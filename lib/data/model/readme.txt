@@ -1,0 +1,1 @@
+ini adalah folder untuk data model
