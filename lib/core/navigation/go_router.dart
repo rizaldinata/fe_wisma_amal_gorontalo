@@ -19,7 +19,7 @@ class AppRouter {
       if (!isLoggedIn &&
           state.path != RouteConstant.loginPath &&
           state.path != RouteConstant.registerPath) {
-        return '${RouteConstant.loginPath}?reason=unauthenticated';
+        return RouteConstant.loginPath;
       }
       return null;
     },
