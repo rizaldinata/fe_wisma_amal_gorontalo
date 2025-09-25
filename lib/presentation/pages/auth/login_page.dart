@@ -114,6 +114,7 @@ class _LoginPageState extends State<LoginPage> {
                     BasicButton(
                       onPressed: () {
                         print('Login pressed');
+                        authController.login();
                         context.goNamed(RouteConstant.dashboardName);
                       },
                       label: 'Login',

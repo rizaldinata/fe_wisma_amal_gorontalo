@@ -21,6 +21,13 @@ class AppRouter {
           state.path != RouteConstant.registerPath) {
         return RouteConstant.loginPath;
       }
+
+      if (isLoggedIn &&
+          (state.path == RouteConstant.loginPath ||
+              state.path == RouteConstant.registerPath ||
+              state.path == RouteConstant.rootPath)) {
+        return RouteConstant.dashboardPath;
+      }
       return null;
     },
     routes: <RouteBase>[
