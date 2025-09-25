@@ -90,7 +90,7 @@ class RegisterPage extends StatelessWidget {
 
                     BasicButton(
                       onPressed: () {
-                        context.go(RouteConstant.login);
+                        context.go(RouteConstant.loginName);
                       },
                       label: 'Login',
                     ),
@@ -104,7 +104,7 @@ class RegisterPage extends StatelessWidget {
                         ),
                         TextButton(
                           onPressed: () {
-                            context.go(RouteConstant.login);
+                            context.goNamed(RouteConstant.loginName);
                           },
                           child: Text('Login disini'),
                         ),

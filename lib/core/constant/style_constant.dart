@@ -6,4 +6,7 @@ class StyleConstant {
   static final TextStyle customTextStyle = GoogleFonts.roboto(
     textStyle: TextStyle(color: _textColor),
   );
+  static final Color primaryColor = Colors.blue;
+  static final Color secondaryColor = Colors.blueAccent;
+  static final Color backgroundColor = Colors.grey.shade300;
 }

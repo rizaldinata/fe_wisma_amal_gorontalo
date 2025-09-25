@@ -82,7 +82,13 @@ class LoginPage extends StatelessWidget {
                     ),
                     SizedBox(height: 40),
 
-                    BasicButton(onPressed: () {}, label: 'Login'),
+                    BasicButton(
+                      onPressed: () {
+                        print('Login pressed');
+                        context.goNamed(RouteConstant.dashboardName);
+                      },
+                      label: 'Login',
+                    ),
                     SizedBox(height: 30),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -93,7 +99,7 @@ class LoginPage extends StatelessWidget {
                         ),
                         TextButton(
                           onPressed: () {
-                            context.go(RouteConstant.register);
+                            context.goNamed(RouteConstant.registerName);
                           },
                           child: Text('Daftar disini'),
                         ),
