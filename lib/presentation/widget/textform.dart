@@ -26,9 +26,23 @@ class CustomTextForm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          isRequired ? '$title *' : title,
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        Text.rich(
+          TextSpan(
+            text: title,
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+
+            children: isRequired
+                ? [
+                    TextSpan(
+                      text: ' *',
+                      style: TextStyle(
+                        color: Colors.red.shade300,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ]
+                : [],
+          ),
         ),
         SizedBox(height: 8),
         TextFormField(

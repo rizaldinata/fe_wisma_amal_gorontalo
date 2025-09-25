@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/constant/route_constant.dart';
-import 'package:frontend/presentation/pages/login/login_page.dart';
+import 'package:frontend/presentation/pages/auth/login_page.dart';
 
 class RouteGenerator {
   static Route<dynamic> generateRoute(RouteSettings settings) {

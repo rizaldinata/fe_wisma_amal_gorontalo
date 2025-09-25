@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/constant/style_constant.dart';
 import 'package:frontend/presentation/widget/button.dart';
 import 'package:frontend/presentation/widget/textform.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginPage extends StatelessWidget {
   const LoginPage({super.key});
@@ -77,7 +79,6 @@ class LoginPage extends StatelessWidget {
                       title: 'Password',
                       hintText: '***********',
                       isRequired: true,
-                      keyboardType: TextInputType.emailAddress,
                     ),
                     SizedBox(height: 40),
 
@@ -91,7 +92,9 @@ class LoginPage extends StatelessWidget {
                           style: StyleConstant.customTextStyle,
                         ),
                         TextButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            context.go(RouteConstant.register);
+                          },
                           child: Text('Daftar disini'),
                         ),
                       ],
