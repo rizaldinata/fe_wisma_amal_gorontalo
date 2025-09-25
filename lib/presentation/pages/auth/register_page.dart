@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/constant/style_constant.dart';
+import 'package:frontend/presentation/get/auth/auth_controller.dart';
 import 'package:frontend/presentation/widget/button.dart';
 import 'package:frontend/presentation/widget/textform.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 class RegisterPage extends StatelessWidget {
-  const RegisterPage({super.key});
+  RegisterPage({super.key});
+  var authController = Get.find<AuthController>();
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +93,8 @@ class RegisterPage extends StatelessWidget {
 
                     BasicButton(
                       onPressed: () {
-                        context.go(RouteConstant.loginName);
+                        authController.login();
+                        context.goNamed(RouteConstant.dashboardName);
                       },
                       label: 'Login',
                     ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/presentation/get/auth/auth_controller.dart';
+import 'package:get/get.dart';
 
 import 'core/navigation/go_router.dart';
 
@@ -7,7 +9,8 @@ void main(List<String> args) {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  MyApp({super.key});
+  var controller = Get.put(AuthController());
 
   @override
   Widget build(BuildContext context) {

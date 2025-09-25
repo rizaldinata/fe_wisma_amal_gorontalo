@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/constant/route_constant.dart';
+import 'package:frontend/presentation/get/auth/auth_controller.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 class SidebarItem {
@@ -13,16 +16,14 @@ class CustomSidebar extends StatelessWidget {
   final String currentRoute;
   final List<SidebarItem> items;
 
-  const CustomSidebar({
-    super.key,
-    required this.currentRoute,
-    required this.items,
-  });
+  var authController = Get.find<AuthController>();
+
+  CustomSidebar({super.key, required this.currentRoute, required this.items});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 220,
+      width: 260,
       color: Colors.white,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -95,7 +96,10 @@ class CustomSidebar extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.logout, size: 20),
             title: const Text("Log out"),
-            onTap: () => context.go("/login"),
+            onTap: () {
+              authController.logout();
+              context.goNamed(RouteConstant.loginName);
+            },
           ),
         ],
       ),

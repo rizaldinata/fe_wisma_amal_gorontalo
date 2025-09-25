@@ -1,12 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/constant/style_constant.dart';
+import 'package:frontend/presentation/get/auth/auth_controller.dart';
 import 'package:frontend/presentation/widget/button.dart';
 import 'package:frontend/presentation/widget/textform.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
-class LoginPage extends StatelessWidget {
-  const LoginPage({super.key});
+class LoginPage extends StatefulWidget {
+  LoginPage({super.key});
+
+  @override
+  State<LoginPage> createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
+  var authController = Get.find<AuthController>();
+
+  @override
+  void initState() {
+    super.initState();
+    // Tampilkan SnackBar setelah widget selesai di-build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      // Ambil query parameter dari state router
+      final reason = GoRouterState.of(context).uri.queryParameters['reason'];
+
+      if (reason == 'unauthenticated') {
+        Get.snackbar(
+          'Akses Dibatasi', // Title
+          'Anda harus login untuk melanjutkan.', // Subtitle
+          snackPosition: SnackPosition.TOP,
+          backgroundColor: Colors.red.withOpacity(0.8),
+          colorText: Colors.white,
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,6 +128,7 @@ class LoginPage extends StatelessWidget {
                         ),
                         TextButton(
                           onPressed: () {
+                            authController.login();
                             context.goNamed(RouteConstant.registerName);
                           },
                           child: Text('Daftar disini'),

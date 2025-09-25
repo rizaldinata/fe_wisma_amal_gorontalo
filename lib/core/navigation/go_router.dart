@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/constant/style_constant.dart';
+import 'package:frontend/presentation/get/auth/auth_controller.dart';
 import 'package:frontend/presentation/pages/auth/login_page.dart';
 import 'package:frontend/presentation/pages/auth/register_page.dart';
 import 'package:frontend/presentation/pages/dashboard/dashboard.dart';
 import 'package:frontend/presentation/widget/sidebar.dart';
+import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRouter {
   final GoRouter router = GoRouter(
     initialLocation: RouteConstant.rootPath,
     redirect: (context, state) {
-      // Redirect from root to login page
-      print('Current path: ${state.fullPath}');
-      if (state.fullPath == RouteConstant.rootPath) {
-        return RouteConstant.loginPath;
+      var controller = Get.find<AuthController>();
+      bool isLoggedIn = controller.isLoggedIn.value;
+
+      if (!isLoggedIn &&
+          state.path != RouteConstant.loginPath &&
+          state.path != RouteConstant.registerPath) {
+        return '${RouteConstant.loginPath}?reason=unauthenticated';
       }
       return null;
     },
@@ -30,7 +35,7 @@ class AppRouter {
                   currentRoute: state.fullPath!,
                   items: [
                     SidebarItem(
-                      label: 'Dashboard',
+                      label: RouteConstant.dashboardName,
                       icon: Icons.dashboard,
                       route: RouteConstant.dashboardPath,
                     ),
@@ -46,6 +51,7 @@ class AppRouter {
                     ),
                   ],
                 ),
+                Expanded(child: child),
               ],
             ),
           );
