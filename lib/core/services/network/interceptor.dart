@@ -1,24 +1,26 @@
 import 'package:dio/dio.dart';
+import 'package:frontend/core/services/storage/shared_prefrence.dart';
+import 'package:shared_preferences/src/shared_preferences_legacy.dart';
 
 class ApiInterceptor extends Interceptor {
-  ApiInterceptor();
+  ApiInterceptor(this._sharedPrefsStorage);
 
+  SharedPrefsStorage _sharedPrefsStorage;
 
   @override
   Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    // Sebelum request dikirim
-      print("Request: ${options.method} ${options.path}");
+   final String? token = await _sharedPrefsStorage.getToken() ;
 
-      // Misalnya inject access token dari memory
-      final token = AccessTokenMemory.instance.token;
-      if (token != null) {
-        options.headers["Authorization"] = "Bearer $token";
-      }
+    if (token != null) {
+      options.headers['Authorization'] = 'Bearer $token';
+    }
 
-      return handler.next(options);
+    print('HEADER ${options.headers}');
+
+    return handler.next(options);
   }
 
   @override
@@ -26,9 +28,7 @@ class ApiInterceptor extends Interceptor {
     Response response,
     ResponseInterceptorHandler handler,
   ) async {
-    // Setelah response diterima
-    print("Response: ${response.statusCode} ${response.requestOptions.path}");
-    return handler.next(response);
+    
   }
 
   @override
