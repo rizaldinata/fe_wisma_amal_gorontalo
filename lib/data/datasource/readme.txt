@@ -1,1 +1,0 @@
-ini adalah folder untuk handle get data dari API
