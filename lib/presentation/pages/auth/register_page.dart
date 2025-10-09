@@ -93,7 +93,7 @@ class RegisterPage extends StatelessWidget {
 
                     BasicButton(
                       onPressed: () {
-                        authController.login();
+                        // authController.login();
                         context.goNamed(RouteConstant.dashboardName);
                       },
                       label: 'Login',

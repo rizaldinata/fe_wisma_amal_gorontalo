@@ -10,15 +10,24 @@ import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRouter {
-  final GoRouter router = GoRouter(
+  late final AuthController authController;
+  
+  AppRouter() {
+    authController = Get.find<AuthController>();
+  }
+  
+  late final GoRouter router = GoRouter(
     initialLocation: RouteConstant.rootPath,
+    refreshListenable: authController.loginStatusNotifier, // Notifier untuk perubahan status login
     redirect: (context, state) {
-      var controller = Get.find<AuthController>();
-      bool isLoggedIn = controller.isLoggedIn.value;
-
+      bool isLoggedIn = authController.isLoggedIn.value;
+      
+      print('Router redirect - isLoggedIn: $isLoggedIn, path: ${state.path}');
+      
       if (!isLoggedIn &&
           state.path != RouteConstant.loginPath &&
           state.path != RouteConstant.registerPath) {
+        print('Redirecting to login because not logged in');
         return RouteConstant.loginPath;
       }
 
@@ -26,8 +35,11 @@ class AppRouter {
           (state.path == RouteConstant.loginPath ||
               state.path == RouteConstant.registerPath ||
               state.path == RouteConstant.rootPath)) {
+        print('Redirecting to dashboard because logged in');
         return RouteConstant.dashboardPath;
       }
+      
+      print('No redirect needed');
       return null;
     },
     routes: <RouteBase>[
@@ -103,11 +115,4 @@ class AppRouter {
       ),
     ],
   );
-}
-
-int _getSelectedIndex(String location) {
-  if (location.startsWith(RouteConstant.dashboardPath)) return 0;
-  if (location.startsWith('/test2')) return 1;
-  if (location.startsWith('/test3')) return 2;
-  return 0;
 }

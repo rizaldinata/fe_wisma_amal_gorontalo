@@ -17,6 +17,9 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   var authController = Get.find<AuthController>();
 
+  var emailController = TextEditingController();
+  var passwordController = TextEditingController();
+
   @override
   void initState() {
     super.initState();
@@ -98,6 +101,7 @@ class _LoginPageState extends State<LoginPage> {
                     // Spacer(),
                     SizedBox(height: 40),
                     CustomTextForm(
+                      controller: emailController,
                       title: 'Email',
                       hintText: 'johnDoe@mail.com',
                       isRequired: true,
@@ -105,6 +109,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                     SizedBox(height: 20),
                     CustomTextForm(
+                      controller: passwordController,
                       title: 'Password',
                       hintText: '***********',
                       isRequired: true,
@@ -112,10 +117,32 @@ class _LoginPageState extends State<LoginPage> {
                     SizedBox(height: 40),
 
                     BasicButton(
-                      onPressed: () {
+                      onPressed: () async {
                         print('Login pressed');
-                        authController.login();
-                        context.goNamed(RouteConstant.dashboardName);
+                        if (emailController.text.isEmpty ||
+                            passwordController.text.isEmpty) {
+                              print('Email or Password is empty');
+                              Get.snackbar(
+                                'Error',
+                                'Email dan password harus diisi',
+                                snackPosition: SnackPosition.TOP,
+                                backgroundColor: Colors.red.withOpacity(0.8),
+                                colorText: Colors.white,
+                              );
+                        } else {
+                          await authController.login(
+                            username: emailController.text,
+                            password: passwordController.text,
+                          );
+                          
+                          // Jika login berhasil, cek status dan refresh router
+                          if (authController.isLoggedIn.value) {
+                            print('Login successful, navigating to dashboard...');
+                            context.go('/dashboard');
+                          }
+                        }
+                        
+                        
                       },
                       label: 'Login',
                     ),
@@ -129,7 +156,6 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         TextButton(
                           onPressed: () {
-                            authController.login();
                             context.goNamed(RouteConstant.registerName);
                           },
                           child: Text('Daftar disini'),

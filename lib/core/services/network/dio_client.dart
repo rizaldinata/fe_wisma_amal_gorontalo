@@ -1,14 +1,10 @@
 import 'package:dio/dio.dart';
-import 'package:dio/browser.dart'; // untuk web
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:frontend/core/services/network/api_config.dart';
+import 'package:frontend/core/services/network/exception.dart';
 import 'package:frontend/core/services/network/interceptor.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class DioClient {
-  
-
   DioClient({
     required this.apiConfig,
     required SharedPrefsStorage SharedPreferences,
@@ -17,7 +13,6 @@ class DioClient {
         apiInterceptor = ApiInterceptor(SharedPreferences) {
     _setupDio();
   }
-
 
 
   final Dio _dio;
@@ -39,8 +34,75 @@ class DioClient {
     );
   }
 
+    // =====================
+  // Generic HTTP methods
+  // =====================
 
+  Future<Response<T>> get<T>(
+    String path, {
+    Map<String, dynamic>? queryParams,
+    Options? options,
+  }) async {
+    try {
+      return await _dio.get<T>(path, queryParameters: queryParams, options: options);
+    } on DioException catch (e) {
+      // Ambil AppException dari error interceptor
+      if (e.error is AppException) throw e.error!;
+      throw AppException.fromDioError(e);
+    } catch (e) {
+      throw AppException.other(e);
+    }
+  }
 
+  Future<Response<T>> post<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParams,
+    Options? options,
+  }) async {
+    try {
+      return await _dio.post<T>(path, data: data, queryParameters: queryParams, options: options);
+    } on DioException catch (e) {
+      if (e.error is AppException) throw e.error!;
+      throw AppException.fromDioError(e);
+    } catch (e) {
+      throw AppException.other(e);
+    }
+  }
+
+  Future<Response<T>> put<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParams,
+    Options? options,
+  }) async {
+    try {
+      return await _dio.put<T>(path, data: data, queryParameters: queryParams, options: options);
+    } on DioException catch (e) {
+      if (e.error is AppException) throw e.error!;
+      throw AppException.fromDioError(e);
+    } catch (e) {
+      throw AppException.other(e);
+    }
+  }
+
+  Future<Response<T>> delete<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParams,
+    Options? options,
+  }) async {
+    try {
+      return await _dio.delete<T>(path, data: data, queryParameters: queryParams, options: options);
+    } on DioException catch (e) {
+      if (e.error is AppException) throw e.error!;
+      throw AppException.fromDioError(e);
+    } catch (e) {
+      throw AppException.other(e);
+    }
+  }
 }
+
+
 
 

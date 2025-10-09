@@ -1,6 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-class SharedPrefsTokenStorage{
+class SharedPrefsStorage{
   static const _key = 'access_token';
 
   

@@ -1,57 +1,57 @@
 import 'package:dio/dio.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
-import 'package:shared_preferences/src/shared_preferences_legacy.dart';
 
 class ApiInterceptor extends Interceptor {
   ApiInterceptor(this._sharedPrefsStorage);
 
-  SharedPrefsStorage _sharedPrefsStorage;
+  final SharedPrefsStorage _sharedPrefsStorage;
+  
 
   @override
   Future<void> onRequest(
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-   final String? token = await _sharedPrefsStorage.getToken() ;
 
+  // Daftar endpoint yang tidak memerlukan token
+  final List<String> publicEndpoints = ['/login', '/register', '/forgot-password'];
+  
+  // Cek apakah request adalah untuk endpoint public
+  bool isPublicEndpoint = publicEndpoints.any((endpoint) => options.path.contains(endpoint));
+  
+  print('Is public endpoint: $isPublicEndpoint');
+  print('Request path: ${options.path}');
+
+  if (!isPublicEndpoint) {
+    print('Fetching token for protected endpoint...');
+    final String? token = await _sharedPrefsStorage.getToken();
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
     }
-
-    print('HEADER ${options.headers}');
-
-    return handler.next(options);
   }
 
-  @override
-  Future<void> onResponse(
-    Response response,
-    ResponseInterceptorHandler handler,
-  ) async {
-    
+  print('REQUEST: ${options.method} ${options.path}');
+  print('HEADERS: ${options.headers}');
+
+  return handler.next(options);
   }
+
 
   @override
   Future<void> onError(
     DioException err,
     ErrorInterceptorHandler handler,
   ) async {
+
+    //handle jika token expired -> lalu hapus token & redirect ke login
     if (err.response?.statusCode == 401) {
-      // delete stored token
-      AccessTokenMemory.instance.clear();
+      
+      await _sharedPrefsStorage.clearToken();
+
+      //memanggil logout yang nantinya merubah login status, sehingga go_router akan otomatis redirect ke login
+      // _authController.logout();
     }
 
     return handler.next(err);
-  }
-}
-
-class AccessTokenMemory {
-  static final AccessTokenMemory instance = AccessTokenMemory._();
-  AccessTokenMemory._();
-
-  String? token; // simpan access token hanya di memory (tidak persistent)
-
-  void clear() {
-    token = null;
   }
 }
