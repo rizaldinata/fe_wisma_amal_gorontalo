@@ -13,6 +13,7 @@ import 'package:frontend/core/services/network/dio_client.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
 import 'package:frontend/data/datasource/auth_datasource.dart';
 import 'package:get_it/get_it.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../services/network/api_config.dart';
 
@@ -47,7 +48,9 @@ Future<void> _initializeNetwork() async {
 }
 
 Future<void> _initializeStorage() async {
-  serviceLocator.registerSingleton<SharedPrefsStorage>(SharedPrefsStorage(),);
+  final prefs = await SharedPreferences.getInstance();
+  serviceLocator.registerSingleton<SharedPreferences>(prefs);
+  serviceLocator.registerSingleton<SharedPrefsStorage>(SharedPrefsStorage(prefs),);
 }
 
 

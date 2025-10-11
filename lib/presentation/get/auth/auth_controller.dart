@@ -30,12 +30,27 @@ class AuthController extends GetxController {
     initLoginStatus().then((value) {
       loginStatusNotifier.value = value;
     });
-
-
     // Listen perubahan isLoggedIn dan update loginStatusNotifier
     ever(isLoggedIn, (val) {
       loginStatusNotifier.value = val;
     });
+  }
+
+  void getUserInfo(){
+    var email = storage.get(StorageConstant.email);
+    var username = storage.get(StorageConstant.userName);
+    var userId = storage.get(StorageConstant.userId);
+    var role = storage.get(StorageConstant.roleActive);
+    var permissions = storage.getList(StorageConstant.permissions);
+
+    // Do something with the user info
+    userInfo.value = UserModel(
+      email: email,
+      name:  username,
+      selectedRoles: role,
+      id: (userId != null) ? int.parse(userId) : null,
+      permissions: permissions
+    );
   }
 
 
@@ -55,7 +70,6 @@ class AuthController extends GetxController {
       password,
     );
     isLoggedIn.value = true;
-    
     userInfo.value = result;
 
     // Tampilkan pesan sukses
@@ -69,6 +83,7 @@ class AuthController extends GetxController {
     await storage.set(StorageConstant.email, result.email ?? '');
     await storage.set(StorageConstant.userName, result.name ?? '');
     await storage.set(StorageConstant.userId, result.id?.toString() ?? '');
+    await storage.set(StorageConstant.roleActive, result.selectedRoles ?? '');
     await storage.setList(StorageConstant.permissions, result.permissions ?? []);
       
     return true;
@@ -91,7 +106,6 @@ class AuthController extends GetxController {
       await auth.logout();
       isLoggedIn.value = false;
     } catch (e) {
-      // Even if logout fails, still update local state
       isLoggedIn.value = false;
     }
   }

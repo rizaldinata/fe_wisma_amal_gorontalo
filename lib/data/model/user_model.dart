@@ -3,6 +3,7 @@ class UserModel {
   String? name;
   String? email;
   String? selectedRoles;
+  List<String>? roleList;
   List<String>? permissions;
   String? createdAt;
 
@@ -11,6 +12,7 @@ class UserModel {
       this.name,
       this.email,
       this.selectedRoles,
+      this.roleList,
       this.permissions,
       this.createdAt});
 
@@ -20,6 +22,7 @@ class UserModel {
     email = json['email'];
     selectedRoles = (json['roles'] as List).isNotEmpty ? json['roles'][0] : null;
     permissions = json['permissions'].cast<String>();
+    roleList = permissions = json['roles'].cast<String>();
     createdAt = json['created_at'];
   }
 
@@ -28,7 +31,7 @@ class UserModel {
     data['id'] = id;
     data['name'] = name;
     data['email'] = email;
-    data['roles'] = selectedRoles;
+    data['roles'] = roleList;
     data['permissions'] = permissions;
     data['created_at'] = createdAt;
     return data;

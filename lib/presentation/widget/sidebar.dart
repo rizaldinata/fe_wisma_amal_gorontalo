@@ -62,6 +62,11 @@ class CustomSidebar extends StatelessWidget {
           // Profile
           GetBuilder(
             init: authController,
+            initState: (state) {
+              if (authController.userInfo.value.id == null) {
+                authController.getUserInfo();
+              }
+            },
             builder: (context) {
               return Padding(
                 padding: const EdgeInsets.all(16.0),

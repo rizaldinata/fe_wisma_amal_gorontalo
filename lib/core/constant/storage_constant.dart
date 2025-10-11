@@ -5,6 +5,7 @@ class StorageConstant {
   static const String profileImagePath = 'profile_image_path';
   static const String userId = 'user_id';
   static const String roleName = 'role-name';
-  static const String roleList = 'roles';
+  static const String roleActive = 'role';
+  static const String roleList = 'roles-list';
   static const String permissions = 'permissions';
 }
