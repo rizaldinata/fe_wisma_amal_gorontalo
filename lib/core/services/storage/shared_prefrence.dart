@@ -26,6 +26,16 @@ class SharedPrefsStorage{
     await prefs.setString(key, value);
   }
 
+    Future<void> setList(String key, List<String> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(key, data);
+  }
+
+  Future<List<String>?> getList(String key) async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(key);
+  }
+
   Future<String?> get(String key) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(key);

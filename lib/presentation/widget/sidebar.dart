@@ -60,37 +60,42 @@ class CustomSidebar extends StatelessWidget {
           const Spacer(),
 
           // Profile
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: InkWell(
-              onTap: () {},
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  children: [
-                    const CircleAvatar(radius: 16, child: Icon(Icons.person)),
-                    const SizedBox(width: 8),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text(
-                          "Hilmi Afifi",
-                          style: TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                        Text(
-                          "Pengelola",
-                          style: TextStyle(fontSize: 12, color: Colors.grey),
+          GetBuilder(
+            init: authController,
+            builder: (context) {
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: InkWell(
+                  onTap: () {},
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const CircleAvatar(radius: 16, child: Icon(Icons.person)),
+                        const SizedBox(width: 8),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              authController.userInfo.value.name ?? "User Name",
+                              style: TextStyle(fontWeight: FontWeight.w500),
+                            ),
+                            Text(
+                              authController.userInfo.value.selectedRoles ?? "No Role",
+                              style: TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            }
           ),
 
           ListTile(

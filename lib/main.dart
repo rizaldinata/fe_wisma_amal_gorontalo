@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/core/services/storage/shared_prefrence.dart';
 import 'package:frontend/data/datasource/auth_datasource.dart';
 import 'package:frontend/presentation/get/auth/auth_controller.dart';
 import 'package:get/get.dart';
@@ -17,6 +18,7 @@ Future<void> main(List<String> args) async {
   // Inisialisasi AuthController sebelum router
   Get.put(AuthController(
     auth: serviceLocator<AuthDatasource>(),
+    storage: serviceLocator<SharedPrefsStorage>(),
   ));
  
   runApp(MyApp());

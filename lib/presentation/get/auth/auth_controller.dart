@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/constant/storage_constant.dart';
 import 'package:frontend/core/services/network/exception.dart';
+import 'package:frontend/core/services/storage/shared_prefrence.dart';
 import 'package:frontend/data/datasource/auth_datasource.dart';
+import 'package:frontend/data/model/user_model.dart';
 import 'package:get/get.dart';
 
 import '../../../main.dart';
@@ -11,10 +14,14 @@ class AuthController extends GetxController {
   // Notifier untuk memberitahu perubahan status login secara realtime untuk GoRouter
   final loginStatusNotifier = ValueNotifier<bool>(false);
 
+  var userInfo = UserModel().obs;
+
   final AuthDatasource auth;
+  final SharedPrefsStorage storage;
 
   AuthController({
     required this.auth,
+    required this.storage,
   });
 
   @override
@@ -22,13 +29,11 @@ class AuthController extends GetxController {
     super.onInit();
     initLoginStatus().then((value) {
       loginStatusNotifier.value = value;
-      print('Auth Controller initialized - isLoggedIn: $value');
     });
 
 
     // Listen perubahan isLoggedIn dan update loginStatusNotifier
     ever(isLoggedIn, (val) {
-      print('AuthController - isLoggedIn changed to: $val');
       loginStatusNotifier.value = val;
     });
   }
@@ -36,23 +41,23 @@ class AuthController extends GetxController {
 
 
   Future<bool> initLoginStatus() async {
-    print('Checking initial login status...');
     var status = await auth.isLoggedIn();
     isLoggedIn.value = status;
-    print('Initial login status: $status');
     return isLoggedIn.value;
   }
 
+
+
   Future<bool> login({required String username, required String password}) async{
     try {
-      print('Starting login process...');
-      await auth.login(
+     var result = await auth.login(
       username,
       password,
     );
-    print('Login successful, updating state...');
     isLoggedIn.value = true;
     
+    userInfo.value = result;
+
     // Tampilkan pesan sukses
     rootScaffoldMessengerKey.currentState?.showSnackBar(
       SnackBar(
@@ -60,16 +65,19 @@ class AuthController extends GetxController {
         backgroundColor: Colors.green,
       ),
     );
-    
+
+    await storage.set(StorageConstant.email, result.email ?? '');
+    await storage.set(StorageConstant.userName, result.name ?? '');
+    await storage.set(StorageConstant.userId, result.id?.toString() ?? '');
+    await storage.setList(StorageConstant.permissions, result.permissions ?? []);
+      
     return true;
     } on AppException catch (e) {
-      print('Login failed: ${e.message}');
       rootScaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(content: Text(' Error: ${e.message}')),
       );
       return false;
     } catch (e) {
-      print('Login failed with unexpected error: $e');
       rootScaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(content: Text(' Error: ${e.toString()}')),
       );
@@ -82,9 +90,7 @@ class AuthController extends GetxController {
     try {
       await auth.logout();
       isLoggedIn.value = false;
-      print('Logout successful');
     } catch (e) {
-      print('Logout error: $e');
       // Even if logout fails, still update local state
       isLoggedIn.value = false;
     }
