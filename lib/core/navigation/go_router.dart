@@ -11,34 +11,40 @@ import 'package:go_router/go_router.dart';
 
 class AppRouter {
   late final AuthController authController;
-  
+
   AppRouter() {
     authController = Get.find<AuthController>();
   }
-  
+
   late final GoRouter router = GoRouter(
     initialLocation: RouteConstant.rootPath,
-    refreshListenable: authController.loginStatusNotifier, // Notifier untuk perubahan status login
+    refreshListenable: authController
+        .loginStatusNotifier, // Notifier untuk perubahan status login
     redirect: (context, state) {
       bool isLoggedIn = authController.isLoggedIn.value;
-      
-      print('Router redirect - isLoggedIn: $isLoggedIn, path: ${state.path}');
-      
+
+      print(
+        'Router redirect - isLoggedIn: $isLoggedIn, path: ${state.path}, fullPath: ${state.fullPath}',
+      );
       if (!isLoggedIn &&
-          state.path != RouteConstant.loginPath &&
-          state.path != RouteConstant.registerPath) {
+          (state.fullPath != RouteConstant.loginPath ||
+              state.fullPath != RouteConstant.registerPath)) {
         print('Redirecting to login because not logged in');
+        if (state.fullPath == RouteConstant.loginPath ||
+            state.fullPath == RouteConstant.registerPath) {
+          return state.path;
+        }
         return RouteConstant.loginPath;
       }
 
       if (isLoggedIn &&
-          (state.path == RouteConstant.loginPath ||
-              state.path == RouteConstant.registerPath ||
-              state.path == RouteConstant.rootPath)) {
+          (state.fullPath == RouteConstant.loginPath ||
+              state.fullPath == RouteConstant.registerPath ||
+              state.fullPath == RouteConstant.rootPath)) {
         print('Redirecting to dashboard because logged in');
         return RouteConstant.dashboardPath;
       }
-      
+
       print('No redirect needed');
       return null;
     },

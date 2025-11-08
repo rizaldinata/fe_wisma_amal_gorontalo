@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:frontend/core/services/network/api_config.dart';
 import 'package:frontend/core/services/network/exception.dart';
 import 'package:frontend/core/services/network/interceptor.dart';
+import 'package:frontend/core/services/network/log_interceptor.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
 
 class DioClient {
@@ -9,11 +10,10 @@ class DioClient {
     required this.apiConfig,
     required SharedPrefsStorage SharedPreferences,
     required Dio dio,
-  })  : _dio = dio,
-        apiInterceptor = ApiInterceptor(SharedPreferences) {
+  }) : _dio = dio,
+       apiInterceptor = ApiInterceptor(SharedPreferences) {
     _setupDio();
   }
-
 
   final Dio _dio;
   final ApiConfig apiConfig;
@@ -32,9 +32,10 @@ class DioClient {
     _dio.interceptors.add(
       LogInterceptor(requestBody: true, responseBody: true),
     );
+    _dio.interceptors.add(PrettyDioLogger());
   }
 
-    // =====================
+  // =====================
   // Generic HTTP methods
   // =====================
 
@@ -44,7 +45,11 @@ class DioClient {
     Options? options,
   }) async {
     try {
-      return await _dio.get<T>(path, queryParameters: queryParams, options: options);
+      return await _dio.get<T>(
+        path,
+        queryParameters: queryParams,
+        options: options,
+      );
     } on DioException catch (e) {
       // Ambil AppException dari error interceptor
       if (e.error is AppException) throw e.error!;
@@ -61,7 +66,12 @@ class DioClient {
     Options? options,
   }) async {
     try {
-      return await _dio.post<T>(path, data: data, queryParameters: queryParams, options: options);
+      return await _dio.post<T>(
+        path,
+        data: data,
+        queryParameters: queryParams,
+        options: options,
+      );
     } on DioException catch (e) {
       if (e.error is AppException) throw e.error!;
       throw AppException.fromDioError(e);
@@ -77,7 +87,12 @@ class DioClient {
     Options? options,
   }) async {
     try {
-      return await _dio.put<T>(path, data: data, queryParameters: queryParams, options: options);
+      return await _dio.put<T>(
+        path,
+        data: data,
+        queryParameters: queryParams,
+        options: options,
+      );
     } on DioException catch (e) {
       if (e.error is AppException) throw e.error!;
       throw AppException.fromDioError(e);
@@ -93,7 +108,12 @@ class DioClient {
     Options? options,
   }) async {
     try {
-      return await _dio.delete<T>(path, data: data, queryParameters: queryParams, options: options);
+      return await _dio.delete<T>(
+        path,
+        data: data,
+        queryParameters: queryParams,
+        options: options,
+      );
     } on DioException catch (e) {
       if (e.error is AppException) throw e.error!;
       throw AppException.fromDioError(e);
@@ -102,7 +122,3 @@ class DioClient {
     }
   }
 }
-
-
-
-

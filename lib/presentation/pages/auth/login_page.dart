@@ -108,11 +108,24 @@ class _LoginPageState extends State<LoginPage> {
                       keyboardType: TextInputType.emailAddress,
                     ),
                     SizedBox(height: 20),
-                    CustomTextForm(
-                      controller: passwordController,
-                      title: 'Password',
-                      hintText: '***********',
-                      isRequired: true,
+                    Obx(
+                      () => CustomTextForm(
+                        controller: passwordController,
+                        title: 'Password',
+                        hintText: '***********',
+                        isRequired: true,
+                        obscureText: authController.obscureText,
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            authController.toggleObscureText();
+                          },
+                          icon: Icon(
+                            !authController.obscureText
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                          ),
+                        ),
+                      ),
                     ),
                     SizedBox(height: 40),
 
@@ -121,28 +134,28 @@ class _LoginPageState extends State<LoginPage> {
                         print('Login pressed');
                         if (emailController.text.isEmpty ||
                             passwordController.text.isEmpty) {
-                              print('Email or Password is empty');
-                              Get.snackbar(
-                                'Error',
-                                'Email dan password harus diisi',
-                                snackPosition: SnackPosition.TOP,
-                                backgroundColor: Colors.red.withOpacity(0.8),
-                                colorText: Colors.white,
-                              );
+                          print('Email or Password is empty');
+                          Get.snackbar(
+                            'Error',
+                            'Email dan password harus diisi',
+                            snackPosition: SnackPosition.TOP,
+                            backgroundColor: Colors.red.withOpacity(0.8),
+                            colorText: Colors.white,
+                          );
                         } else {
                           await authController.login(
-                            username: emailController.text,
+                            email: emailController.text,
                             password: passwordController.text,
                           );
-                          
+
                           // Jika login berhasil, cek status dan refresh router
                           if (authController.isLoggedIn.value) {
-                            print('Login successful, navigating to dashboard...');
+                            print(
+                              'Login successful, navigating to dashboard...',
+                            );
                             context.go('/dashboard');
                           }
                         }
-                        
-                        
                       },
                       label: 'Login',
                     ),

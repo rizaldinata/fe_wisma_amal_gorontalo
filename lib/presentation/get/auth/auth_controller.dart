@@ -3,7 +3,9 @@ import 'package:frontend/core/constant/storage_constant.dart';
 import 'package:frontend/core/services/network/exception.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
 import 'package:frontend/data/datasource/auth_datasource.dart';
-import 'package:frontend/data/model/user_model.dart';
+import 'package:frontend/data/model/auth/login_request.dart';
+import 'package:frontend/data/model/auth/register_request.dart';
+import 'package:frontend/data/model/auth/user_model.dart';
 import 'package:get/get.dart';
 
 import '../../../main.dart';
@@ -11,18 +13,16 @@ import '../../../main.dart';
 class AuthController extends GetxController {
   var isLoggedIn = false.obs;
 
-  // Notifier untuk memberitahu perubahan status login secara realtime untuk GoRouter
   final loginStatusNotifier = ValueNotifier<bool>(false);
 
   var userInfo = UserModel().obs;
 
+  var _obscureText = true.obs;
+
   final AuthDatasource auth;
   final SharedPrefsStorage storage;
 
-  AuthController({
-    required this.auth,
-    required this.storage,
-  });
+  AuthController({required this.auth, required this.storage});
 
   @override
   void onInit() {
@@ -36,24 +36,28 @@ class AuthController extends GetxController {
     });
   }
 
-  void getUserInfo(){
+  get obscureText => _obscureText.value;
+
+  void toggleObscureText() {
+    _obscureText.value = !_obscureText.value;
+  }
+
+  void getUserInfo() {
     var email = storage.get(StorageConstant.email);
     var username = storage.get(StorageConstant.userName);
     var userId = storage.get(StorageConstant.userId);
-    var role = storage.get(StorageConstant.roleActive);
-    var permissions = storage.getList(StorageConstant.permissions);
+    var role = storage.getList(StorageConstant.roleActive);
+    var permissions = storage.getPermissions();
 
     // Do something with the user info
     userInfo.value = UserModel(
-      email: email,
-      name:  username,
-      selectedRoles: role,
+      email: email ?? '',
+      name: username ?? '',
+      roles: role ?? [],
       id: (userId != null) ? int.parse(userId) : null,
-      permissions: permissions
+      permissions: permissions ?? {},
     );
   }
-
-
 
   Future<bool> initLoginStatus() async {
     var status = await auth.isLoggedIn();
@@ -61,32 +65,65 @@ class AuthController extends GetxController {
     return isLoggedIn.value;
   }
 
-
-
-  Future<bool> login({required String username, required String password}) async{
+  Future<bool> login({required String email, required String password}) async {
     try {
-     var result = await auth.login(
-      username,
-      password,
-    );
-    isLoggedIn.value = true;
-    userInfo.value = result;
+      var result = await auth.login(
+        LoginRequestModel(email: email, password: password),
+      );
+      if (result == null) return false;
+      isLoggedIn.value = true;
+      userInfo.value = result;
 
-    // Tampilkan pesan sukses
-    rootScaffoldMessengerKey.currentState?.showSnackBar(
-      SnackBar(
-        content: Text('Login berhasil!'),
-        backgroundColor: Colors.green,
-      ),
-    );
+      // Tampilkan pesan sukses
+      rootScaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text('Login berhasil!'),
+          backgroundColor: Colors.green,
+        ),
+      );
 
-    await storage.set(StorageConstant.email, result.email ?? '');
-    await storage.set(StorageConstant.userName, result.name ?? '');
-    await storage.set(StorageConstant.userId, result.id?.toString() ?? '');
-    await storage.set(StorageConstant.roleActive, result.selectedRoles ?? '');
-    await storage.setList(StorageConstant.permissions, result.permissions ?? []);
-      
-    return true;
+      return true;
+    } on AppException catch (e) {
+      rootScaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(content: Text(' Error: ${e.message}')),
+      );
+      return false;
+    } catch (e) {
+      rootScaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(content: Text(' Error: ${e.toString()}')),
+      );
+      return false;
+    }
+  }
+
+  Future<bool> register({
+    required String username,
+    required String email,
+    required String password,
+    required String passwordConfirm,
+  }) async {
+    try {
+      var result = await auth.register(
+        RegisterRequestModel(
+          name: username,
+          email: email,
+          password: password,
+          passwordConfirmation: passwordConfirm,
+        ),
+      );
+      if (result == null) return false;
+      isLoggedIn.value = true;
+      userInfo.value = result;
+
+      // Tampilkan pesan sukses
+      rootScaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text('Register berhasil!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      return true;
     } on AppException catch (e) {
       rootScaffoldMessengerKey.currentState?.showSnackBar(
         SnackBar(content: Text(' Error: ${e.message}')),

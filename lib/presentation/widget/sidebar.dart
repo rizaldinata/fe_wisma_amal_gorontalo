@@ -80,7 +80,10 @@ class CustomSidebar extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        const CircleAvatar(radius: 16, child: Icon(Icons.person)),
+                        const CircleAvatar(
+                          radius: 16,
+                          child: Icon(Icons.person),
+                        ),
                         const SizedBox(width: 8),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -90,8 +93,12 @@ class CustomSidebar extends StatelessWidget {
                               style: TextStyle(fontWeight: FontWeight.w500),
                             ),
                             Text(
-                              authController.userInfo.value.selectedRoles ?? "No Role",
-                              style: TextStyle(fontSize: 12, color: Colors.grey),
+                              authController.userInfo.value.roles?.join(', ') ??
+                                  "No Role",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                             ),
                           ],
                         ),
@@ -100,7 +107,7 @@ class CustomSidebar extends StatelessWidget {
                   ),
                 ),
               );
-            }
+            },
           ),
 
           ListTile(
