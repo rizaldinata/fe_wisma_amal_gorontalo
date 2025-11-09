@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/constant/style_constant.dart';
-import 'package:frontend/presentation/get/auth/auth_controller.dart';
+import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend/presentation/bloc/auth/auth_event.dart';
+import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend/presentation/widget/button.dart';
 import 'package:frontend/presentation/widget/textform.dart';
-import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 class LoginPage extends StatefulWidget {
@@ -15,8 +17,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  var authController = Get.find<AuthController>();
-
   var emailController = TextEditingController();
   var passwordController = TextEditingController();
 
@@ -29,20 +29,21 @@ class _LoginPageState extends State<LoginPage> {
       final reason = GoRouterState.of(context).uri.queryParameters['reason'];
 
       if (reason == 'unauthenticated') {
-        Get.snackbar(
-          'Akses Dibatasi', // Title
-          'Anda harus login untuk melanjutkan.', // Subtitle
-          snackPosition: SnackPosition.TOP,
-          backgroundColor: Colors.red.withOpacity(0.8),
-          colorText: Colors.white,
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Anda harus login untuk melanjutkan.'),
+            backgroundColor: Colors.red.withOpacity(0.8),
+          ),
         );
       }
     });
+    
+    // Toggle obscure text saat pertama kali
+    context.read<AuthBloc>().add(const ToggleObscureTextEvent());
   }
 
   @override
   Widget build(BuildContext context) {
-    authController.toggleObscureText();
     return Scaffold(
       backgroundColor: Colors.grey.shade300,
       body: Stack(
@@ -82,102 +83,108 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 height: 700,
                 width: 600,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Login Page',
-                      style: StyleConstant.customTextStyle.copyWith(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      'Masukan Email dan Password untuk melanjutkan',
-                      style: StyleConstant.customTextStyle.copyWith(
-                        fontSize: 16,
-                      ),
-                    ),
-                    // Spacer(),
-                    SizedBox(height: 40),
-                    CustomTextForm(
-                      controller: emailController,
-                      title: 'Email',
-                      hintText: 'johnDoe@mail.com',
-                      isRequired: true,
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    SizedBox(height: 20),
-                    Obx(
-                      () => CustomTextForm(
-                        controller: passwordController,
-                        title: 'Password',
-                        hintText: '***********',
-                        isRequired: true,
-                        obscureText: authController.obscureText,
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            authController.toggleObscureText();
-                          },
-                          icon: Icon(
-                            !authController.obscureText
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                          ),
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 40),
-
-                    BasicButton(
-                      onPressed: () async {
-                        print('Login pressed');
-                        if (emailController.text.isEmpty ||
-                            passwordController.text.isEmpty) {
-                          print('Email or Password is empty');
-                          Get.snackbar(
-                            'Error',
-                            'Email dan password harus diisi',
-                            snackPosition: SnackPosition.TOP,
-                            backgroundColor: Colors.red.withOpacity(0.8),
-                            colorText: Colors.white,
-                          );
-                        } else {
-                          await authController.login(
-                            email: emailController.text,
-                            password: passwordController.text,
-                          );
-
-                          // Jika login berhasil, cek status dan refresh router
-                          if (authController.isLoggedIn.value) {
-                            print(
-                              'Login successful, navigating to dashboard...',
-                           );
-                            context.go(RouteConstant.dashboardPath);
-                          }
-                        }
-                      },
-                      label: 'Login',
-                    ),
-                    SizedBox(height: 30),
-                    Row(
+                child: BlocConsumer<AuthBloc, AuthState>(
+                  listener: (context, state) {
+                    // Navigate to dashboard ketika login berhasil
+                    if (state.isLoggedIn && state.successMessage != null) {
+                      print('Login successful, navigating to dashboard...');
+                      context.go(RouteConstant.dashboardPath);
+                    }
+                  },
+                  builder: (context, state) {
+                    return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          'Belum punya akun?',
-                          style: StyleConstant.customTextStyle,
+                          'Login Page',
+                          style: StyleConstant.customTextStyle.copyWith(
+                            fontSize: 30,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
-                        TextButton(
-                          onPressed: () {
-                            context.goNamed(RouteConstant.registerName);
-                          },
-                          child: Text('Daftar disini'),
+                        SizedBox(height: 10),
+                        Text(
+                          'Masukan Email dan Password untuk melanjutkan',
+                          style: StyleConstant.customTextStyle.copyWith(
+                            fontSize: 16,
+                          ),
+                        ),
+                        SizedBox(height: 40),
+                        CustomTextForm(
+                          controller: emailController,
+                          title: 'Email',
+                          hintText: 'johnDoe@mail.com',
+                          isRequired: true,
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        SizedBox(height: 20),
+                        CustomTextForm(
+                          controller: passwordController,
+                          title: 'Password',
+                          hintText: '***********',
+                          isRequired: true,
+                          obscureText: state.obscureText,
+                          suffixIcon: IconButton(
+                            onPressed: () {
+                              context.read<AuthBloc>().add(
+                                    const ToggleObscureTextEvent(),
+                                  );
+                            },
+                            icon: Icon(
+                              !state.obscureText
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 40),
+                        BasicButton(
+                          onPressed: state.isLoading
+                              ? null
+                              : () async {
+                                  print('Login pressed');
+                                  if (emailController.text.isEmpty ||
+                                      passwordController.text.isEmpty) {
+                                    print('Email or Password is empty');
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Email dan password harus diisi',
+                                        ),
+                                        backgroundColor:
+                                            Colors.red.withOpacity(0.8),
+                                      ),
+                                    );
+                                  } else {
+                                    context.read<AuthBloc>().add(
+                                          LoginEvent(
+                                            email: emailController.text,
+                                            password: passwordController.text,
+                                          ),
+                                        );
+                                  }
+                                },
+                          label: state.isLoading ? 'Loading...' : 'Login',
+                        ),
+                        SizedBox(height: 30),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              'Belum punya akun?',
+                              style: StyleConstant.customTextStyle,
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                context.goNamed(RouteConstant.registerName);
+                              },
+                              child: Text('Daftar disini'),
+                            ),
+                          ],
                         ),
                       ],
-                    ),
-                    // Spacer(),
-                  ],
+                    );
+                  },
                 ),
               ),
             ),

@@ -1,27 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/constant/style_constant.dart';
-import 'package:frontend/presentation/get/auth/auth_controller.dart';
+import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/pages/auth/login_page.dart';
 import 'package:frontend/presentation/pages/auth/register_page.dart';
 import 'package:frontend/presentation/pages/dashboard/dashboard.dart';
 import 'package:frontend/presentation/widget/sidebar.dart';
-import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRouter {
-  late final AuthController authController;
+  late final AuthBloc authBloc;
 
-  AppRouter() {
-    authController = Get.find<AuthController>();
-  }
+  AppRouter({required this.authBloc});
 
   late final GoRouter router = GoRouter(
     initialLocation: RouteConstant.rootPath,
-    refreshListenable: authController
-        .loginStatusNotifier, // Notifier untuk perubahan status login
+    refreshListenable: authBloc.loginStatusNotifier,
     redirect: (context, state) {
-      bool isLoggedIn = authController.isLoggedIn.value;
+      bool isLoggedIn = authBloc.state.isLoggedIn;
 
       print(
         'Router redirect - isLoggedIn: $isLoggedIn, path: ${state.path}, fullPath: ${state.fullPath}',
