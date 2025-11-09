@@ -33,7 +33,7 @@ class CustomTextForm extends StatelessWidget {
             text: title,
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
 
-            children: isRequired
+          children: isRequired
                 ? [
                     TextSpan(
                       text: ' *',

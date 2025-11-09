@@ -42,6 +42,7 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    authController.toggleObscureText();
     return Scaffold(
       backgroundColor: Colors.grey.shade300,
       body: Stack(
@@ -152,8 +153,8 @@ class _LoginPageState extends State<LoginPage> {
                           if (authController.isLoggedIn.value) {
                             print(
                               'Login successful, navigating to dashboard...',
-                            );
-                            context.go('/dashboard');
+                           );
+                            context.go(RouteConstant.dashboardPath);
                           }
                         }
                       },
