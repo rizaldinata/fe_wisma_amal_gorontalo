@@ -51,6 +51,25 @@ class AppException implements Exception {
   static String _parseServerMessage(dynamic data, int? statusCode) {
     // Kalau response-nya JSON dari API, coba ekstrak pesan error-nya
     if (data is Map<String, dynamic>) {
+      // Handle format: {"status":"Error","message":"Validation Error","data":{"email":["..."]}}
+      if (data.containsKey('data') && data['data'] is Map<String, dynamic>) {
+        final errorData = data['data'] as Map<String, dynamic>;
+        
+        // Ambil field pertama yang ada error
+        if (errorData.isNotEmpty) {
+          final firstKey = errorData.keys.first;
+          final firstError = errorData[firstKey];
+          
+          if (firstError is List && firstError.isNotEmpty) {
+            // Format: {"email": ["The email has already been taken."]}
+            return firstError.first.toString();
+          } else if (firstError is String) {
+            return firstError;
+          }
+        }
+      }
+      
+      // Handle format standard lainnya
       if (data.containsKey('message')) return data['message'].toString();
       if (data.containsKey('error')) return data['error'].toString();
       if (data.containsKey('errors')) {

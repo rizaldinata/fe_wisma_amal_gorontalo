@@ -1,44 +1,46 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/constant/style_constant.dart';
-import 'package:frontend/presentation/get/auth/auth_controller.dart';
+import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/pages/auth/login_page.dart';
 import 'package:frontend/presentation/pages/auth/register_page.dart';
 import 'package:frontend/presentation/pages/dashboard/dashboard.dart';
 import 'package:frontend/presentation/widget/sidebar.dart';
-import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRouter {
-  late final AuthController authController;
-  
-  AppRouter() {
-    authController = Get.find<AuthController>();
-  }
-  
+  late final AuthBloc authBloc;
+
+  AppRouter({required this.authBloc});
+
   late final GoRouter router = GoRouter(
     initialLocation: RouteConstant.rootPath,
-    refreshListenable: authController.loginStatusNotifier, // Notifier untuk perubahan status login
+    refreshListenable: authBloc.loginStatusNotifier,
     redirect: (context, state) {
-      bool isLoggedIn = authController.isLoggedIn.value;
-      
-      print('Router redirect - isLoggedIn: $isLoggedIn, path: ${state.path}');
-      
+      bool isLoggedIn = authBloc.state.isLoggedIn;
+
+      print(
+        'Router redirect - isLoggedIn: $isLoggedIn, path: ${state.path}, fullPath: ${state.fullPath}',
+      );
       if (!isLoggedIn &&
-          state.path != RouteConstant.loginPath &&
-          state.path != RouteConstant.registerPath) {
+          (state.fullPath != RouteConstant.loginPath ||
+              state.fullPath != RouteConstant.registerPath)) {
         print('Redirecting to login because not logged in');
+        if (state.fullPath == RouteConstant.loginPath ||
+            state.fullPath == RouteConstant.registerPath) {
+          return state.path;
+        }
         return RouteConstant.loginPath;
       }
 
       if (isLoggedIn &&
-          (state.path == RouteConstant.loginPath ||
-              state.path == RouteConstant.registerPath ||
-              state.path == RouteConstant.rootPath)) {
+          (state.fullPath == RouteConstant.loginPath ||
+              state.fullPath == RouteConstant.registerPath ||
+              state.fullPath == RouteConstant.rootPath)) {
         print('Redirecting to dashboard because logged in');
         return RouteConstant.dashboardPath;
       }
-      
+
       print('No redirect needed');
       return null;
     },

@@ -10,6 +10,7 @@ class CustomTextForm extends StatelessWidget {
     this.keyboardType = TextInputType.text,
     this.fillColor = Colors.white,
     this.controller,
+    this.suffixIcon,
     this.validator,
   });
   final Color? fillColor;
@@ -20,6 +21,7 @@ class CustomTextForm extends StatelessWidget {
   final TextInputType keyboardType;
   final TextEditingController? controller;
   final String? Function(String?)? validator;
+  final Widget? suffixIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +33,7 @@ class CustomTextForm extends StatelessWidget {
             text: title,
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
 
-            children: isRequired
+          children: isRequired
                 ? [
                     TextSpan(
                       text: ' *',
@@ -50,10 +52,12 @@ class CustomTextForm extends StatelessWidget {
           obscureText: obscureText,
           keyboardType: keyboardType,
           validator: validator,
+          
           decoration: InputDecoration(
             filled: (fillColor != null),
             fillColor: fillColor,
             hintText: hintText,
+            suffixIcon: suffixIcon,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
           ),

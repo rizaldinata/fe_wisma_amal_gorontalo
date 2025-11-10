@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/core/constant/route_constant.dart';
-import 'package:frontend/presentation/get/auth/auth_controller.dart';
-import 'package:get/get.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend/presentation/bloc/auth/auth_event.dart';
+import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:go_router/go_router.dart';
 
 class SidebarItem {
@@ -15,8 +16,6 @@ class SidebarItem {
 class CustomSidebar extends StatelessWidget {
   final String currentRoute;
   final List<SidebarItem> items;
-
-  var authController = Get.find<AuthController>();
 
   CustomSidebar({super.key, required this.currentRoute, required this.items});
 
@@ -60,14 +59,13 @@ class CustomSidebar extends StatelessWidget {
           const Spacer(),
 
           // Profile
-          GetBuilder(
-            init: authController,
-            initState: (state) {
-              if (authController.userInfo.value.id == null) {
-                authController.getUserInfo();
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              // Load user info if not loaded yet
+              if (state.userInfo == null || state.userInfo?.id == null) {
+                context.read<AuthBloc>().add(const GetUserInfoEvent());
               }
-            },
-            builder: (context) {
+              
               return Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: InkWell(
@@ -80,18 +78,24 @@ class CustomSidebar extends StatelessWidget {
                     ),
                     child: Row(
                       children: [
-                        const CircleAvatar(radius: 16, child: Icon(Icons.person)),
+                        const CircleAvatar(
+                          radius: 16,
+                          child: Icon(Icons.person),
+                        ),
                         const SizedBox(width: 8),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              authController.userInfo.value.name ?? "User Name",
+                              state.userInfo?.name ?? "User Name",
                               style: TextStyle(fontWeight: FontWeight.w500),
                             ),
                             Text(
-                              authController.userInfo.value.selectedRoles ?? "No Role",
-                              style: TextStyle(fontSize: 12, color: Colors.grey),
+                              state.userInfo?.roles?.join(', ') ?? "No Role",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                             ),
                           ],
                         ),
@@ -100,15 +104,15 @@ class CustomSidebar extends StatelessWidget {
                   ),
                 ),
               );
-            }
+            },
           ),
 
           ListTile(
             leading: const Icon(Icons.logout, size: 20),
             title: const Text("Log out"),
             onTap: () {
-              authController.logout();
-              context.goNamed(RouteConstant.loginName);
+              // Hanya dispatch event, biarkan router yang handle redirect
+              context.read<AuthBloc>().add(const LogoutEvent());
             },
           ),
         ],

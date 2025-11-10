@@ -1,18 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/constant/style_constant.dart';
-import 'package:frontend/presentation/get/auth/auth_controller.dart';
+import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend/presentation/bloc/auth/auth_event.dart';
+import 'package:frontend/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend/presentation/widget/app_snackbar.dart';
 import 'package:frontend/presentation/widget/button.dart';
 import 'package:frontend/presentation/widget/textform.dart';
-import 'package:get/get.dart';
 import 'package:go_router/go_router.dart';
 
 class RegisterPage extends StatelessWidget {
   RegisterPage({super.key});
-  var authController = Get.find<AuthController>();
+
+  final _formKey = GlobalKey<FormState>();
+
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController passwordConfirmController =
+      TextEditingController();
 
   @override
   Widget build(BuildContext context) {
+    // Toggle obscure text saat pertama kali
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<AuthBloc>().add(const ToggleObscureTextEvent());
+    });
+
     return Scaffold(
       backgroundColor: Colors.grey.shade300,
       body: Stack(
@@ -36,7 +51,7 @@ class RegisterPage extends StatelessWidget {
           ),
           Center(
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 700),
+              constraints: BoxConstraints(maxWidth: 700, maxHeight: 1000),
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 30, horizontal: 40),
                 decoration: BoxDecoration(
@@ -50,72 +65,162 @@ class RegisterPage extends StatelessWidget {
                     ),
                   ],
                 ),
-                height: 700,
+                // height: 700,
                 width: 600,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Register Page',
-                      style: StyleConstant.customTextStyle.copyWith(
-                        fontSize: 30,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Text(
-                      'Masukan Email dan Password untuk melanjutkan',
-                      style: StyleConstant.customTextStyle.copyWith(
-                        fontSize: 16,
-                      ),
-                    ),
-                    // Spacer(),
-                    SizedBox(height: 40),
-                    CustomTextForm(
-                      title: 'Email',
-                      hintText: 'johnDoe@mail.com',
-                      isRequired: true,
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    SizedBox(height: 20),
-                    CustomTextForm(
-                      title: 'Password',
-                      hintText: '***********',
-                      isRequired: true,
-                    ),
-                    SizedBox(height: 20),
-                    CustomTextForm(
-                      title: 'konfirmasi Password',
-                      hintText: '***********',
-                      isRequired: true,
-                    ),
-                    SizedBox(height: 40),
+                child: BlocConsumer<AuthBloc, AuthState>(
+                  listener: (context, state) {
+                    // Navigate to dashboard ketika register berhasil
+                    if (state.isLoggedIn && state.successMessage != null) {
+                      print('Register successful, navigating to dashboard...');
+                      context.go(RouteConstant.dashboardPath);
+                    }
+                  },
+                  builder: (context, state) {
+                    return Form(
+                      key: _formKey,
+                      autovalidateMode: AutovalidateMode.onUnfocus,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Register Page',
+                            style: StyleConstant.customTextStyle.copyWith(
+                              fontSize: 30,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          SizedBox(height: 10),
+                          Text(
+                            'Daftar akun baru untuk melanjutkan',
+                            style: StyleConstant.customTextStyle.copyWith(
+                              fontSize: 16,
+                            ),
+                          ),
+                          SizedBox(height: 30),
+                          CustomTextForm(
+                            controller: usernameController,
+                            title: 'Username',
+                            hintText: 'John Doe',
+                            isRequired: true,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Username tidak boleh kosong';
+                              }
 
-                    BasicButton(
-                      onPressed: () {
-                        // authController.login();
-                        context.goNamed(RouteConstant.dashboardName);
-                      },
-                      label: 'Login',
-                    ),
-                    SizedBox(height: 30),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Sudah punya akun?',
-                          style: StyleConstant.customTextStyle,
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            context.goNamed(RouteConstant.loginName);
-                          },
-                          child: Text('Login disini'),
-                        ),
-                      ],
-                    ),
-                    // Spacer(),
-                  ],
+                              return null;
+                            },
+                          ),
+                          SizedBox(height: 20),
+                          CustomTextForm(
+                            controller: emailController,
+                            title: 'Email',
+                            hintText: 'johnDoe@mail.com',
+                            isRequired: true,
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Email tidak boleh kosong';
+                              }
+                              if (!RegExp(
+                                r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$',
+                              ).hasMatch(value)) {
+                                return 'Format email tidak valid';
+                              }
+                              return null;
+                            },
+                          ),
+                          SizedBox(height: 20),
+                          CustomTextForm(
+                            controller: passwordController,
+                            title: 'Password',
+                            hintText: '***********',
+                            isRequired: true,
+                            obscureText: state.obscureText,
+                            suffixIcon: IconButton(
+                              onPressed: () {
+                                context.read<AuthBloc>().add(
+                                  const ToggleObscureTextEvent(),
+                                );
+                              },
+                              icon: Icon(
+                                !state.obscureText
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Password tidak boleh kosong';
+                              }
+                              if (value.length < 6) {
+                                return 'Password minimal 6 karakter';
+                              }
+                              return null;
+                            },
+                          ),
+                          SizedBox(height: 20),
+                          CustomTextForm(
+                            controller: passwordConfirmController,
+                            title: 'Konfirmasi Password',
+                            hintText: '***********',
+                            isRequired: true,
+                            obscureText: state.obscureText,
+                            validator: (value) {
+                              if (value != passwordController.text) {
+                                return 'Password tidak cocok';
+                              }
+                              return null;
+                            },
+                          ),
+                          SizedBox(height: 30),
+                          BasicButton(
+                            onPressed: state.isLoading
+                                ? null
+                                : () async {
+                                    // Jalankan validator
+                                    if (_formKey.currentState?.validate() ??
+                                        false) {
+                                      // Kalau valid, kirim event register
+                                      context.read<AuthBloc>().add(
+                                        RegisterEvent(
+                                          username: usernameController.text,
+                                          email: emailController.text,
+                                          password: passwordController.text,
+                                          passwordConfirm:
+                                              passwordConfirmController.text,
+                                        ),
+                                      );
+                                      context.go(RouteConstant.loginPath);
+                                    } else {
+                                      // Kalau tidak valid, tampilkan snackbar error
+                                      AppSnackbar.showError(
+                                        'Periksa kembali data yang kamu masukkan',
+                                      );
+                                    }
+                                  },
+                            label: state.isLoading ? 'Loading...' : 'Register',
+                          ),
+                          SizedBox(height: 30),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Sudah punya akun?',
+                                style: StyleConstant.customTextStyle,
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  context.go(RouteConstant.loginPath);
+                                },
+                                child: Text('Login disini'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

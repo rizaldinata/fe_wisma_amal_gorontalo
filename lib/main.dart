@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
-import 'package:frontend/core/services/storage/shared_prefrence.dart';
-import 'package:frontend/data/datasource/auth_datasource.dart';
-import 'package:frontend/presentation/get/auth/auth_controller.dart';
-import 'package:get/get.dart';
+import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 
 import 'core/navigation/go_router.dart';
 
@@ -14,12 +12,6 @@ Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   
   await initializeDependencies();
-  
-  // Inisialisasi AuthController sebelum router
-  Get.put(AuthController(
-    auth: serviceLocator<AuthDatasource>(),
-    storage: serviceLocator<SharedPrefsStorage>(),
-  ));
  
   runApp(MyApp());
 }
@@ -29,15 +21,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      title: 'Wisma Amal',
-      scaffoldMessengerKey: rootScaffoldMessengerKey,
-      theme: ThemeData(
-        primaryColor: Colors.blue,
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+    final authBloc = serviceLocator<AuthBloc>();
+    
+    return BlocProvider.value(
+      value: authBloc,
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        title: 'Wisma Amal',
+        scaffoldMessengerKey: rootScaffoldMessengerKey,
+        theme: ThemeData(
+          primaryColor: Colors.blue,
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        ),
+        routerConfig: AppRouter(authBloc: authBloc).router,
       ),
-      routerConfig: AppRouter().router,
     );
   }
 }
