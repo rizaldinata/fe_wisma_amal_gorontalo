@@ -30,7 +30,7 @@ jobs:
       # 4. Membangun aplikasi Flutter web
       # PENTING: Ganti <nama-repositori> dengan nama repo Anda!
       - name: Build Flutter web
-        run: flutter build web --base-href /
+        run: flutter build web --base-href "/fe_wisma_amal_gorontalo/
 
       # 5. Menerapkan hasil build ke branch 'gh-pages'
       - name: Deploy to GitHub Pages
