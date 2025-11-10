@@ -52,3 +52,8 @@ class GetUserInfoEvent extends AuthEvent {
 class ToggleObscureTextEvent extends AuthEvent {
   const ToggleObscureTextEvent();
 }
+
+
+class ResetStateEvent extends AuthEvent {
+  const ResetStateEvent();
+}

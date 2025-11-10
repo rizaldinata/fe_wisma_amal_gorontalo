@@ -22,7 +22,8 @@ class PrettyDioLogger extends Interceptor {
 🧾 Body : ${options.data}
 \x1B[33m================\x1B[0m
 ''');
-    super.onRequest(options, handler);
+    // super.onRequest(options, handler);
+    return handler.next(options);
   }
 
   @override
@@ -36,11 +37,12 @@ class PrettyDioLogger extends Interceptor {
 \x1B[32m================\x1B[0m
       ''');
     }
-    super.onResponse(response, handler);
+    // super.onResponse(response, handler);
+     return handler.next(response);
   }
 
   @override
-  void onError(DioError err, ErrorInterceptorHandler handler) {
+  void onError(DioException err, ErrorInterceptorHandler handler) {
     if (kDebugMode) {
       logger.e('''
 \x1B[31m=== ERROR ===\x1B[0m
@@ -51,7 +53,8 @@ class PrettyDioLogger extends Interceptor {
 \x1B[31m==============\x1B[0m
 ''');
     }
-    super.onError(err, handler);
+    // super.onError(err, handler);
+    return handler.next(err);
   }
 
   String _prettyJson(dynamic data) {
@@ -59,7 +62,11 @@ class PrettyDioLogger extends Interceptor {
       if (data is String) {
         return _encoder.convert(json.decode(data));
       }
-      return _encoder.convert(data);
+      if (data is Map || data is List) {
+        return _encoder.convert(data);
+      }
+      // fallback aman untuk tipe selain Map/List
+      return data.toString();
     } catch (e) {
       return data.toString();
     }

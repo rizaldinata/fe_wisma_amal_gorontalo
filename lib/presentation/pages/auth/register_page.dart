@@ -5,6 +5,7 @@ import 'package:frontend/core/constant/style_constant.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend/presentation/widget/app_snackbar.dart';
 import 'package:frontend/presentation/widget/button.dart';
 import 'package:frontend/presentation/widget/textform.dart';
 import 'package:go_router/go_router.dart';
@@ -26,7 +27,7 @@ class RegisterPage extends StatelessWidget {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AuthBloc>().add(const ToggleObscureTextEvent());
     });
-    
+
     return Scaffold(
       backgroundColor: Colors.grey.shade300,
       body: Stack(
@@ -64,7 +65,7 @@ class RegisterPage extends StatelessWidget {
                     ),
                   ],
                 ),
-                height: 700,
+                // height: 700,
                 width: 600,
                 child: BlocConsumer<AuthBloc, AuthState>(
                   listener: (context, state) {
@@ -77,8 +78,10 @@ class RegisterPage extends StatelessWidget {
                   builder: (context, state) {
                     return Form(
                       key: _formKey,
+                      autovalidateMode: AutovalidateMode.onUnfocus,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(
                             'Register Page',
@@ -100,6 +103,13 @@ class RegisterPage extends StatelessWidget {
                             title: 'Username',
                             hintText: 'John Doe',
                             isRequired: true,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Username tidak boleh kosong';
+                              }
+
+                              return null;
+                            },
                           ),
                           SizedBox(height: 20),
                           CustomTextForm(
@@ -108,6 +118,17 @@ class RegisterPage extends StatelessWidget {
                             hintText: 'johnDoe@mail.com',
                             isRequired: true,
                             keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Email tidak boleh kosong';
+                              }
+                              if (!RegExp(
+                                r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$',
+                              ).hasMatch(value)) {
+                                return 'Format email tidak valid';
+                              }
+                              return null;
+                            },
                           ),
                           SizedBox(height: 20),
                           CustomTextForm(
@@ -119,8 +140,8 @@ class RegisterPage extends StatelessWidget {
                             suffixIcon: IconButton(
                               onPressed: () {
                                 context.read<AuthBloc>().add(
-                                      const ToggleObscureTextEvent(),
-                                    );
+                                  const ToggleObscureTextEvent(),
+                                );
                               },
                               icon: Icon(
                                 !state.obscureText
@@ -128,6 +149,15 @@ class RegisterPage extends StatelessWidget {
                                     : Icons.visibility,
                               ),
                             ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Password tidak boleh kosong';
+                              }
+                              if (value.length < 6) {
+                                return 'Password minimal 6 karakter';
+                              }
+                              return null;
+                            },
                           ),
                           SizedBox(height: 20),
                           CustomTextForm(
@@ -136,55 +166,37 @@ class RegisterPage extends StatelessWidget {
                             hintText: '***********',
                             isRequired: true,
                             obscureText: state.obscureText,
+                            validator: (value) {
+                              if (value != passwordController.text) {
+                                return 'Password tidak cocok';
+                              }
+                              return null;
+                            },
                           ),
                           SizedBox(height: 30),
                           BasicButton(
                             onPressed: state.isLoading
                                 ? null
                                 : () async {
-                                    print('Register pressed');
-                                    if (emailController.text.isEmpty ||
-                                        usernameController.text.isEmpty ||
-                                        passwordController.text.isEmpty ||
-                                        passwordConfirmController
-                                            .text.isEmpty) {
-                                      print('Field is empty');
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Semua field harus diisi',
-                                          ),
-                                          backgroundColor:
-                                              Colors.red.withOpacity(0.8),
-                                        ),
-                                      );
-                                    } else if (passwordController.text !=
-                                        passwordConfirmController.text) {
-                                      print('Password not match');
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Password tidak cocok',
-                                          ),
-                                          backgroundColor:
-                                              Colors.red.withOpacity(0.8),
-                                        ),
-                                      );
-                                    } else {
+                                    // Jalankan validator
+                                    if (_formKey.currentState?.validate() ??
+                                        false) {
+                                      // Kalau valid, kirim event register
                                       context.read<AuthBloc>().add(
-                                            RegisterEvent(
-                                              username:
-                                                  usernameController.text,
-                                              email: emailController.text,
-                                              password:
-                                                  passwordController.text,
-                                              passwordConfirm:
-                                                  passwordConfirmController
-                                                      .text,
-                                            ),
-                                          );
+                                        RegisterEvent(
+                                          username: usernameController.text,
+                                          email: emailController.text,
+                                          password: passwordController.text,
+                                          passwordConfirm:
+                                              passwordConfirmController.text,
+                                        ),
+                                      );
+                                      context.go(RouteConstant.loginPath);
+                                    } else {
+                                      // Kalau tidak valid, tampilkan snackbar error
+                                      AppSnackbar.showError(
+                                        'Periksa kembali data yang kamu masukkan',
+                                      );
                                     }
                                   },
                             label: state.isLoading ? 'Loading...' : 'Register',
@@ -199,7 +211,7 @@ class RegisterPage extends StatelessWidget {
                               ),
                               TextButton(
                                 onPressed: () {
-                                  context.goNamed(RouteConstant.loginName);
+                                  context.go(RouteConstant.loginPath);
                                 },
                                 child: Text('Login disini'),
                               ),

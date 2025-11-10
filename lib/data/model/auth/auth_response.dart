@@ -12,8 +12,4 @@ class AuthResponse {
       user: (json['user'] != null) ? UserModel.fromJson(json['user']) : null,
     );
   }
-
-  //Map<String, dynamic> toJson() {
-  //  return {'token': token, 'user': user.toJson()};
-  // }
 }

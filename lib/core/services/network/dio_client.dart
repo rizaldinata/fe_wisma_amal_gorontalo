@@ -29,10 +29,10 @@ class DioClient {
 
     _dio.interceptors.clear();
     _dio.interceptors.add(apiInterceptor);
+    _dio.interceptors.add(PrettyDioLogger());
     _dio.interceptors.add(
       LogInterceptor(requestBody: true, responseBody: true),
     );
-    _dio.interceptors.add(PrettyDioLogger());
   }
 
   // =====================
@@ -120,5 +120,63 @@ class DioClient {
     } catch (e) {
       throw AppException.other(e);
     }
+  }
+
+  // =====================
+  // HTTP methods without exception handling
+  // =====================
+
+  Future<Response<T>> getWithoutException<T>(
+    String path, {
+    Map<String, dynamic>? queryParams,
+    Options? options,
+  }) async {
+    return await _dio.get<T>(
+      path,
+      queryParameters: queryParams,
+      options: options,
+    );
+  }
+
+  Future<Response<T>> postWithoutException<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParams,
+    Options? options,
+  }) async {
+    return await _dio.post<T>(
+      path,
+      data: data,
+      queryParameters: queryParams,
+      options: options,
+    );
+  }
+
+  Future<Response<T>> putWithoutException<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParams,
+    Options? options,
+  }) async {
+    return await _dio.put<T>(
+      path,
+      data: data,
+      queryParameters: queryParams,
+      options: options,
+    );
+  }
+
+  Future<Response<T>> deleteWithoutException<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParams,
+    Options? options,
+  }) async {
+    return await _dio.delete<T>(
+      path,
+      data: data,
+      queryParameters: queryParams,
+      options: options,
+    );
   }
 }
