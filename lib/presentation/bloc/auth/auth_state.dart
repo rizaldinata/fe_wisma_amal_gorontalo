@@ -1,29 +1,28 @@
 import 'package:equatable/equatable.dart';
 import 'package:frontend/data/model/auth/user_model.dart';
 import 'package:frontend/domain/entity/user_entity.dart';
+import 'package:formz/formz.dart';
 
 class AuthState extends Equatable {
   final bool isLoggedIn;
   final UserEntity? userInfo;
   final bool obscureText;
-  final bool isLoading;
+  final FormzSubmissionStatus status;
   final String? errorMessage;
-  final String? successMessage;
 
   const AuthState({
     this.isLoggedIn = false,
     this.userInfo,
     this.obscureText = true,
-    this.isLoading = false,
+    this.status = FormzSubmissionStatus.initial,
     this.errorMessage,
-    this.successMessage,
   });
 
   AuthState copyWith({
     bool? isLoggedIn,
     UserEntity? userInfo,
     bool? obscureText,
-    bool? isLoading,
+    FormzSubmissionStatus? status,
     String? errorMessage,
     String? successMessage,
   }) {
@@ -31,9 +30,8 @@ class AuthState extends Equatable {
       isLoggedIn: isLoggedIn ?? this.isLoggedIn,
       userInfo: userInfo ?? this.userInfo,
       obscureText: obscureText ?? this.obscureText,
-      isLoading: isLoading ?? this.isLoading,
+      status: status ?? this.status,
       errorMessage: errorMessage,
-      successMessage: successMessage,
     );
   }
 
@@ -42,8 +40,7 @@ class AuthState extends Equatable {
     isLoggedIn,
     userInfo,
     obscureText,
-    isLoading,
+    status,
     errorMessage,
-    successMessage,
   ];
 }

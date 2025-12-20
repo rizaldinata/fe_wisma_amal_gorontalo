@@ -18,7 +18,9 @@ class AppLayoutPage extends StatelessWidget {
             currentRoute: context.router.current.name,
             items: [
               SidebarItem(
-                onTap: () {},
+                onTap: () {
+                  // context.router.replace(DashboardRoute());
+                },
                 label: RouteConstant.dashboardName,
                 icon: Icons.dashboard,
               ),
@@ -30,7 +32,8 @@ class AppLayoutPage extends StatelessWidget {
               ),
             ],
           ),
-          Expanded(child: AutoRouter()),
+          // Expanded(child: AutoRouter()),
+          Expanded(child: Placeholder()),
         ],
       ),
     );

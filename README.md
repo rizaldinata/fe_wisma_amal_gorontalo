@@ -2,6 +2,30 @@
 
 Aplikasi mobile untuk manajemen Wisma Amal Gorontalo.
 
+## 🏗️ Architecture
+
+Project ini menggunakan **Semi-Clean Architecture** dengan pendekatan pragmatis untuk development yang lebih cepat:
+
+### Karakteristik:
+- ✅ Separation of concerns (presentation, data, domain)
+- ✅ BLoC pattern untuk state management
+- ✅ Dependency injection dengan GetIt
+- ❌ **Tidak ada abstraksi/interface** (langsung concrete implementation)
+- ❌ **Repository hanya ada di layer Data**
+
+### Flow Data:
+```
+UI (Presentation) → BLoC → Repository (Data) → DataSource → API/Local
+                      ↓
+                   Entity (Domain)
+```
+
+### Keuntungan Semi-Clean:
+- ⚡ Development lebih cepat (less boilerplate)
+- 🎯 Lebih simple untuk project skala kecil-menengah
+- 📝 Tetap maintainable dengan separation of concerns
+- 🔄 Mudah di-refactor ke full Clean Architecture jika diperlukan
+
 ## 📋 Project Structure
 
 ```
@@ -14,8 +38,8 @@ lib/
 │   └── theme/              # Theme configuration
 ├── data/
 │   ├── datasource/         # Data sources (API, Local)
-│   ├── model/              # Data models
-│   └── repository/         # Repository implementation
+│   ├── model/              # Data models (DTO)
+│   └── repository/         # Repository implementation (langsung concrete)
 ├── domain/
 │   └── entity/             # Business entities
 └── presentation/
@@ -23,6 +47,30 @@ lib/
     ├── pages/              # UI pages
     └── widget/             # Reusable widgets
 ```
+
+### Layer Explanation:
+
+#### 1️⃣ **Presentation Layer**
+- **Pages**: UI screens
+- **Widgets**: Reusable components
+- **BLoC**: Business logic & state management
+- Bertanggung jawab untuk UI dan user interaction
+
+#### 2️⃣ **Data Layer**
+- **DataSource**: Komunikasi dengan external sources (API, Database)
+- **Model**: DTO (Data Transfer Object) dengan JSON serialization
+- **Repository**: Bridge antara DataSource dan BLoC (concrete class, no interface)
+- Bertanggung jawab untuk data management
+
+#### 3️⃣ **Domain Layer**
+- **Entity**: Plain Dart objects, business model
+- Pure Dart, no dependencies
+- Digunakan untuk transfer data antar layer
+
+#### 4️⃣ **Core Layer**
+- Shared utilities, constants, themes
+- Dependency injection setup
+- Navigation configuration
 
 ## 🚀 Getting Started
 
@@ -78,11 +126,13 @@ flutter run
 ## ✅ TODO List
 
 ### Authentication
-- [x] Setup project structure
+- [v] Setup project structure
 - [ ] Implement theme system
-- [x] Login page
-- [x] Auth Guard
-- [x] Register page
+- [v] Login page
+- [v] Auth Guard
+- [v] Register page
+- [v] save token in secure storage
+- [ ] form validation
 - [ ] Forgot password
 - [ ] Token management
 

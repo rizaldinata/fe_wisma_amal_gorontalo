@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:frontend/core/constant/route_constant.dart';
+import 'package:formz/formz.dart';
 import 'package:frontend/core/constant/style_constant.dart';
+import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend/presentation/widget/core/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/button.dart';
 import 'package:frontend/presentation/widget/core/textform.dart';
-import 'package:go_router/go_router.dart';
 import 'package:auto_route/auto_route.dart';
 
 @RoutePage()
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({super.key, @QueryParam('reason') this.reason});
+
+  final String? reason;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -27,10 +30,7 @@ class _LoginPageState extends State<LoginPage> {
     super.initState();
     // Tampilkan SnackBar setelah widget selesai di-build
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // Ambil query parameter dari state router
-      final reason = GoRouterState.of(context).uri.queryParameters['reason'];
-
-      if (reason == 'unauthenticated') {
+      if (widget.reason == 'unauthenticated') {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Anda harus login untuk melanjutkan.'),
@@ -39,7 +39,7 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
     });
-    
+
     // Toggle obscure text saat pertama kali
     context.read<AuthBloc>().add(const ToggleObscureTextEvent());
   }
@@ -87,10 +87,18 @@ class _LoginPageState extends State<LoginPage> {
                 width: 600,
                 child: BlocConsumer<AuthBloc, AuthState>(
                   listener: (context, state) {
+                    if (state.status.isFailure) {
+                      AppSnackbar.showError(
+                        state.errorMessage ?? 'Login failed',
+                      );
+                    }
                     // Navigate to dashboard ketika login berhasil
-                    if (state.isLoggedIn && state.successMessage != null) {
+                    if (state.isLoggedIn && state.errorMessage == null) {
                       print('Login successful, navigating to dashboard...');
-                      context.go(RouteConstant.dashboardPath);
+                      context.router.pushAndPopUntil(
+                        AppLayoutRoute(),
+                        predicate: (_) => false,
+                      );
                     }
                   },
                   builder: (context, state) {
@@ -129,8 +137,8 @@ class _LoginPageState extends State<LoginPage> {
                           suffixIcon: IconButton(
                             onPressed: () {
                               context.read<AuthBloc>().add(
-                                    const ToggleObscureTextEvent(),
-                                  );
+                                const ToggleObscureTextEvent(),
+                              );
                             },
                             icon: Icon(
                               !state.obscureText
@@ -141,7 +149,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         SizedBox(height: 40),
                         BasicButton(
-                          onPressed: state.isLoading
+                          onPressed: state.status.isInProgress
                               ? null
                               : () async {
                                   print('Login pressed');
@@ -153,20 +161,23 @@ class _LoginPageState extends State<LoginPage> {
                                         content: Text(
                                           'Email dan password harus diisi',
                                         ),
-                                        backgroundColor:
-                                            Colors.red.withOpacity(0.8),
+                                        backgroundColor: Colors.red.withOpacity(
+                                          0.8,
+                                        ),
                                       ),
                                     );
                                   } else {
                                     context.read<AuthBloc>().add(
-                                          LoginEvent(
-                                            email: emailController.text,
-                                            password: passwordController.text,
-                                          ),
-                                        );
+                                      LoginEvent(
+                                        email: emailController.text,
+                                        password: passwordController.text,
+                                      ),
+                                    );
                                   }
                                 },
-                          label: state.isLoading ? 'Loading...' : 'Login',
+                          label: state.status.isInProgress
+                              ? 'Loading...'
+                              : 'Login',
                         ),
                         SizedBox(height: 30),
                         Row(
@@ -178,7 +189,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             TextButton(
                               onPressed: () {
-                                context.goNamed(RouteConstant.registerName);
+                                context.router.replace(RegisterRoute());
                               },
                               child: Text('Daftar disini'),
                             ),

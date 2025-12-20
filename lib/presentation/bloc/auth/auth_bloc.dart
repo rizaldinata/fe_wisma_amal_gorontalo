@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:formz/formz.dart';
 import 'package:frontend/core/constant/storage_constant.dart';
 import 'package:frontend/core/services/network/exception.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
-import 'package:frontend/data/datasource/auth_datasource.dart';
 import 'package:frontend/data/model/auth/auth_request_model.dart';
 import 'package:frontend/data/repository/auth_repository.dart';
 import 'package:frontend/domain/entity/user_entity.dart';
@@ -54,25 +54,24 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   Future<void> _onLogin(LoginEvent event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(isLoading: true, errorMessage: null));
+    emit(
+      state.copyWith(
+        status: FormzSubmissionStatus.inProgress,
+        errorMessage: null,
+      ),
+    );
 
     try {
       final result = await auth.login(
         AuthRequestModel(email: event.email, password: event.password),
       );
 
-      // if (result == null) {
-      //   emit(state.copyWith(isLoading: false, errorMessage: 'Login gagal'));
-      //   return;
-      // }
-
       if (auth.isLoggedIn()) {
-        loginStatusNotifier.isLoggedIn = true;
         emit(
           state.copyWith(
             isLoggedIn: true,
             userInfo: result,
-            isLoading: false,
+            status: FormzSubmissionStatus.success,
             successMessage: 'Login berhasil!',
           ),
         );
@@ -81,13 +80,22 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       // Tampilkan pesan sukses
       AppSnackbar.showSuccess('Login berhasil!');
     } on AppException catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.message));
-      AppSnackbar.showError(e.message);
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: e.message,
+        ),
+      );
     }
   }
 
   Future<void> _onRegister(RegisterEvent event, Emitter<AuthState> emit) async {
-    emit(state.copyWith(isLoading: true, errorMessage: null));
+    emit(
+      state.copyWith(
+        status: FormzSubmissionStatus.inProgress,
+        errorMessage: null,
+      ),
+    );
 
     try {
       final result = await auth.register(
@@ -98,40 +106,39 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         ),
       );
 
-      // if (result == null) {
-      //   emit(state.copyWith(isLoading: false, errorMessage: 'Register gagal'));
-      //   return;
-      // }
-
       if (auth.isLoggedIn()) {
-        loginStatusNotifier.isLoggedIn = true;
         emit(
           state.copyWith(
             isLoggedIn: true,
             userInfo: result,
-            isLoading: false,
+            status: FormzSubmissionStatus.success,
             successMessage: 'Register berhasil!',
           ),
         );
       }
-
       AppSnackbar.showSuccess('Register berhasil!');
     } on AppException catch (e) {
-      emit(state.copyWith(isLoading: false, errorMessage: e.message));
-      AppSnackbar.showError(e.message);
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: e.message,
+        ),
+      );
     }
   }
 
   Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
     try {
+      emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
       await auth.logout();
-      emit(const AuthState());
-      loginStatusNotifier.isLoggedIn =
-          false;
+      emit(
+        const AuthState(
+          status: FormzSubmissionStatus.initial,
+          isLoggedIn: false,
+        ),
+      );
     } catch (e) {
-      emit(const AuthState()); 
-      loginStatusNotifier.isLoggedIn =
-          false;
+      emit(state.copyWith(status: FormzSubmissionStatus.failure));
     }
   }
 
@@ -140,14 +147,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final username = storage.get(StorageConstant.userName);
     final userId = storage.getInt(StorageConstant.userId);
     final role = storage.getList(StorageConstant.roleActive);
-    final permissions = storage.getPermissions();
 
     final userInfo = UserEntity(
       email: email ?? '',
       name: username ?? '',
       id: userId ?? 0,
       roles: role ?? [],
-      permissions: permissions?.toList() ?? [],
     );
 
     emit(state.copyWith(userInfo: userInfo));

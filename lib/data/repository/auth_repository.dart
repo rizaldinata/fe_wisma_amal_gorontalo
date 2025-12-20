@@ -1,3 +1,4 @@
+import 'package:frontend/core/constant/storage_constant.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
 import 'package:frontend/data/datasource/auth_datasource.dart';
 import 'package:frontend/domain/entity/user_entity.dart';
@@ -10,8 +11,13 @@ class AuthRepository {
   Future<UserEntity> register(request) async {
     try {
       final response = await datasource.register(request);
-      await storage.saveToken(response.data.token);
-      return response.data.toEntity();
+      final token = response.data.token.split('|').last;
+      await storage.saveToken(token);
+      UserEntity userEntity = response.data.toEntity();
+      if (response.status) {
+        await _saveUserInfo(userEntity);
+      }
+      return userEntity;
     } catch (e) {
       rethrow;
     }
@@ -20,8 +26,13 @@ class AuthRepository {
   Future<UserEntity> login(request) async {
     try {
       final response = await datasource.login(request);
-      await storage.saveToken(response.data.token);
-      return response.data.toEntity();
+      final token = response.data.token.split('|').last;
+      await storage.saveToken(token);
+      UserEntity userEntity = response.data.toEntity();
+      if (response.status) {
+        await _saveUserInfo(userEntity);
+      }
+      return userEntity;
     } catch (e) {
       rethrow;
     }
@@ -33,6 +44,14 @@ class AuthRepository {
       await storage.clear();
     }
     return result;
+  }
+
+  Future<void> _saveUserInfo(UserEntity user) async {
+    await storage.setString(StorageConstant.email, user.email);
+    await storage.setString(StorageConstant.userName, user.name);
+    await storage.setInt(StorageConstant.userId, user.id ?? 0);
+    await storage.setList(StorageConstant.roleActive, user.roles);
+    // await storage.setPermissions(user.permissions.toSet());
   }
 
   bool isLoggedIn() {

@@ -51,7 +51,7 @@ class SharedPrefsStorage {
     return _prefs.getInt(key);
   }
 
-  Future<void> set(String key, String value) async {
+  Future<void> setString(String key, String value) async {
     await _prefs.setString(key, value);
   }
 

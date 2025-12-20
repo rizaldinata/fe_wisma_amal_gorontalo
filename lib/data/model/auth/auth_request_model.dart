@@ -13,9 +13,7 @@ class AuthRequestModel {
     return {
       'email': email,
       'password': password,
-      if (username != null) 'username': username,
+      if (username != null) 'name': username,
     };
   }
-
-  
 }

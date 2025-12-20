@@ -33,18 +33,50 @@ class AppLayoutRoute extends _i4.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i2.LoginPage]
-class LoginRoute extends _i4.PageRouteInfo<void> {
-  const LoginRoute({List<_i4.PageRouteInfo>? children})
-    : super(LoginRoute.name, initialChildren: children);
+class LoginRoute extends _i4.PageRouteInfo<LoginRouteArgs> {
+  LoginRoute({_i5.Key? key, String? reason, List<_i4.PageRouteInfo>? children})
+    : super(
+        LoginRoute.name,
+        args: LoginRouteArgs(key: key, reason: reason),
+        rawQueryParams: {'reason': reason},
+        initialChildren: children,
+      );
 
   static const String name = 'LoginRoute';
 
   static _i4.PageInfo page = _i4.PageInfo(
     name,
     builder: (data) {
-      return const _i2.LoginPage();
+      final queryParams = data.queryParams;
+      final args = data.argsAs<LoginRouteArgs>(
+        orElse: () => LoginRouteArgs(reason: queryParams.optString('reason')),
+      );
+      return _i2.LoginPage(key: args.key, reason: args.reason);
     },
   );
+}
+
+class LoginRouteArgs {
+  const LoginRouteArgs({this.key, this.reason});
+
+  final _i5.Key? key;
+
+  final String? reason;
+
+  @override
+  String toString() {
+    return 'LoginRouteArgs{key: $key, reason: $reason}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! LoginRouteArgs) return false;
+    return key == other.key && reason == other.reason;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ reason.hashCode;
 }
 
 /// generated route for

@@ -9,10 +9,7 @@ class AuthGuard extends AutoRouteGuard {
   AuthGuard(this.authRepository);
 
   @override
-  void onNavigation(
-    NavigationResolver resolver,
-    StackRouter router,
-  ) {
+  void onNavigation(NavigationResolver resolver, StackRouter router) {
     bool isLoggedIn = authRepository.isLoggedIn();
     if (isLoggedIn) {
       resolver.next();

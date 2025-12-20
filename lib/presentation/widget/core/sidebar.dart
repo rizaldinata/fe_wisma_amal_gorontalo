@@ -1,10 +1,11 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:formz/formz.dart';
+import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
-import 'package:go_router/go_router.dart';
 
 class SidebarItem {
   final String label;
@@ -12,13 +13,17 @@ class SidebarItem {
   final void Function() onTap;
 
   SidebarItem({required this.label, required this.icon, required this.onTap});
-} 
+}
 
 class CustomSidebar extends StatelessWidget {
   final String currentRoute;
   final List<SidebarItem> items;
 
-  const CustomSidebar({super.key, required this.currentRoute, required this.items});
+  const CustomSidebar({
+    super.key,
+    required this.currentRoute,
+    required this.items,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +71,7 @@ class CustomSidebar extends StatelessWidget {
               if (state.userInfo == null || state.userInfo?.id == null) {
                 context.read<AuthBloc>().add(const GetUserInfoEvent());
               }
-              
+
               return Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: InkWell(
@@ -108,12 +113,21 @@ class CustomSidebar extends StatelessWidget {
             },
           ),
 
-          ListTile(
-            leading: const Icon(Icons.logout, size: 20),
-            title: const Text("Log out"),
-            onTap: () {
-              // Hanya dispatch event, biarkan router yang handle redirect
-              context.read<AuthBloc>().add(const LogoutEvent());
+          BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              return ListTile(
+                leading: const Icon(Icons.logout, size: 20),
+                title: Text(
+                  state.status.isInProgress ? 'Logging out...' : 'Logout',
+                ),
+                onTap: () {
+                  context.read<AuthBloc>().add(const LogoutEvent());
+                  context.router.pushAndPopUntil(
+                    LoginRoute(),
+                    predicate: (route) => true,
+                  );
+                },
+              );
             },
           ),
         ],

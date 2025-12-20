@@ -1,15 +1,15 @@
-import 'package:auto_route/annotations.dart';
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:frontend/core/constant/route_constant.dart';
+import 'package:formz/formz.dart';
 import 'package:frontend/core/constant/style_constant.dart';
+import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend/presentation/widget/core/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/button.dart';
 import 'package:frontend/presentation/widget/core/textform.dart';
-import 'package:go_router/go_router.dart';
 
 @RoutePage()
 class RegisterPage extends StatelessWidget {
@@ -71,10 +71,18 @@ class RegisterPage extends StatelessWidget {
                 width: 600,
                 child: BlocConsumer<AuthBloc, AuthState>(
                   listener: (context, state) {
+                    if (state.status.isFailure) {
+                      AppSnackbar.showError(
+                        state.errorMessage ?? 'Register failed',
+                      );
+                    }
                     // Navigate to dashboard ketika register berhasil
-                    if (state.isLoggedIn && state.successMessage != null) {
-                      print('Register successful, navigating to dashboard...');
-                      context.go(RouteConstant.dashboardPath);
+                    if (state.isLoggedIn && state.errorMessage == null) {
+                      print('Login successful, navigating to dashboard...');
+                      context.router.pushAndPopUntil(
+                        AppLayoutRoute(),
+                        predicate: (_) => false,
+                      );
                     }
                   },
                   builder: (context, state) {
@@ -177,7 +185,7 @@ class RegisterPage extends StatelessWidget {
                           ),
                           SizedBox(height: 30),
                           BasicButton(
-                            onPressed: state.isLoading
+                            onPressed: state.status.isInProgress
                                 ? null
                                 : () async {
                                     // Jalankan validator
@@ -193,7 +201,6 @@ class RegisterPage extends StatelessWidget {
                                               passwordConfirmController.text,
                                         ),
                                       );
-                                      context.go(RouteConstant.loginPath);
                                     } else {
                                       // Kalau tidak valid, tampilkan snackbar error
                                       AppSnackbar.showError(
@@ -201,7 +208,9 @@ class RegisterPage extends StatelessWidget {
                                       );
                                     }
                                   },
-                            label: state.isLoading ? 'Loading...' : 'Register',
+                            label: state.status.isInProgress
+                                ? 'Loading...'
+                                : 'Register',
                           ),
                           SizedBox(height: 30),
                           Row(
@@ -213,7 +222,7 @@ class RegisterPage extends StatelessWidget {
                               ),
                               TextButton(
                                 onPressed: () {
-                                  context.go(RouteConstant.loginPath);
+                                  context.router.replace(LoginRoute());
                                 },
                                 child: Text('Login disini'),
                               ),
