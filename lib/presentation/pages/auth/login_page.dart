@@ -5,12 +5,14 @@ import 'package:frontend/core/constant/style_constant.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
-import 'package:frontend/presentation/widget/button.dart';
-import 'package:frontend/presentation/widget/textform.dart';
+import 'package:frontend/presentation/widget/core/button.dart';
+import 'package:frontend/presentation/widget/core/textform.dart';
 import 'package:go_router/go_router.dart';
+import 'package:auto_route/auto_route.dart';
 
+@RoutePage()
 class LoginPage extends StatefulWidget {
-  LoginPage({super.key});
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();

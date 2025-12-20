@@ -1,9 +1,10 @@
 import 'package:equatable/equatable.dart';
 import 'package:frontend/data/model/auth/user_model.dart';
+import 'package:frontend/domain/entity/user_entity.dart';
 
 class AuthState extends Equatable {
   final bool isLoggedIn;
-  final UserModel? userInfo;
+  final UserEntity? userInfo;
   final bool obscureText;
   final bool isLoading;
   final String? errorMessage;
@@ -20,7 +21,7 @@ class AuthState extends Equatable {
 
   AuthState copyWith({
     bool? isLoggedIn,
-    UserModel? userInfo,
+    UserEntity? userInfo,
     bool? obscureText,
     bool? isLoading,
     String? errorMessage,
@@ -38,11 +39,11 @@ class AuthState extends Equatable {
 
   @override
   List<Object?> get props => [
-        isLoggedIn,
-        userInfo,
-        obscureText,
-        isLoading,
-        errorMessage,
-        successMessage,
-      ];
+    isLoggedIn,
+    userInfo,
+    obscureText,
+    isLoading,
+    errorMessage,
+    successMessage,
+  ];
 }

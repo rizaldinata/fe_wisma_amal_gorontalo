@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
@@ -8,16 +9,16 @@ import 'package:go_router/go_router.dart';
 class SidebarItem {
   final String label;
   final IconData icon;
-  final String route;
+  final void Function() onTap;
 
-  SidebarItem({required this.label, required this.icon, required this.route});
-} // model di atas
+  SidebarItem({required this.label, required this.icon, required this.onTap});
+} 
 
 class CustomSidebar extends StatelessWidget {
   final String currentRoute;
   final List<SidebarItem> items;
 
-  CustomSidebar({super.key, required this.currentRoute, required this.items});
+  const CustomSidebar({super.key, required this.currentRoute, required this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -121,10 +122,10 @@ class CustomSidebar extends StatelessWidget {
   }
 
   Widget _buildMenuItem(BuildContext context, SidebarItem item) {
-    final bool isSelected = currentRoute == item.route;
+    final bool isSelected = currentRoute == context.router.current.name;
 
     return InkWell(
-      onTap: () => context.go(item.route),
+      onTap: item.onTap,
       child: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),

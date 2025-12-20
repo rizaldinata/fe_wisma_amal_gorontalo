@@ -8,15 +8,12 @@
 
 import 'dart:core';
 
-import 'package:dio/dio.dart';
-import 'package:frontend/core/services/network/dio_client.dart';
-import 'package:frontend/core/services/storage/shared_prefrence.dart';
-import 'package:frontend/data/datasource/auth_datasource.dart';
-import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend/core/dependency_injection/bloc.dart';
+import 'package:frontend/core/dependency_injection/datasource.dart';
+import 'package:frontend/core/dependency_injection/network.dart';
+import 'package:frontend/core/dependency_injection/repository.dart';
+import 'package:frontend/core/dependency_injection/storage.dart';
 import 'package:get_it/get_it.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../services/network/api_config.dart';
 
 final GetIt serviceLocator = GetIt.instance;
 
@@ -32,46 +29,9 @@ Future<void> initializeDependencies() async {
     registerFactory: membuat instance baru setiap kali di panggil.
    */
 
-  await _initializeStorage();
-  await _initializeNetwork();
-  await _initializeDatasource();
-  await _initializeBloc();
-}
-
-Future<void> _initializeNetwork() async {
-  serviceLocator.registerSingleton<Dio>(Dio());
-  serviceLocator.registerSingleton<ApiConfig>(ApiConfig.production().getUrl());
-  serviceLocator.registerSingleton(
-    DioClient(
-      apiConfig: serviceLocator<ApiConfig>(),
-      SharedPreferences: serviceLocator<SharedPrefsStorage>(),
-      dio: serviceLocator<Dio>(),
-    ),
-  );
-}
-
-Future<void> _initializeStorage() async {
-  final prefs = await SharedPreferences.getInstance();
-  serviceLocator.registerSingleton<SharedPreferences>(prefs);
-  serviceLocator.registerSingleton<SharedPrefsStorage>(
-    SharedPrefsStorage(prefs),
-  );
-}
-
-Future<void> _initializeDatasource() async {
-  serviceLocator.registerFactory<AuthDatasource>(
-    () => AuthDatasource(
-      dioClient: serviceLocator<DioClient>(),
-      storage: serviceLocator<SharedPrefsStorage>(),
-    ),
-  );
-}
-
-Future<void> _initializeBloc() async {
-  serviceLocator.registerLazySingleton<AuthBloc>(
-    () => AuthBloc(
-      auth: serviceLocator<AuthDatasource>(),
-      storage: serviceLocator<SharedPrefsStorage>(),
-    ),
-  );
+  await initializeStorage();
+  await initializeNetwork();
+  await initializeDatasource();
+  await initializeRepository();
+  await initializeBloc();
 }

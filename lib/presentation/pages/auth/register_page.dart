@@ -1,3 +1,4 @@
+import 'package:auto_route/annotations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/constant/route_constant.dart';
@@ -5,11 +6,12 @@ import 'package:frontend/core/constant/style_constant.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
-import 'package:frontend/presentation/widget/app_snackbar.dart';
-import 'package:frontend/presentation/widget/button.dart';
-import 'package:frontend/presentation/widget/textform.dart';
+import 'package:frontend/presentation/widget/core/app_snackbar.dart';
+import 'package:frontend/presentation/widget/core/button.dart';
+import 'package:frontend/presentation/widget/core/textform.dart';
 import 'package:go_router/go_router.dart';
 
+@RoutePage()
 class RegisterPage extends StatelessWidget {
   RegisterPage({super.key});
 

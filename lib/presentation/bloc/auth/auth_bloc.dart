@@ -1,19 +1,15 @@
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/constant/storage_constant.dart';
 import 'package:frontend/core/services/network/exception.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
 import 'package:frontend/data/datasource/auth_datasource.dart';
-import 'package:frontend/data/model/auth/auth_error_model.dart';
-import 'package:frontend/data/model/auth/login_request.dart';
-import 'package:frontend/data/model/auth/register_request.dart';
-import 'package:frontend/data/model/auth/user_model.dart';
+import 'package:frontend/data/model/auth/auth_request_model.dart';
+import 'package:frontend/data/repository/auth_repository.dart';
+import 'package:frontend/domain/entity/user_entity.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
-import 'package:frontend/presentation/widget/app_snackbar.dart';
-
-import '../../../main.dart';
+import 'package:frontend/presentation/widget/core/app_snackbar.dart';
 
 class AuthStateNotifier extends ChangeNotifier {
   bool _isLoggedIn = false;
@@ -23,13 +19,13 @@ class AuthStateNotifier extends ChangeNotifier {
   set isLoggedIn(bool value) {
     if (_isLoggedIn != value) {
       _isLoggedIn = value;
-      notifyListeners(); // Trigger router refresh
+      notifyListeners();
     }
   }
 }
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final AuthDatasource auth;
+  final AuthRepository auth;
   final SharedPrefsStorage storage;
   final AuthStateNotifier loginStatusNotifier = AuthStateNotifier();
 
@@ -44,16 +40,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<ResetStateEvent>((event, emit) {
       emit(const AuthState());
     });
-
-    // Initialize login status saat bloc dibuat
     add(const InitLoginStatusEvent());
   }
 
-  Future<void> _onInitLoginStatus(
-    InitLoginStatusEvent event,
-    Emitter<AuthState> emit,
-  ) async {
-    final status = await auth.isLoggedIn();
+  void _onInitLoginStatus(InitLoginStatusEvent event, Emitter<AuthState> emit) {
+    final status = auth.isLoggedIn();
     loginStatusNotifier.isLoggedIn = status;
     emit(state.copyWith(isLoggedIn: status));
 
@@ -67,23 +58,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     try {
       final result = await auth.login(
-        LoginRequestModel(email: event.email, password: event.password),
+        AuthRequestModel(email: event.email, password: event.password),
       );
 
-      if (result == null) {
-        emit(state.copyWith(isLoading: false, errorMessage: 'Login gagal'));
-        return;
+      // if (result == null) {
+      //   emit(state.copyWith(isLoading: false, errorMessage: 'Login gagal'));
+      //   return;
+      // }
+
+      if (auth.isLoggedIn()) {
+        loginStatusNotifier.isLoggedIn = true;
+        emit(
+          state.copyWith(
+            isLoggedIn: true,
+            userInfo: result,
+            isLoading: false,
+            successMessage: 'Login berhasil!',
+          ),
+        );
       }
-
-      loginStatusNotifier.isLoggedIn = true;
-      emit(
-        state.copyWith(
-          isLoggedIn: true,
-          userInfo: result,
-          isLoading: false,
-          successMessage: 'Login berhasil!',
-        ),
-      );
 
       // Tampilkan pesan sukses
       AppSnackbar.showSuccess('Login berhasil!');
@@ -98,28 +91,29 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     try {
       final result = await auth.register(
-        RegisterRequestModel(
-          name: event.username,
+        AuthRequestModel(
           email: event.email,
           password: event.password,
-          passwordConfirmation: event.passwordConfirm,
+          username: event.username,
         ),
       );
 
-      if (result == null) {
-        emit(state.copyWith(isLoading: false, errorMessage: 'Register gagal'));
-        return;
+      // if (result == null) {
+      //   emit(state.copyWith(isLoading: false, errorMessage: 'Register gagal'));
+      //   return;
+      // }
+
+      if (auth.isLoggedIn()) {
+        loginStatusNotifier.isLoggedIn = true;
+        emit(
+          state.copyWith(
+            isLoggedIn: true,
+            userInfo: result,
+            isLoading: false,
+            successMessage: 'Register berhasil!',
+          ),
+        );
       }
-
-      // loginStatusNotifier.isLoggedIn = true;
-      emit(
-        state.copyWith(
-          // isLoggedIn: true,
-          userInfo: result,
-          isLoading: false,
-          successMessage: 'Register berhasil!',
-        ),
-      );
 
       AppSnackbar.showSuccess('Register berhasil!');
     } on AppException catch (e) {
@@ -131,13 +125,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
     try {
       await auth.logout();
-      emit(const AuthState()); // Reset to initial state
+      emit(const AuthState());
       loginStatusNotifier.isLoggedIn =
-          false; // Update notifier setelah emit - trigger router refresh
+          false;
     } catch (e) {
-      emit(const AuthState()); // Reset to initial state even on error
+      emit(const AuthState()); 
       loginStatusNotifier.isLoggedIn =
-          false; // Update notifier setelah emit - trigger router refresh
+          false;
     }
   }
 
@@ -148,12 +142,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final role = storage.getList(StorageConstant.roleActive);
     final permissions = storage.getPermissions();
 
-    final userInfo = UserModel(
+    final userInfo = UserEntity(
       email: email ?? '',
       name: username ?? '',
+      id: userId ?? 0,
       roles: role ?? [],
-      id: (userId != null) ? userId : null,
-      permissions: permissions ?? {},
+      permissions: permissions?.toList() ?? [],
     );
 
     emit(state.copyWith(userInfo: userInfo));

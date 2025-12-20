@@ -1,96 +1,58 @@
 import 'package:dio/dio.dart';
 import 'package:frontend/core/constant/endpoint_constant.dart';
-import 'package:frontend/core/constant/storage_constant.dart';
 import 'package:frontend/core/services/network/dio_client.dart';
-import 'package:frontend/core/services/network/exception.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
-import 'package:frontend/data/model/auth/auth_response.dart';
-import 'package:frontend/data/model/auth/login_request.dart';
-import 'package:frontend/data/model/auth/register_request.dart';
-import 'package:frontend/data/model/auth/user_model.dart';
+import 'package:frontend/data/model/auth/auth_request_model.dart';
+import 'package:frontend/data/model/auth/auth_response_model.dart';
+import 'package:frontend/data/model/base_response_model.dart';
 
 class AuthDatasource {
-  AuthDatasource({required this.dioClient, required this.storage});
+  AuthDatasource({required this.dioClient});
 
   final DioClient dioClient;
-  final SharedPrefsStorage storage;
 
-  Future<UserModel?> register(RegisterRequestModel request) async {
+
+  Future<BaseResponseModel<AuthResponseModel>> register(
+    AuthRequestModel request,
+  ) async {
     try {
       final response = await dioClient.post(
-      EndpointConstant.registerEndpoint,
-      data: request.toJson(),
-    );
-
-    // var data = AuthResponse.fromJson(response.data['data']);
-
-
-    //   // save token
-    //   if (data.token.isNotEmpty) {
-    //     var trimmed = data.token.split('|').last;
-    //     await storage.saveToken(trimmed);
-    //   } else {
-    //     throw Exception('Token not found in login response');
-    //   }
-    //   if (data.user != null) {
-    //     await storage.setPermissions(data.user?.permissions?.toSet() ?? {});
-    //     await storage.set(StorageConstant.userName, data.user?.name ?? '');
-    //     await storage.set(StorageConstant.email, data.user?.email ?? '');
-    //     await storage.setInt(StorageConstant.userId, data.user?.id ?? 0);
-    //     await storage.setList(
-    //       StorageConstant.roleActive,
-    //       data.user?.roles ?? [],
-    //     );
-    //   }
-
-    //   return data.user;
+        EndpointConstant.registerEndpoint,
+        data: request.toJson(),
+      );
+      return BaseResponseModel<AuthResponseModel>.fromJson(
+        response.data,
+        (json) => AuthResponseModel.fromJson(json),
+      );
     } catch (e) {
-      // Gunakan AppException.fromDioError untuk handle semua error Dio
       rethrow;
     }
   }
 
-  Future<UserModel?> login(LoginRequestModel request) async {
+  Future<BaseResponseModel<AuthResponseModel>> login(
+    AuthRequestModel request,
+  ) async {
     try {
-      // Implementasi login menggunakan dioClient
       final response = await dioClient.post(
         EndpointConstant.loginEndpoint,
         data: request.toJson(),
       );
-
-      var data = AuthResponse.fromJson(response.data['data']);
-
-      // save token
-      if (data.token.isNotEmpty) {
-        var trimmed = data.token.split('|').last;
-        await storage.saveToken(trimmed);
-      } else {
-        throw Exception('Token not found in login response');
-      }
-      if (data.user != null) {
-        await storage.setPermissions(data.user?.permissions?.toSet() ?? {});
-        await storage.set(StorageConstant.userName, data.user?.name ?? '');
-        await storage.set(StorageConstant.email, data.user?.email ?? '');
-        await storage.setInt(StorageConstant.userId, data.user?.id ?? 0);
-        await storage.setList(
-          StorageConstant.roleActive,
-          data.user?.roles ?? [],
-        );
-      }
-
-      return data.user;
+      final baseResponse = BaseResponseModel<AuthResponseModel>.fromJson(
+        response.data,
+        (json) => AuthResponseModel.fromJson(json),
+      );
+      return baseResponse;
     } catch (e) {
-      // Gunakan AppException.fromDioError untuk handle semua error Dio
       rethrow;
     }
   }
 
-  Future<void> logout() async {
-    await storage.clearToken();
-  }
-
-  Future<bool> isLoggedIn() async {
-    final token = storage.getToken();
-    return token != null;
+  Future<bool> logout() async {
+    try {
+      var response = await dioClient.post(EndpointConstant.logoutEndpoint);
+      return response.statusCode == 200;
+    } catch (e) {
+      rethrow;
+    }
   }
 }
