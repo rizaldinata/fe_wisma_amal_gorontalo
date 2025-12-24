@@ -43,4 +43,3 @@ class ApiConfig {
   final Duration receiveTimeout;
   final Map<String, dynamic> headers;
 }
-

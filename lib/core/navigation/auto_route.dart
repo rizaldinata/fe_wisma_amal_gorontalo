@@ -8,12 +8,19 @@ import 'package:frontend/data/repository/auth_repository.dart';
 class AppRouter extends RootStackRouter {
   @override
   List<AutoRoute> get routes => [
+    // Rute Admin (Protected)
     AutoRoute(
       page: AppLayoutRoute.page,
-      initial: true,
+      guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+      children: [
+        // Nanti child routes admin di sini
+      ],
+    ),
+    AutoRoute(
+      page: LandingRoute.page,
       guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
     ),
-    AutoRoute(page: LoginRoute.page),
+    AutoRoute(page: LoginRoute.page, initial: true),
     AutoRoute(page: RegisterRoute.page),
   ];
 }

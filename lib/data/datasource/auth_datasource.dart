@@ -11,7 +11,6 @@ class AuthDatasource {
 
   final DioClient dioClient;
 
-
   Future<BaseResponseModel<AuthResponseModel>> register(
     AuthRequestModel request,
   ) async {
@@ -42,6 +41,16 @@ class AuthDatasource {
         (json) => AuthResponseModel.fromJson(json),
       );
       return baseResponse;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<List<String>> getPermissions() async {
+    try {
+      final response = await dioClient.get(EndpointConstant.permissionEndpoint);
+      final List<dynamic> data = response.data['data'];
+      return data.map((e) => e.toString()).toList();
     } catch (e) {
       rethrow;
     }

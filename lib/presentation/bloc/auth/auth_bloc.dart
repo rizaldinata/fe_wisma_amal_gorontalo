@@ -147,12 +147,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final username = storage.get(StorageConstant.userName);
     final userId = storage.getInt(StorageConstant.userId);
     final role = storage.getList(StorageConstant.roleActive);
+    final permissions = storage.getPermissions()?.toList();
 
     final userInfo = UserEntity(
       email: email ?? '',
       name: username ?? '',
       id: userId ?? 0,
       roles: role ?? [],
+      permissions: permissions,
     );
 
     emit(state.copyWith(userInfo: userInfo));

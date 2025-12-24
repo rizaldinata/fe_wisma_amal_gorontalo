@@ -92,13 +92,29 @@ class _LoginPageState extends State<LoginPage> {
                         state.errorMessage ?? 'Login failed',
                       );
                     }
-                    // Navigate to dashboard ketika login berhasil
-                    if (state.isLoggedIn && state.errorMessage == null) {
-                      print('Login successful, navigating to dashboard...');
-                      context.router.pushAndPopUntil(
-                        AppLayoutRoute(),
-                        predicate: (_) => false,
-                      );
+
+                    // LOGIC REDIRECT BERDASARKAN PERMISSION
+                    if (state.isLoggedIn &&
+                        state.userInfo != null &&
+                        state.errorMessage == null) {
+                      final permissions = state.userInfo?.permissions ?? [];
+
+                      print('User Permissions: $permissions'); // Debugging
+
+                      // Cek apakah punya akses Admin Panel
+                      if (permissions.contains('access_admin_panel')) {
+                        print('Role: ADMIN -> Navigasi ke Dashboard');
+                        context.router.pushAndPopUntil(
+                          const AppLayoutRoute(),
+                          predicate: (_) => false,
+                        );
+                      } else {
+                        print('Role: USER/GUEST -> Navigasi ke Landing Page');
+                        context.router.pushAndPopUntil(
+                          const LandingRoute(),
+                          predicate: (_) => false,
+                        );
+                      }
                     }
                   },
                   builder: (context, state) {

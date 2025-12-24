@@ -16,4 +16,7 @@ class RouteConstant {
   //dashboard page
   static const String dashboardPath = '/dashboard';
   static const String dashboardName = 'dashboard';
+
+  static const String landingPath = '/landing';
+  static const String landingName = 'landing';
 }

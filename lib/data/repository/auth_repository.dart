@@ -13,7 +13,9 @@ class AuthRepository {
       final response = await datasource.register(request);
       final token = response.data.token.split('|').last;
       await storage.saveToken(token);
+      final permissions = await datasource.getPermissions();
       UserEntity userEntity = response.data.toEntity();
+      userEntity.permissions = permissions;
       if (response.status) {
         await _saveUserInfo(userEntity);
       }
@@ -28,7 +30,9 @@ class AuthRepository {
       final response = await datasource.login(request);
       final token = response.data.token.split('|').last;
       await storage.saveToken(token);
+      final permissions = await datasource.getPermissions();
       UserEntity userEntity = response.data.toEntity();
+      userEntity.permissions = permissions;
       if (response.status) {
         await _saveUserInfo(userEntity);
       }
@@ -51,7 +55,9 @@ class AuthRepository {
     await storage.setString(StorageConstant.userName, user.name);
     await storage.setInt(StorageConstant.userId, user.id ?? 0);
     await storage.setList(StorageConstant.roleActive, user.roles);
-    // await storage.setPermissions(user.permissions.toSet());
+    if (user.permissions != null) {
+      await storage.setPermissions(user.permissions!.toSet());
+    }
   }
 
   bool isLoggedIn() {

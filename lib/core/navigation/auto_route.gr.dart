@@ -9,21 +9,22 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:auto_route/auto_route.dart' as _i4;
-import 'package:flutter/material.dart' as _i5;
-import 'package:frontend/presentation/pages/auth/login_page.dart' as _i2;
-import 'package:frontend/presentation/pages/auth/register_page.dart' as _i3;
+import 'package:auto_route/auto_route.dart' as _i5;
+import 'package:flutter/material.dart' as _i6;
+import 'package:frontend/presentation/pages/auth/login_page.dart' as _i3;
+import 'package:frontend/presentation/pages/auth/register_page.dart' as _i4;
+import 'package:frontend/presentation/pages/landing/landing_page.dart' as _i2;
 import 'package:frontend/presentation/widget/app_layout.dart' as _i1;
 
 /// generated route for
 /// [_i1.AppLayoutPage]
-class AppLayoutRoute extends _i4.PageRouteInfo<void> {
-  const AppLayoutRoute({List<_i4.PageRouteInfo>? children})
+class AppLayoutRoute extends _i5.PageRouteInfo<void> {
+  const AppLayoutRoute({List<_i5.PageRouteInfo>? children})
     : super(AppLayoutRoute.name, initialChildren: children);
 
   static const String name = 'AppLayoutRoute';
 
-  static _i4.PageInfo page = _i4.PageInfo(
+  static _i5.PageInfo page = _i5.PageInfo(
     name,
     builder: (data) {
       return const _i1.AppLayoutPage();
@@ -32,9 +33,25 @@ class AppLayoutRoute extends _i4.PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [_i2.LoginPage]
-class LoginRoute extends _i4.PageRouteInfo<LoginRouteArgs> {
-  LoginRoute({_i5.Key? key, String? reason, List<_i4.PageRouteInfo>? children})
+/// [_i2.LandingPage]
+class LandingRoute extends _i5.PageRouteInfo<void> {
+  const LandingRoute({List<_i5.PageRouteInfo>? children})
+    : super(LandingRoute.name, initialChildren: children);
+
+  static const String name = 'LandingRoute';
+
+  static _i5.PageInfo page = _i5.PageInfo(
+    name,
+    builder: (data) {
+      return const _i2.LandingPage();
+    },
+  );
+}
+
+/// generated route for
+/// [_i3.LoginPage]
+class LoginRoute extends _i5.PageRouteInfo<LoginRouteArgs> {
+  LoginRoute({_i6.Key? key, String? reason, List<_i5.PageRouteInfo>? children})
     : super(
         LoginRoute.name,
         args: LoginRouteArgs(key: key, reason: reason),
@@ -44,14 +61,14 @@ class LoginRoute extends _i4.PageRouteInfo<LoginRouteArgs> {
 
   static const String name = 'LoginRoute';
 
-  static _i4.PageInfo page = _i4.PageInfo(
+  static _i5.PageInfo page = _i5.PageInfo(
     name,
     builder: (data) {
       final queryParams = data.queryParams;
       final args = data.argsAs<LoginRouteArgs>(
         orElse: () => LoginRouteArgs(reason: queryParams.optString('reason')),
       );
-      return _i2.LoginPage(key: args.key, reason: args.reason);
+      return _i3.LoginPage(key: args.key, reason: args.reason);
     },
   );
 }
@@ -59,7 +76,7 @@ class LoginRoute extends _i4.PageRouteInfo<LoginRouteArgs> {
 class LoginRouteArgs {
   const LoginRouteArgs({this.key, this.reason});
 
-  final _i5.Key? key;
+  final _i6.Key? key;
 
   final String? reason;
 
@@ -80,9 +97,9 @@ class LoginRouteArgs {
 }
 
 /// generated route for
-/// [_i3.RegisterPage]
-class RegisterRoute extends _i4.PageRouteInfo<RegisterRouteArgs> {
-  RegisterRoute({_i5.Key? key, List<_i4.PageRouteInfo>? children})
+/// [_i4.RegisterPage]
+class RegisterRoute extends _i5.PageRouteInfo<RegisterRouteArgs> {
+  RegisterRoute({_i6.Key? key, List<_i5.PageRouteInfo>? children})
     : super(
         RegisterRoute.name,
         args: RegisterRouteArgs(key: key),
@@ -91,13 +108,13 @@ class RegisterRoute extends _i4.PageRouteInfo<RegisterRouteArgs> {
 
   static const String name = 'RegisterRoute';
 
-  static _i4.PageInfo page = _i4.PageInfo(
+  static _i5.PageInfo page = _i5.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<RegisterRouteArgs>(
         orElse: () => const RegisterRouteArgs(),
       );
-      return _i3.RegisterPage(key: args.key);
+      return _i4.RegisterPage(key: args.key);
     },
   );
 }
@@ -105,7 +122,7 @@ class RegisterRoute extends _i4.PageRouteInfo<RegisterRouteArgs> {
 class RegisterRouteArgs {
   const RegisterRouteArgs({this.key});
 
-  final _i5.Key? key;
+  final _i6.Key? key;
 
   @override
   String toString() {
