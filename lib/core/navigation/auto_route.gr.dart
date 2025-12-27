@@ -9,22 +9,28 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:auto_route/auto_route.dart' as _i5;
-import 'package:flutter/material.dart' as _i6;
-import 'package:frontend/presentation/pages/auth/login_page.dart' as _i3;
-import 'package:frontend/presentation/pages/auth/register_page.dart' as _i4;
-import 'package:frontend/presentation/pages/landing/landing_page.dart' as _i2;
+import 'package:auto_route/auto_route.dart' as _i8;
+import 'package:flutter/material.dart' as _i9;
+import 'package:frontend/domain/entity/room_entity.dart' as _i10;
+import 'package:frontend/presentation/pages/auth/login_page.dart' as _i5;
+import 'package:frontend/presentation/pages/auth/register_page.dart' as _i6;
+import 'package:frontend/presentation/pages/dashboard/admin/room/form_room_page.dart'
+    as _i3;
+import 'package:frontend/presentation/pages/dashboard/admin/room/room_page.dart'
+    as _i7;
+import 'package:frontend/presentation/pages/dashboard/dashboard.dart' as _i2;
+import 'package:frontend/presentation/pages/landing/landing_page.dart' as _i4;
 import 'package:frontend/presentation/widget/app_layout.dart' as _i1;
 
 /// generated route for
 /// [_i1.AppLayoutPage]
-class AppLayoutRoute extends _i5.PageRouteInfo<void> {
-  const AppLayoutRoute({List<_i5.PageRouteInfo>? children})
+class AppLayoutRoute extends _i8.PageRouteInfo<void> {
+  const AppLayoutRoute({List<_i8.PageRouteInfo>? children})
     : super(AppLayoutRoute.name, initialChildren: children);
 
   static const String name = 'AppLayoutRoute';
 
-  static _i5.PageInfo page = _i5.PageInfo(
+  static _i8.PageInfo page = _i8.PageInfo(
     name,
     builder: (data) {
       return const _i1.AppLayoutPage();
@@ -33,25 +39,90 @@ class AppLayoutRoute extends _i5.PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [_i2.LandingPage]
-class LandingRoute extends _i5.PageRouteInfo<void> {
-  const LandingRoute({List<_i5.PageRouteInfo>? children})
-    : super(LandingRoute.name, initialChildren: children);
+/// [_i2.DashboardPage]
+class DashboardRoute extends _i8.PageRouteInfo<void> {
+  const DashboardRoute({List<_i8.PageRouteInfo>? children})
+    : super(DashboardRoute.name, initialChildren: children);
 
-  static const String name = 'LandingRoute';
+  static const String name = 'DashboardRoute';
 
-  static _i5.PageInfo page = _i5.PageInfo(
+  static _i8.PageInfo page = _i8.PageInfo(
     name,
     builder: (data) {
-      return const _i2.LandingPage();
+      return const _i2.DashboardPage();
     },
   );
 }
 
 /// generated route for
-/// [_i3.LoginPage]
-class LoginRoute extends _i5.PageRouteInfo<LoginRouteArgs> {
-  LoginRoute({_i6.Key? key, String? reason, List<_i5.PageRouteInfo>? children})
+/// [_i3.FormRoomPage]
+class FormRoomRoute extends _i8.PageRouteInfo<FormRoomRouteArgs> {
+  FormRoomRoute({
+    _i9.Key? key,
+    _i10.RoomEntity? room,
+    List<_i8.PageRouteInfo>? children,
+  }) : super(
+         FormRoomRoute.name,
+         args: FormRoomRouteArgs(key: key, room: room),
+         initialChildren: children,
+       );
+
+  static const String name = 'FormRoomRoute';
+
+  static _i8.PageInfo page = _i8.PageInfo(
+    name,
+    builder: (data) {
+      final args = data.argsAs<FormRoomRouteArgs>(
+        orElse: () => const FormRoomRouteArgs(),
+      );
+      return _i3.FormRoomPage(key: args.key, room: args.room);
+    },
+  );
+}
+
+class FormRoomRouteArgs {
+  const FormRoomRouteArgs({this.key, this.room});
+
+  final _i9.Key? key;
+
+  final _i10.RoomEntity? room;
+
+  @override
+  String toString() {
+    return 'FormRoomRouteArgs{key: $key, room: $room}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! FormRoomRouteArgs) return false;
+    return key == other.key && room == other.room;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ room.hashCode;
+}
+
+/// generated route for
+/// [_i4.LandingPage]
+class LandingRoute extends _i8.PageRouteInfo<void> {
+  const LandingRoute({List<_i8.PageRouteInfo>? children})
+    : super(LandingRoute.name, initialChildren: children);
+
+  static const String name = 'LandingRoute';
+
+  static _i8.PageInfo page = _i8.PageInfo(
+    name,
+    builder: (data) {
+      return const _i4.LandingPage();
+    },
+  );
+}
+
+/// generated route for
+/// [_i5.LoginPage]
+class LoginRoute extends _i8.PageRouteInfo<LoginRouteArgs> {
+  LoginRoute({_i9.Key? key, String? reason, List<_i8.PageRouteInfo>? children})
     : super(
         LoginRoute.name,
         args: LoginRouteArgs(key: key, reason: reason),
@@ -61,14 +132,14 @@ class LoginRoute extends _i5.PageRouteInfo<LoginRouteArgs> {
 
   static const String name = 'LoginRoute';
 
-  static _i5.PageInfo page = _i5.PageInfo(
+  static _i8.PageInfo page = _i8.PageInfo(
     name,
     builder: (data) {
       final queryParams = data.queryParams;
       final args = data.argsAs<LoginRouteArgs>(
         orElse: () => LoginRouteArgs(reason: queryParams.optString('reason')),
       );
-      return _i3.LoginPage(key: args.key, reason: args.reason);
+      return _i5.LoginPage(key: args.key, reason: args.reason);
     },
   );
 }
@@ -76,7 +147,7 @@ class LoginRoute extends _i5.PageRouteInfo<LoginRouteArgs> {
 class LoginRouteArgs {
   const LoginRouteArgs({this.key, this.reason});
 
-  final _i6.Key? key;
+  final _i9.Key? key;
 
   final String? reason;
 
@@ -97,9 +168,9 @@ class LoginRouteArgs {
 }
 
 /// generated route for
-/// [_i4.RegisterPage]
-class RegisterRoute extends _i5.PageRouteInfo<RegisterRouteArgs> {
-  RegisterRoute({_i6.Key? key, List<_i5.PageRouteInfo>? children})
+/// [_i6.RegisterPage]
+class RegisterRoute extends _i8.PageRouteInfo<RegisterRouteArgs> {
+  RegisterRoute({_i9.Key? key, List<_i8.PageRouteInfo>? children})
     : super(
         RegisterRoute.name,
         args: RegisterRouteArgs(key: key),
@@ -108,13 +179,13 @@ class RegisterRoute extends _i5.PageRouteInfo<RegisterRouteArgs> {
 
   static const String name = 'RegisterRoute';
 
-  static _i5.PageInfo page = _i5.PageInfo(
+  static _i8.PageInfo page = _i8.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<RegisterRouteArgs>(
         orElse: () => const RegisterRouteArgs(),
       );
-      return _i4.RegisterPage(key: args.key);
+      return _i6.RegisterPage(key: args.key);
     },
   );
 }
@@ -122,7 +193,7 @@ class RegisterRoute extends _i5.PageRouteInfo<RegisterRouteArgs> {
 class RegisterRouteArgs {
   const RegisterRouteArgs({this.key});
 
-  final _i6.Key? key;
+  final _i9.Key? key;
 
   @override
   String toString() {
@@ -138,4 +209,20 @@ class RegisterRouteArgs {
 
   @override
   int get hashCode => key.hashCode;
+}
+
+/// generated route for
+/// [_i7.RoomPage]
+class RoomRoute extends _i8.PageRouteInfo<void> {
+  const RoomRoute({List<_i8.PageRouteInfo>? children})
+    : super(RoomRoute.name, initialChildren: children);
+
+  static const String name = 'RoomRoute';
+
+  static _i8.PageInfo page = _i8.PageInfo(
+    name,
+    builder: (data) {
+      return const _i7.RoomPage();
+    },
+  );
 }

@@ -13,34 +13,44 @@ class BasicButton extends StatelessWidget {
     ),
     this.leadIcon = const SizedBox.shrink(),
     this.trailIcon = const SizedBox.shrink(),
+    this.isLoading = false,
   });
   final String label;
   final void Function()? onPressed;
   final TextStyle style;
   final Widget leadIcon;
   final Widget trailIcon;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: Colors.blue,
-        padding: EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+        padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        minimumSize: Size(double.infinity, 50),
+        minimumSize: const Size(double.infinity, 50),
       ),
-      onPressed: onPressed,
-
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          leadIcon,
-          SizedBox(width: 8),
-          Text(label, style: style),
-          SizedBox(width: 8),
-          trailIcon,
-        ],
-      ),
+      onPressed: isLoading ? null : onPressed,
+      child: isLoading
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 2,
+              ),
+            )
+          : Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                leadIcon,
+                const SizedBox(width: 8),
+                Text(label, style: style),
+                const SizedBox(width: 8),
+                trailIcon,
+              ],
+            ),
     );
   }
 }

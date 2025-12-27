@@ -12,6 +12,7 @@ class CustomTextForm extends StatelessWidget {
     this.controller,
     this.suffixIcon,
     this.validator,
+    this.maxLines = 1,
   });
   final Color? fillColor;
   final String title;
@@ -22,6 +23,7 @@ class CustomTextForm extends StatelessWidget {
   final TextEditingController? controller;
   final String? Function(String?)? validator;
   final Widget? suffixIcon;
+  final int maxLines;
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +35,7 @@ class CustomTextForm extends StatelessWidget {
             text: title,
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
 
-          children: isRequired
+            children: isRequired
                 ? [
                     TextSpan(
                       text: ' *',
@@ -52,7 +54,7 @@ class CustomTextForm extends StatelessWidget {
           obscureText: obscureText,
           keyboardType: keyboardType,
           validator: validator,
-          
+          maxLines: maxLines,
           decoration: InputDecoration(
             filled: (fillColor != null),
             fillColor: fillColor,

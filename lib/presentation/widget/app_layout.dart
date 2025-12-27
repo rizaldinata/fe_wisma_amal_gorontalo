@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/constant/style_constant.dart';
+import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/presentation/widget/core/sidebar.dart';
 
 @RoutePage()
@@ -19,10 +20,17 @@ class AppLayoutPage extends StatelessWidget {
             items: [
               SidebarItem(
                 onTap: () {
-                  // context.router.replace(DashboardRoute());
+                  context.router.replace(const DashboardRoute());
                 },
                 label: RouteConstant.dashboardName,
                 icon: Icons.dashboard,
+              ),
+              SidebarItem(
+                onTap: () {
+                  context.router.push(const RoomRoute());
+                },
+                label: RouteConstant.roomName,
+                icon: Icons.meeting_room,
               ),
               SidebarItem(onTap: () {}, label: 'Test 2', icon: Icons.abc),
               SidebarItem(
@@ -33,7 +41,7 @@ class AppLayoutPage extends StatelessWidget {
             ],
           ),
           // Expanded(child: AutoRouter()),
-          Expanded(child: Placeholder()),
+          Expanded(child: AutoRouter()),
         ],
       ),
     );

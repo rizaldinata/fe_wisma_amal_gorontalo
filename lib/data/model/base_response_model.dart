@@ -13,7 +13,7 @@ class BaseResponseModel<T> {
 
   factory BaseResponseModel.fromJson(
     Map<String, dynamic> json,
-    T Function(Map<String, dynamic>) fromJsonT,
+    T Function(dynamic) fromJsonT,
   ) {
     return BaseResponseModel(
       status: json['status'],

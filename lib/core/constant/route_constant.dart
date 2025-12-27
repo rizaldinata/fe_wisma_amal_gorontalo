@@ -19,4 +19,10 @@ class RouteConstant {
 
   static const String landingPath = '/landing';
   static const String landingName = 'landing';
+
+  static const String roomPath = 'rooms';
+  static const String roomName = 'rooms';
+
+  static const String formRoomPath = 'room-form';
+  static const String formRoomName = 'room-form';
 }
