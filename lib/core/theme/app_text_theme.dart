@@ -21,32 +21,32 @@ class AppTextTheme {
     ),
     headlineLarge: TextStyle(
       fontSize: 22,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.bold,
       color: AppColors.textPrimaryLight,
     ),
     headlineMedium: TextStyle(
       fontSize: 20,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.bold,
       color: AppColors.textPrimaryLight,
     ),
     headlineSmall: TextStyle(
       fontSize: 18,
-      fontWeight: FontWeight.w600,
+      fontWeight: FontWeight.bold,
       color: AppColors.textPrimaryLight,
     ),
     titleLarge: TextStyle(
       fontSize: 18,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.bold,
       color: AppColors.textPrimaryLight,
     ),
     titleMedium: TextStyle(
       fontSize: 16,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.bold,
       color: AppColors.textPrimaryLight,
     ),
     titleSmall: TextStyle(
       fontSize: 14,
-      fontWeight: FontWeight.w500,
+      fontWeight: FontWeight.bold,
       color: AppColors.textPrimaryLight,
     ),
     bodyLarge: TextStyle(

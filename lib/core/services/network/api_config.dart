@@ -22,7 +22,7 @@ class ApiConfig {
         case PRODUCTION:
           return ApiConfig(baseUrl: 'https://api.wismaamalgorontalo.site/api');
         case DEVELOP:
-          return ApiConfig(baseUrl: 'http://localhost:8000/api');
+          return ApiConfig(baseUrl: 'http://127.0.0.1:8000/api');
         default:
           return ApiConfig(baseUrl: 'https://api.wismaamalgorontalo.site/api');
       }

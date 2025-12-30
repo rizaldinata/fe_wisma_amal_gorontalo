@@ -30,9 +30,9 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'Wisma Amal',
         scaffoldMessengerKey: rootScaffoldMessengerKey,
-        // theme: AppTheme.lightTheme,
-        // darkTheme: AppTheme.darkTheme,
-        // themeMode: ThemeMode.system,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: ThemeMode.light,
         routerConfig: router.config(),
       ),
     );

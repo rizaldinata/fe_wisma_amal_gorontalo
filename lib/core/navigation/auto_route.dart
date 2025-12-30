@@ -1,4 +1,5 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/widgets.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auth_guard.dart';
@@ -11,16 +12,20 @@ class AppRouter extends RootStackRouter {
   List<AutoRoute> get routes => [
     AutoRoute(
       page: AppLayoutRoute.page,
+      path: RouteConstant.rootPath,
       guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
       children: [
-        // Dashboard Utama
+        AutoRoute(path: RouteConstant.dashboardName, page: DashboardRoute.page),
         AutoRoute(
-          path: '', // Default page saat masuk dashboard
-          page: DashboardRoute.page,
+          path: RouteConstant.roomName,
+          page: RoomRoute.page,
+          children: [
+            AutoRoute(
+              path: RouteConstant.formRoomName,
+              page: FormRoomRoute.page,
+            ),
+          ],
         ),
-
-        AutoRoute(path: RouteConstant.roomPath, page: RoomRoute.page),
-        AutoRoute(path: RouteConstant.formRoomPath, page: FormRoomRoute.page),
       ],
     ),
     AutoRoute(page: LandingRoute.page, initial: true),

@@ -3,12 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/constant/style_constant.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
-import 'package:frontend/presentation/widget/core/sidebar.dart';
+import 'package:frontend/presentation/widget/core/sidebar/sidebar.dart';
 
 @RoutePage()
-class AppLayoutPage extends StatelessWidget {
+class AppLayoutPage extends StatefulWidget {
   const AppLayoutPage({super.key});
 
+  @override
+  State<AppLayoutPage> createState() => _AppLayoutPageState();
+}
+
+class _AppLayoutPageState extends State<AppLayoutPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -20,17 +25,23 @@ class AppLayoutPage extends StatelessWidget {
             items: [
               SidebarItem(
                 onTap: () {
-                  context.router.replace(const DashboardRoute());
+                  setState(() {
+                    context.router.replace(const DashboardRoute());
+                  });
                 },
                 label: RouteConstant.dashboardName,
                 icon: Icons.dashboard,
+                routeName: DashboardRoute.name,
               ),
               SidebarItem(
                 onTap: () {
-                  context.router.push(const RoomRoute());
+                  setState(() {
+                    context.router.replace(const RoomRoute());
+                  });
                 },
                 label: RouteConstant.roomName,
                 icon: Icons.meeting_room,
+                routeName: RoomRoute.name,
               ),
               SidebarItem(onTap: () {}, label: 'Test 2', icon: Icons.abc),
               SidebarItem(

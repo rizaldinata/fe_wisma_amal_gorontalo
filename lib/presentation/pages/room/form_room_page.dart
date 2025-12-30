@@ -6,9 +6,9 @@ import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/presentation/bloc/room/room_bloc.dart';
 import 'package:frontend/presentation/bloc/room/room_event.dart';
 import 'package:frontend/presentation/bloc/room/room_state.dart';
-import 'package:frontend/presentation/widget/core/app_snackbar.dart';
-import 'package:frontend/presentation/widget/core/button.dart';
-import 'package:frontend/presentation/widget/core/textform.dart';
+import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
+import 'package:frontend/presentation/widget/core/botton/button.dart';
+import 'package:frontend/presentation/widget/core/textform/textform.dart';
 
 @RoutePage()
 class FormRoomPage extends StatefulWidget {

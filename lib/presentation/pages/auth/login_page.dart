@@ -6,9 +6,9 @@ import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
-import 'package:frontend/presentation/widget/core/app_snackbar.dart';
-import 'package:frontend/presentation/widget/core/button.dart';
-import 'package:frontend/presentation/widget/core/textform.dart';
+import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
+import 'package:frontend/presentation/widget/core/botton/button.dart';
+import 'package:frontend/presentation/widget/core/textform/textform.dart';
 import 'package:auto_route/auto_route.dart';
 
 @RoutePage()
@@ -93,7 +93,6 @@ class _LoginPageState extends State<LoginPage> {
                       );
                     }
 
-                    // LOGIC REDIRECT BERDASARKAN PERMISSION
                     if (state.isLoggedIn &&
                         state.userInfo != null &&
                         state.errorMessage == null) {
@@ -101,7 +100,6 @@ class _LoginPageState extends State<LoginPage> {
 
                       print('User Permissions: $permissions'); // Debugging
 
-                      // Cek apakah punya akses Admin Panel
                       if (permissions.contains('access_admin_panel')) {
                         print('Role: ADMIN -> Navigasi ke Dashboard');
                         context.router.pushAndPopUntil(

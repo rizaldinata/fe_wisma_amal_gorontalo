@@ -10,9 +10,15 @@ import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 class SidebarItem {
   final String label;
   final IconData icon;
+  final String routeName;
   final void Function() onTap;
 
-  SidebarItem({required this.label, required this.icon, required this.onTap});
+  SidebarItem({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+    String? routeName,
+  }) : routeName = routeName ?? label;
 }
 
 class CustomSidebar extends StatelessWidget {
@@ -97,7 +103,7 @@ class CustomSidebar extends StatelessWidget {
                               style: TextStyle(fontWeight: FontWeight.w500),
                             ),
                             Text(
-                              state.userInfo?.roles?.join(', ') ?? "No Role",
+                              state.userInfo?.roles.join(', ') ?? "No Role",
                               style: TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
@@ -136,7 +142,17 @@ class CustomSidebar extends StatelessWidget {
   }
 
   Widget _buildMenuItem(BuildContext context, SidebarItem item) {
-    final bool isSelected = currentRoute == context.router.current.name;
+    // Gunakan isRouteActive supaya tetap true meski nested route (child) aktif
+    final currentSegments = context.router.currentSegments;
+    final bool isSelected = currentSegments.any(
+      (e) => e.name == item.routeName,
+    );
+
+    // Debug: print path lengkap dan nama leaf
+    print(
+      '[ITEM] Full Route: /${currentSegments.map((e) => e.name).join('/')}',
+    );
+    print('[ITEM] Item RouteName: ${item.routeName}');
 
     return InkWell(
       onTap: item.onTap,
@@ -149,11 +165,7 @@ class CustomSidebar extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(
-              item.icon,
-              size: 20,
-              color: isSelected ? Colors.black : Colors.grey,
-            ),
+            Icon(item.icon, size: 20, color: Colors.black),
             const SizedBox(width: 12),
             Text(
               item.label,

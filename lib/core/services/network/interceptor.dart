@@ -13,18 +13,16 @@ class ApiInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
 
-  // Daftar endpoint yang tidak memerlukan token
-  final List<String> publicEndpoints = ['/login', '/register', '/forgot-password'];
+  final List<String> publicRoutes = ['/login', '/register', '/forgot-password'];
   
-  // Cek apakah request adalah untuk endpoint public
-  bool isPublicEndpoint = publicEndpoints.any((endpoint) => options.path.contains(endpoint));
+  bool isPublicEndpoint = publicRoutes.any((endpoint) => options.path.contains(endpoint));
   
   print('Is public endpoint: $isPublicEndpoint');
   print('Request path: ${options.path}');
 
   if (!isPublicEndpoint) {
     print('Fetching token for protected endpoint...');
-    final String? token = await _sharedPrefsStorage.getToken();
+    final String? token =  _sharedPrefsStorage.getToken();
     if (token != null) {
       options.headers['Authorization'] = 'Bearer $token';
     }

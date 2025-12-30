@@ -14,9 +14,9 @@ import 'package:flutter/material.dart' as _i9;
 import 'package:frontend/domain/entity/room_entity.dart' as _i10;
 import 'package:frontend/presentation/pages/auth/login_page.dart' as _i5;
 import 'package:frontend/presentation/pages/auth/register_page.dart' as _i6;
-import 'package:frontend/presentation/pages/dashboard/admin/room/form_room_page.dart'
+import 'package:frontend/presentation/pages/room/form_room_page.dart'
     as _i3;
-import 'package:frontend/presentation/pages/dashboard/admin/room/room_page.dart'
+import 'package:frontend/presentation/pages/room/room_page.dart'
     as _i7;
 import 'package:frontend/presentation/pages/dashboard/dashboard.dart' as _i2;
 import 'package:frontend/presentation/pages/landing/landing_page.dart' as _i4;

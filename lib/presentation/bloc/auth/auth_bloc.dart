@@ -9,7 +9,7 @@ import 'package:frontend/data/repository/auth_repository.dart';
 import 'package:frontend/domain/entity/user_entity.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
-import 'package:frontend/presentation/widget/core/app_snackbar.dart';
+import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 class AuthStateNotifier extends ChangeNotifier {
   bool _isLoggedIn = false;

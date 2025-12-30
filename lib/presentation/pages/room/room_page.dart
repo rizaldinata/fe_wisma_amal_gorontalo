@@ -7,7 +7,7 @@ import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/presentation/bloc/room/room_bloc.dart';
 import 'package:frontend/presentation/bloc/room/room_event.dart';
 import 'package:frontend/presentation/bloc/room/room_state.dart';
-import 'package:frontend/presentation/widget/core/app_snackbar.dart';
+import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 @RoutePage()
 class RoomPage extends StatelessWidget {
@@ -39,9 +39,7 @@ class RoomView extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
-          // Navigasi ke Form Tambah
           final result = await context.router.push(FormRoomRoute());
-          // Jika kembali setelah berhasil simpan, refresh list
           if (result == true && context.mounted) {
             context.read<RoomBloc>().add(GetRoomsEvent());
           }
