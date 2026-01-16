@@ -1,6 +1,7 @@
 import 'package:frontend/core/constant/storage_constant.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
 import 'package:frontend/data/datasource/auth_datasource.dart';
+import 'package:frontend/domain/entity/permission_entity.dart';
 import 'package:frontend/domain/entity/user_entity.dart';
 
 class AuthRepository {
@@ -15,7 +16,7 @@ class AuthRepository {
       await storage.saveToken(token);
       final permissions = await datasource.getPermissions();
       UserEntity userEntity = response.data.toEntity();
-      userEntity.permissions = permissions;
+      userEntity.permissions = Permissions(permissions.data.toSet());
       if (response.status) {
         await _saveUserInfo(userEntity);
       }
@@ -32,7 +33,7 @@ class AuthRepository {
       await storage.saveToken(token);
       final permissions = await datasource.getPermissions();
       UserEntity userEntity = response.data.toEntity();
-      userEntity.permissions = permissions;
+      userEntity.permissions = Permissions(permissions.data.toSet());
       if (response.status) {
         await _saveUserInfo(userEntity);
       }
@@ -56,7 +57,7 @@ class AuthRepository {
     await storage.setInt(StorageConstant.userId, user.id ?? 0);
     await storage.setList(StorageConstant.roleActive, user.roles);
     if (user.permissions != null) {
-      await storage.setPermissions(user.permissions!.toSet());
+      await storage.setPermissions(user.permissions!.raw);
     }
   }
 

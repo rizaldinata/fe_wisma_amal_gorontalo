@@ -1,9 +1,11 @@
+import 'package:frontend/domain/entity/permission_entity.dart';
+
 class UserEntity {
   int? id;
   String name;
   String email;
   List<String> roles;
-  List<String>? permissions;
+  Permissions? permissions;
 
   UserEntity({
     this.id,

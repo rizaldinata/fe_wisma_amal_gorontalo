@@ -1,4 +1,5 @@
 import 'package:frontend/data/model/auth/user_model.dart';
+import 'package:frontend/domain/entity/permission_entity.dart';
 import 'package:frontend/domain/entity/user_entity.dart';
 
 class AuthResponseModel {
@@ -26,7 +27,7 @@ class AuthResponseModel {
       name: user.name,
       email: user.email,
       roles: user.roles.map((role) => role.name).toList(),
-      permissions: [],
+      // permissions: Permissions(),
     );
   }
 }

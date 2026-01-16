@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
+import 'package:frontend/core/constant/permission_key.dart';
 import 'package:frontend/core/constant/style_constant.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
@@ -96,22 +97,20 @@ class _LoginPageState extends State<LoginPage> {
                     if (state.isLoggedIn &&
                         state.userInfo != null &&
                         state.errorMessage == null) {
-                      final permissions = state.userInfo?.permissions ?? [];
+                      final permissions = state.userInfo?.permissions;
 
-                      print('User Permissions: $permissions'); // Debugging
-
-                      if (permissions.contains('access_admin_panel')) {
-                        print('Role: ADMIN -> Navigasi ke Dashboard');
-                        context.router.pushAndPopUntil(
-                          const AppLayoutRoute(),
-                          predicate: (_) => false,
-                        );
-                      } else {
-                        print('Role: USER/GUEST -> Navigasi ke Landing Page');
-                        context.router.pushAndPopUntil(
-                          const LandingRoute(),
-                          predicate: (_) => false,
-                        );
+                      if (permissions != null) {
+                        if (permissions.can(PermissionKeys.accessAdminPanel)) {
+                          context.router.pushAndPopUntil(
+                            const AppLayoutRoute(),
+                            predicate: (_) => false,
+                          );
+                        } else {
+                          context.router.pushAndPopUntil(
+                            const LandingRoute(),
+                            predicate: (_) => false,
+                          );
+                        }
                       }
                     }
                   },

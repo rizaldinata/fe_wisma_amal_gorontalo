@@ -6,6 +6,7 @@ import 'package:frontend/core/services/network/exception.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
 import 'package:frontend/data/model/auth/auth_request_model.dart';
 import 'package:frontend/data/repository/auth_repository.dart';
+import 'package:frontend/domain/entity/permission_entity.dart';
 import 'package:frontend/domain/entity/user_entity.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
@@ -147,7 +148,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     final username = storage.get(StorageConstant.userName);
     final userId = storage.getInt(StorageConstant.userId);
     final role = storage.getList(StorageConstant.roleActive);
-    final permissions = storage.getPermissions()?.toList();
+    final permissions = Permissions(storage.getPermissions()?.toSet() ?? {});
 
     final userInfo = UserEntity(
       email: email ?? '',

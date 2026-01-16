@@ -1,9 +1,12 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend/core/constant/permission_key.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
+import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend/presentation/bloc/room/room_bloc.dart';
 import 'package:frontend/presentation/bloc/room/room_event.dart';
 import 'package:frontend/presentation/bloc/room/room_state.dart';
@@ -99,57 +102,71 @@ class RoomView extends StatelessWidget {
         statusColor = Colors.grey;
     }
 
-    return Card(
-      elevation: 2,
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: statusColor.withOpacity(0.2),
-          child: Icon(Icons.meeting_room, color: statusColor),
-        ),
-        title: Text(
-          "Kamar ${room.number}",
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text("${room.type} - Rp ${room.price}"),
-            Container(
-              margin: const EdgeInsets.only(top: 4),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: statusColor,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: Text(
-                room.status.toUpperCase(),
-                style: const TextStyle(color: Colors.white, fontSize: 10),
-              ),
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        return Card(
+          elevation: 2,
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: statusColor.withOpacity(0.2),
+              child: Icon(Icons.meeting_room, color: statusColor),
             ),
-          ],
-        ),
-        trailing: PopupMenuButton(
-          onSelected: (value) async {
-            if (value == 'edit') {
-              final result = await context.router.push(
-                FormRoomRoute(room: room),
-              );
-              if (result == true && context.mounted) {
-                context.read<RoomBloc>().add(GetRoomsEvent());
-              }
-            } else if (value == 'delete') {
-              _showDeleteDialog(context, room);
-            }
-          },
-          itemBuilder: (context) => [
-            const PopupMenuItem(value: 'edit', child: Text("Edit")),
-            const PopupMenuItem(
-              value: 'delete',
-              child: Text("Hapus", style: TextStyle(color: Colors.red)),
+            title: Text(
+              "Kamar ${room.number}",
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-          ],
-        ),
-      ),
+            subtitle: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text("${room.type} - Rp ${room.price}"),
+                Container(
+                  margin: const EdgeInsets.only(top: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    room.status.toUpperCase(),
+                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                  ),
+                ),
+              ],
+            ),
+            trailing:
+                (state.userInfo?.permissions?.can(PermissionKeys.manageRooms) ??
+                    false)
+                ? PopupMenuButton(
+                    onSelected: (value) async {
+                      if (value == 'edit') {
+                        final result = await context.router.push(
+                          FormRoomRoute(room: room),
+                        );
+                        if (result == true && context.mounted) {
+                          context.read<RoomBloc>().add(GetRoomsEvent());
+                        }
+                      } else if (value == 'delete') {
+                        _showDeleteDialog(context, room);
+                      }
+                    },
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(value: 'edit', child: Text("Edit")),
+                      const PopupMenuItem(
+                        value: 'delete',
+                        child: Text(
+                          "Hapus",
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    ],
+                  )
+                : null,
+          ),
+        );
+      },
     );
   }
 
