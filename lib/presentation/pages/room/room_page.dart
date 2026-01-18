@@ -13,6 +13,7 @@ import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend/presentation/bloc/room/room_bloc.dart';
 import 'package:frontend/presentation/bloc/room/room_event.dart';
 import 'package:frontend/presentation/bloc/room/room_state.dart';
+import 'package:frontend/presentation/pages/room/widget/room_card.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:frontend/presentation/widget/core/card/stat_card.dart';
@@ -55,7 +56,6 @@ class _RoomViewState extends State<RoomView>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
 
     return BlocBuilder<RoomBloc, RoomState>(
       builder: (context, state) {
@@ -111,7 +111,7 @@ class _RoomViewState extends State<RoomView>
                             ),
                             dividerColor: Colors.transparent,
                             indicatorSize: TabBarIndicatorSize.tab,
-                            tabs: [
+                            tabs: const [
                               Tab(text: 'All'),
                               Tab(text: 'Available'),
                               Tab(text: 'Occupied'),
@@ -121,29 +121,42 @@ class _RoomViewState extends State<RoomView>
                           ),
                         ),
                       ),
-
                       if (context.can(PermissionKeys.manageRooms)) ...[
-                        SizedBox(width: 20),
+                        const SizedBox(width: 20),
                         BasicButton(
                           onPressed: () {},
                           label: 'Tambah Kamar',
-                          leadIcon: Icon(Icons.add),
+                          leadIcon: const Icon(Icons.add),
                         ),
                       ],
                     ],
                   ),
-                  SizedBox(height: 16),
-                  SizedBox(
-                    height: MediaQuery.sizeOf(context).height * 0.7,
-                    child: TabBarView(
-                      controller: _controller,
-                      children: [
-                        BasicCard(child: Text('All Rooms List Here')),
-                        BasicCard(child: Text('Available Rooms List Here')),
-                        BasicCard(child: Text('Occupied Rooms List Here')),
-                        BasicCard(child: Text('Maintenance Rooms List Here')),
-                      ],
-                    ),
+                  const SizedBox(height: 16),
+
+                  // Content based on selected tab
+                  AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      final List<dynamic> currentRooms;
+                      switch (_controller.index) {
+                        case 0:
+                          currentRooms = state.rooms;
+                          break;
+                        case 1:
+                          currentRooms = state.availableRooms;
+                          break;
+                        case 2:
+                          currentRooms = state.occupiedRooms;
+                          break;
+                        case 3:
+                          currentRooms = state.maintenanceRooms;
+                          break;
+                        default:
+                          currentRooms = state.rooms;
+                      }
+
+                      return _buildRoomGrid(currentRooms);
+                    },
                   ),
                 ],
               ),
@@ -152,5 +165,63 @@ class _RoomViewState extends State<RoomView>
         );
       },
     );
+  }
+
+  Widget _buildRoomGrid(List<dynamic> rooms) {
+    if (rooms.isEmpty) {
+      return BasicCard(
+        child: SizedBox(
+          height: 300,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: const [
+                Icon(Icons.bed_outlined, size: 64, color: Colors.grey),
+                SizedBox(height: 16),
+                Text(
+                  'Tidak ada kamar',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return BasicCard(
+          child: GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: constraints.maxWidth ~/ 300,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              childAspectRatio: 0.55,
+            ),
+            itemBuilder: (context, index) {
+              final room = rooms[index];
+              return RoomCard(
+                title: room.number,
+                imageUrl: '',
+                availability: room.status.toString(),
+                description: room.description ?? '',
+                price: '${room.price}',
+              );
+            },
+            itemCount: rooms.length,
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
   }
 }

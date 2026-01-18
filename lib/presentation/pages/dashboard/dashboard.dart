@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:frontend/domain/entity/table/tabel_colum.dart';
 import 'package:frontend/presentation/pages/dashboard/widget/stat_data.dart';
 import 'package:frontend/presentation/widget/core/table/table.dart';
-import 'package:frontend/presentation/widget/core/card/stat_card.dart';
 
 @RoutePage()
 class DashboardPage extends StatelessWidget {
