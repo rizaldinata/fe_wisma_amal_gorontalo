@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:formz/formz.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/presentation/bloc/room/room_bloc.dart';
@@ -41,24 +42,24 @@ class _FormRoomPageState extends State<FormRoomPage> {
     _descController = TextEditingController(
       text: widget.room?.description ?? '',
     );
-    if (widget.room != null) {
-      const validStatuses = ['available', 'occupied', 'maintenance'];
-      String incomingStatus = widget.room!.status;
+    // if (widget.room != null) {
+    //   const validStatuses = ['available', 'occupied', 'maintenance'];
+    //   String incomingStatus = widget.room!.status.displayName.toLowerCase();
 
-      if (validStatuses.contains(incomingStatus)) {
-        _selectedStatus = incomingStatus;
-      } else {
-        if (incomingStatus.toLowerCase() == 'tersedia') {
-          _selectedStatus = 'available';
-        } else if (incomingStatus.toLowerCase() == 'terisi') {
-          _selectedStatus = 'occupied';
-        } else if (incomingStatus.toLowerCase() == 'perbaikan') {
-          _selectedStatus = 'maintenance';
-        } else {
-          _selectedStatus = 'available';
-        }
-      }
-    }
+    //   if (validStatuses.contains(incomingStatus)) {
+    //     _selectedStatus = incomingStatus;
+    //   } else {
+    //     if (incomingStatus.toLowerCase() == 'tersedia') {
+    //       _selectedStatus = 'available';
+    //     } else if (incomingStatus.toLowerCase() == 'terisi') {
+    //       _selectedStatus = 'occupied';
+    //     } else if (incomingStatus.toLowerCase() == 'perbaikan') {
+    //       _selectedStatus = 'maintenance';
+    //     } else {
+    //       _selectedStatus = 'available';
+    //     }
+    //   }
+    // }
   }
 
   @override
@@ -76,7 +77,7 @@ class _FormRoomPageState extends State<FormRoomPage> {
       create: (context) => serviceLocator<RoomBloc>(),
       child: BlocConsumer<RoomBloc, RoomState>(
         listener: (context, state) {
-          if (state.status == RoomStatus.success) {
+          if (state.status == FormzSubmissionStatus.success) {
             context.router.maybePop(true);
           }
           if (state.errorMessage != null) {
@@ -149,7 +150,8 @@ class _FormRoomPageState extends State<FormRoomPage> {
                     ),
                     const SizedBox(height: 24),
                     BasicButton(
-                      isLoading: state.status == RoomStatus.loading,
+                      isLoading:
+                          state.status == FormzSubmissionStatus.inProgress,
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           String cleanPrice = _priceController.text.replaceAll(
@@ -162,7 +164,9 @@ class _FormRoomPageState extends State<FormRoomPage> {
                             number: _numberController.text,
                             type: _typeController.text,
                             price: double.tryParse(cleanPrice) ?? 0,
-                            status: _selectedStatus,
+                            status:
+                                state.selectedRoom?.status ??
+                                RoomStatusEnum.fromString(_selectedStatus),
                             description: _descController.text,
                           );
 

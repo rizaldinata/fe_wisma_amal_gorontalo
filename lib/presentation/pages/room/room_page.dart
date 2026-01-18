@@ -1,15 +1,21 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:formz/formz.dart';
 import 'package:frontend/core/constant/permission_key.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
+import 'package:frontend/core/theme/color_schemes.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend/presentation/bloc/room/room_bloc.dart';
 import 'package:frontend/presentation/bloc/room/room_event.dart';
 import 'package:frontend/presentation/bloc/room/room_state.dart';
+import 'package:frontend/presentation/widget/core/botton/button.dart';
+import 'package:frontend/presentation/widget/core/card/basic_card.dart';
+import 'package:frontend/presentation/widget/core/card/stat_card.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 @RoutePage()
@@ -19,177 +25,132 @@ class RoomPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => serviceLocator<RoomBloc>()..add(GetRoomsEvent()),
+      create: (context) => RoomBloc(serviceLocator.get())..add(GetRoomsEvent()),
       child: const RoomView(),
     );
   }
 }
 
-class RoomView extends StatelessWidget {
+class RoomView extends StatefulWidget {
   const RoomView({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Manajemen Kamar"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => context.read<RoomBloc>().add(GetRoomsEvent()),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          final result = await context.router.push(FormRoomRoute());
-          if (result == true && context.mounted) {
-            context.read<RoomBloc>().add(GetRoomsEvent());
-          }
-        },
-        child: const Icon(Icons.add),
-      ),
-      body: BlocConsumer<RoomBloc, RoomState>(
-        listener: (context, state) {
-          if (state.errorMessage != null) {
-            AppSnackbar.showError(state.errorMessage!);
-          }
-          if (state.successMessage != null) {
-            AppSnackbar.showSuccess(state.successMessage!);
-          }
-        },
-        builder: (context, state) {
-          if (state.status == RoomStatus.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+  State<RoomView> createState() => _RoomViewState();
+}
 
-          if (state.rooms.isEmpty) {
-            return const Center(child: Text("Belum ada data kamar"));
-          }
+class _RoomViewState extends State<RoomView>
+    with SingleTickerProviderStateMixin {
+  late final TabController _controller;
 
-          return RefreshIndicator(
-            onRefresh: () async {
-              context.read<RoomBloc>().add(GetRoomsEvent());
-            },
-            child: ListView.separated(
-              padding: const EdgeInsets.all(16),
-              itemCount: state.rooms.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final room = state.rooms[index];
-                return _buildRoomCard(context, room);
-              },
-            ),
-          );
-        },
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _controller = TabController(length: 4, vsync: this);
   }
 
-  Widget _buildRoomCard(BuildContext context, RoomEntity room) {
-    Color statusColor;
-    switch (room.status) {
-      case 'available':
-        statusColor = Colors.green;
-        break;
-      case 'occupied':
-        statusColor = Colors.red;
-        break;
-      case 'maintenance':
-        statusColor = Colors.orange;
-        break;
-      default:
-        statusColor = Colors.grey;
-    }
+  String _selectedFilter = 'all';
+  String _searchQuery = '';
 
-    return BlocBuilder<AuthBloc, AuthState>(
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
+    return BlocBuilder<RoomBloc, RoomState>(
       builder: (context, state) {
-        return Card(
-          elevation: 2,
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: statusColor.withOpacity(0.2),
-              child: Icon(Icons.meeting_room, color: statusColor),
-            ),
-            title: Text(
-              "Kamar ${room.number}",
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("${room.type} - Rp ${room.price}"),
-                Container(
-                  margin: const EdgeInsets.only(top: 4),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: statusColor,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                  child: Text(
-                    room.status.toUpperCase(),
-                    style: const TextStyle(color: Colors.white, fontSize: 10),
-                  ),
-                ),
-              ],
-            ),
-            trailing:
-                (state.userInfo?.permissions?.can(PermissionKeys.manageRooms) ??
-                    false)
-                ? PopupMenuButton(
-                    onSelected: (value) async {
-                      if (value == 'edit') {
-                        final result = await context.router.push(
-                          FormRoomRoute(room: room),
-                        );
-                        if (result == true && context.mounted) {
-                          context.read<RoomBloc>().add(GetRoomsEvent());
-                        }
-                      } else if (value == 'delete') {
-                        _showDeleteDialog(context, room);
-                      }
-                    },
-                    itemBuilder: (context) => [
-                      const PopupMenuItem(value: 'edit', child: Text("Edit")),
-                      const PopupMenuItem(
-                        value: 'delete',
-                        child: Text(
-                          "Hapus",
-                          style: TextStyle(color: Colors.red),
-                        ),
+        return Scaffold(
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      StatCard(
+                        title: 'Total Rooms',
+                        count: state.rooms.length.toString(),
+                        color: Colors.green.shade100,
+                      ),
+                      const SizedBox(width: 16),
+                      StatCard(
+                        title: 'Available Rooms',
+                        count: state.availableRooms.length.toString(),
+                        color: colorScheme.primaryContainer,
+                      ),
+                      const SizedBox(width: 16),
+                      StatCard(
+                        title: 'Occupied Rooms',
+                        count: state.occupiedRooms.length.toString(),
+                        color: colorScheme.errorContainer,
+                      ),
+                      const SizedBox(width: 16),
+                      StatCard(
+                        title: 'Maintenance Rooms',
+                        count: state.maintenanceRooms.length.toString(),
+                        color: colorScheme.secondaryContainer,
                       ),
                     ],
-                  )
-                : null,
+                  ),
+                  const SizedBox(height: 30),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.surfaceContainerLow,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: TabBar(
+                            indicator: BoxDecoration(
+                              borderRadius: BorderRadius.circular(8),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withAlpha(50),
+                            ),
+                            dividerColor: Colors.transparent,
+                            indicatorSize: TabBarIndicatorSize.tab,
+                            tabs: [
+                              Tab(text: 'All'),
+                              Tab(text: 'Available'),
+                              Tab(text: 'Occupied'),
+                              Tab(text: 'Maintenance'),
+                            ],
+                            controller: _controller,
+                          ),
+                        ),
+                      ),
+
+                      if (context.can(PermissionKeys.manageRooms)) ...[
+                        SizedBox(width: 20),
+                        BasicButton(
+                          onPressed: () {},
+                          label: 'Tambah Kamar',
+                          leadIcon: Icon(Icons.add),
+                        ),
+                      ],
+                    ],
+                  ),
+                  SizedBox(height: 16),
+                  SizedBox(
+                    height: MediaQuery.sizeOf(context).height * 0.7,
+                    child: TabBarView(
+                      controller: _controller,
+                      children: [
+                        BasicCard(child: Text('All Rooms List Here')),
+                        BasicCard(child: Text('Available Rooms List Here')),
+                        BasicCard(child: Text('Occupied Rooms List Here')),
+                        BasicCard(child: Text('Maintenance Rooms List Here')),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },
-    );
-  }
-
-  void _showDeleteDialog(BuildContext context, RoomEntity room) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Hapus Kamar"),
-        content: Text("Yakin ingin menghapus kamar ${room.number}?"),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text("Batal"),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              context.read<RoomBloc>().add(DeleteRoomEvent(room.id));
-            },
-            child: const Text("Hapus", style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
     );
   }
 }

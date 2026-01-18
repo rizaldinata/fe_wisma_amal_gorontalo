@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 
-class DashboardStatCard extends StatelessWidget {
-  const DashboardStatCard({
+class StatCard extends StatelessWidget {
+  const StatCard({
     super.key,
     this.title = 'Total Users',
     this.count = '200',
-    this.icon = const Icon(Icons.people, size: 40, color: Colors.blue),
+    this.icon,
     this.color,
   });
   final String title;
   final String count;
-  final Widget icon;
+  final Widget? icon;
   final Color? color;
 
   @override
@@ -36,7 +36,8 @@ class DashboardStatCard extends StatelessWidget {
             ],
           ),
           const SizedBox(width: 16),
-          BasicCard(color: color ?? Colors.blue.shade100, child: icon),
+          if (icon != null)
+            BasicCard(color: color ?? Colors.blue.shade100, child: icon),
         ],
       ),
     );

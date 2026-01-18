@@ -14,4 +14,9 @@ class UserEntity {
     required this.roles,
     this.permissions,
   });
+
+  @override
+  toString() {
+    return 'UserEntity{id: $id, name: $name, email: $email, roles: $roles, permissions: ${permissions?.raw}}';
+  }
 }

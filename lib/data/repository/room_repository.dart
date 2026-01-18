@@ -1,4 +1,5 @@
 import 'package:frontend/data/datasource/room_datasource.dart';
+import 'package:frontend/data/model/room/room_model.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
 
 class RoomRepository {
@@ -17,14 +18,7 @@ class RoomRepository {
 
   Future<RoomEntity> createRoom(RoomEntity room) async {
     try {
-      final data = {
-        'number': room.number,
-        'type': room.type,
-        'price': room.price,
-        'status': room.status,
-        'description': room.description,
-      };
-      final response = await datasource.createRoom(data);
+      final response = await datasource.createRoom(RoomModel.fromDomain(room));
       return response.data.toEntity();
     } catch (e) {
       rethrow;
@@ -33,14 +27,10 @@ class RoomRepository {
 
   Future<RoomEntity> updateRoom(int id, RoomEntity room) async {
     try {
-      final data = {
-        'number': room.number,
-        'type': room.type,
-        'price': room.price,
-        'status': room.status,
-        'description': room.description,
-      };
-      final response = await datasource.updateRoom(id, data);
+      final response = await datasource.updateRoom(
+        id,
+        RoomModel.fromDomain(room),
+      );
       return response.data.toEntity();
     } catch (e) {
       rethrow;

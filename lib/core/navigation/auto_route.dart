@@ -12,23 +12,15 @@ class AppRouter extends RootStackRouter {
     AutoRoute(
       page: AppLayoutRoute.page,
       path: RouteConstant.rootPath,
-      guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+      // guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
       children: [
         AutoRoute(
           path: RouteConstant.dashboardName,
           page: DashboardRoute.page,
           initial: true,
         ),
-        AutoRoute(
-          path: RouteConstant.roomName,
-          page: RoomRoute.page,
-          children: [
-            AutoRoute(
-              path: RouteConstant.formRoomName,
-              page: FormRoomRoute.page,
-            ),
-          ],
-        ),
+        AutoRoute(path: RouteConstant.roomName, page: RoomRoute.page),
+        AutoRoute(path: RouteConstant.formRoomName, page: FormRoomRoute.page),
       ],
     ),
     AutoRoute(page: LandingRoute.page, initial: true),

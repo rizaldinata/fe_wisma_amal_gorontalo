@@ -27,12 +27,12 @@ class RoomDatasource {
 
   // CREATE ROOM
   Future<BaseResponseModel<RoomModel>> createRoom(
-    Map<String, dynamic> data,
+    RoomModel data,
   ) async {
     try {
       final response = await dioClient.post(
         EndpointConstant.roomsEndpoint,
-        data: data,
+        data: data.toJson(),
       );
       return BaseResponseModel<RoomModel>.fromJson(
         response.data,
@@ -46,12 +46,12 @@ class RoomDatasource {
   // UPDATE ROOM
   Future<BaseResponseModel<RoomModel>> updateRoom(
     int id,
-    Map<String, dynamic> data,
+    RoomModel data,
   ) async {
     try {
       final response = await dioClient.put(
         '${EndpointConstant.roomsEndpoint}/$id',
-        data: data,
+        data: data.toJson(),
       );
       return BaseResponseModel<RoomModel>.fromJson(
         response.data,

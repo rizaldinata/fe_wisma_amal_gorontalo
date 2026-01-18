@@ -68,6 +68,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
 
       if (auth.isLoggedIn()) {
+        add(const GetUserInfoEvent());
         emit(
           state.copyWith(
             isLoggedIn: true,
@@ -77,8 +78,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           ),
         );
       }
-
-      // Tampilkan pesan sukses
       AppSnackbar.showSuccess('Login berhasil!');
     } on AppException catch (e) {
       emit(
@@ -108,6 +107,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
 
       if (auth.isLoggedIn()) {
+        add(const GetUserInfoEvent());
         emit(
           state.copyWith(
             isLoggedIn: true,
@@ -144,21 +144,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   }
 
   void _onGetUserInfo(GetUserInfoEvent event, Emitter<AuthState> emit) {
-    final email = storage.get(StorageConstant.email);
-    final username = storage.get(StorageConstant.userName);
-    final userId = storage.getInt(StorageConstant.userId);
-    final role = storage.getList(StorageConstant.roleActive);
-    final permissions = Permissions(storage.getPermissions()?.toSet() ?? {});
+    try {
+      final email = storage.get(StorageConstant.email);
+      final username = storage.get(StorageConstant.userName);
+      final userId = storage.getInt(StorageConstant.userId);
+      final role = storage.getList(StorageConstant.roleActive);
+      final permissions = Permissions(storage.getPermissions()?.toSet() ?? {});
 
-    final userInfo = UserEntity(
-      email: email ?? '',
-      name: username ?? '',
-      id: userId ?? 0,
-      roles: role ?? [],
-      permissions: permissions,
-    );
+      final userInfo = UserEntity(
+        email: email ?? '',
+        name: username ?? '',
+        id: userId ?? 0,
+        roles: role ?? [],
+        permissions: permissions,
+      );
 
-    emit(state.copyWith(userInfo: userInfo));
+      emit(state.copyWith(userInfo: userInfo));
+    } catch (e) {
+      emit(state.copyWith(errorMessage: e.toString()));
+    }
   }
 
   void _onToggleObscureText(

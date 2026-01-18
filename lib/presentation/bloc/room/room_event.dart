@@ -10,6 +10,11 @@ abstract class RoomEvent extends Equatable {
 
 class GetRoomsEvent extends RoomEvent {}
 
+class SelectRoomEvent extends RoomEvent {
+  final RoomEntity room;
+  const SelectRoomEvent(this.room);
+}
+
 class AddRoomEvent extends RoomEvent {
   final RoomEntity room;
   const AddRoomEvent(this.room);

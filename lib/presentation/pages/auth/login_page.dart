@@ -84,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                     ),
                   ],
                 ),
-                height: 700,
+                // height: 700,
                 width: 600,
                 child: BlocConsumer<AuthBloc, AuthState>(
                   listener: (context, state) {
@@ -94,29 +94,30 @@ class _LoginPageState extends State<LoginPage> {
                       );
                     }
 
-                    if (state.isLoggedIn &&
-                        state.userInfo != null &&
-                        state.errorMessage == null) {
-                      final permissions = state.userInfo?.permissions;
+                    // if (state.isLoggedIn &&
+                    //     state.userInfo != null &&
+                    //     state.errorMessage == null) {
+                    // final permissions = state.userInfo?.permissions;
 
-                      if (permissions != null) {
-                        if (permissions.can(PermissionKeys.accessAdminPanel)) {
-                          context.router.pushAndPopUntil(
-                            const AppLayoutRoute(),
-                            predicate: (_) => false,
-                          );
-                        } else {
-                          context.router.pushAndPopUntil(
-                            const LandingRoute(),
-                            predicate: (_) => false,
-                          );
-                        }
-                      }
-                    }
+                    // if (permissions != null) {
+                    //   if (permissions.can(PermissionKeys.accessAdminPanel)) {
+                    //     context.router.pushAndPopUntil(
+                    //       const AppLayoutRoute(),
+                    //       predicate: (_) => false,
+                    //     );
+                    //   } else {
+                    //     context.router.pushAndPopUntil(
+                    //       const LandingRoute(),
+                    //       predicate: (_) => false,
+                    //     );
+                    //   }
+                    // }
+                    // }
                   },
                   builder: (context, state) {
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
                           'Login Page',

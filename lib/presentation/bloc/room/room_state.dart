@@ -1,24 +1,33 @@
 import 'package:equatable/equatable.dart';
+import 'package:formz/formz.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
 
-enum RoomStatus { initial, loading, success, failure }
-
 class RoomState extends Equatable {
-  final RoomStatus status;
+  final FormzSubmissionStatus status;
   final List<RoomEntity> rooms;
+  List<RoomEntity> get availableRooms =>
+      rooms.where((room) => room.status == RoomStatusEnum.available).toList();
+  List<RoomEntity> get occupiedRooms =>
+      rooms.where((room) => room.status == RoomStatusEnum.occupied).toList();
+  List<RoomEntity> get maintenanceRooms =>
+      rooms.where((room) => room.status == RoomStatusEnum.maintenance).toList();
+
   final String? errorMessage;
   final String? successMessage;
+  final RoomEntity? selectedRoom;
 
   const RoomState({
-    this.status = RoomStatus.initial,
+    this.status = FormzSubmissionStatus.initial,
     this.rooms = const [],
     this.errorMessage,
     this.successMessage,
+    this.selectedRoom,
   });
 
   RoomState copyWith({
-    RoomStatus? status,
+    FormzSubmissionStatus? status,
     List<RoomEntity>? rooms,
+    RoomEntity? selectedRoom,
     String? errorMessage,
     String? successMessage,
   }) {
@@ -27,6 +36,7 @@ class RoomState extends Equatable {
       rooms: rooms ?? this.rooms,
       errorMessage: errorMessage,
       successMessage: successMessage,
+      selectedRoom: selectedRoom ?? this.selectedRoom,
     );
   }
 

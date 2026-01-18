@@ -14,10 +14,16 @@ class AppException implements Exception {
         return AppException("Connection timeout. Please try again.", code: 408);
 
       case DioExceptionType.receiveTimeout:
-        return AppException("Receive timeout. Server took too long to respond.", code: 408);
+        return AppException(
+          "Receive timeout. Server took too long to respond.",
+          code: 408,
+        );
 
       case DioExceptionType.sendTimeout:
-        return AppException("Send timeout. Please check your connection.", code: 408);
+        return AppException(
+          "Send timeout. Please check your connection.",
+          code: 408,
+        );
 
       case DioExceptionType.badResponse:
         final response = error.response;
@@ -27,7 +33,10 @@ class AppException implements Exception {
         return AppException(msg, code: statusCode, details: data);
 
       case DioExceptionType.connectionError:
-        return AppException("No Internet connection detected. Please check your network.", code: 503);
+        return AppException(
+          "Unable to connect to the server. Please check your network or try again later.",
+          code: 503,
+        );
 
       case DioExceptionType.cancel:
         return AppException("Request cancelled by user.");
@@ -54,12 +63,12 @@ class AppException implements Exception {
       // Handle format: {"status":"Error","message":"Validation Error","data":{"email":["..."]}}
       if (data.containsKey('data') && data['data'] is Map<String, dynamic>) {
         final errorData = data['data'] as Map<String, dynamic>;
-        
+
         // Ambil field pertama yang ada error
         if (errorData.isNotEmpty) {
           final firstKey = errorData.keys.first;
           final firstError = errorData[firstKey];
-          
+
           if (firstError is List && firstError.isNotEmpty) {
             // Format: {"email": ["The email has already been taken."]}
             return firstError.first.toString();
@@ -68,7 +77,7 @@ class AppException implements Exception {
           }
         }
       }
-      
+
       // Handle format standard lainnya
       if (data.containsKey('message')) return data['message'].toString();
       if (data.containsKey('error')) return data['error'].toString();

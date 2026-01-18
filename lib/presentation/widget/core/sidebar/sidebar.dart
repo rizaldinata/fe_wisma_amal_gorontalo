@@ -4,21 +4,23 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend/presentation/widget/core/botton/icon_button.dart';
 
 class SidebarItem {
   final String label;
   final IconData? icon;
-  final String? routeName;
+  // final String? routeName;
   final VoidCallback? onTap;
+  final PageRouteInfo? page;
   final List<SidebarItem>? children;
   final bool hasAccess;
 
   const SidebarItem({
     required this.label,
     this.icon,
-    this.routeName,
     this.onTap,
     this.children,
+    this.page,
     this.hasAccess = true,
   });
 
@@ -58,21 +60,25 @@ class _CustomSidebarState extends State<CustomSidebar> {
     final current = context.router.current;
     final segments = context.router.currentSegments;
 
-    if (item.routeName != null) {
+    if (item.page != null) {
       final activeOverride = (widget.activeRouteName != null)
           ? widget.activeRouteName
           : null;
-      if (activeOverride != null && activeOverride == item.routeName)
+      if (activeOverride != null && activeOverride == item.page!.routeName) {
         return true;
-      if (current != null && current.name == item.routeName) return true;
-      if (segments.any((s) => s.name == item.routeName)) return true;
+      }
+
+      if (current.name == item.page!.routeName) return true;
+
+      if (segments.any((s) => s.name == item.page!.routeName)) return true;
       try {
         final stack = context.router.stack;
         for (final entry in stack) {
-          if (entry.name == item.routeName) return true;
+          if (entry.name == item.page!.routeName) return true;
         }
       } catch (_) {}
     }
+
     if (item.hasChildren) {
       return item.children!.any((c) => _isSelected(context, c));
     }
@@ -85,15 +91,8 @@ class _CustomSidebarState extends State<CustomSidebar> {
         item.onTap!.call();
         return;
       }
-      if (item.routeName != null) {
-        final page = PageRouteInfo.named(item.routeName!);
-        try {
-          context.router.push(page);
-        } catch (_) {
-          try {
-            context.router.replace(page);
-          } catch (_) {}
-        }
+      if (item.page != null) {
+        context.router.push(item.page!);
       }
     });
   }
@@ -103,7 +102,7 @@ class _CustomSidebarState extends State<CustomSidebar> {
     return Container(
       width: widget.width,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: Theme.of(context).colorScheme.surfaceContainerLow,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
@@ -112,107 +111,29 @@ class _CustomSidebarState extends State<CustomSidebar> {
           ),
         ],
       ),
-      child: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
+      child: BlocBuilder<AuthBloc, AuthState>(
+        builder: (context, state) {
+          return SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Wisma Amal',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Operational & Maintenance',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onSurface.withOpacity(0.6),
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Divider + menu label
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                'Menu',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.onSurface.withOpacity(0.6),
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                itemCount: widget.items.length,
-                itemBuilder: (context, index) {
-                  final item = widget.items[index];
-                  if (item.hasAccess) {
-                    if (item.hasChildren) {
-                      final id = item.label;
-                      final isOpen =
-                          _expanded.contains(id) || _isSelected(context, item);
-                      return _buildAccordionSection(context, item, isOpen, id);
-                    }
-                    return _buildMenuTile(context, item);
-                  }
-                },
-              ),
-            ),
-
-            // Profile + logout area
-            const SizedBox(height: 8),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: BlocBuilder<AuthBloc, AuthState>(
-                builder: (context, state) {
-                  if (state.userInfo == null || state.userInfo?.id == null) {
-                    context.read<AuthBloc>().add(const GetUserInfoEvent());
-                  }
-
-                  return Row(
+                  // Header
+                  Row(
                     children: [
-                      CircleAvatar(
-                        radius: 20,
-                        child: Icon(
-                          Icons.person,
-                          color: Theme.of(context).colorScheme.onPrimary,
-                        ),
-                        backgroundColor: Theme.of(context).colorScheme.primary,
-                      ),
-                      const SizedBox(width: 10),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              state.userInfo?.name ?? 'User',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600),
+                              'Wisma Amal',
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w700),
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              state.userInfo?.roles.join(', ') ?? 'No Role',
+                              'Operational & Maintenance',
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
                                     color: Theme.of(
@@ -223,20 +144,129 @@ class _CustomSidebarState extends State<CustomSidebar> {
                           ],
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.logout),
-                        onPressed: () {
-                          context.read<AuthBloc>().add(const LogoutEvent());
-                        },
-                      ),
                     ],
-                  );
-                },
+                  ),
+
+                  // Divider + menu label
+                  Text(
+                    'Menu',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      itemCount: widget.items.length,
+                      itemBuilder: (context, index) {
+                        final item = widget.items[index];
+                        if (!item.hasAccess) {
+                          // Return an empty widget instead of null to keep
+                          // the children's indices contiguous for the
+                          // underlying sliver list.
+                          return const SizedBox.shrink();
+                        }
+
+                        if (item.hasChildren) {
+                          final id = item.label;
+                          final isOpen =
+                              _expanded.contains(id) ||
+                              _isSelected(context, item);
+                          return _buildAccordionSection(
+                            context,
+                            item,
+                            isOpen,
+                            id,
+                          );
+                        }
+
+                        return _buildMenuTile(context, item);
+                      },
+                    ),
+                  ),
+
+                  // Profile
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: BlocBuilder<AuthBloc, AuthState>(
+                      builder: (context, state) {
+                        if (state.userInfo == null ||
+                            state.userInfo?.id == null) {
+                          context.read<AuthBloc>().add(
+                            const GetUserInfoEvent(),
+                          );
+                        }
+
+                        return Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundColor: Theme.of(
+                                context,
+                              ).colorScheme.primary,
+                              child: Icon(
+                                Icons.person,
+                                color: Theme.of(context).colorScheme.onPrimary,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    state.userInfo?.name ?? 'User',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(fontWeight: FontWeight.w600),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    state.userInfo?.roles.join(', ') ??
+                                        'No Role',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurface
+                                              .withOpacity(0.6),
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  SizedBox(height: 12),
+                  CustomIconButton(
+                    icon: Icon(Icons.logout),
+                    title: 'Logout',
+                    onPressed: () {
+                      context.read<AuthBloc>().add(const LogoutEvent());
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                ],
               ),
             ),
-            const SizedBox(height: 12),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -248,7 +278,7 @@ class _CustomSidebarState extends State<CustomSidebar> {
     String id,
   ) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
         color: isOpen
             ? Theme.of(context).colorScheme.primary.withOpacity(0.06)
@@ -272,7 +302,7 @@ class _CustomSidebarState extends State<CustomSidebar> {
             section.label,
             style: Theme.of(
               context,
-            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w600),
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
           ),
           childrenPadding: const EdgeInsets.only(
             left: 20,
@@ -280,56 +310,8 @@ class _CustomSidebarState extends State<CustomSidebar> {
             bottom: 8,
           ),
           children: section.children!
-              .map((child) => _buildChildTile(context, child))
+              .map((child) => _buildMenuTile(context, child))
               .toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildChildTile(BuildContext context, SidebarItem item) {
-    final selected = _isSelected(context, item);
-    return InkWell(
-      onTap: () => _handleTap(context, item),
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected
-              ? Theme.of(context).colorScheme.primary.withOpacity(0.12)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            if (item.icon != null) ...[
-              Icon(
-                item.icon,
-                size: 18,
-                color: selected
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-              ),
-              const SizedBox(width: 12),
-            ],
-            Expanded(
-              child: Text(
-                item.label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                  color: selected
-                      ? Theme.of(context).colorScheme.primary
-                      : null,
-                ),
-              ),
-            ),
-            if (selected)
-              Icon(
-                Icons.circle,
-                size: 8,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-          ],
         ),
       ),
     );
@@ -337,50 +319,47 @@ class _CustomSidebarState extends State<CustomSidebar> {
 
   Widget _buildMenuTile(BuildContext context, SidebarItem item) {
     final selected = _isSelected(context, item);
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      child: Material(
-        color: selected
-            ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
-            : Colors.transparent,
+    return Material(
+      color: selected
+          ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(10),
+      child: InkWell(
         borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(10),
-          onTap: () => _handleTap(context, item),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            child: Row(
-              children: [
-                if (item.icon != null)
-                  Icon(
-                    item.icon,
-                    size: 20,
+        onTap: () => _handleTap(context, item),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          child: Row(
+            children: [
+              if (item.icon != null)
+                Icon(
+                  item.icon,
+                  size: 20,
+                  color: selected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.8),
+                ),
+              if (item.icon != null) const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  item.label,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     color: selected
                         ? Theme.of(context).colorScheme.primary
-                        : Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.8),
-                  ),
-                if (item.icon != null) const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    item.label,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                      color: selected
-                          ? Theme.of(context).colorScheme.primary
-                          : null,
-                    ),
+                        : null,
                   ),
                 ),
-                if (selected)
-                  Icon(
-                    Icons.circle,
-                    size: 8,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-              ],
-            ),
+              ),
+              if (selected)
+                Icon(
+                  Icons.circle,
+                  size: 8,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+            ],
           ),
         ),
       ),

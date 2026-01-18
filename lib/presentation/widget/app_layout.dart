@@ -1,7 +1,6 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:frontend/core/constant/permission_key.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/constant/style_constant.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
@@ -32,22 +31,18 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                   SidebarItem(
                     label: RouteConstant.dashboardName,
                     icon: Icons.dashboard,
-                    routeName: DashboardRoute.name,
+                    page: DashboardRoute(),
                     hasAccess: true,
                   ),
                   SidebarItem(
                     label: 'Rooms',
                     icon: Icons.storage,
-                    hasAccess:
-                        state.userInfo?.permissions?.can(
-                          PermissionKeys.manageRooms,
-                        ) ??
-                        false,
+                    hasAccess: true,
                     children: [
                       SidebarItem(
                         label: RouteConstant.roomName,
                         icon: Icons.meeting_room,
-                        routeName: RoomRoute.name,
+                        page: RoomRoute(),
                       ),
                     ],
                   ),

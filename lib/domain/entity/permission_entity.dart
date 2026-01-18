@@ -16,4 +16,5 @@ class Permissions {
   }
 
   Set<String> get raw => _values;
+  
 }

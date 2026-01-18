@@ -12,8 +12,4 @@ Future<void> initializeBloc() async {
       storage: serviceLocator.get<SharedPrefsStorage>(),
     ),
   );
-
-  serviceLocator.registerFactory<RoomBloc>(
-    () => RoomBloc(serviceLocator.get<RoomRepository>()),
-  );
 }

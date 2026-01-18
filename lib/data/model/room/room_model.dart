@@ -1,13 +1,19 @@
 import 'package:frontend/domain/entity/room_entity.dart';
 
-class RoomModel extends RoomEntity {
+class RoomModel {
+  final int id;
+  final String number;
+  final String type;
+  final double price;
+  final String status;
+  final String? description;
   RoomModel({
-    required super.id,
-    required super.number,
-    required super.type,
-    required super.price,
-    required super.status,
-    super.description,
+    required this.id,
+    required this.number,
+    required this.type,
+    required this.price,
+    required this.status,
+    this.description,
   });
 
   factory RoomModel.fromJson(Map<String, dynamic> json) {
@@ -41,8 +47,19 @@ class RoomModel extends RoomEntity {
       number: number,
       type: type,
       price: price,
-      status: status,
+      status: RoomStatusEnum.fromString(status),
       description: description,
+    );
+  }
+
+  factory RoomModel.fromDomain(RoomEntity entity) {
+    return RoomModel(
+      id: entity.id,
+      number: entity.number,
+      type: entity.type,
+      price: entity.price,
+      status: entity.status.displayName,
+      description: entity.description,
     );
   }
 }

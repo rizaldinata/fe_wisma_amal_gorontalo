@@ -44,6 +44,13 @@ class MyApp extends StatelessWidget {
   }
 }
 
+extension PermissionContext on BuildContext {
+  bool can(String permission) {
+    final auth = read<AuthBloc>().state;
+    return auth.userInfo?.permissions?.can(permission) ?? false;
+  }
+}
+
 class SessionListener extends StatelessWidget {
   final Widget child;
   final AppRouter router;
@@ -53,12 +60,14 @@ class SessionListener extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
+      listenWhen: (previous, current) =>
+          previous.isLoggedIn != current.isLoggedIn,
       listener: (context, state) {
         print('isLoggedIn: ${state.isLoggedIn}');
         print('userInfo: ${state.userInfo}');
         if (state.isLoggedIn) {
-          router.replaceAll([AppLayoutRoute(), DashboardRoute()]);
-        } else if (!state.isLoggedIn) {
+          router.replaceAll([const DashboardRoute()]);
+        } else {
           router.replaceAll([LoginRoute()]);
         }
       },

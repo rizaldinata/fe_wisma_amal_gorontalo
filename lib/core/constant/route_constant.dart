@@ -17,5 +17,5 @@ class RouteConstant {
   static const String landingName = 'landing';
   static const String roomName = 'rooms';
 
-  static const String formRoomName = 'room-form';
+  static const String formRoomName = '$roomName/room-form';
 }

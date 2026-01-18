@@ -4,8 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> initializeStorage() async {
   final prefs = await SharedPreferences.getInstance();
-  serviceLocator.registerSingleton<SharedPreferences>(prefs);
-  serviceLocator.registerSingleton<SharedPrefsStorage>(
-    SharedPrefsStorage(prefs),
+  serviceLocator.registerLazySingleton<SharedPreferences>(() => prefs);
+  serviceLocator.registerLazySingleton<SharedPrefsStorage>(
+    () => SharedPrefsStorage(prefs),
   );
 }
