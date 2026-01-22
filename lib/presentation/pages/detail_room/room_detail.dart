@@ -63,6 +63,7 @@ class RoomDetailView extends StatelessWidget {
                 children: [
                   ImageCarousel(
                     height: 400,
+                    maxWidth: double.infinity,
                     imageUrls:
                         state.room?.imageUrl
                             .map((image) => image.url)
