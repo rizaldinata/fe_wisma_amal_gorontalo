@@ -1,3 +1,5 @@
+import 'package:frontend/data/model/room/room_image_model.dart';
+
 enum RoomStatusEnum {
   available,
   occupied,
@@ -31,11 +33,11 @@ enum RoomStatusEnum {
 
   static RoomStatusEnum fromString(String status) {
     switch (status.toLowerCase()) {
-      case 'tersedia':
+      case 'available':
         return RoomStatusEnum.available;
-      case 'terisi':
+      case 'occupied':
         return RoomStatusEnum.occupied;
-      case 'perbaikan':
+      case 'maintenance':
         return RoomStatusEnum.maintenance;
       default:
         throw ArgumentError('Invalid room status: $status');
@@ -48,8 +50,12 @@ class RoomEntity {
   final String number;
   final String type;
   final double price;
+  final String priceFormatted;
   final RoomStatusEnum status;
-  final String? description;
+  final String statusCode;
+  final String description;
+  final List<RoomImageModel> imageUrl;
+  final List<String> facilities;
 
   RoomEntity({
     required this.id,
@@ -57,6 +63,10 @@ class RoomEntity {
     required this.type,
     required this.price,
     required this.status,
-    this.description,
+    required this.description,
+    required this.priceFormatted,
+    required this.imageUrl,
+    required this.facilities,
+    required this.statusCode,
   });
 }

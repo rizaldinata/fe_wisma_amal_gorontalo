@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
@@ -29,6 +31,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository auth;
   final SharedPrefsStorage storage;
   final AuthStateNotifier loginStatusNotifier = AuthStateNotifier();
+  Timer? _sessionTimer;
 
   AuthBloc({required this.auth, required this.storage})
     : super(const AuthState()) {
@@ -42,6 +45,25 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(const AuthState());
     });
     add(const InitLoginStatusEvent());
+    on<CheckSessionEvent>((event, emit) async {
+      _sessionTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
+        print('Checking session validity...');
+        _checkSession();
+      });
+    });
+  }
+
+  Future<void> _checkSession() async {
+    try {
+      final isValid = await auth.checkSession();
+      if (!isValid) {
+        add(const LogoutEvent());
+        AppSnackbar.showError('Sesi telah berakhir. Silakan login kembali.');
+      }
+    } catch (e) {
+      print('Error checking session: $e');
+      AppSnackbar.showError('Terjadi kesalahan saat memeriksa sesi.');
+    }
   }
 
   void _onInitLoginStatus(InitLoginStatusEvent event, Emitter<AuthState> emit) {
@@ -139,7 +161,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         ),
       );
     } catch (e) {
-      emit(state.copyWith(status: FormzSubmissionStatus.failure));
+      AppSnackbar.showError('Gagal logout: ${e.toString()}');
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: e.toString(),
+          isLoggedIn: false,
+        ),
+      );
     }
   }
 
@@ -174,6 +203,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   @override
   Future<void> close() {
+    _sessionTimer?.cancel();
     loginStatusNotifier.dispose();
     return super.close();
   }

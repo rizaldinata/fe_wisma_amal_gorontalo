@@ -4,12 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:frontend/core/constant/permission_key.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
-import 'package:frontend/core/navigation/auto_route.gr.dart';
-import 'package:frontend/core/theme/color_schemes.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/main.dart';
-import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
-import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend/presentation/bloc/room/room_bloc.dart';
 import 'package:frontend/presentation/bloc/room/room_event.dart';
 import 'package:frontend/presentation/bloc/room/room_state.dart';
@@ -17,7 +13,6 @@ import 'package:frontend/presentation/pages/room/widget/room_card.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:frontend/presentation/widget/core/card/stat_card.dart';
-import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 @RoutePage()
 class RoomPage extends StatelessWidget {
@@ -132,12 +127,10 @@ class _RoomViewState extends State<RoomView>
                     ],
                   ),
                   const SizedBox(height: 16),
-
-                  // Content based on selected tab
                   AnimatedBuilder(
                     animation: _controller,
                     builder: (context, child) {
-                      final List<dynamic> currentRooms;
+                      final List<RoomEntity> currentRooms;
                       switch (_controller.index) {
                         case 0:
                           currentRooms = state.rooms;
@@ -155,7 +148,7 @@ class _RoomViewState extends State<RoomView>
                           currentRooms = state.rooms;
                       }
 
-                      return _buildRoomGrid(currentRooms);
+                      return _buildRoomGrid(currentRooms, state);
                     },
                   ),
                 ],
@@ -167,7 +160,26 @@ class _RoomViewState extends State<RoomView>
     );
   }
 
-  Widget _buildRoomGrid(List<dynamic> rooms) {
+  Widget _buildRoomGrid(List<RoomEntity> rooms, RoomState state) {
+    print('Building room grid with ${rooms.length} rooms');
+    if (state.status == FormzSubmissionStatus.inProgress) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20.0),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    if (state.status == FormzSubmissionStatus.failure) {
+      return Center(
+        child: Text(
+          'Gagal memuat kamar: ${state.errorMessage}',
+          style: const TextStyle(color: Colors.red),
+        ),
+      );
+    }
+
     if (rooms.isEmpty) {
       return BasicCard(
         child: SizedBox(
@@ -198,18 +210,18 @@ class _RoomViewState extends State<RoomView>
             padding: const EdgeInsets.all(16),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: constraints.maxWidth ~/ 300,
-              crossAxisSpacing: 16,
+              crossAxisSpacing: 30,
               mainAxisSpacing: 16,
-              childAspectRatio: 0.55,
+              childAspectRatio: 0.6,
             ),
             itemBuilder: (context, index) {
               final room = rooms[index];
               return RoomCard(
                 title: room.number,
-                imageUrl: '',
-                availability: room.status.toString(),
-                description: room.description ?? '',
-                price: '${room.price}',
+                imageUrl: room.imageUrl.first.thumbnail,
+                availability: room.status,
+                description: room.description,
+                price: '${room.priceFormatted} / bulan',
               );
             },
             itemCount: rooms.length,

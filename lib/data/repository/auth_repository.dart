@@ -9,6 +9,15 @@ class AuthRepository {
   final SharedPrefsStorage storage;
   AuthRepository({required this.datasource, required this.storage});
 
+  Future<bool> checkSession() async {
+    try {
+      final result = await datasource.checkSession();
+      return result;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<UserEntity> register(request) async {
     try {
       final response = await datasource.register(request);

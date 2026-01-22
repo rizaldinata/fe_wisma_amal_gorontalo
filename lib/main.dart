@@ -5,6 +5,7 @@ import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
@@ -27,7 +28,7 @@ class MyApp extends StatelessWidget {
     final authBloc = serviceLocator<AuthBloc>();
 
     return BlocProvider.value(
-      value: authBloc,
+      value: authBloc..add(const CheckSessionEvent()),
       child: MaterialApp.router(
         debugShowCheckedModeBanner: false,
         title: 'Wisma Amal',
@@ -60,11 +61,7 @@ class SessionListener extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
-      listenWhen: (previous, current) =>
-          previous.isLoggedIn != current.isLoggedIn,
       listener: (context, state) {
-        print('isLoggedIn: ${state.isLoggedIn}');
-        print('userInfo: ${state.userInfo}');
         if (state.isLoggedIn) {
           router.replaceAll([const DashboardRoute()]);
         } else {

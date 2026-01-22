@@ -29,10 +29,15 @@ class DioClient {
 
     _dio.interceptors.clear();
     _dio.interceptors.add(apiInterceptor);
+    _dio.interceptors.add(
+      LogInterceptor(
+        requestHeader: true,
+        responseHeader: true,
+        requestBody: true,
+        responseBody: true,
+      ),
+    );
     _dio.interceptors.add(PrettyDioLogger());
-    // _dio.interceptors.add(
-    //   LogInterceptor(requestBody: true, responseBody: true),
-    // );
   }
 
   // =====================

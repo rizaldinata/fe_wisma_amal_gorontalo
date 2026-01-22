@@ -3,6 +3,7 @@ import 'package:formz/formz.dart';
 import 'package:frontend/data/repository/room_repository.dart';
 import 'package:frontend/presentation/bloc/room/room_event.dart';
 import 'package:frontend/presentation/bloc/room/room_state.dart';
+import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 class RoomBloc extends Bloc<RoomEvent, RoomState> {
   final RoomRepository repository;
@@ -29,6 +30,7 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
         ),
       );
     } catch (e) {
+      AppSnackbar.showError('Gagal memuat data kamar: ${e.toString()}');
       emit(
         state.copyWith(
           status: FormzSubmissionStatus.failure,
@@ -50,6 +52,7 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
       );
       add(GetRoomsEvent());
     } catch (e) {
+      AppSnackbar.showError('Gagal menambah kamar: ${e.toString()}');
       emit(
         state.copyWith(
           status: FormzSubmissionStatus.failure,
@@ -74,6 +77,7 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
       );
       add(GetRoomsEvent());
     } catch (e) {
+      AppSnackbar.showError('Gagal mengupdate kamar: ${e.toString()}');
       emit(
         state.copyWith(
           status: FormzSubmissionStatus.failure,
@@ -98,6 +102,7 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
       );
       add(GetRoomsEvent());
     } catch (e) {
+      AppSnackbar.showError('Gagal menghapus kamar: ${e.toString()}');
       emit(
         state.copyWith(
           status: FormzSubmissionStatus.failure,

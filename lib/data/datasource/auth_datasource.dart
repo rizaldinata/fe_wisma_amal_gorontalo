@@ -46,6 +46,24 @@ class AuthDatasource {
     }
   }
 
+  Future<bool> checkSession() async {
+    try {
+      final response = await dioClient.get(
+        EndpointConstant.checkSessionEndpoint,
+      );
+      var data = BaseResponseModel.fromJson(response.data, (json) {
+        
+      });
+      if (response.statusCode == 200) {
+        return data.status;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      return false;
+    }
+  }
+
   Future<BaseResponseModel<List<String>>> getPermissions() async {
     try {
       final response = await dioClient.get(EndpointConstant.permissionEndpoint);

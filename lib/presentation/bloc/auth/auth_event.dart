@@ -15,10 +15,7 @@ class LoginEvent extends AuthEvent {
   final String email;
   final String password;
 
-  const LoginEvent({
-    required this.email,
-    required this.password,
-  });
+  const LoginEvent({required this.email, required this.password});
 
   @override
   List<Object?> get props => [email, password];
@@ -53,7 +50,10 @@ class ToggleObscureTextEvent extends AuthEvent {
   const ToggleObscureTextEvent();
 }
 
-
 class ResetStateEvent extends AuthEvent {
   const ResetStateEvent();
+}
+
+class CheckSessionEvent extends AuthEvent {
+  const CheckSessionEvent();
 }

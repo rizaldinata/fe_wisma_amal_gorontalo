@@ -11,8 +11,22 @@ class ApiConfig {
   static const String PRODUCTION = 'production';
   static const String DEVELOP = 'develop';
 
-  // Set mode yang ingin digunakan
   static const String currentMode = DEVELOP;
+
+  factory ApiConfig.getServerUrl() {
+    if (kReleaseMode) {
+      return ApiConfig(baseUrl: 'https://api.wismaamalgorontalo.site');
+    } else {
+      switch (currentMode) {
+        case PRODUCTION:
+          return ApiConfig(baseUrl: 'https://api.wismaamalgorontalo.site');
+        case DEVELOP:
+          return ApiConfig(baseUrl: 'http://127.0.0.1:8000');
+        default:
+          return ApiConfig(baseUrl: 'https://api.wismaamalgorontalo.site');
+      }
+    }
+  }
 
   ApiConfig getUrl() {
     if (kReleaseMode) {
