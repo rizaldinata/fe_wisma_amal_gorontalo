@@ -26,19 +26,6 @@ class RoomCard extends StatelessWidget {
     this.onTap,
   });
 
-  getColor(RoomStatusEnum status) {
-    switch (status) {
-      case RoomStatusEnum.available:
-        return Colors.green;
-      case RoomStatusEnum.occupied:
-        return Colors.red;
-      case RoomStatusEnum.maintenance:
-        return Colors.orange;
-      case RoomStatusEnum.unknown:
-        return Colors.grey;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     print('Building RoomCard for $title with imageUrl: $imageUrl');
@@ -88,7 +75,7 @@ class RoomCard extends StatelessWidget {
                   if (loadingProgress == null) return child;
                   return Container(
                     height: 200,
-                    color: Colors.grey[300],
+                    color: const Color.fromRGBO(224, 224, 224, 1),
                     child: Center(
                       child: CircularProgressIndicator(
                         value: loadingProgress.expectedTotalBytes != null
@@ -110,19 +97,13 @@ class RoomCard extends StatelessWidget {
                   children: [
                     CustomChip(
                       label: availability.displayName,
-                      color: getColor(availability),
+                      color: availability.getColor,
                     ),
 
                     const SizedBox(height: 12),
 
                     // Title
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    Text(title, style: Theme.of(context).textTheme.titleLarge),
 
                     const SizedBox(height: 8),
 
@@ -141,10 +122,7 @@ class RoomCard extends StatelessWidget {
                     FittedBox(
                       child: Text(
                         price,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: Theme.of(context).textTheme.headlineMedium,
                       ),
                     ),
 

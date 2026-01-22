@@ -3,6 +3,7 @@ import 'package:frontend/domain/entity/room_entity.dart';
 
 class RoomModel {
   final int id;
+  final String title;
   final String number;
   final String type;
   final double price;
@@ -15,6 +16,7 @@ class RoomModel {
 
   RoomModel({
     required this.id,
+    required this.title,
     required this.number,
     required this.type,
     required this.price,
@@ -29,6 +31,7 @@ class RoomModel {
   factory RoomModel.fromJson(Map<String, dynamic> json) {
     return RoomModel(
       id: json['id'] ?? 0,
+      title: json['title'] ?? '',
       number: json['number']?.toString() ?? '',
       type: json['type'] ?? '',
       price: (json['price'] is String)
@@ -51,6 +54,7 @@ class RoomModel {
 
   Map<String, dynamic> toJson() {
     return {
+      'title': title,
       'number': number,
       'type': type,
       'price': price,
@@ -62,6 +66,7 @@ class RoomModel {
   RoomEntity toEntity() {
     return RoomEntity(
       id: id,
+      title: title,
       number: number,
       type: type,
       price: price,
@@ -77,14 +82,16 @@ class RoomModel {
   factory RoomModel.fromDomain(RoomEntity entity) {
     return RoomModel(
       id: entity.id,
+      title: entity.title,
       number: entity.number,
       type: entity.type,
       price: entity.price,
       status: entity.status.displayName,
       statusCode: entity.status.name,
       description: entity.description,
-      facilities: const [],
-      images: const [],
+      facilities: entity.facilities,
+      images: entity.imageUrl,
+      priceFormatted: entity.priceFormatted,
     );
   }
 }

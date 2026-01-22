@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:frontend/core/constant/endpoint_constant.dart';
 import 'package:frontend/core/services/network/dio_client.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
@@ -51,15 +52,14 @@ class AuthDatasource {
       final response = await dioClient.get(
         EndpointConstant.checkSessionEndpoint,
       );
-      var data = BaseResponseModel.fromJson(response.data, (json) {
-        
-      });
+      var data = BaseResponseModel.fromJson(response.data, (json) {});
       if (response.statusCode == 200) {
         return data.status;
       } else {
         return false;
       }
     } catch (e) {
+      debugPrint(e.toString());
       return false;
     }
   }
@@ -73,6 +73,7 @@ class AuthDatasource {
       );
       return baseResponse;
     } catch (e) {
+      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -82,6 +83,7 @@ class AuthDatasource {
       var response = await dioClient.post(EndpointConstant.logoutEndpoint);
       return response.statusCode == 200;
     } catch (e) {
+      debugPrint(e.toString());
       rethrow;
     }
   }

@@ -20,7 +20,10 @@ class AppRouter extends RootStackRouter {
           initial: true,
         ),
         AutoRoute(path: RouteConstant.roomName, page: RoomRoute.page),
-        AutoRoute(path: RouteConstant.formRoomName, page: FormRoomRoute.page),
+        AutoRoute(
+          path: RouteConstant.detailRoomName,
+          page: RoomDetailRoute.page,
+        ),
       ],
     ),
     AutoRoute(page: LandingRoute.page, initial: true),

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:frontend/data/model/room/room_image_model.dart';
 
 enum RoomStatusEnum {
@@ -15,6 +16,19 @@ enum RoomStatusEnum {
         return false;
       case RoomStatusEnum.unknown:
         return false;
+    }
+  }
+
+  Color get getColor {
+    switch (this) {
+      case RoomStatusEnum.available:
+        return Colors.green;
+      case RoomStatusEnum.occupied:
+        return Colors.red;
+      case RoomStatusEnum.maintenance:
+        return Colors.orange;
+      case RoomStatusEnum.unknown:
+        return Colors.grey;
     }
   }
 
@@ -47,6 +61,7 @@ enum RoomStatusEnum {
 
 class RoomEntity {
   final int id;
+  final String title;
   final String number;
   final String type;
   final double price;
@@ -59,6 +74,7 @@ class RoomEntity {
 
   RoomEntity({
     required this.id,
+    required this.title,
     required this.number,
     required this.type,
     required this.price,

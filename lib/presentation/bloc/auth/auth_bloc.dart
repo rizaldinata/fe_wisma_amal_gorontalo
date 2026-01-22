@@ -60,9 +60,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         add(const LogoutEvent());
         AppSnackbar.showError('Sesi telah berakhir. Silakan login kembali.');
       }
+    } on AppException catch (e) {
+      print('Error checking session: ${e.message}');
+      AppSnackbar.showError('Gagal memeriksa sesi: ${e.message}');
     } catch (e) {
-      print('Error checking session: $e');
-      AppSnackbar.showError('Terjadi kesalahan saat memeriksa sesi.');
+      print('Unexpected error checking session: $e');
+      AppSnackbar.showError(
+        'Terjadi kesalahan tak terduga saat memeriksa sesi.',
+      );
     }
   }
 
@@ -108,6 +113,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           errorMessage: e.message,
         ),
       );
+      AppSnackbar.showError('Gagal login: ${e.message}');
+    } catch (e) {
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: e.toString(),
+        ),
+      );
+      AppSnackbar.showError('Gagal login: ${e.toString()}');
     }
   }
 
@@ -141,10 +155,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       }
       AppSnackbar.showSuccess('Register berhasil!');
     } on AppException catch (e) {
+      AppSnackbar.showError('Gagal register: ${e.message}');
       emit(
         state.copyWith(
           status: FormzSubmissionStatus.failure,
           errorMessage: e.message,
+        ),
+      );
+    } catch (e) {
+      AppSnackbar.showError('Gagal register: ${e.toString()}');
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: e.toString(),
         ),
       );
     }
@@ -157,6 +180,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(
         const AuthState(
           status: FormzSubmissionStatus.initial,
+          isLoggedIn: false,
+        ),
+      );
+    } on AppException catch (e) {
+      AppSnackbar.showError('Gagal logout: ${e.message}');
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: e.message,
           isLoggedIn: false,
         ),
       );
@@ -189,8 +221,28 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
 
       emit(state.copyWith(userInfo: userInfo));
+    } on AppException catch (e) {
+      AppSnackbar.showError(
+        'gagal mendapatkan informasi pengguna: ${e.message}',
+      );
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: e.message,
+          isLoggedIn: false,
+        ),
+      );
     } catch (e) {
-      emit(state.copyWith(errorMessage: e.toString()));
+      AppSnackbar.showError(
+        'gagal mendapatkan informasi pengguna: ${e.toString()}',
+      );
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: e.toString(),
+          isLoggedIn: false,
+        ),
+      );
     }
   }
 

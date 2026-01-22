@@ -25,6 +25,15 @@ class RoomRepository {
     }
   }
 
+  Future<RoomEntity> getRoomById(int id) async {
+    try {
+      final response = await datasource.getRoomById(id);
+      return response.data.toEntity();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<RoomEntity> updateRoom(int id, RoomEntity room) async {
     try {
       final response = await datasource.updateRoom(

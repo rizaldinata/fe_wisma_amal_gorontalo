@@ -6,27 +6,27 @@ class AppTextTheme {
   static TextTheme lightTextTheme = TextTheme(
     displayLarge: TextStyle(
       fontSize: 32,
-      fontWeight: FontWeight.bold,
+      fontWeight: FontWeight.w800,
       color: AppColors.textPrimaryLight,
     ),
     displayMedium: TextStyle(
       fontSize: 28,
-      fontWeight: FontWeight.bold,
+      fontWeight: FontWeight.w800,
       color: AppColors.textPrimaryLight,
     ),
     displaySmall: TextStyle(
       fontSize: 24,
-      fontWeight: FontWeight.bold,
+      fontWeight: FontWeight.w800,
       color: AppColors.textPrimaryLight,
     ),
     headlineLarge: TextStyle(
       fontSize: 22,
-      fontWeight: FontWeight.bold,
+      fontWeight: FontWeight.w800,
       color: AppColors.textPrimaryLight,
     ),
     headlineMedium: TextStyle(
       fontSize: 20,
-      fontWeight: FontWeight.bold,
+      fontWeight: FontWeight.w800,
       color: AppColors.textPrimaryLight,
     ),
     headlineSmall: TextStyle(

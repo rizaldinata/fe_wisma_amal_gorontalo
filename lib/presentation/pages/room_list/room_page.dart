@@ -4,12 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:frontend/core/constant/permission_key.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/main.dart';
-import 'package:frontend/presentation/bloc/room/room_bloc.dart';
-import 'package:frontend/presentation/bloc/room/room_event.dart';
-import 'package:frontend/presentation/bloc/room/room_state.dart';
-import 'package:frontend/presentation/pages/room/widget/room_card.dart';
+import 'package:frontend/presentation/bloc/room_list/room_bloc.dart';
+import 'package:frontend/presentation/bloc/room_list/room_event.dart';
+import 'package:frontend/presentation/bloc/room_list/room_state.dart';
+import 'package:frontend/presentation/pages/room_list/widget/room_card.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:frontend/presentation/widget/core/card/stat_card.dart';
@@ -43,9 +44,6 @@ class _RoomViewState extends State<RoomView>
     super.initState();
     _controller = TabController(length: 4, vsync: this);
   }
-
-  String _selectedFilter = 'all';
-  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
@@ -217,7 +215,10 @@ class _RoomViewState extends State<RoomView>
             itemBuilder: (context, index) {
               final room = rooms[index];
               return RoomCard(
-                title: room.number,
+                onTap: () {
+                  context.router.push(RoomDetailRoute(roomId: room.id));
+                },
+                title: room.title,
                 imageUrl: room.imageUrl.first.thumbnail,
                 availability: room.status,
                 description: room.description,

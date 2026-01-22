@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:frontend/core/constant/endpoint_constant.dart';
 import 'package:frontend/core/services/network/dio_client.dart';
 import 'package:frontend/data/model/base_response_model.dart';
@@ -8,13 +9,11 @@ class RoomDatasource {
 
   RoomDatasource({required this.dioClient});
 
-  // GET ALL ROOMS
   Future<BaseResponseModel<List<RoomModel>>> getRooms() async {
     try {
       final response = await dioClient.get(EndpointConstant.roomsEndpoint);
 
       return BaseResponseModel<List<RoomModel>>.fromJson(response.data, (json) {
-        // Parsing aman: pastikan json adalah List sebelum di-map
         if (json is List) {
           return json.map((e) => RoomModel.fromJson(e)).toList();
         }
@@ -25,10 +24,23 @@ class RoomDatasource {
     }
   }
 
+  Future<BaseResponseModel<RoomModel>> getRoomById(int id) async {
+    try {
+      final response = await dioClient.get(
+        '${EndpointConstant.roomsEndpoint}/$id',
+      );
+      return BaseResponseModel<RoomModel>.fromJson(
+        response.data,
+        (json) => RoomModel.fromJson(json),
+      );
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
+
   // CREATE ROOM
-  Future<BaseResponseModel<RoomModel>> createRoom(
-    RoomModel data,
-  ) async {
+  Future<BaseResponseModel<RoomModel>> createRoom(RoomModel data) async {
     try {
       final response = await dioClient.post(
         EndpointConstant.roomsEndpoint,
@@ -39,6 +51,7 @@ class RoomDatasource {
         (json) => RoomModel.fromJson(json),
       );
     } catch (e) {
+      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -58,6 +71,7 @@ class RoomDatasource {
         (json) => RoomModel.fromJson(json),
       );
     } catch (e) {
+      debugPrint(e.toString());
       rethrow;
     }
   }
@@ -70,6 +84,7 @@ class RoomDatasource {
       );
       return response.statusCode == 200;
     } catch (e) {
+      debugPrint(e.toString());
       rethrow;
     }
   }

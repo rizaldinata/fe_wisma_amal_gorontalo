@@ -67,7 +67,7 @@ class AppColors {
 
   // Border & Divider
   static const Color borderLight = Color(0xFFE8E8E8);
-  static const Color dividerLight = Color(0xFFF0F0F0);
+  static const Color dividerLight = Color.fromARGB(255, 203, 203, 203);
   static const Color borderDark = Color(0xFF404040);
   static const Color dividerDark = Color(0xFF2A2A2A);
 

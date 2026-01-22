@@ -1,8 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
+import 'package:frontend/core/services/network/exception.dart';
 import 'package:frontend/data/repository/room_repository.dart';
-import 'package:frontend/presentation/bloc/room/room_event.dart';
-import 'package:frontend/presentation/bloc/room/room_state.dart';
+import 'package:frontend/presentation/bloc/room_list/room_event.dart';
+import 'package:frontend/presentation/bloc/room_list/room_state.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 class RoomBloc extends Bloc<RoomEvent, RoomState> {
@@ -51,6 +52,14 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
         ),
       );
       add(GetRoomsEvent());
+    } on AppException catch (e) {
+      AppSnackbar.showError('Gagal menambah kamar: ${e.message}');
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: e.message,
+        ),
+      );
     } catch (e) {
       AppSnackbar.showError('Gagal menambah kamar: ${e.toString()}');
       emit(
@@ -76,6 +85,14 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
         ),
       );
       add(GetRoomsEvent());
+    } on AppException catch (e) {
+      AppSnackbar.showError('Gagal mengupdate kamar: ${e.message}');
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: e.message,
+        ),
+      );
     } catch (e) {
       AppSnackbar.showError('Gagal mengupdate kamar: ${e.toString()}');
       emit(
@@ -101,6 +118,14 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
         ),
       );
       add(GetRoomsEvent());
+    } on AppException catch (e) {
+      AppSnackbar.showError('Gagal menghapus kamar: ${e.message}');
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: e.message,
+        ),
+      );
     } catch (e) {
       AppSnackbar.showError('Gagal menghapus kamar: ${e.toString()}');
       emit(
