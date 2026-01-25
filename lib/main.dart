@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
-import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
+import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+import 'package:frontend/presentation/pages/app/app_bloc.dart';
 
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
@@ -14,8 +16,24 @@ final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDependencies();
+  usePathUrlStrategy();
 
-  runApp(MyApp());
+  const storage = FlutterSecureStorage();
+
+  await storage.write(key: 'ping', value: 'pong');
+  final v = await storage.read(key: 'ping');
+
+  print('STORAGE TEST: $v');
+
+  runApp(
+    MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: serviceLocator<AuthBloc>()),
+        BlocProvider(create: (context) => AppBloc()),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -25,29 +43,26 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authBloc = serviceLocator<AuthBloc>();
+    final isDarkMode = context.select((AppBloc bloc) => bloc.state.isDarkMode);
 
-    return BlocProvider.value(
-      value: authBloc..add(const CheckSessionEvent()),
-      child: MaterialApp.router(
-        debugShowCheckedModeBanner: false,
-        title: 'Wisma Amal',
-        scaffoldMessengerKey: rootScaffoldMessengerKey,
-        theme: AppTheme.lightTheme,
-        builder: (context, child) {
-          return SessionListener(router: router, child: child!);
-        },
-        darkTheme: AppTheme.darkTheme,
-        themeMode: ThemeMode.light,
-        routerConfig: router.config(),
-      ),
+    return MaterialApp.router(
+      debugShowCheckedModeBanner: false,
+      title: 'Wisma Amal',
+      scaffoldMessengerKey: rootScaffoldMessengerKey,
+      theme: AppTheme.lightTheme,
+      builder: (context, child) {
+        return SessionListener(router: router, child: child!);
+      },
+      darkTheme: AppTheme.darkTheme,
+      themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+      routerConfig: router.config(),
     );
   }
 }
 
 extension PermissionContext on BuildContext {
   bool can(String permission) {
-    final auth = read<AuthBloc>().state;
+    final auth = watch<AuthBloc>().state;
     return auth.userInfo?.permissions?.can(permission) ?? false;
   }
 }

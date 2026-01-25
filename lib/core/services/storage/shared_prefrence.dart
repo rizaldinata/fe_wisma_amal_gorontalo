@@ -30,7 +30,8 @@ class SharedPrefsStorage {
 
   Set<String>? getPermissions() {
     var permissions = _prefs.getStringList(StorageConstant.permissions);
-    return permissions!.toSet();
+    if (permissions == null) return null;
+    return permissions.toSet();
   }
 
   // Generic methods for other data types if needed

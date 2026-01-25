@@ -117,7 +117,9 @@ class _RoomViewState extends State<RoomView>
                       if (context.can(PermissionKeys.manageRooms)) ...[
                         const SizedBox(width: 20),
                         BasicButton(
-                          onPressed: () {},
+                          onPressed: () {
+                            context.router.navigate(AddRoomRoute());
+                          },
                           label: 'Tambah Kamar',
                           leadIcon: const Icon(Icons.add),
                         ),
@@ -216,7 +218,7 @@ class _RoomViewState extends State<RoomView>
               final room = rooms[index];
               return RoomCard(
                 onTap: () {
-                  context.router.push(RoomDetailRoute(roomId: room.id));
+                  context.router.navigate(RoomDetailRoute(roomId: room.id));
                 },
                 title: room.title,
                 imageUrl: room.imageUrl.first.thumbnail,

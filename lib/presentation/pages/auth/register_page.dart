@@ -79,9 +79,9 @@ class RegisterPage extends StatelessWidget {
                     // Navigate to dashboard ketika register berhasil
                     if (state.isLoggedIn && state.errorMessage == null) {
                       print('Login successful, navigating to dashboard...');
-                      context.router.pushAndPopUntil(
+                      context.router.navigate(
                         AppLayoutRoute(),
-                        predicate: (_) => false,
+                        // predicate: (_) => false,
                       );
                     }
                   },
@@ -222,7 +222,7 @@ class RegisterPage extends StatelessWidget {
                               ),
                               TextButton(
                                 onPressed: () {
-                                  context.router.replace(LoginRoute());
+                                  context.router.navigate(LoginRoute());
                                 },
                                 child: Text('Login disini'),
                               ),

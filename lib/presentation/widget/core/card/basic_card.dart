@@ -8,6 +8,7 @@ class BasicCard extends StatelessWidget {
     this.height,
     this.width,
     this.color,
+    this.title,
     this.borderRadius,
   });
   final Widget? child;
@@ -15,6 +16,7 @@ class BasicCard extends StatelessWidget {
   final double? height;
   final double? width;
   final Color? color;
+  final String? title;
   final BorderRadius? borderRadius;
 
   @override
@@ -29,7 +31,21 @@ class BasicCard extends StatelessWidget {
         color: color ?? Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: borderRadius ?? BorderRadius.circular(15.0),
       ),
-      child: child,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (title != null) ...[
+            Text(
+              title!,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 10),
+            Divider(),
+            const SizedBox(height: 30),
+          ],
+          child ?? const SizedBox.shrink(),
+        ],
+      ),
     );
   }
 }

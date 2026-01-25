@@ -18,6 +18,12 @@ class AppLayoutPage extends StatefulWidget {
 
 class _AppLayoutPageState extends State<AppLayoutPage> {
   @override
+  void initState() {
+    super.initState();
+    // context.read<AuthBloc>().add(CheckSessionEvent());
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: StyleConstant.backgroundColor,

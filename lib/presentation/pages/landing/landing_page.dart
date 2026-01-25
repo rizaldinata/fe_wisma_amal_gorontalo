@@ -62,7 +62,7 @@ class LandingPage extends StatelessWidget {
                       width: 200,
                       child: BasicButton(
                         onPressed: () {
-                          context.router.push(LoginRoute());
+                          context.router.navigate(LoginRoute());
                         },
                         label: 'Masuk / Daftar',
                         leadIcon: const Icon(Icons.login, color: Colors.white),

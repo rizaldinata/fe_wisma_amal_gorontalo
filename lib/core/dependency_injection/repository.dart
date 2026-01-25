@@ -12,6 +12,7 @@ Future<void> initializeRepository() async {
     () => AuthRepository(
       datasource: serviceLocator.get(),
       storage: serviceLocator.get(),
+      secureStorage: serviceLocator.get(),
     ),
   );
 

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/theme/app_text_theme.dart';
 import 'package:frontend/core/theme/app_typography.dart';
 import 'package:frontend/core/theme/color_schemes.dart';
 
 class AppTheme {
   static ThemeData lightTheme = ThemeData(
+    primaryTextTheme: AppTextTheme.lightTextTheme,
     useMaterial3: true,
     colorScheme: lightColorScheme,
     primaryColor: lightColorScheme.primary,
@@ -17,6 +19,7 @@ class AppTheme {
       bodyMedium: AppTypography.bodyMedium,
       labelSmall: AppTypography.labelSmallLight,
     ),
+    // textTheme: AppTextTheme.lightTextTheme,
 
     // AppBar - Clean minimal design seperti mockup
     appBarTheme: AppBarTheme(
@@ -139,11 +142,11 @@ class AppTheme {
 
     // Divider
     dividerTheme: DividerThemeData(
-      color: AppColors.dividerLight,
+      color: AppColors.dividerDark,
       thickness: 1,
       space: 1,
     ),
-    dividerColor: AppColors.dividerLight,
+    dividerColor: AppColors.dividerDark,
 
     // List Tile - untuk sidebar dan list items
     listTileTheme: ListTileThemeData(
@@ -224,12 +227,13 @@ class AppTheme {
     fontFamily: 'Inter',
 
     textTheme: const TextTheme(
-      displayLarge: AppTypography.displayLarge,
-      headlineMedium: AppTypography.headlineMedium,
-      titleMedium: AppTypography.titleMedium,
-      bodyMedium: AppTypography.bodyMedium,
+      displayLarge: AppTypography.displayLargeDark,
+      headlineMedium: AppTypography.headlineMediumDark,
+      titleMedium: AppTypography.titleMediumDark,
+      bodyMedium: AppTypography.bodyMediumDark,
       labelSmall: AppTypography.labelSmallDark,
     ),
+    // textTheme: AppTextTheme.darkTextTheme,
 
     // AppBar
     appBarTheme: AppBarTheme(
@@ -352,11 +356,11 @@ class AppTheme {
 
     // Divider
     dividerTheme: DividerThemeData(
-      color: AppColors.dividerDark,
+      color: AppColors.dividerLight,
       thickness: 1,
       space: 1,
     ),
-    dividerColor: AppColors.dividerDark,
+    dividerColor: AppColors.dividerLight,
 
     // List Tile
     listTileTheme: ListTileThemeData(

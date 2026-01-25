@@ -6,10 +6,11 @@ import 'package:formz/formz.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/data/repository/room_repository.dart';
 import 'package:frontend/presentation/bloc/detail_room/detail_room_bloc.dart';
+import 'package:frontend/presentation/widget/core/appbar/custom_appbar.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:frontend/presentation/widget/core/chip/custom_chip.dart';
-import 'package:frontend/presentation/widget/core/image_carousel/image_carousel.dart';
+import 'package:frontend/presentation/widget/core/image/image_carousel.dart';
 
 @RoutePage()
 class RoomDetailPage extends StatelessWidget {
@@ -43,7 +44,10 @@ class RoomDetailView extends StatelessWidget {
 
         if (state.status == FormzSubmissionStatus.failure) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Room Detail')),
+            appBar: CustomAppbar(
+              icon: const Icon(Icons.arrow_back),
+              title: 'Room Detail',
+            ),
             body: Center(
               child: Text(
                 state.errorMessage ?? 'Terjadi kesalahan tak terduga',
@@ -53,126 +57,146 @@ class RoomDetailView extends StatelessWidget {
         }
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Room Detail')),
-          body: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-            child: BasicCard(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-              width: double.infinity,
-              child: ListView(
-                children: [
-                  ImageCarousel(
-                    height: 400,
-                    maxWidth: double.infinity,
-                    imageUrls:
-                        state.room?.imageUrl
-                            .map((image) => image.url)
-                            .toList() ??
-                        [],
-                  ),
-                  SizedBox(height: 24),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          flex: 70,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      state.room?.title ?? '',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.headlineMedium,
-                                    ),
+          appBar: CustomAppbar(
+            icon: const Icon(Icons.arrow_back),
+            title: 'Room Detail',
+          ),
+          body: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: BasicCard(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 20,
+                ),
+                width: double.infinity,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      height: 400,
+                      child: ImageCarousel(
+                        maxWidth: double.infinity,
+                        height: 400,
+                        images:
+                            state.room?.imageUrl
+                                .map(
+                                  (url) => CarouselImage.network(
+                                    url.url,
+                                    fit: BoxFit.cover,
                                   ),
-                                  SizedBox(width: 10),
-                                  CustomChip(
-                                    label: state.room?.status.displayName ?? '',
-                                    color:
-                                        state.room?.status.getColor ??
-                                        Colors.grey,
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 30),
-                              Divider(),
-                              SizedBox(height: 30),
-                              Text(
-                                'Fasilitas',
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.headlineSmall,
-                              ),
-                              SizedBox(height: 20),
-                              SizedBox(
-                                width: 300,
-                                child: Wrap(
-                                  spacing: 10,
-                                  runSpacing: 10,
-                                  children:
-                                      state.room?.facilities
-                                          .map(
-                                            (facility) => CustomChip(
-                                              label: facility,
-                                              color: Colors.blueGrey,
-                                            ),
-                                          )
-                                          .toList() ??
-                                      [],
-                                ),
-                              ),
-                              SizedBox(height: 30),
-                              Divider(),
-                              SizedBox(height: 30),
-                              Text(
-                                'Deskripsi',
-                                style: Theme.of(
-                                  context,
-                                ).textTheme.headlineSmall,
-                              ),
-                              SizedBox(height: 20),
-                              Text(
-                                state.room?.description ?? '',
-                                style: Theme.of(context).textTheme.bodyMedium,
-                              ),
-                            ],
-                          ),
-                        ),
-                        SizedBox(width: 30),
-                        Expanded(
-                          flex: 30,
-                          child: BasicCard(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.primary.withAlpha(50),
+                                )
+                                .toList() ??
+                            [],
+                      ),
+                    ),
+                    SizedBox(height: 24),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            flex: 70,
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        state.room?.title ?? '',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.headlineMedium,
+                                      ),
+                                    ),
+                                    SizedBox(width: 10),
+                                    CustomChip(
+                                      label:
+                                          state.room?.status.displayName ?? '',
+                                      color:
+                                          state.room?.status.getColor ??
+                                          Colors.grey,
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 30),
+                                Divider(),
+                                SizedBox(height: 30),
                                 Text(
-                                  '${state.room?.priceFormatted}/ bulan',
+                                  'Fasilitas',
                                   style: Theme.of(
                                     context,
-                                  ).textTheme.titleMedium,
+                                  ).textTheme.headlineSmall,
                                 ),
                                 SizedBox(height: 20),
-                                BasicButton(
-                                  onPressed: () {},
-                                  label: 'Pesan Sekarang',
+                                SizedBox(
+                                  width: 300,
+                                  child: Wrap(
+                                    spacing: 10,
+                                    runSpacing: 10,
+                                    children:
+                                        state.room?.facilities
+                                            .map(
+                                              (facility) => CustomChip(
+                                                label: facility,
+                                                color: Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
+                                              ),
+                                            )
+                                            .toList() ??
+                                        [],
+                                  ),
+                                ),
+                                SizedBox(height: 30),
+                                Divider(),
+                                SizedBox(height: 30),
+                                Text(
+                                  'Deskripsi',
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.headlineSmall,
+                                ),
+                                SizedBox(height: 20),
+                                Text(
+                                  state.room?.description ?? '',
+                                  style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                               ],
                             ),
                           ),
-                        ),
-                      ],
+                          SizedBox(width: 30),
+                          Expanded(
+                            flex: 30,
+                            child: BasicCard(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withAlpha(50),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${state.room?.priceFormatted}/ bulan',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                  ),
+                                  SizedBox(height: 20),
+                                  BasicButton(
+                                    onPressed: () {},
+                                    label: 'Pesan Sekarang',
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

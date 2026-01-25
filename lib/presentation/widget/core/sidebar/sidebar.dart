@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend/presentation/pages/app/app_bloc.dart';
 import 'package:frontend/presentation/widget/core/botton/icon_button.dart';
 
 class SidebarItem {
@@ -92,182 +93,225 @@ class _CustomSidebarState extends State<CustomSidebar> {
         return;
       }
       if (item.page != null) {
-        context.router.push(item.page!);
+        context.router.navigate(item.page!);
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: widget.width,
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerLow,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 12,
-            offset: const Offset(4, 4),
+    var isDarkMode = context.select((AppBloc bloc) => bloc.state.isDarkMode);
+
+    return BlocBuilder<AppBloc, AppState>(
+      builder: (context, state) {
+        return Container(
+          width: widget.width,
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surfaceContainerLow,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.08),
+                blurRadius: 12,
+                offset: const Offset(4, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          return SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Header
-                  Row(
+          child: BlocBuilder<AuthBloc, AuthState>(
+            builder: (context, state) {
+              return SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Wisma Amal',
-                              style: Theme.of(context).textTheme.titleLarge
-                                  ?.copyWith(fontWeight: FontWeight.w700),
+                      // Header
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Wisma Amal',
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Operational & Maintenance',
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withOpacity(0.6),
+                                      ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Operational & Maintenance',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface.withOpacity(0.6),
-                                  ),
-                            ),
-                          ],
+                          ),
+                        ],
+                      ),
+
+                      // Divider + menu label
+                      Text(
+                        'Menu',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.6),
                         ),
                       ),
+                      const SizedBox(height: 8),
+
+                      Expanded(
+                        child: ListView.builder(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          itemCount: widget.items.length,
+                          itemBuilder: (context, index) {
+                            final item = widget.items[index];
+                            if (!item.hasAccess) {
+                              // Return an empty widget instead of null to keep
+                              // the children's indices contiguous for the
+                              // underlying sliver list.
+                              return const SizedBox.shrink();
+                            }
+
+                            if (item.hasChildren) {
+                              final id = item.label;
+                              final isOpen =
+                                  _expanded.contains(id) ||
+                                  _isSelected(context, item);
+                              return _buildAccordionSection(
+                                context,
+                                item,
+                                isOpen,
+                                id,
+                              );
+                            }
+
+                            return _buildMenuTile(context, item);
+                          },
+                        ),
+                      ),
+                      ToggleButtons(
+                        isSelected: [!isDarkMode, isDarkMode],
+                        onPressed: (index) {
+                          context.read<AppBloc>().add(
+                            AppBlocChangeThemeEvent(),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(8),
+                        selectedColor: Theme.of(context).colorScheme.onPrimary,
+                        fillColor: Theme.of(context).colorScheme.primary,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.7),
+                        constraints: const BoxConstraints(
+                          minWidth: 105,
+                          minHeight: 30,
+                        ),
+                        children: const [
+                          Icon(Icons.dark_mode_rounded, size: 18),
+                          Icon(Icons.light_mode_rounded, size: 18),
+                        ],
+                      ),
+
+                      // Profile
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.surfaceContainerHigh,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: BlocBuilder<AuthBloc, AuthState>(
+                          builder: (context, state) {
+                            if (state.userInfo == null ||
+                                state.userInfo?.id == null) {
+                              context.read<AuthBloc>().add(
+                                const GetUserInfoEvent(),
+                              );
+                            }
+
+                            return Row(
+                              children: [
+                                CircleAvatar(
+                                  radius: 20,
+                                  backgroundColor: Theme.of(
+                                    context,
+                                  ).colorScheme.primary,
+                                  child: Icon(
+                                    Icons.person,
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.onPrimary,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        state.userInfo?.name ?? 'User',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        state.userInfo?.roles.join(', ') ??
+                                            'No Role',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurface
+                                                  .withOpacity(0.6),
+                                            ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                      SizedBox(height: 12),
+                      CustomIconButton(
+                        boxShadow: [],
+                        icon: Icon(Icons.logout),
+                        title: 'Logout',
+                        onPressed: () {
+                          context.read<AuthBloc>().add(const LogoutEvent());
+                        },
+                      ),
+                      const SizedBox(height: 12),
                     ],
                   ),
-
-                  // Divider + menu label
-                  Text(
-                    'Menu',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      itemCount: widget.items.length,
-                      itemBuilder: (context, index) {
-                        final item = widget.items[index];
-                        if (!item.hasAccess) {
-                          // Return an empty widget instead of null to keep
-                          // the children's indices contiguous for the
-                          // underlying sliver list.
-                          return const SizedBox.shrink();
-                        }
-
-                        if (item.hasChildren) {
-                          final id = item.label;
-                          final isOpen =
-                              _expanded.contains(id) ||
-                              _isSelected(context, item);
-                          return _buildAccordionSection(
-                            context,
-                            item,
-                            isOpen,
-                            id,
-                          );
-                        }
-
-                        return _buildMenuTile(context, item);
-                      },
-                    ),
-                  ),
-
-                  // Profile
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: BlocBuilder<AuthBloc, AuthState>(
-                      builder: (context, state) {
-                        if (state.userInfo == null ||
-                            state.userInfo?.id == null) {
-                          context.read<AuthBloc>().add(
-                            const GetUserInfoEvent(),
-                          );
-                        }
-
-                        return Row(
-                          children: [
-                            CircleAvatar(
-                              radius: 20,
-                              backgroundColor: Theme.of(
-                                context,
-                              ).colorScheme.primary,
-                              child: Icon(
-                                Icons.person,
-                                color: Theme.of(context).colorScheme.onPrimary,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    state.userInfo?.name ?? 'User',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(fontWeight: FontWeight.w600),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    state.userInfo?.roles.join(', ') ??
-                                        'No Role',
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurface
-                                              .withOpacity(0.6),
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ),
-                  SizedBox(height: 12),
-                  CustomIconButton(
-                    icon: Icon(Icons.logout),
-                    title: 'Logout',
-                    onPressed: () {
-                      context.read<AuthBloc>().add(const LogoutEvent());
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+                ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 
@@ -300,9 +344,10 @@ class _CustomSidebarState extends State<CustomSidebar> {
               : null,
           title: Text(
             section.label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurface.withAlpha(200),
+            ),
           ),
           childrenPadding: const EdgeInsets.only(
             left: 20,
@@ -349,7 +394,9 @@ class _CustomSidebarState extends State<CustomSidebar> {
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                     color: selected
                         ? Theme.of(context).colorScheme.primary
-                        : null,
+                        : Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.8),
                   ),
                 ),
               ),

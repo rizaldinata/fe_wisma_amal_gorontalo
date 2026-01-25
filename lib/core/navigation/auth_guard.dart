@@ -1,7 +1,9 @@
 // router/auth_guard.dart
 import 'package:auto_route/auto_route.dart';
+import 'package:frontend/core/constant/storage_constant.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
+import 'package:frontend/core/services/storage/secure_storage.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
 import 'package:frontend/data/repository/auth_repository.dart';
 
@@ -9,19 +11,22 @@ class AuthGuard extends AutoRouteGuard {
   AuthRepository authRepository;
 
   AuthGuard(this.authRepository);
-  final SharedPrefsStorage storage = serviceLocator.get<SharedPrefsStorage>();
+  final SecureStorageService storage = serviceLocator
+      .get<SecureStorageService>();
 
-  bool isLoggedIn() {
-    final token = storage.getToken();
+  Future<bool> isLoggedIn() async {
+    final token = await storage.get(StorageConstant.token);
     return token != null;
   }
 
   @override
   void onNavigation(NavigationResolver resolver, StackRouter router) {
-    if (isLoggedIn()) {
-      resolver.next();
-    } else {
-      router.push(LoginRoute());
-    }
+    isLoggedIn().then((loggedIn) {
+      if (loggedIn) {
+        resolver.next();
+      } else {
+        router.navigate(LoginRoute());
+      }
+    });
   }
 }

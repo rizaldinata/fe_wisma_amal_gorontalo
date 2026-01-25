@@ -3,15 +3,16 @@ import 'package:frontend/core/services/network/api_config.dart';
 import 'package:frontend/core/services/network/exception.dart';
 import 'package:frontend/core/services/network/interceptor.dart';
 import 'package:frontend/core/services/network/log_interceptor.dart';
+import 'package:frontend/core/services/storage/secure_storage.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
 
 class DioClient {
   DioClient({
     required this.apiConfig,
-    required SharedPrefsStorage SharedPreferences,
+    required SecureStorageService secureStorage,
     required Dio dio,
   }) : _dio = dio,
-       apiInterceptor = ApiInterceptor(SharedPreferences) {
+       apiInterceptor = ApiInterceptor(secureStorage) {
     _setupDio();
   }
 

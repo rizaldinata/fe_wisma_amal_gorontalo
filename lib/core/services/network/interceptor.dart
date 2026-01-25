@@ -1,10 +1,11 @@
 import 'package:dio/dio.dart';
-import 'package:frontend/core/services/storage/shared_prefrence.dart';
+import 'package:frontend/core/constant/storage_constant.dart';
+import 'package:frontend/core/services/storage/secure_storage.dart';
 
 class ApiInterceptor extends Interceptor {
-  ApiInterceptor(this._sharedPrefsStorage);
+  ApiInterceptor(this.secureStorageService);
 
-  final SharedPrefsStorage _sharedPrefsStorage;
+  final SecureStorageService secureStorageService;
 
   @override
   Future<void> onRequest(
@@ -21,10 +22,12 @@ class ApiInterceptor extends Interceptor {
       (endpoint) => options.path.contains(endpoint),
     );
 
-
     if (!isPublicEndpoint) {
       print('Fetching token for protected endpoint...');
-      final String? token = _sharedPrefsStorage.getToken();
+      final String? token = await secureStorageService.get(
+        StorageConstant.token,
+      );
+      print('Token: $token');
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
       }
@@ -43,7 +46,7 @@ class ApiInterceptor extends Interceptor {
   ) async {
     //handle jika token expired -> lalu hapus token & redirect ke login
     if (err.response?.statusCode == 401) {
-      await _sharedPrefsStorage.clearToken();
+      await secureStorageService.delete(StorageConstant.token);
 
       //memanggil logout yang nantinya merubah login status, sehingga go_router akan otomatis redirect ke login
       // _authController.logout();

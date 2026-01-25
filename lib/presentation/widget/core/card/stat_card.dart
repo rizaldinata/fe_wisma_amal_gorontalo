@@ -29,7 +29,6 @@ class StatCard extends StatelessWidget {
               Text(
                 count,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.black,
                   fontWeight: FontWeight.bold,
                 ),
               ),

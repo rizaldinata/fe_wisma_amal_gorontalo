@@ -1,5 +1,6 @@
 class StorageConstant {
   StorageConstant._();
+  static const String token = 'token';
   static const String userName = 'user_name';
   static const String email = 'email';
   static const String profileImagePath = 'profile_image_path';

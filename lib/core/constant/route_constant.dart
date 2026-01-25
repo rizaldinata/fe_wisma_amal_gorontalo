@@ -7,13 +7,15 @@ class RouteConstant {
   static const String rootName = 'root';
 
   //auth page
-  static const String loginName = 'login';
-  static const String registerName = 'register';
+  static const String loginName = '/login';
+  static const String registerName = '/register';
 
   //dashboard page
   static const String dashboardName = 'dashboard';
   static const String landingName = 'landing';
   static const String roomName = 'rooms';
 
+  static const String addRoomName = '$roomName/add';
   static const String detailRoomName = '$roomName/:id';
+  static const String editRoomName = '$detailRoomName/edit';
 }

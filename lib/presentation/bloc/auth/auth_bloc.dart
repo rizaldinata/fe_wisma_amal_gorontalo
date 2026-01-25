@@ -71,13 +71,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     }
   }
 
-  void _onInitLoginStatus(InitLoginStatusEvent event, Emitter<AuthState> emit) {
-    final status = auth.isLoggedIn();
+  void _onInitLoginStatus(
+    InitLoginStatusEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    final status = await auth.isLoggedIn();
     loginStatusNotifier.isLoggedIn = status;
-    emit(state.copyWith(isLoggedIn: status));
 
     if (status) {
-      add(const GetUserInfoEvent());
+      final email = storage.get(StorageConstant.email);
+      final username = storage.get(StorageConstant.userName);
+      final userId = storage.getInt(StorageConstant.userId);
+      final role = storage.getList(StorageConstant.roleActive);
+      final permissions = Permissions(storage.getPermissions()?.toSet() ?? {});
+
+      final userInfo = UserEntity(
+        email: email ?? '',
+        name: username ?? '',
+        id: userId ?? 0,
+        roles: role ?? [],
+        permissions: permissions,
+      );
+      emit(state.copyWith(isLoggedIn: status, userInfo: userInfo));
+    } else {
+      emit(state.copyWith(isLoggedIn: status));
     }
   }
 
@@ -94,7 +111,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         AuthRequestModel(email: event.email, password: event.password),
       );
 
-      if (auth.isLoggedIn()) {
+      final isLoggedIn = await auth.isLoggedIn();
+
+      if (isLoggedIn) {
         add(const GetUserInfoEvent());
         emit(
           state.copyWith(
@@ -142,7 +161,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         ),
       );
 
-      if (auth.isLoggedIn()) {
+      final isLoggedIn = await auth.isLoggedIn();
+
+      if (isLoggedIn) {
         add(const GetUserInfoEvent());
         emit(
           state.copyWith(

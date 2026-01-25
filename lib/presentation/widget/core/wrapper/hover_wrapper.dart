@@ -1,8 +1,34 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 enum HoverEffectType { scale, color, combine }
 
 class HoverTapWrapper extends StatefulWidget {
+  const HoverTapWrapper({
+    super.key,
+    required this.child,
+    this.onTap,
+    this.effect = HoverEffectType.combine,
+
+    // scale
+    this.hoverScale = 1.03,
+    this.pressedScale = 0.97,
+
+    // color
+    this.normalColor,
+    this.hoverColor,
+
+    // decoration
+    this.borderRadius,
+    this.border,
+    this.boxShadow,
+
+    // behavior
+    this.duration = const Duration(milliseconds: 140),
+    this.cursor = SystemMouseCursors.click,
+    this.enableHover = true,
+  });
+
   final Widget child;
   final VoidCallback? onTap;
 
@@ -10,27 +36,21 @@ class HoverTapWrapper extends StatefulWidget {
 
   // scale
   final double hoverScale;
+  final double pressedScale;
 
   // color
-  final Color? hoverColor;
   final Color? normalColor;
+  final Color? hoverColor;
 
+  // decoration
+  final BorderRadius? borderRadius;
+  final BoxBorder? border;
+  final List<BoxShadow>? boxShadow;
+
+  // behavior
   final Duration duration;
   final MouseCursor cursor;
-  final BorderRadius? borderRadius;
-
-  const HoverTapWrapper({
-    super.key,
-    required this.child,
-    this.onTap,
-    this.effect = HoverEffectType.scale,
-    this.hoverScale = 1.03,
-    this.hoverColor,
-    this.normalColor,
-    this.duration = const Duration(milliseconds: 150),
-    this.cursor = SystemMouseCursors.click,
-    this.borderRadius,
-  });
+  final bool enableHover;
 
   @override
   State<HoverTapWrapper> createState() => _HoverTapWrapperState();
@@ -38,48 +58,75 @@ class HoverTapWrapper extends StatefulWidget {
 
 class _HoverTapWrapperState extends State<HoverTapWrapper> {
   bool _hovered = false;
+  bool _pressed = false;
 
-  void _onEnter(_) => setState(() => _hovered = true);
-  void _onExit(_) => setState(() => _hovered = false);
+  bool get _enabled => widget.onTap != null;
+
+  void _onEnter(PointerEnterEvent _) {
+    if (!_enabled || !widget.enableHover) return;
+    setState(() => _hovered = true);
+  }
+
+  void _onExit(PointerExitEvent _) {
+    if (!_enabled || !widget.enableHover) return;
+    setState(() {
+      _hovered = false;
+      _pressed = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     assert(
-      widget.effect != HoverEffectType.color &&
-              widget.effect != HoverEffectType.combine ||
-          widget.hoverColor != null,
+      widget.effect == HoverEffectType.scale || widget.hoverColor != null,
       'hoverColor must be provided for color or combine effect',
     );
 
-    final scale = (_hovered && widget.effect != HoverEffectType.color)
-        ? widget.hoverScale
-        : 1.0;
+    // ---- SCALE ----
+    double scale = 1.0;
 
-    final bgColor =
+    if (_pressed) {
+      scale = widget.pressedScale;
+    } else if (_hovered && widget.effect != HoverEffectType.color) {
+      scale = widget.hoverScale;
+    }
+
+    // ---- COLOR ----
+    final Color? backgroundColor =
         (_hovered &&
             (widget.effect == HoverEffectType.color ||
                 widget.effect == HoverEffectType.combine))
         ? widget.hoverColor
         : widget.normalColor;
 
-    Widget result = AnimatedContainer(
+    Widget content = AnimatedScale(
+      scale: scale,
       duration: widget.duration,
       curve: Curves.easeOut,
-      transform: Matrix4.identity()..scale(scale),
-      color: bgColor,
-      child: widget.child,
+      child: AnimatedContainer(
+        duration: widget.duration,
+        curve: Curves.easeOut,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: widget.borderRadius,
+          border: widget.border,
+          boxShadow: widget.boxShadow,
+        ),
+        child: widget.child,
+      ),
     );
 
     return MouseRegion(
-      cursor: widget.cursor,
+      cursor: _enabled ? widget.cursor : MouseCursor.defer,
       onEnter: _onEnter,
       onExit: _onExit,
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
         onTap: widget.onTap,
-        child: widget.borderRadius != null
-            ? ClipRRect(borderRadius: widget.borderRadius!, child: result)
-            : result,
+        onTapDown: _enabled ? (_) => setState(() => _pressed = true) : null,
+        onTapUp: _enabled ? (_) => setState(() => _pressed = false) : null,
+        onTapCancel: _enabled ? () => setState(() => _pressed = false) : null,
+        child: content,
       ),
     );
   }

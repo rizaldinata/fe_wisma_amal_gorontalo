@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/presentation/widget/core/textform/textfield.dart';
 
 class CustomTextForm extends StatelessWidget {
   const CustomTextForm({
@@ -8,7 +9,7 @@ class CustomTextForm extends StatelessWidget {
     this.isRequired = false,
     this.obscureText = false,
     this.keyboardType = TextInputType.text,
-    this.fillColor = Colors.white,
+    this.fillColor,
     this.controller,
     this.suffixIcon,
     this.validator,
@@ -33,7 +34,7 @@ class CustomTextForm extends StatelessWidget {
         Text.rich(
           TextSpan(
             text: title,
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            style: Theme.of(context).textTheme.titleMedium,
 
             children: isRequired
                 ? [
@@ -49,20 +50,16 @@ class CustomTextForm extends StatelessWidget {
           ),
         ),
         SizedBox(height: 8),
-        TextFormField(
+        CustomTextField(
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
           validator: validator,
           maxLines: maxLines,
-          decoration: InputDecoration(
-            filled: (fillColor != null),
-            fillColor: fillColor,
-            hintText: hintText,
-            suffixIcon: suffixIcon,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
-            contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-          ),
+          fillColor:
+              fillColor ?? Theme.of(context).colorScheme.surfaceContainerHigh,
+          hintText: hintText,
+          suffixIcon: suffixIcon,
         ),
       ],
     );

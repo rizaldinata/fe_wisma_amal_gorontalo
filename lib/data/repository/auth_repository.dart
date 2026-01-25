@@ -1,4 +1,5 @@
 import 'package:frontend/core/constant/storage_constant.dart';
+import 'package:frontend/core/services/storage/secure_storage.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
 import 'package:frontend/data/datasource/auth_datasource.dart';
 import 'package:frontend/domain/entity/permission_entity.dart';
@@ -7,7 +8,12 @@ import 'package:frontend/domain/entity/user_entity.dart';
 class AuthRepository {
   AuthDatasource datasource;
   final SharedPrefsStorage storage;
-  AuthRepository({required this.datasource, required this.storage});
+  final SecureStorageService secureStorage;
+  AuthRepository({
+    required this.datasource,
+    required this.storage,
+    required this.secureStorage,
+  });
 
   Future<bool> checkSession() async {
     try {
@@ -22,7 +28,7 @@ class AuthRepository {
     try {
       final response = await datasource.register(request);
       final token = response.data.token.split('|').last;
-      await storage.saveToken(token);
+      await secureStorage.set(StorageConstant.token, token);
       final permissions = await datasource.getPermissions();
       UserEntity userEntity = response.data.toEntity();
       userEntity.permissions = Permissions(permissions.data.toSet());
@@ -39,7 +45,7 @@ class AuthRepository {
     try {
       final response = await datasource.login(request);
       final token = response.data.token.split('|').last;
-      await storage.saveToken(token);
+      await secureStorage.set(StorageConstant.token, token);
       final permissions = await datasource.getPermissions();
       UserEntity userEntity = response.data.toEntity();
       userEntity.permissions = Permissions(permissions.data.toSet());
@@ -56,6 +62,7 @@ class AuthRepository {
     final result = await datasource.logout();
     if (result) {
       await storage.clear();
+      await secureStorage.delete(StorageConstant.token);
     }
     return result;
   }
@@ -70,8 +77,8 @@ class AuthRepository {
     }
   }
 
-  bool isLoggedIn() {
-    final token = storage.getToken();
+  Future<bool> isLoggedIn() async {
+    final token = await secureStorage.get(StorageConstant.token);
     return token != null;
   }
 }
