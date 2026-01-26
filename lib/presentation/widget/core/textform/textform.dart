@@ -57,7 +57,7 @@ class CustomTextForm extends StatelessWidget {
           validator: validator,
           maxLines: maxLines,
           fillColor:
-              fillColor ?? Theme.of(context).colorScheme.surfaceContainerHigh,
+              fillColor ?? Theme.of(context).colorScheme.surfaceContainerLow,
           hintText: hintText,
           suffixIcon: suffixIcon,
         ),

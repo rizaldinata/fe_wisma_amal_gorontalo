@@ -13,25 +13,30 @@ class CarouselImage {
   final String? path;
   final Uint8List? bytes;
   final BoxFit fit;
+  final double width;
 
   const CarouselImage.network(String url, {this.fit = BoxFit.cover})
     : type = ImageSourceType.network,
       path = url,
+      width = 300,
       bytes = null;
 
   const CarouselImage.asset(String assetPath, {this.fit = BoxFit.cover})
     : type = ImageSourceType.asset,
       path = assetPath,
+      width = 300,
       bytes = null;
 
   CarouselImage.file(File file, {this.fit = BoxFit.cover})
     : type = ImageSourceType.file,
       path = file.path,
+      width = 300,
       bytes = null;
 
   const CarouselImage.memory(Uint8List data, {this.fit = BoxFit.cover})
     : type = ImageSourceType.memory,
       path = null,
+      width = 300,
       bytes = data;
 }
 
@@ -48,6 +53,127 @@ Widget buildCarouselImage(CarouselImage image) {
 
     case ImageSourceType.memory:
       return Image.memory(image.bytes!, fit: image.fit);
+  }
+}
+
+class DynamicCarousel extends StatefulWidget {
+  const DynamicCarousel({
+    super.key,
+    required this.items,
+    this.height = 400,
+    this.onDelete,
+  });
+
+  final List<CarouselImage> items;
+  final double height;
+  final void Function(int index)? onDelete;
+
+  @override
+  State<DynamicCarousel> createState() => _DynamicCarouselState();
+}
+
+class _DynamicCarouselState extends State<DynamicCarousel> {
+  final ScrollController _controller = ScrollController();
+  int _currentIndex = 0;
+
+  double _offsetUntil(int index) {
+    double offset = 0;
+    for (int i = 0; i < index; i++) {
+      offset += widget.items[i].width + 12; // spacing
+    }
+    return offset;
+  }
+
+  void _goTo(int index) {
+    if (index < 0 || index >= widget.items.length) return;
+
+    _controller.animateTo(
+      _offsetUntil(index),
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+
+    setState(() => _currentIndex = index);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: widget.height,
+      child: Stack(
+        fit: StackFit.loose,
+        children: [
+          ListView.separated(
+            controller: _controller,
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 48),
+            itemCount: widget.items.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final item = widget.items[index];
+              final isActive = index == _currentIndex;
+
+              return AnimatedScale(
+                scale: isActive ? 1.0 : 0.85,
+                duration: const Duration(milliseconds: 200),
+                child: SizedBox(
+                  height: widget.height,
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: buildCarouselImage(item),
+                      ),
+
+                      if (widget.onDelete != null)
+                        Positioned(
+                          top: 6,
+                          right: 6,
+                          child: CustomIconButton(
+                            backgroundColor: Colors.red.withAlpha(70),
+                            hoverColor: Colors.red.withAlpha(150),
+                            boxShadow: [],
+                            borderColor: Colors.red,
+                            icon: Icon(Icons.delete_rounded, color: Colors.red),
+                            onPressed: () => widget.onDelete!(index),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+
+          // LEFT
+          Align(
+            alignment: Alignment.centerLeft,
+
+            child: SizedBox(
+              width: 60,
+              height: 60,
+              child: CustomIconButton(
+                icon: const Icon(Icons.chevron_left, size: 36),
+                onPressed: () => _goTo(_currentIndex - 1),
+              ),
+            ),
+          ),
+
+          // RIGHT
+          Align(
+            alignment: Alignment.centerRight,
+            child: SizedBox(
+              width: 60,
+              height: 60,
+              child: CustomIconButton(
+                icon: const Icon(Icons.chevron_right, size: 36),
+                onPressed: () => _goTo(_currentIndex + 1),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

@@ -1,8 +1,12 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:frontend/core/constant/endpoint_constant.dart';
 import 'package:frontend/core/services/network/dio_client.dart';
 import 'package:frontend/data/model/base_response_model.dart';
 import 'package:frontend/data/model/room/room_model.dart';
+import 'package:file_picker/file_picker.dart';
 
 class RoomDatasource {
   final DioClient dioClient;
@@ -57,13 +61,10 @@ class RoomDatasource {
   }
 
   // UPDATE ROOM
-  Future<BaseResponseModel<RoomModel>> updateRoom(
-    int id,
-    RoomModel data,
-  ) async {
+  Future<BaseResponseModel<RoomModel>> updateRoom(RoomModel data) async {
     try {
       final response = await dioClient.put(
-        '${EndpointConstant.roomsEndpoint}/$id',
+        '${EndpointConstant.roomsEndpoint}/${data.id}',
         data: data.toJson(),
       );
       return BaseResponseModel<RoomModel>.fromJson(
@@ -83,6 +84,61 @@ class RoomDatasource {
         '${EndpointConstant.roomsEndpoint}/$id',
       );
       return response.statusCode == 200;
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
+
+  // DELETE ROOM IMAGE
+  Future<bool> deleteRoomImage({
+    required int roomId,
+    required int imageId,
+  }) async {
+    try {
+      final response = await dioClient.delete(
+        EndpointConstant.deleteRoomImage(roomId: roomId, imageId: imageId),
+      );
+      if (response.statusCode == 200) {
+        return response.data['status'] == true;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      debugPrint(e.toString());
+      rethrow;
+    }
+  }
+
+  // UPLOAD ROOM IMAGE
+  Future<bool> uploadRoomImage({
+    required int roomId,
+    required List<PlatformFile> files,
+  }) async {
+    try {
+      final formData = FormData();
+
+      for (final file in files) {
+        formData.files.add(
+          MapEntry(
+            'images[]',
+            MultipartFile.fromBytes(
+              file.bytes!, // WAJIB untuk web
+              filename: file.name,
+            ),
+          ),
+        );
+      }
+
+      final response = await dioClient.post(
+        EndpointConstant.uploadRoomImage(roomId: roomId),
+        data: formData,
+      );
+      if (response.statusCode == 200) {
+        return response.data['status'] == true;
+      } else {
+        return false;
+      }
     } catch (e) {
       debugPrint(e.toString());
       rethrow;

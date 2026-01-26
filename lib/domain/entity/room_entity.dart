@@ -72,7 +72,7 @@ class RoomEntity {
   final List<RoomImageModel> imageUrl;
   final List<String> facilities;
 
-  RoomEntity({
+  const RoomEntity({
     required this.id,
     required this.title,
     required this.number,
@@ -85,4 +85,47 @@ class RoomEntity {
     required this.facilities,
     required this.statusCode,
   });
+
+  copyWith({
+    int? id,
+    String? title,
+    String? number,
+    String? type,
+    double? price,
+    RoomStatusEnum? status,
+    String? description,
+    String? priceFormatted,
+    List<RoomImageModel>? imageUrl,
+    List<String>? facilities,
+    String? statusCode,
+  }) {
+    return RoomEntity(
+      id: id ?? this.id,
+      title: title ?? this.title,
+      number: number ?? this.number,
+      type: type ?? this.type,
+      price: price ?? this.price,
+      status: status ?? this.status,
+      description: description ?? this.description,
+      priceFormatted: priceFormatted ?? this.priceFormatted,
+      imageUrl: imageUrl ?? this.imageUrl,
+      facilities: facilities ?? this.facilities,
+      statusCode: statusCode ?? this.statusCode,
+    );
+  }
+
+  const RoomEntity.empty()
+    : this(
+        id: 0,
+        title: '',
+        number: '',
+        type: '',
+        price: 0.0,
+        status: RoomStatusEnum.unknown,
+        description: '',
+        priceFormatted: '',
+        imageUrl: const [],
+        facilities: const [],
+        statusCode: '',
+      );
 }

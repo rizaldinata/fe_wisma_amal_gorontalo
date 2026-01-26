@@ -1,11 +1,13 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_carousel_slider/carousel_slider.dart';
 import 'package:formz/formz.dart';
+import 'package:frontend/core/constant/permission_key.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
-import 'package:frontend/data/repository/room_repository.dart';
+import 'package:frontend/core/navigation/auto_route.gr.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/presentation/bloc/detail_room/detail_room_bloc.dart';
+import 'package:frontend/presentation/pages/room_form/form_room.dart';
 import 'package:frontend/presentation/widget/core/appbar/custom_appbar.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
@@ -62,6 +64,7 @@ class RoomDetailView extends StatelessWidget {
             title: 'Room Detail',
           ),
           body: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               child: BasicCard(
@@ -75,10 +78,10 @@ class RoomDetailView extends StatelessWidget {
                   children: [
                     SizedBox(
                       height: 400,
-                      child: ImageCarousel(
-                        maxWidth: double.infinity,
+                      child: DynamicCarousel(
                         height: 400,
-                        images:
+                        
+                        items:
                             state.room?.imageUrl
                                 .map(
                                   (url) => CarouselImage.network(
@@ -91,6 +94,7 @@ class RoomDetailView extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 24),
+
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
                       child: Row(
@@ -101,6 +105,35 @@ class RoomDetailView extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
+                                if (context.can(
+                                  PermissionKeys.manageRooms,
+                                )) ...[
+                                  SizedBox(
+                                    width: 200,
+                                    child: BasicButton(
+                                      foregroundColor: Theme.of(
+                                        context,
+                                      ).colorScheme.onSurface,
+                                      type: ButtonType.secondary,
+                                      trailIcon: Icon(Icons.edit),
+                                      onPressed: () async {
+                                        print('Edit button pressed');
+                                        await context.router.push(
+                                          FormRoomRoute(
+                                            formMode: FormMode.edit,
+                                            roomId: state.room?.id,
+                                          ),
+                                        );
+
+                                        context.read<DetailRoomBloc>().add(
+                                          LoadDetailRoomEvent(state.room!.id),
+                                        );
+                                      },
+                                      label: 'Edit Kamar',
+                                    ),
+                                  ),
+                                  SizedBox(height: 20),
+                                ],
                                 Row(
                                   children: [
                                     Expanded(

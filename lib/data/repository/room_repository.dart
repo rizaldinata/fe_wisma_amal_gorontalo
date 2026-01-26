@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:frontend/data/datasource/room_datasource.dart';
 import 'package:frontend/data/model/room/room_model.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
@@ -34,12 +35,9 @@ class RoomRepository {
     }
   }
 
-  Future<RoomEntity> updateRoom(int id, RoomEntity room) async {
+  Future<RoomEntity> updateRoom(RoomEntity room) async {
     try {
-      final response = await datasource.updateRoom(
-        id,
-        RoomModel.fromDomain(room),
-      );
+      final response = await datasource.updateRoom(RoomModel.fromDomain(room));
       return response.data.toEntity();
     } catch (e) {
       rethrow;
@@ -48,5 +46,13 @@ class RoomRepository {
 
   Future<bool> deleteRoom(int id) async {
     return await datasource.deleteRoom(id);
+  }
+
+  Future<bool> uploadRoomImage(int roomId, List<PlatformFile> files) async {
+    return await datasource.uploadRoomImage(files: files, roomId: roomId);
+  }
+
+  Future<bool> deleteRoomImage(int roomId, int imageId) async {
+    return await datasource.deleteRoomImage(roomId: roomId, imageId: imageId);
   }
 }

@@ -10,6 +10,7 @@ import 'package:frontend/main.dart';
 import 'package:frontend/presentation/bloc/room_list/room_bloc.dart';
 import 'package:frontend/presentation/bloc/room_list/room_event.dart';
 import 'package:frontend/presentation/bloc/room_list/room_state.dart';
+import 'package:frontend/presentation/pages/room_form/form_room.dart';
 import 'package:frontend/presentation/pages/room_list/widget/room_card.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
@@ -118,7 +119,9 @@ class _RoomViewState extends State<RoomView>
                         const SizedBox(width: 20),
                         BasicButton(
                           onPressed: () {
-                            context.router.navigate(AddRoomRoute());
+                            context.router.navigate(
+                              FormRoomRoute(formMode: FormMode.add),
+                            );
                           },
                           label: 'Tambah Kamar',
                           leadIcon: const Icon(Icons.add),

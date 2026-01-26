@@ -35,12 +35,12 @@ class RoomCard extends StatelessWidget {
         height: height,
         width: width,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHigh,
+          color: Theme.of(context).colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
-              blurRadius: 10,
+              color: Theme.of(context).colorScheme.shadow.withAlpha(70),
+              blurRadius: 5,
               offset: const Offset(0, 4),
             ),
           ],
@@ -102,8 +102,7 @@ class RoomCard extends StatelessWidget {
 
                     const SizedBox(height: 12),
 
-                    // Title
-                    Text(title, style: Theme.of(context).textTheme.titleLarge),
+                    Text(title, style: Theme.of(context).textTheme.titleMedium),
 
                     const SizedBox(height: 8),
 
@@ -118,7 +117,6 @@ class RoomCard extends StatelessWidget {
 
                     const SizedBox(height: 16),
 
-                    // Price
                     FittedBox(
                       child: Text(
                         price,

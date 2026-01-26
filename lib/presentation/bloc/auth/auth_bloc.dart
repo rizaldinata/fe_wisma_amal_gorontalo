@@ -53,6 +53,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     });
   }
 
+  // Future<void> checkLoginStatus() async {
+  //   final status = storage.getToken() != null;
+  //   loginStatusNotifier.isLoggedIn = status;
+  //   if (status) {
+  //     add(const GetUserInfoEvent());
+  //   }
+  // }
+
   Future<void> _checkSession() async {
     try {
       final isValid = await auth.checkSession();
@@ -75,8 +83,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     InitLoginStatusEvent event,
     Emitter<AuthState> emit,
   ) async {
+    print('Initializing login status...');
     final status = await auth.isLoggedIn();
     loginStatusNotifier.isLoggedIn = status;
+    print('Login status initialized: $status');
 
     if (status) {
       final email = storage.get(StorageConstant.email);

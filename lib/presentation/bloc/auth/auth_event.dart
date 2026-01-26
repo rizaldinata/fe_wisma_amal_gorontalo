@@ -57,3 +57,4 @@ class ResetStateEvent extends AuthEvent {
 class CheckSessionEvent extends AuthEvent {
   const CheckSessionEvent();
 }
+

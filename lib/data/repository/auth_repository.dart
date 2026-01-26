@@ -45,6 +45,7 @@ class AuthRepository {
     try {
       final response = await datasource.login(request);
       final token = response.data.token.split('|').last;
+      print('Login token: $token');
       await secureStorage.set(StorageConstant.token, token);
       final permissions = await datasource.getPermissions();
       UserEntity userEntity = response.data.toEntity();

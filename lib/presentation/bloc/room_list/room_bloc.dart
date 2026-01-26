@@ -77,7 +77,7 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
   ) async {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     try {
-      await repository.updateRoom(event.id, event.room);
+      await repository.updateRoom(event.room);
       emit(
         state.copyWith(
           status: FormzSubmissionStatus.success,

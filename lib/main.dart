@@ -6,6 +6,7 @@ import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:frontend/presentation/pages/app/app_bloc.dart';
@@ -28,7 +29,9 @@ Future<void> main(List<String> args) async {
   runApp(
     MultiBlocProvider(
       providers: [
-        BlocProvider.value(value: serviceLocator<AuthBloc>()),
+        BlocProvider.value(
+          value: serviceLocator<AuthBloc>()..add(InitLoginStatusEvent()),
+        ),
         BlocProvider(create: (context) => AppBloc()),
       ],
       child: MyApp(),
@@ -77,6 +80,9 @@ class SessionListener extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocListener<AuthBloc, AuthState>(
       listener: (context, state) {
+        print(
+          'SessionListener: Auth state changed: isLoggedIn=${state.isLoggedIn}',
+        );
         if (state.isLoggedIn) {
           router.replaceAll([const DashboardRoute()]);
         } else {

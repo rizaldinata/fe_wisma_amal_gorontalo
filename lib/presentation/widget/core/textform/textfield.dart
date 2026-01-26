@@ -33,10 +33,11 @@ class CustomTextField extends StatelessWidget {
       decoration: InputDecoration(
         filled: (fillColor != null),
         fillColor:
-            fillColor ?? Theme.of(context).colorScheme.surfaceContainerHigh,
+            fillColor ?? Theme.of(context).colorScheme.surfaceContainerLow,
         hintText: hintText,
         suffixIcon: suffixIcon,
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+        
         contentPadding: EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       ),
     );
