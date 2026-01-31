@@ -7,6 +7,7 @@ import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend/presentation/widget/core/keyboard/enter_listener.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/textform/textform.dart';
@@ -162,36 +163,42 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         SizedBox(height: 40),
-                        BasicButton(
-                          onPressed: state.status.isInProgress
-                              ? null
-                              : () async {
-                                  print('Login pressed');
-                                  if (emailController.text.isEmpty ||
-                                      passwordController.text.isEmpty) {
-                                    print('Email or Password is empty');
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'Email dan password harus diisi',
+                        EnterKeyListener(
+                          onEnter: () {
+                            print('Login pressed');
+                          },
+                          child: BasicButton(
+                            onPressed: state.status.isInProgress
+                                ? null
+                                : () async {
+                                    print('Login pressed');
+                                    if (emailController.text.isEmpty ||
+                                        passwordController.text.isEmpty) {
+                                      print('Email or Password is empty');
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Email dan password harus diisi',
+                                          ),
+                                          backgroundColor: Colors.red
+                                              .withOpacity(0.8),
                                         ),
-                                        backgroundColor: Colors.red.withOpacity(
-                                          0.8,
+                                      );
+                                    } else {
+                                      context.read<AuthBloc>().add(
+                                        LoginEvent(
+                                          email: emailController.text,
+                                          password: passwordController.text,
                                         ),
-                                      ),
-                                    );
-                                  } else {
-                                    context.read<AuthBloc>().add(
-                                      LoginEvent(
-                                        email: emailController.text,
-                                        password: passwordController.text,
-                                      ),
-                                    );
-                                  }
-                                },
-                          label: state.status.isInProgress
-                              ? 'Loading...'
-                              : 'Login',
+                                      );
+                                    }
+                                  },
+                            label: state.status.isInProgress
+                                ? 'Loading...'
+                                : 'Login',
+                          ),
                         ),
                         SizedBox(height: 30),
                         Row(

@@ -7,6 +7,7 @@ import 'package:formz/formz.dart';
 import 'package:frontend/core/utils/image_utils.dart';
 import 'package:frontend/data/repository/room_repository.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
+import 'package:frontend/presentation/pages/room_form/form_room.dart';
 import 'package:frontend/presentation/widget/core/image/image_carousel.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
@@ -24,6 +25,53 @@ class FormRoomBloc extends Bloc<FormRoomEvent, FormRoomState> {
     on<AddFormRoomEvent>(_onAddFormRoom);
     on<PickRoomImagesEvent>(_onPickRoomImages);
     on<RemoveRoomImageEvent>(_onRemoveRoomImage);
+    on<AddFacilityEvent>(_onAddFacility);
+    on<RemoveFacilityEvent>(_onRemoveFacility);
+    on<UploadRoomImagesEvent>(_onUploadRoomImages);
+  }
+
+  Future<void> _onUploadRoomImages(
+    UploadRoomImagesEvent event,
+    Emitter<FormRoomState> emit,
+  ) async {
+    try {} catch (e) {
+      emit(
+        state.copyWith(
+          errorMessage: e.toString(),
+          submitStatus: FormzSubmissionStatus.failure,
+        ),
+      );
+    }
+  }
+
+  Future<void> _onAddFacility(
+    AddFacilityEvent event,
+    Emitter<FormRoomState> emit,
+  ) async {
+    try {
+      final updatedFacilities = List<String>.from(state.facilities)
+        ..add(event.facility);
+
+      emit(state.copyWith(facilities: updatedFacilities));
+      AppSnackbar.showSuccess('Facility added');
+    } catch (e) {
+      emit(state.copyWith(errorMessage: e.toString()));
+    }
+  }
+
+  Future<void> _onRemoveFacility(
+    RemoveFacilityEvent event,
+    Emitter<FormRoomState> emit,
+  ) async {
+    try {
+      final facilities = List<String>.from(state.facilities);
+      facilities.removeAt(event.index);
+
+      emit(state.copyWith(facilities: facilities));
+      AppSnackbar.showSuccess('Facility removeded');
+    } catch (e) {
+      emit(state.copyWith(errorMessage: e.toString()));
+    }
   }
 
   Future<void> _onRemoveRoomImage(
@@ -32,8 +80,17 @@ class FormRoomBloc extends Bloc<FormRoomEvent, FormRoomState> {
   ) async {
     try {
       final updatedImages = state.imageFiles
-          .where((image) => image.id != event.index)
+          .where((image) => image.id != event.file.id)
           .toList();
+
+      if (event.file.type == ImageSourceType.network &&
+          event.file.url != null) {
+        final imagesToDelete = List<ImageFile>.from(state.imageUrlsToDelete);
+        imagesToDelete.add(event.file);
+        print("adding image to delete:${event.file.id}");
+        emit(state.copyWith(imageUrlsToDelete: imagesToDelete));
+        print("total images to delete:${state.imageUrlsToDelete.length}");
+      }
 
       emit(state.copyWith(imageFiles: updatedImages));
       AppSnackbar.showSuccess('Image removeded');
@@ -135,6 +192,7 @@ class FormRoomBloc extends Bloc<FormRoomEvent, FormRoomState> {
             loadStatus: FormzSubmissionStatus.success,
             room: room,
             imageFiles: imageFiles,
+            facilities: room.facilities,
           ),
         );
       }
@@ -145,6 +203,9 @@ class FormRoomBloc extends Bloc<FormRoomEvent, FormRoomState> {
           errorMessage: e.toString(),
         ),
       );
+    } finally {
+      // Future.delayed(const Duration(milliseconds: 500));
+      // emit(state.copyWith(loadStatus: FormzSubmissionStatus.initial));
     }
   }
 
@@ -155,11 +216,45 @@ class FormRoomBloc extends Bloc<FormRoomEvent, FormRoomState> {
     try {
       emit(state.copyWith(submitStatus: FormzSubmissionStatus.inProgress));
       RoomEntity processedRoom;
-      if (event.roomData.description.isNotEmpty) {
+      if (event.formMode == FormMode.edit) {
         processedRoom = await repository.updateRoom(event.roomData);
       } else {
         processedRoom = await repository.createRoom(event.roomData);
       }
+      //delete images if any
+      print(
+        "total images to delete at submit:${state.imageUrlsToDelete.length}",
+      );
+      for (var image in state.imageUrlsToDelete) {
+        if (image.id != null) {
+          print("deleting image:${image.id}");
+          await repository.deleteRoomImage(
+            processedRoom.id,
+            int.parse(image.id!),
+          );
+        }
+      }
+      //upload new images if any
+      final newImages = state.imageFiles
+          .where(
+            (image) =>
+                image.type == ImageSourceType.memory && image.file != null,
+          )
+          .toList();
+      if (newImages.isNotEmpty) {
+        print("uploading new images");
+        final files = newImages.map((e) => e.file!).toList();
+        try {
+          await repository.uploadRoomImage(processedRoom.id, files);
+        } catch (e) {
+          print('Error uploading images: $e');
+          // We still consider it a success if the room was saved,
+          // but we might want to warn the user or rethrow depending on requirements.
+          // For now, let's rethrow to show the error snackbar.
+          throw Exception('Room saved, but image upload failed: $e');
+        }
+      }
+
       emit(
         state.copyWith(
           room: processedRoom,

@@ -117,30 +117,35 @@ class RoomDatasource {
   }) async {
     try {
       final formData = FormData();
-
       for (final file in files) {
+        if (file.bytes == null) {
+          debugPrint('File bytes for ${file.name} is null, skipping');
+          continue;
+        }
         formData.files.add(
           MapEntry(
             'images[]',
             MultipartFile.fromBytes(
-              file.bytes!, // WAJIB untuk web
+              file.bytes!,
               filename: file.name,
+              contentType: DioMediaType.parse('image/jpeg'),
             ),
           ),
         );
       }
-
       final response = await dioClient.post(
         EndpointConstant.uploadRoomImage(roomId: roomId),
         data: formData,
       );
-      if (response.statusCode == 200) {
+      // Status 201 (Created) adalah standard Laravel/REST API
+      // untuk request POST yang berhasil membuat data baru.
+      if (response.statusCode == 200 || response.statusCode == 201) {
         return response.data['status'] == true;
       } else {
         return false;
       }
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint('Upload error: $e');
       rethrow;
     }
   }

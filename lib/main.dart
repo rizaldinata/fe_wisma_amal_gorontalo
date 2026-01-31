@@ -9,7 +9,7 @@ import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
-import 'package:frontend/presentation/pages/app/app_bloc.dart';
+import 'package:frontend/presentation/bloc/app/app_bloc.dart';
 
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();

@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
-import 'package:frontend/presentation/pages/app/app_bloc.dart';
+import 'package:frontend/presentation/bloc/app/app_bloc.dart';
 import 'package:frontend/presentation/widget/core/botton/icon_button.dart';
 
 class SidebarItem {

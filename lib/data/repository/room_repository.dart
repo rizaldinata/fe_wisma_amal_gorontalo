@@ -40,6 +40,7 @@ class RoomRepository {
       final response = await datasource.updateRoom(RoomModel.fromDomain(room));
       return response.data.toEntity();
     } catch (e) {
+      print('error at room repository updateRoom: $e');
       rethrow;
     }
   }

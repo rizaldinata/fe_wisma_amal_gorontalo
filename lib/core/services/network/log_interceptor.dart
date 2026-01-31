@@ -19,6 +19,7 @@ class PrettyDioLogger extends Interceptor {
 \x1B[33m=== REQUEST ===\x1B[0m
 ➡️  [${options.method}] ${options.uri}
 🔍 Query: ${_prettyJson(options.queryParameters)}')
+🧾 Headers: ${_prettyJson(options.headers)}
 🧾 Body : ${options.data}
 \x1B[33m================\x1B[0m
 ''');
@@ -33,12 +34,13 @@ class PrettyDioLogger extends Interceptor {
 \x1B[32m=== RESPONSE ===\x1B[0m
 ✅ URL: ${response.requestOptions.uri}
 📦 Status: ${response.statusCode}
+📦 Headers: ${_prettyJson(response.headers)}
 🧾 Data: ${_prettyJson(response.data)}
 \x1B[32m================\x1B[0m
       ''');
     }
     // super.onResponse(response, handler);
-     return handler.next(response);
+    return handler.next(response);
   }
 
   @override
@@ -49,6 +51,7 @@ class PrettyDioLogger extends Interceptor {
 ❌ URL: ${err.requestOptions.uri}
 🚨 Message: ${err.message}
 📦 Status: ${err.response?.statusCode}
+📦 Headers: ${_prettyJson(err.response?.headers)}
 🧾 Data: ${_prettyJson(err.response?.data)}
 \x1B[31m==============\x1B[0m
 ''');

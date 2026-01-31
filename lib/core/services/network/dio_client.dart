@@ -32,10 +32,10 @@ class DioClient {
     _dio.interceptors.add(apiInterceptor);
     _dio.interceptors.add(
       LogInterceptor(
-        requestHeader: true,
-        responseHeader: true,
-        requestBody: true,
-        responseBody: true,
+        requestHeader: false,
+        responseHeader: false,
+        requestBody: false,
+        responseBody: false,
       ),
     );
     _dio.interceptors.add(PrettyDioLogger());

@@ -17,12 +17,13 @@ final class LoadFormRoomEvent extends FormRoomEvent {
 }
 
 final class SubmitFormRoomEvent extends FormRoomEvent {
-  const SubmitFormRoomEvent({required this.roomData});
+  const SubmitFormRoomEvent({required this.roomData, required this.formMode});
 
   final RoomEntity roomData;
+  final FormMode formMode;
 
   @override
-  List<Object> get props => [roomData];
+  List<Object> get props => [roomData, formMode];
 }
 
 final class AddFormRoomEvent extends FormRoomEvent {
@@ -46,10 +47,32 @@ final class EditFormRoomEvent extends FormRoomEvent {
 final class PickRoomImagesEvent extends FormRoomEvent {}
 
 final class RemoveRoomImageEvent extends FormRoomEvent {
-  const RemoveRoomImageEvent({required this.index});
+  const RemoveRoomImageEvent({required this.file});
 
-  final String index;
+  final ImageFile file;
+
+  @override
+  List<Object> get props => [file];
+}
+
+final class AddFacilityEvent extends FormRoomEvent {
+  const AddFacilityEvent({required this.facility});
+
+  final String facility;
+
+  @override
+  List<Object> get props => [facility];
+}
+
+final class RemoveFacilityEvent extends FormRoomEvent {
+  const RemoveFacilityEvent({required this.index});
+
+  final int index;
 
   @override
   List<Object> get props => [index];
+}
+
+final class UploadRoomImagesEvent extends FormRoomEvent {
+  const UploadRoomImagesEvent();
 }

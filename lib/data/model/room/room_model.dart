@@ -9,7 +9,7 @@ class RoomModel {
   final double price;
   final String? priceFormatted;
   final String status;
-  final String? statusCode;
+  final String statusCode;
   final String? description;
   final List<String> facilities;
   final List<RoomImageModel> images;
@@ -22,7 +22,7 @@ class RoomModel {
     required this.price,
     required this.status,
     this.priceFormatted,
-    this.statusCode,
+    required this.statusCode,
     this.description,
     required this.facilities,
     required this.images,
@@ -58,7 +58,8 @@ class RoomModel {
       'number': number,
       'type': type,
       'price': price,
-      'status': statusCode ?? status,
+      'status': statusCode,
+      'facilities': facilities,
       'description': description,
     };
   }
@@ -70,8 +71,8 @@ class RoomModel {
       number: number,
       type: type,
       price: price,
-      status: RoomStatusEnum.fromString(statusCode ?? ''),
-      statusCode: statusCode ?? '',
+      status: RoomStatusEnum.fromString(statusCode),
+      statusCode: statusCode,
       description: description ?? '',
       priceFormatted: priceFormatted ?? '',
       imageUrl: images,
@@ -86,7 +87,7 @@ class RoomModel {
       number: entity.number,
       type: entity.type,
       price: entity.price,
-      status: entity.status.displayName,
+      status: entity.status.name,
       statusCode: entity.status.name,
       description: entity.description,
       facilities: entity.facilities,

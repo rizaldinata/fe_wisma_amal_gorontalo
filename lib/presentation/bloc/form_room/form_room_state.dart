@@ -19,6 +19,7 @@ class FormRoomState extends Equatable {
   final List<ImageFile> imageUrlsToDelete;
   final RoomEntity room;
   final List<ImageFile> imageFiles;
+  final List<String> facilities;
 
   const FormRoomState({
     this.loadStatus = FormzSubmissionStatus.initial,
@@ -30,6 +31,7 @@ class FormRoomState extends Equatable {
     this.successMessage,
     this.room = const RoomEntity.empty(),
     this.imageFiles = const [],
+    this.facilities = const [],
   });
 
   FormRoomState copyWith({
@@ -42,6 +44,7 @@ class FormRoomState extends Equatable {
     String? successMessage,
     RoomEntity? room,
     List<ImageFile>? imageFiles,
+    List<String>? facilities,
   }) {
     return FormRoomState(
       loadStatus: loadStatus ?? this.loadStatus,
@@ -53,6 +56,7 @@ class FormRoomState extends Equatable {
       successMessage: successMessage,
       room: room ?? this.room,
       imageFiles: imageFiles ?? this.imageFiles,
+      facilities: facilities ?? this.facilities,
     );
   }
 
@@ -67,5 +71,6 @@ class FormRoomState extends Equatable {
     successMessage,
     imageUrlsToDelete,
     imageFiles,
+    facilities,
   ];
 }
