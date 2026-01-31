@@ -111,7 +111,7 @@ class RoomDatasource {
   }
 
   // UPLOAD ROOM IMAGE
-  Future<bool> uploadRoomImage({
+    Future<bool> uploadRoomImage({
     required int roomId,
     required List<PlatformFile> files,
   }) async {
@@ -137,7 +137,7 @@ class RoomDatasource {
         EndpointConstant.uploadRoomImage(roomId: roomId),
         data: formData,
       );
-      // Status 201 (Created) adalah standard Laravel/REST API
+      // Status 201 (Created) adalah standard Laravel/REST API 
       // untuk request POST yang berhasil membuat data baru.
       if (response.statusCode == 200 || response.statusCode == 201) {
         return response.data['status'] == true;
@@ -148,5 +148,4 @@ class RoomDatasource {
       debugPrint('Upload error: $e');
       rethrow;
     }
-  }
-}
+  }}

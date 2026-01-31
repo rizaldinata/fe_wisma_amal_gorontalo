@@ -62,6 +62,12 @@ class BasicButton extends StatelessWidget {
 
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
+      style: type == ButtonType.danger
+          ? ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.error,
+              foregroundColor: Colors.white,
+            )
+          : null,
       child: isLoading
           ? const SizedBox(
               height: 20,

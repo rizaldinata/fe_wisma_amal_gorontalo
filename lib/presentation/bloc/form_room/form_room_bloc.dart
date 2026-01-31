@@ -178,7 +178,7 @@ class FormRoomBloc extends Bloc<FormRoomEvent, FormRoomState> {
         final room = await repository.getRoomById(event.roomId!);
 
         final imageFiles = room.imageUrl
-            .map(
+            ?.map(
               (url) => ImageFile(
                 url: url.url,
                 id: '${url.id}',
@@ -219,7 +219,9 @@ class FormRoomBloc extends Bloc<FormRoomEvent, FormRoomState> {
       if (event.formMode == FormMode.edit) {
         processedRoom = await repository.updateRoom(event.roomData);
       } else {
-        processedRoom = await repository.createRoom(event.roomData);
+        processedRoom = await repository.createRoom(
+          event.roomData.copyWith(status: RoomStatusEnum.available),
+        );
       }
       //delete images if any
       print(

@@ -5,7 +5,6 @@ class RoomModel {
   final int id;
   final String title;
   final String number;
-  final String type;
   final double price;
   final String? priceFormatted;
   final String status;
@@ -18,7 +17,6 @@ class RoomModel {
     required this.id,
     required this.title,
     required this.number,
-    required this.type,
     required this.price,
     required this.status,
     this.priceFormatted,
@@ -33,7 +31,6 @@ class RoomModel {
       id: json['id'] ?? 0,
       title: json['title'] ?? '',
       number: json['number']?.toString() ?? '',
-      type: json['type'] ?? '',
       price: (json['price'] is String)
           ? double.tryParse(json['price']) ?? 0.0
           : (json['price'] as num?)?.toDouble() ?? 0.0,
@@ -56,7 +53,6 @@ class RoomModel {
     return {
       'title': title,
       'number': number,
-      'type': type,
       'price': price,
       'status': statusCode,
       'facilities': facilities,
@@ -69,7 +65,6 @@ class RoomModel {
       id: id,
       title: title,
       number: number,
-      type: type,
       price: price,
       status: RoomStatusEnum.fromString(statusCode),
       statusCode: statusCode,
@@ -85,7 +80,6 @@ class RoomModel {
       id: entity.id,
       title: entity.title,
       number: entity.number,
-      type: entity.type,
       price: entity.price,
       status: entity.status.name,
       statusCode: entity.status.name,

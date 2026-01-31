@@ -80,7 +80,7 @@ class RoomDetailView extends StatelessWidget {
                       height: 400,
                       child: DynamicCarousel(
                         height: 400,
-                        
+
                         items:
                             state.room?.imageUrl
                                 .map(
@@ -117,7 +117,6 @@ class RoomDetailView extends StatelessWidget {
                                       type: ButtonType.secondary,
                                       trailIcon: Icon(Icons.edit),
                                       onPressed: () async {
-                                        print('Edit button pressed');
                                         await context.router.push(
                                           FormRoomRoute(
                                             formMode: FormMode.edit,
@@ -145,6 +144,16 @@ class RoomDetailView extends StatelessWidget {
                                       ),
                                     ),
                                     SizedBox(width: 10),
+                                    if (state.room?.number != null &&
+                                        state.room!.number.isNotEmpty) ...[
+                                      Text(
+                                        'No. ${state.room?.number}',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyMedium,
+                                      ),
+                                      SizedBox(width: 10),
+                                    ],
                                     CustomChip(
                                       label:
                                           state.room?.status.displayName ?? '',

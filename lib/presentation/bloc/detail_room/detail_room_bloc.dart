@@ -16,7 +16,7 @@ class DetailRoomBloc extends Bloc<DetailRoomEvent, DetailRoomState> {
   DetailRoomBloc({required this.repository}) : super(const DetailRoomState()) {
     on<LoadDetailRoomEvent>(_onLoadDetailRoom);
     on<UpdateRoomEvent>(_onUpdateRoom);
-    on<DeleteRoomEvent>(_onDeleteRoom);
+    // on<DeleteRoomEvent>(_onDeleteRoom);
   }
 
   Future<void> _onLoadDetailRoom(
@@ -69,26 +69,30 @@ class DetailRoomBloc extends Bloc<DetailRoomEvent, DetailRoomState> {
     }
   }
 
-  Future<void> _onDeleteRoom(
-    DeleteRoomEvent event,
-    Emitter<DetailRoomState> emit,
-  ) async {
-    try {} on AppException catch (e) {
-      AppSnackbar.showError('Gagal menghapus kamar: ${e.message}');
-      emit(
-        state.copyWith(
-          status: FormzSubmissionStatus.failure,
-          errorMessage: e.message,
-        ),
-      );
-    } catch (e) {
-      AppSnackbar.showError('Gagal menghapus kamar: ${e.toString()}');
-      emit(
-        state.copyWith(
-          status: FormzSubmissionStatus.failure,
-          errorMessage: e.toString(),
-        ),
-      );
-    }
-  }
+  // Future<void> _onDeleteRoom(
+  //   DeleteRoomEvent event,
+  //   Emitter<DetailRoomState> emit,
+  // ) async {
+  //   try {
+  //     emit(state.copyWith(deleteStatus: FormzSubmissionStatus.inProgress));
+  //     await repository.deleteRoom(event.roomId);
+  //     emit(state.copyWith(deleteStatus: FormzSubmissionStatus.success));
+  //   } on AppException catch (e) {
+  //     AppSnackbar.showError('Gagal menghapus kamar: ${e.message}');
+  //     emit(
+  //       state.copyWith(
+  //         status: FormzSubmissionStatus.failure,
+  //         errorMessage: e.message,
+  //       ),
+  //     );
+  //   } catch (e) {
+  //     AppSnackbar.showError('Gagal menghapus kamar: ${e.toString()}');
+  //     emit(
+  //       state.copyWith(
+  //         status: FormzSubmissionStatus.failure,
+  //         errorMessage: e.toString(),
+  //       ),
+  //     );
+  //   }
+  // }
 }

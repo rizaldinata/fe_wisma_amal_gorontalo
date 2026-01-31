@@ -59,6 +59,8 @@ class _FormRoomViewState extends State<FormRoomView> {
   final TextEditingController titleController = TextEditingController();
 
   final TextEditingController priceController = TextEditingController();
+
+  final TextEditingController roomNumberController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   String? _facilitiesError;
 
@@ -66,6 +68,7 @@ class _FormRoomViewState extends State<FormRoomView> {
     titleController.text = state.room.title;
     descriptionController.text = state.room.description;
     priceController.text = ThousandsFormatter.format(state.room.price.toInt());
+    roomNumberController.text = state.room.number;
   }
 
   @override
@@ -243,6 +246,18 @@ class _FormRoomViewState extends State<FormRoomView> {
                                   ),
                                   SizedBox(height: 30),
                                   CustomTextForm(
+                                    title: 'Room number',
+                                    hintText: 'Enter room number',
+                                    keyboardType: TextInputType.number,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
+                                    maxLines: 1,
+                                    controller: roomNumberController,
+                                    isRequired: true,
+                                  ),
+                                  SizedBox(height: 30),
+                                  CustomTextForm(
                                     title: 'Price',
                                     hintText: 'Enter room price',
                                     keyboardType: TextInputType.number,
@@ -253,10 +268,15 @@ class _FormRoomViewState extends State<FormRoomView> {
                                       ThousandsFormatter(),
                                     ],
                                     validator: (v) {
+                                      // final price = ThousandsFormatter.parse(
+                                      //   priceController.text.trim(),
+                                      // );
                                       if (v == null || v.trim().isEmpty) {
                                         return 'Price is required';
                                       }
-                                      final p = double.tryParse(v.trim());
+                                      final p = ThousandsFormatter.parse(
+                                        v.trim(),
+                                      );
                                       if (p == null || p <= 0) {
                                         return 'Price must be greater than 0';
                                       }
@@ -389,14 +409,13 @@ class _FormRoomViewState extends State<FormRoomView> {
                                         return;
                                       }
 
-                                      final price =
-                                          double.tryParse(
-                                            priceController.text.trim(),
-                                          ) ??
-                                          0;
-
-                                      print(
-                                        'Submitting form with title: ${titleController.text.trim()}, price: $price, description: ${descriptionController.text.trim()}, facilities: ${state.facilities}',
+                                      // final price =
+                                      //     double.tryParse(
+                                      //       priceController.text.trim(),
+                                      //     ) ??
+                                      //     0;
+                                      final price = ThousandsFormatter.parse(
+                                        priceController.text.trim(),
                                       );
 
                                       context.read<FormRoomBloc>().add(
@@ -407,8 +426,10 @@ class _FormRoomViewState extends State<FormRoomView> {
                                             description: descriptionController
                                                 .text
                                                 .trim(),
-                                            price: price,
+                                            price: price.toDouble(),
                                             facilities: state.facilities,
+                                            number: roomNumberController.text
+                                                .trim(),
                                           ),
                                         ),
                                       );

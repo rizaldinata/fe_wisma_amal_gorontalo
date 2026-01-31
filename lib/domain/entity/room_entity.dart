@@ -63,7 +63,6 @@ class RoomEntity {
   final int id;
   final String title;
   final String number;
-  final String type;
   final double price;
   final String priceFormatted;
   final RoomStatusEnum status;
@@ -76,7 +75,6 @@ class RoomEntity {
     required this.id,
     required this.title,
     required this.number,
-    required this.type,
     required this.price,
     required this.status,
     required this.description,
@@ -90,7 +88,6 @@ class RoomEntity {
     int? id,
     String? title,
     String? number,
-    String? type,
     double? price,
     RoomStatusEnum? status,
     String? description,
@@ -103,7 +100,6 @@ class RoomEntity {
       id: id ?? this.id,
       title: title ?? this.title,
       number: number ?? this.number,
-      type: type ?? this.type,
       price: price ?? this.price,
       status: status ?? this.status,
       description: description ?? this.description,
@@ -119,7 +115,6 @@ class RoomEntity {
         id: 0,
         title: '',
         number: '',
-        type: '',
         price: 0.0,
         status: RoomStatusEnum.unknown,
         description: '',

@@ -15,6 +15,7 @@ import 'package:frontend/presentation/pages/room_list/widget/room_card.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:frontend/presentation/widget/core/card/stat_card.dart';
+import 'package:frontend/presentation/widget/core/dialog/app_dialog.dart';
 
 @RoutePage()
 class RoomPage extends StatelessWidget {
@@ -118,10 +119,14 @@ class _RoomViewState extends State<RoomView>
                       if (context.can(PermissionKeys.manageRooms)) ...[
                         const SizedBox(width: 20),
                         BasicButton(
-                          onPressed: () {
-                            context.router.navigate(
+                          onPressed: () async {
+                            await context.router.navigate(
                               FormRoomRoute(formMode: FormMode.add),
                             );
+
+                            if (mounted) {
+                              context.read<RoomBloc>().add(GetRoomsEvent());
+                            }
                           },
                           label: 'Tambah Kamar',
                           leadIcon: const Icon(Icons.add),
@@ -223,10 +228,24 @@ class _RoomViewState extends State<RoomView>
                 onTap: () {
                   context.router.navigate(RoomDetailRoute(roomId: room.id));
                 },
+                onDelete: () async {
+                  final confirmed = await AppDialog.show(
+                    context,
+                    title: 'Delete Room',
+                    message:
+                        'Are you sure you want to delete this room? This action cannot be undone.',
+                    confirmLabel: 'Delete',
+                    type: AppDialogType.danger,
+                  );
+                  if (confirmed == true) {
+                    context.read<RoomBloc>().add(DeleteRoomEvent(room.id));
+                  }
+                },
                 title: room.title,
-                imageUrl: room.imageUrl.first.thumbnail,
+                imageUrl: room.imageUrl.firstOrNull?.thumbnail,
                 availability: room.status,
                 description: room.description,
+                roomNumber: room.number,
                 price: '${room.priceFormatted} / bulan',
               );
             },

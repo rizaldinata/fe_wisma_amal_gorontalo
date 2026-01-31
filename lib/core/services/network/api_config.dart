@@ -5,7 +5,10 @@ class ApiConfig {
     required this.baseUrl,
     this.connectTimeout = const Duration(milliseconds: 30000),
     this.receiveTimeout = const Duration(milliseconds: 30000),
-    this.headers = const <String, String>{'Content-Type': 'application/json'},
+    this.headers = const <String, String>{
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+    },
   });
 
   static const String PRODUCTION = 'production';

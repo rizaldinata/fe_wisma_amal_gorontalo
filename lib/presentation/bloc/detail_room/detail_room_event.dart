@@ -25,11 +25,11 @@ final class UpdateRoomEvent extends DetailRoomEvent {
   List<Object> get props => [room];
 }
 
-final class DeleteRoomEvent extends DetailRoomEvent {
-  final int roomId;
+// final class DeleteRoomEvent extends DetailRoomEvent {
+//   final int roomId;
 
-  const DeleteRoomEvent(this.roomId);
+//   const DeleteRoomEvent(this.roomId);
 
-  @override
-  List<Object> get props => [roomId];
-}
+//   @override
+//   List<Object> get props => [roomId];
+// }
