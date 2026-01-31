@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/presentation/widget/core/textform/textfield.dart';
 
 class CustomTextForm extends StatelessWidget {
@@ -14,6 +15,7 @@ class CustomTextForm extends StatelessWidget {
     this.suffixIcon,
     this.validator,
     this.maxLines = 1,
+    this.inputFormatters,
   });
   final Color? fillColor;
   final String title;
@@ -25,6 +27,7 @@ class CustomTextForm extends StatelessWidget {
   final String? Function(String?)? validator;
   final Widget? suffixIcon;
   final int maxLines;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +54,7 @@ class CustomTextForm extends StatelessWidget {
         ),
         SizedBox(height: 8),
         CustomTextField(
+          inputFormatters: inputFormatters,
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,

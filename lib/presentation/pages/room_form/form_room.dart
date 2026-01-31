@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
+import 'package:flutter/services.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/utils/image_utils.dart';
 import 'package:frontend/data/repository/room_repository.dart';
@@ -242,6 +243,9 @@ class _FormRoomViewState extends State<FormRoomView> {
                                     keyboardType: TextInputType.number,
                                     controller: priceController,
                                     isRequired: true,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                    ],
                                     validator: (v) {
                                       if (v == null || v.trim().isEmpty) {
                                         return 'Price is required';
