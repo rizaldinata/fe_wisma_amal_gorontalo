@@ -14,7 +14,8 @@ import 'package:flutter/material.dart' as _i10;
 import 'package:frontend/presentation/pages/auth/login_page.dart' as _i5;
 import 'package:frontend/presentation/pages/auth/register_page.dart' as _i6;
 import 'package:frontend/presentation/pages/dashboard/dashboard.dart' as _i2;
-import 'package:frontend/presentation/pages/detail_room/room_detail.dart' as _i7;
+import 'package:frontend/presentation/pages/detail_room/room_detail.dart'
+    as _i7;
 import 'package:frontend/presentation/pages/landing/landing_page.dart' as _i4;
 import 'package:frontend/presentation/pages/room_form/form_room.dart' as _i3;
 import 'package:frontend/presentation/pages/room_list/room_page.dart' as _i8;
@@ -57,12 +58,13 @@ class DashboardRoute extends _i9.PageRouteInfo<void> {
 class FormRoomRoute extends _i9.PageRouteInfo<FormRoomRouteArgs> {
   FormRoomRoute({
     _i10.Key? key,
-    required _i3.FormMode formMode,
     int? roomId,
+    required _i3.FormMode formMode,
     List<_i9.PageRouteInfo>? children,
   }) : super(
          FormRoomRoute.name,
-         args: FormRoomRouteArgs(key: key, formMode: formMode, roomId: roomId),
+         args: FormRoomRouteArgs(key: key, roomId: roomId, formMode: formMode),
+         rawPathParams: {'id': roomId},
          initialChildren: children,
        );
 
@@ -74,25 +76,25 @@ class FormRoomRoute extends _i9.PageRouteInfo<FormRoomRouteArgs> {
       final args = data.argsAs<FormRoomRouteArgs>();
       return _i3.FormRoomPage(
         key: args.key,
-        formMode: args.formMode,
         roomId: args.roomId,
+        formMode: args.formMode,
       );
     },
   );
 }
 
 class FormRoomRouteArgs {
-  const FormRoomRouteArgs({this.key, required this.formMode, this.roomId});
+  const FormRoomRouteArgs({this.key, this.roomId, required this.formMode});
 
   final _i10.Key? key;
 
-  final _i3.FormMode formMode;
-
   final int? roomId;
+
+  final _i3.FormMode formMode;
 
   @override
   String toString() {
-    return 'FormRoomRouteArgs{key: $key, formMode: $formMode, roomId: $roomId}';
+    return 'FormRoomRouteArgs{key: $key, roomId: $roomId, formMode: $formMode}';
   }
 
   @override
@@ -100,12 +102,12 @@ class FormRoomRouteArgs {
     if (identical(this, other)) return true;
     if (other is! FormRoomRouteArgs) return false;
     return key == other.key &&
-        formMode == other.formMode &&
-        roomId == other.roomId;
+        roomId == other.roomId &&
+        formMode == other.formMode;
   }
 
   @override
-  int get hashCode => key.hashCode ^ formMode.hashCode ^ roomId.hashCode;
+  int get hashCode => key.hashCode ^ roomId.hashCode ^ formMode.hashCode;
 }
 
 /// generated route for

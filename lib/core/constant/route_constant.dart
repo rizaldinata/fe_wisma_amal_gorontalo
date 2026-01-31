@@ -17,5 +17,5 @@ class RouteConstant {
 
   static const String addRoomName = '$roomName/add';
   static const String detailRoomName = '$roomName/:id';
-  static const String editRoomName = '$detailRoomName/edit';
+  static const String editRoomName = '$detailRoomName/form';
 }

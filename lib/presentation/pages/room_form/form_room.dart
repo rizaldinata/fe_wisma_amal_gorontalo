@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:flutter/services.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/core/utils/formatter/digit_formatter.dart';
 import 'package:frontend/core/utils/image_utils.dart';
 import 'package:frontend/data/repository/room_repository.dart';
 import 'package:frontend/presentation/bloc/detail_room/detail_room_bloc.dart';
@@ -22,7 +23,11 @@ enum FormMode { add, edit }
 
 @RoutePage()
 class FormRoomPage extends StatelessWidget {
-  const FormRoomPage({super.key, required this.formMode, this.roomId});
+  const FormRoomPage({
+    super.key,
+    @PathParam('id') this.roomId,
+    required this.formMode,
+  });
   final FormMode formMode;
   final int? roomId;
 
@@ -60,7 +65,7 @@ class _FormRoomViewState extends State<FormRoomView> {
   void setInitData(FormRoomState state) {
     titleController.text = state.room.title;
     descriptionController.text = state.room.description;
-    priceController.text = state.room.price.toString();
+    priceController.text = ThousandsFormatter.format(state.room.price.toInt());
   }
 
   @override
@@ -245,6 +250,7 @@ class _FormRoomViewState extends State<FormRoomView> {
                                     isRequired: true,
                                     inputFormatters: [
                                       FilteringTextInputFormatter.digitsOnly,
+                                      ThousandsFormatter(),
                                     ],
                                     validator: (v) {
                                       if (v == null || v.trim().isEmpty) {
