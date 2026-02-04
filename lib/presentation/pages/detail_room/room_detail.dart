@@ -118,10 +118,7 @@ class RoomDetailView extends StatelessWidget {
                                       trailIcon: Icon(Icons.edit),
                                       onPressed: () async {
                                         await context.router.push(
-                                          FormRoomRoute(
-                                            formMode: FormMode.edit,
-                                            roomId: state.room?.id,
-                                          ),
+                                          EditRoomRoute(roomId: state.room!.id),
                                         );
 
                                         context.read<DetailRoomBloc>().add(

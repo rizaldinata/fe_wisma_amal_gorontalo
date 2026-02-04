@@ -120,9 +120,7 @@ class _RoomViewState extends State<RoomView>
                         const SizedBox(width: 20),
                         BasicButton(
                           onPressed: () async {
-                            await context.router.navigate(
-                              FormRoomRoute(formMode: FormMode.add),
-                            );
+                            await context.router.navigate(const AddRoomRoute());
 
                             if (mounted) {
                               context.read<RoomBloc>().add(GetRoomsEvent());

@@ -13,9 +13,21 @@ class RouteConstant {
   //dashboard page
   static const String dashboardName = 'dashboard';
   static const String landingName = 'landing';
-  static const String roomName = 'rooms';
 
-  static const String addRoomName = '$roomName/add';
-  static const String detailRoomName = '$roomName/:id';
-  static const String editRoomName = '$detailRoomName/form';
+  // Manajemen penghuni
+  static const String residentName = 'residents';
+
+  // Manajemen kamar & reservasi
+  static const String roomAndReservationName = 'room-reservations';
+  static const String roomName = '$roomAndReservationName/rooms';
+  static const String addRoomName = '$roomAndReservationName/$roomName/add';
+  static const String detailRoomName = '$roomAndReservationName/$roomName/:id';
+  static const String editRoomName =
+      '$roomAndReservationName/$detailRoomName/form';
+
+  // Manajemen Keuangan
+  static const String financeName = 'finances';
+
+  // Manajemen Inventaris & Pemeliharaan
+  static const String inventoryAndMaintenanceName = 'inventory-maintenance';
 }

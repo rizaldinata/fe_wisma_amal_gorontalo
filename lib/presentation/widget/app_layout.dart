@@ -34,29 +34,77 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
               CustomSidebar(
                 activeRouteName: context.router.current.name,
                 items: [
+                  // dashboard
                   SidebarItem(
                     label: RouteConstant.dashboardName,
                     icon: Icons.dashboard,
                     page: DashboardRoute(),
                     hasAccess: true,
                   ),
+
+                  // manajemen penghuni
                   SidebarItem(
-                    label: 'Rooms',
-                    icon: Icons.storage,
+                    label: 'Penghuni',
+                    icon: Icons.people,
                     hasAccess: true,
                     children: [
                       SidebarItem(
-                        label: RouteConstant.roomName,
-                        icon: Icons.meeting_room,
-                        page: RoomRoute(),
+                        label: 'penghuni',
+                        icon: Icons.person,
+                        page: const ResidentPlaceholderRoute(),
                       ),
                     ],
                   ),
-                  SidebarItem(label: 'Test 2', icon: Icons.abc, onTap: () {}),
+
+                  // manajemen kamar & reservasi
                   SidebarItem(
-                    label: 'Test 3',
-                    icon: Icons.access_alarm,
-                    onTap: () {},
+                    label: 'Kamar & Reservasi',
+                    icon: Icons.room,
+                    hasAccess: true,
+                    children: [
+                      SidebarItem(
+                        label: 'Kamar',
+                        icon: Icons.meeting_room,
+                        page: RoomRoute(),
+                      ),
+                      SidebarItem(
+                        label: 'Reservasi',
+                        icon: Icons.book_online,
+                        page: const RoomAndReservationPlaceholderRoute(),
+                      ),
+                    ],
+                  ),
+
+                  // manajemen keuangan
+                  SidebarItem(
+                    label: 'Keuangan',
+                    icon: Icons.monetization_on,
+                    hasAccess: true,
+                    children: [
+                      SidebarItem(
+                        label: 'Pembayaran',
+                        icon: Icons.payment,
+                        page: const FinancePlaceholderRoute(),
+                      ),
+                    ],
+                  ),
+
+                  SidebarItem(
+                    label: 'Inventaris & Pemiliharaan',
+                    icon: Icons.inventory,
+                    hasAccess: true,
+                    children: [
+                      SidebarItem(
+                        label: 'Inventaris',
+                        icon: Icons.inventory,
+                        page: const InventoryAndMaintenancePlaceholderRoute(),
+                      ),
+                      SidebarItem(
+                        label: 'Pemeliharaan',
+                        icon: Icons.build,
+                        page: const InventoryAndMaintenancePlaceholderRoute(),
+                      ),
+                    ],
                   ),
                 ],
               ),

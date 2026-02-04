@@ -21,15 +21,27 @@ import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 enum FormMode { add, edit }
 
-@RoutePage()
-class FormRoomPage extends StatelessWidget {
-  const FormRoomPage({
-    super.key,
-    @PathParam('id') this.roomId,
-    required this.formMode,
-  });
-  final FormMode formMode;
-  final int? roomId;
+// wrapper add room
+@RoutePage(name: 'AddRoomRoute')
+class AddRoomPage extends StatelessWidget {
+  const AddRoomPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) =>
+          FormRoomBloc(repository: serviceLocator.get<RoomRepository>())
+            ..add(const LoadFormRoomEvent()),
+      child: const FormRoomView(formMode: FormMode.add),
+    );
+  }
+}
+
+// wrapper edit room
+@RoutePage(name: 'EditRoomRoute')
+class EditRoomPage extends StatelessWidget {
+  const EditRoomPage({super.key, @PathParam('id') required this.roomId});
+  final int roomId;
 
   @override
   Widget build(BuildContext context) {
@@ -37,8 +49,19 @@ class FormRoomPage extends StatelessWidget {
       create: (context) =>
           FormRoomBloc(repository: serviceLocator.get<RoomRepository>())
             ..add(LoadFormRoomEvent(roomId: roomId)),
-      child: FormRoomView(formMode: formMode, roomId: roomId),
+      child: FormRoomView(formMode: FormMode.edit, roomId: roomId),
     );
+  }
+}
+
+class FormRoomPage extends StatelessWidget {
+  const FormRoomPage({super.key, this.roomId, required this.formMode});
+  final FormMode formMode;
+  final int? roomId;
+
+  @override
+  Widget build(BuildContext context) {
+    return const SizedBox.shrink();
   }
 }
 
