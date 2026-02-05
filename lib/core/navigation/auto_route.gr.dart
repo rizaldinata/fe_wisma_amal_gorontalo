@@ -226,6 +226,22 @@ class LoginRouteArgs {
 }
 
 /// generated route for
+/// [_i4.PermissionPlaceholderPage]
+class PermissionPlaceholderRoute extends _i10.PageRouteInfo<void> {
+  const PermissionPlaceholderRoute({List<_i10.PageRouteInfo>? children})
+    : super(PermissionPlaceholderRoute.name, initialChildren: children);
+
+  static const String name = 'PermissionPlaceholderRoute';
+
+  static _i10.PageInfo page = _i10.PageInfo(
+    name,
+    builder: (data) {
+      return const _i4.PermissionPlaceholderPage();
+    },
+  );
+}
+
+/// generated route for
 /// [_i7.RegisterPage]
 class RegisterRoute extends _i10.PageRouteInfo<RegisterRouteArgs> {
   RegisterRoute({_i11.Key? key, List<_i10.PageRouteInfo>? children})
@@ -281,6 +297,22 @@ class ResidentPlaceholderRoute extends _i10.PageRouteInfo<void> {
     name,
     builder: (data) {
       return const _i4.ResidentPlaceholderPage();
+    },
+  );
+}
+
+/// generated route for
+/// [_i4.RolePlaceholderPage]
+class RolePlaceholderRoute extends _i10.PageRouteInfo<void> {
+  const RolePlaceholderRoute({List<_i10.PageRouteInfo>? children})
+    : super(RolePlaceholderRoute.name, initialChildren: children);
+
+  static const String name = 'RolePlaceholderRoute';
+
+  static _i10.PageInfo page = _i10.PageInfo(
+    name,
+    builder: (data) {
+      return const _i4.RolePlaceholderPage();
     },
   );
 }

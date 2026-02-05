@@ -10,9 +10,11 @@ class RouteConstant {
   static const String loginName = '/login';
   static const String registerName = '/register';
 
-  //dashboard page
+  //dashboard dan admin panel
   static const String dashboardName = 'dashboard';
   static const String landingName = 'landing';
+  static const String permissionName = 'permission';
+  static const String roleName = 'role';
 
   // Manajemen penghuni
   static const String residentName = 'residents';

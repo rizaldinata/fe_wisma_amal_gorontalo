@@ -18,6 +18,14 @@ class AppRouter extends RootStackRouter {
           page: DashboardRoute.page,
           initial: true,
         ),
+        AutoRoute(
+          path: RouteConstant.permissionName,
+          page: PermissionPlaceholderRoute.page,
+        ),
+        AutoRoute(
+          path: RouteConstant.roleName,
+          page: RolePlaceholderRoute.page,
+        ),
 
         // manajemen penghuni
         AutoRoute(

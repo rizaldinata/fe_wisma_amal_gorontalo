@@ -1,6 +1,17 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 
+// wrapper untuk menu permission
+@RoutePage(name: 'PermissionPlaceholderRoute')
+class PermissionPlaceholderPage extends EmptyPlaceholderPage {
+  const PermissionPlaceholderPage({super.key}) : super(title: 'Permission');
+}
+
+@RoutePage(name: 'RolePlaceholderRoute')
+class RolePlaceholderPage extends EmptyPlaceholderPage {
+  const RolePlaceholderPage({super.key}) : super(title: 'Role');
+}
+
 // wrapper untuk Menu Penghuni
 @RoutePage(name: 'ResidentPlaceholderRoute')
 class ResidentPlaceholderPage extends EmptyPlaceholderPage {

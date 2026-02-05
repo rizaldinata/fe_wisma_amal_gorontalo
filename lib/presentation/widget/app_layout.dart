@@ -41,6 +41,18 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                     page: DashboardRoute(),
                     hasAccess: true,
                   ),
+                  SidebarItem(
+                    label: 'Izin',
+                    icon: Icons.check_circle_outline,
+                    page: PermissionPlaceholderRoute(),
+                    hasAccess: true,
+                  ),
+                  SidebarItem(
+                    label: 'Peran',
+                    icon: Icons.security,
+                    page: RolePlaceholderRoute(),
+                    hasAccess: true,
+                  ),
 
                   // manajemen penghuni
                   SidebarItem(
