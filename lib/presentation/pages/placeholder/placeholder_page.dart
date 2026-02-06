@@ -7,6 +7,7 @@ class PermissionPlaceholderPage extends EmptyPlaceholderPage {
   const PermissionPlaceholderPage({super.key}) : super(title: 'Permission');
 }
 
+// wrapper untuk menu peran
 @RoutePage(name: 'RolePlaceholderRoute')
 class RolePlaceholderPage extends EmptyPlaceholderPage {
   const RolePlaceholderPage({super.key}) : super(title: 'Role');
@@ -36,6 +37,12 @@ class FinancePlaceholderPage extends EmptyPlaceholderPage {
 class InventoryAndMaintenancePlaceholderPage extends EmptyPlaceholderPage {
   const InventoryAndMaintenancePlaceholderPage({super.key})
     : super(title: 'Inventaris & Pemeliharaan');
+}
+
+// wrapper untuk menu pengaturan
+@RoutePage(name: 'SettingPlaceholderRoute')
+class SettingPlaceholderPage extends EmptyPlaceholderPage {
+  const SettingPlaceholderPage({super.key}) : super(title: 'Pengaturan');
 }
 
 class EmptyPlaceholderPage extends StatelessWidget {

@@ -1,3 +1,5 @@
+import 'package:equatable/equatable.dart';
+
 class Permissions {
   final Set<String> _values;
 
@@ -16,5 +18,21 @@ class Permissions {
   }
 
   Set<String> get raw => _values;
-  
+}
+
+class PermissionEntity extends Equatable {
+  final int id;
+  final String name;
+  final String? target;
+  final String? description;
+
+  const PermissionEntity({
+    required this.id,
+    required this.name,
+    this.target,
+    this.description,
+  });
+
+  @override
+  List<Object?> get props => [id, name, target, description];
 }

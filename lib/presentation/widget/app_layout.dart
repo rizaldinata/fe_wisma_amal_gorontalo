@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/constant/style_constant.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend/presentation/widget/core/sidebar/sidebar.dart';
@@ -44,8 +45,8 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                   SidebarItem(
                     label: 'Izin',
                     icon: Icons.check_circle_outline,
-                    page: PermissionPlaceholderRoute(),
-                    hasAccess: true,
+                    page: const PermissionRoute(),
+                    hasAccess: context.can('access-permission-management'),
                   ),
                   SidebarItem(
                     label: 'Peran',
@@ -117,6 +118,13 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                         page: const InventoryAndMaintenancePlaceholderRoute(),
                       ),
                     ],
+                  ),
+
+                  // pengaturan
+                  SidebarItem(
+                    label: 'Pengaturan',
+                    icon: Icons.settings,
+                    page: SettingPlaceholderRoute(),
                   ),
                 ],
               ),

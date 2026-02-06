@@ -5,7 +5,7 @@ import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 class TableCard extends StatelessWidget {
   final String title;
   final List<TableColumn> columns;
-  final List<List<String>> rows;
+  final List<List<dynamic>> rows;
 
   const TableCard({
     super.key,
@@ -91,10 +91,9 @@ class _TableHeader extends StatelessWidget {
 
 class _TableRow extends StatelessWidget {
   final List<TableColumn> columns;
-  final List<String> values;
+  final List<dynamic> values;
 
-  const _TableRow({required this.columns, required this.values})
-    : assert(columns.length == values.length);
+  const _TableRow({required this.columns, required this.values});
 
   @override
   Widget build(BuildContext context) {
@@ -106,13 +105,17 @@ class _TableRow extends StatelessWidget {
       child: Row(
         children: List.generate(values.length, (index) {
           final column = columns[index];
+          final value = values[index];
+
           return Expanded(
             flex: column.flex,
-            child: Text(
-              values[index],
-              textAlign: column.align,
-              style: Theme.of(context).textTheme.bodyMedium,
-            ),
+            child: value is Widget
+                ? value
+                : Text(
+                    value.toString(),
+                    textAlign: column.align,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
           );
         }),
       ),

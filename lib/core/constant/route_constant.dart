@@ -13,8 +13,9 @@ class RouteConstant {
   //dashboard dan admin panel
   static const String dashboardName = 'dashboard';
   static const String landingName = 'landing';
-  static const String permissionName = 'permission';
+  static const String permissionName = 'permissions';
   static const String roleName = 'role';
+  static const String settingName = 'setting';
 
   // Manajemen penghuni
   static const String residentName = 'residents';

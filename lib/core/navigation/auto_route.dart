@@ -1,7 +1,8 @@
 import 'package:auto_route/auto_route.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
-import 'package:frontend/presentation/pages/placeholder/placeholder_page.dart';
+import 'package:frontend/presentation/pages/permission/permission_page.dart';
 
 @AutoRouterConfig()
 class AppRouter extends RootStackRouter {
@@ -20,7 +21,7 @@ class AppRouter extends RootStackRouter {
         ),
         AutoRoute(
           path: RouteConstant.permissionName,
-          page: PermissionPlaceholderRoute.page,
+          page: PermissionRoute.page,
         ),
         AutoRoute(
           path: RouteConstant.roleName,
@@ -56,6 +57,12 @@ class AppRouter extends RootStackRouter {
         AutoRoute(
           path: RouteConstant.inventoryAndMaintenanceName,
           page: InventoryAndMaintenancePlaceholderRoute.page,
+        ),
+
+        // pengaturan
+        AutoRoute(
+          path: RouteConstant.settingName,
+          page: SettingPlaceholderRoute.page,
         ),
       ],
     ),
