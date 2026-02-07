@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/domain/entity/permission_entity.dart';
 import 'package:frontend/domain/entity/table/tabel_colum.dart';
 import 'package:frontend/presentation/bloc/permission/permission_bloc.dart';
@@ -83,10 +84,20 @@ class PermissionView extends StatelessWidget {
                       p.name,
                       p.target ?? '-',
                       p.description ?? '-',
-                      // Di sini kita masukkan Widget Row berisi tombol, bukan String lagi
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.visibility,
+                              color: Colors.blue,
+                            ),
+                            onPressed: () {
+                              context.router.navigate(
+                                PermissionDetailRoute(id: p.id),
+                              );
+                            },
+                          ),
                           IconButton(
                             icon: const Icon(Icons.edit, color: Colors.orange),
                             onPressed: () =>
@@ -95,7 +106,6 @@ class PermissionView extends StatelessWidget {
                           IconButton(
                             icon: const Icon(Icons.delete, color: Colors.red),
                             onPressed: () async {
-                              // Menggunakan AppDialog yang sudah Anda miliki di project
                               final confirm = await AppDialog.show(
                                 context,
                                 title: 'Hapus Izin',

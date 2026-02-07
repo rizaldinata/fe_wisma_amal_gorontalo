@@ -24,6 +24,10 @@ class AppRouter extends RootStackRouter {
           page: PermissionRoute.page,
         ),
         AutoRoute(
+          path: '${RouteConstant.permissionName}/:id',
+          page: PermissionDetailRoute.page,
+        ),
+        AutoRoute(
           path: RouteConstant.roleName,
           page: RolePlaceholderRoute.page,
         ),
