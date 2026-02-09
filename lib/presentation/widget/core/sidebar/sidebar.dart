@@ -356,32 +356,40 @@ class _CustomSidebarState extends State<CustomSidebar> {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(10),
-        child: ExpansionTile(
-          key: PageStorageKey(id),
-          initiallyExpanded: isOpen,
-          onExpansionChanged: (v) => _toggleExpanded(id),
-          tilePadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          leading: section.icon != null
-              ? Icon(
-                  section.icon,
-                  color: Theme.of(context).colorScheme.onSurface.withAlpha(170),
-                )
-              : null,
-          title: Text(
-            section.label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              fontWeight: FontWeight.w600,
-              color: Theme.of(context).colorScheme.onSurface.withAlpha(200),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            key: PageStorageKey(id),
+            initiallyExpanded: isOpen,
+            onExpansionChanged: (v) => _toggleExpanded(id),
+            tilePadding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 8,
             ),
+            leading: section.icon != null
+                ? Icon(
+                    section.icon,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withAlpha(170),
+                  )
+                : null,
+            title: Text(
+              section.label,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(200),
+              ),
+            ),
+            childrenPadding: const EdgeInsets.only(
+              left: 20,
+              right: 12,
+              bottom: 8,
+            ),
+            children: section.children!
+                .map((child) => _buildMenuTile(context, child))
+                .toList(),
           ),
-          childrenPadding: const EdgeInsets.only(
-            left: 20,
-            right: 12,
-            bottom: 8,
-          ),
-          children: section.children!
-              .map((child) => _buildMenuTile(context, child))
-              .toList(),
         ),
       ),
     );
