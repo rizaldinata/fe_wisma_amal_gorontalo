@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend/core/constant/permission_key.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/presentation/bloc/detail_room/detail_room_bloc.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/botton/icon_button.dart';
@@ -66,6 +68,8 @@ class RoomCard extends StatelessWidget {
                   ),
                   child: ImageNetwork(imageUrl: imageUrl),
                 ),
+
+                if (context.can(PermissionKeys.deleteRooms,))
                 Positioned(
                   top: 12,
                   right: 12,

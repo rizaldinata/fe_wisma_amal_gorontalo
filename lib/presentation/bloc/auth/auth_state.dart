@@ -42,6 +42,5 @@ class AuthState extends Equatable {
     obscureText,
     status,
     errorMessage,
-    
   ];
 }

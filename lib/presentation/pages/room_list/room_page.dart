@@ -116,7 +116,7 @@ class _RoomViewState extends State<RoomView>
                           ),
                         ),
                       ),
-                      if (context.can(PermissionKeys.manageRooms)) ...[
+                      if (context.can(PermissionKeys.createRooms)) ...[
                         const SizedBox(width: 20),
                         BasicButton(
                           onPressed: () async {

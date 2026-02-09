@@ -24,6 +24,15 @@ class AuthRepository {
     }
   }
 
+  Future<void> getPermissions() async {
+    try {
+      final response = await datasource.getPermissions();
+      _savePermissions(Permissions(response.data.toSet()));
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<UserEntity> register(request) async {
     try {
       final response = await datasource.register(request);
@@ -45,7 +54,6 @@ class AuthRepository {
     try {
       final response = await datasource.login(request);
       final token = response.data.token.split('|').last;
-      print('Login token: $token');
       await secureStorage.set(StorageConstant.token, token);
       final permissions = await datasource.getPermissions();
       UserEntity userEntity = response.data.toEntity();
@@ -66,6 +74,10 @@ class AuthRepository {
       await secureStorage.delete(StorageConstant.token);
     }
     return result;
+  }
+
+  Future<void> _savePermissions(Permissions permissions) async {
+    await storage.setPermissions(permissions.raw);
   }
 
   Future<void> _saveUserInfo(UserEntity user) async {

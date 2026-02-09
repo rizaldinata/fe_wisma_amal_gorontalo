@@ -7,6 +7,7 @@ import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend/presentation/widget/core/appbar/custom_appbar.dart';
 import 'package:frontend/presentation/widget/core/keyboard/enter_listener.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
@@ -50,6 +51,10 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey.shade300,
+      appBar: CustomAppbar(
+        icon: Icon(Icons.arrow_back, color: Colors.black),
+        title: 'Kembali',
+      ),
       body: Stack(
         children: [
           Align(
@@ -95,25 +100,11 @@ class _LoginPageState extends State<LoginPage> {
                       );
                     }
 
-                    // if (state.isLoggedIn &&
-                    //     state.userInfo != null &&
-                    //     state.errorMessage == null) {
-                    // final permissions = state.userInfo?.permissions;
-
-                    // if (permissions != null) {
-                    //   if (permissions.can(PermissionKeys.accessAdminPanel)) {
-                    //     context.router.pushAndPopUntil(
-                    //       const AppLayoutRoute(),
-                    //       predicate: (_) => false,
-                    //     );
-                    //   } else {
-                    //     context.router.pushAndPopUntil(
-                    //       const LandingRoute(),
-                    //       predicate: (_) => false,
-                    //     );
-                    //   }
-                    // }
-                    // }
+                    // Jika login berhasil, kembalikan user ke tampilan utama
+                    // dan reset semua route agar menu mengikuti permission baru.
+                    if (state.status.isSuccess && state.isLoggedIn) {
+                      context.router.replaceAll([const AppLayoutRoute()]);
+                    }
                   },
                   builder: (context, state) {
                     return Column(
@@ -171,10 +162,8 @@ class _LoginPageState extends State<LoginPage> {
                             onPressed: state.status.isInProgress
                                 ? null
                                 : () async {
-                                    print('Login pressed');
                                     if (emailController.text.isEmpty ||
                                         passwordController.text.isEmpty) {
-                                      print('Email or Password is empty');
                                       ScaffoldMessenger.of(
                                         context,
                                       ).showSnackBar(

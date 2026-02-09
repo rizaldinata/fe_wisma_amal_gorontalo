@@ -40,6 +40,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RegisterEvent>(_onRegister);
     on<LogoutEvent>(_onLogout);
     on<GetUserInfoEvent>(_onGetUserInfo);
+    on<GetPermissionsEvent>(_onGetPermissions);
     on<ToggleObscureTextEvent>(_onToggleObscureText);
     on<ResetStateEvent>((event, emit) {
       emit(const AuthState());
@@ -53,13 +54,39 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     });
   }
 
-  // Future<void> checkLoginStatus() async {
-  //   final status = storage.getToken() != null;
-  //   loginStatusNotifier.isLoggedIn = status;
-  //   if (status) {
-  //     add(const GetUserInfoEvent());
-  //   }
-  // }
+  Future<void> _onGetPermissions(
+    GetPermissionsEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    try {
+      // Ambil ulang permissions dari server dan simpan ke SharedPreferences
+      await auth.getPermissions();
+
+      // Setelah tersimpan di storage, sinkronkan kembali ke state.userInfo
+      final currentUser = state.userInfo;
+      if (currentUser != null) {
+        final permissions = Permissions(
+          storage.getPermissions()?.toSet() ?? {},
+        );
+        final updatedUser = UserEntity(
+          id: currentUser.id,
+          name: currentUser.name,
+          email: currentUser.email,
+          roles: currentUser.roles,
+          permissions: permissions,
+        );
+        emit(state.copyWith(userInfo: updatedUser));
+      }
+    } on AppException catch (e) {
+      debugPrint('Error fetching permissions: ${e.message}');
+      AppSnackbar.showError('Gagal mendapatkan izin: ${e.message}');
+    } catch (e) {
+      debugPrint('Unexpected error fetching permissions: $e');
+      AppSnackbar.showError(
+        'Terjadi kesalahan tak terduga saat mendapatkan izin.',
+      );
+    }
+  }
 
   Future<void> _checkSession() async {
     try {
@@ -85,6 +112,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     print('Initializing login status...');
     final status = await auth.isLoggedIn();
+    try {
+      await auth.getPermissions();
+    } catch (_) {}
     loginStatusNotifier.isLoggedIn = status;
     print('Login status initialized: $status');
 

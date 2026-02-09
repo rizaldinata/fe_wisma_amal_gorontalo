@@ -53,9 +53,9 @@ class MyApp extends StatelessWidget {
       title: 'Wisma Amal',
       scaffoldMessengerKey: rootScaffoldMessengerKey,
       theme: AppTheme.lightTheme,
-      builder: (context, child) {
-        return SessionListener(router: router, child: child!);
-      },
+      // builder: (context, child) {
+      //   return SessionListener(router: router, child: child!);
+      // },
       darkTheme: AppTheme.darkTheme,
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
       routerConfig: router.config(),
@@ -70,26 +70,26 @@ extension PermissionContext on BuildContext {
   }
 }
 
-class SessionListener extends StatelessWidget {
-  final Widget child;
-  final AppRouter router;
+// class SessionListener extends StatelessWidget {
+//   final Widget child;
+//   final AppRouter router;
 
-  const SessionListener({super.key, required this.child, required this.router});
+//   const SessionListener({super.key, required this.child, required this.router});
 
-  @override
-  Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        print(
-          'SessionListener: Auth state changed: isLoggedIn=${state.isLoggedIn}',
-        );
-        if (state.isLoggedIn) {
-          router.replaceAll([const DashboardRoute()]);
-        } else {
-          router.replaceAll([LoginRoute()]);
-        }
-      },
-      child: child,
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return BlocListener<AuthBloc, AuthState>(
+//       listener: (context, state) {
+//         print(
+//           'SessionListener: Auth state changed: isLoggedIn=${state.isLoggedIn}',
+//         );
+//         if (state.isLoggedIn) {
+//           router.replaceAll([const DashboardRoute()]);
+//         } else {
+//           router.replaceAll([LoginRoute()]);
+//         }
+//       },
+//       child: child,
+//     );
+//   }
+// }

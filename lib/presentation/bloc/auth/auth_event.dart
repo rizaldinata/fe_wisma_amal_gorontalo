@@ -11,6 +11,10 @@ class InitLoginStatusEvent extends AuthEvent {
   const InitLoginStatusEvent();
 }
 
+class GetPermissionsEvent extends AuthEvent {
+  const GetPermissionsEvent();
+}
+
 class LoginEvent extends AuthEvent {
   final String email;
   final String password;
@@ -57,4 +61,3 @@ class ResetStateEvent extends AuthEvent {
 class CheckSessionEvent extends AuthEvent {
   const CheckSessionEvent();
 }
-

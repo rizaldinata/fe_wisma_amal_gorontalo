@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend/core/constant/permission_key.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/constant/style_constant.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
@@ -36,12 +37,16 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                 activeRouteName: context.router.current.name,
                 items: [
                   // dashboard
-                  SidebarItem(
-                    label: RouteConstant.dashboardName,
-                    icon: Icons.dashboard,
-                    page: DashboardRoute(),
-                    hasAccess: true,
-                  ),
+                  if (context.can(PermissionKeys.viewDashboard))
+                    SidebarItem(
+                      label: RouteConstant.dashboardName,
+                      icon: Icons.dashboard,
+                      page: DashboardRoute(),
+                      hasAccess: true,
+                    ),
+
+
+                  if (context.can(PermissionKeys.viewPermission))
                   SidebarItem(
                     label: 'Izin',
                     icon: Icons.check_circle_outline,
@@ -68,25 +73,28 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                       ),
                     ],
                   ),
+                  if (context.can(PermissionKeys.viewRooms) ||
+                      context.can(PermissionKeys.viewLease))
+                    SidebarItem(
+                      label: 'Kamar & Reservasi',
+                      icon: Icons.room,
+                      hasAccess: true,
+                      children: [
+                        if (context.can(PermissionKeys.viewRooms))
+                          SidebarItem(
+                            label: 'Kamar',
+                            icon: Icons.meeting_room,
+                            page: RoomRoute(),
+                          ),
 
-                  // manajemen kamar & reservasi
-                  SidebarItem(
-                    label: 'Kamar & Reservasi',
-                    icon: Icons.room,
-                    hasAccess: true,
-                    children: [
-                      SidebarItem(
-                        label: 'Kamar',
-                        icon: Icons.meeting_room,
-                        page: RoomRoute(),
-                      ),
-                      SidebarItem(
-                        label: 'Reservasi',
-                        icon: Icons.book_online,
-                        page: const RoomAndReservationPlaceholderRoute(),
-                      ),
-                    ],
-                  ),
+                        if (context.can(PermissionKeys.viewLease))
+                          SidebarItem(
+                            label: 'Reservasi',
+                            icon: Icons.book_online,
+                            page: const RoomAndReservationPlaceholderRoute(),
+                          ),
+                      ],
+                    ),
 
                   // manajemen keuangan
                   SidebarItem(

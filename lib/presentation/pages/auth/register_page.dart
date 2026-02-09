@@ -7,6 +7,7 @@ import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend/presentation/widget/core/appbar/custom_appbar.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/textform/textform.dart';
@@ -31,6 +32,10 @@ class RegisterPage extends StatelessWidget {
     });
 
     return Scaffold(
+      appBar: CustomAppbar(
+        icon: Icon(Icons.arrow_back, color: Colors.black),
+        title: 'Kembali',
+      ),
       backgroundColor: Colors.grey.shade300,
       body: Stack(
         children: [

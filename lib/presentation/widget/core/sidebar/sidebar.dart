@@ -1,10 +1,15 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend/core/constant/storage_constant.dart';
+import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/core/navigation/auto_route.gr.dart';
+import 'package:frontend/core/services/storage/secure_storage.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend/presentation/bloc/app/app_bloc.dart';
+import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/botton/icon_button.dart';
 
 class SidebarItem {
@@ -55,6 +60,14 @@ class _CustomSidebarState extends State<CustomSidebar> {
         _expanded.add(id);
       }
     });
+  }
+
+  final SecureStorageService storage = serviceLocator
+      .get<SecureStorageService>();
+
+  Future<bool> isLoggedIn() async {
+    final token = await storage.get(StorageConstant.token);
+    return token != null;
   }
 
   bool _isSelected(BuildContext context, SidebarItem item) {
@@ -222,87 +235,99 @@ class _CustomSidebarState extends State<CustomSidebar> {
 
                       // Profile
                       const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.surfaceContainerHigh,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: BlocBuilder<AuthBloc, AuthState>(
-                          builder: (context, state) {
-                            if (state.userInfo == null ||
-                                state.userInfo?.id == null) {
-                              context.read<AuthBloc>().add(
-                                const GetUserInfoEvent(),
-                              );
-                            }
 
-                            return Row(
-                              children: [
-                                CircleAvatar(
-                                  radius: 20,
-                                  backgroundColor: Theme.of(
-                                    context,
-                                  ).colorScheme.primary,
-                                  child: Icon(
-                                    Icons.person,
-                                    color: Theme.of(
+                      if (state.isLoggedIn == false)
+                        BasicButton(
+                          onPressed: () {
+                            context.router.push(LoginRoute());
+                          },
+                          label: 'login',
+                        ),
+
+                      if (state.isLoggedIn == true)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHigh,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: BlocBuilder<AuthBloc, AuthState>(
+                            builder: (context, state) {
+                              if (state.userInfo == null ||
+                                  state.userInfo?.id == null) {
+                                context.read<AuthBloc>().add(
+                                  const GetUserInfoEvent(),
+                                );
+                              }
+
+                              return Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 20,
+                                    backgroundColor: Theme.of(
                                       context,
-                                    ).colorScheme.onPrimary,
+                                    ).colorScheme.primary,
+                                    child: Icon(
+                                      Icons.person,
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onPrimary,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(width: 10),
+                                  const SizedBox(width: 10),
 
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        state.userInfo?.name ?? 'User',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                      const SizedBox(height: 2),
-                                      Text(
-                                        state.userInfo?.roles.join(', ') ??
-                                            'No Role',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurface
-                                                  .withOpacity(0.6),
-                                            ),
-                                      ),
-                                    ],
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          state.userInfo?.name ?? 'User',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodyMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text(
+                                          state.userInfo?.roles.join(', ') ??
+                                              'Guest',
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .bodySmall
+                                              ?.copyWith(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .onSurface
+                                                    .withOpacity(0.6),
+                                              ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                ),
-                              ],
-                            );
+                                ],
+                              );
+                            },
+                          ),
+                        ),
+                      SizedBox(height: 12),
+
+                      if (state.isLoggedIn == true)
+                        CustomIconButton(
+                          boxShadow: [],
+                          icon: Icon(Icons.logout),
+                          title: 'Logout',
+                          onPressed: () {
+                            context.read<AuthBloc>().add(const LogoutEvent());
                           },
                         ),
-                      ),
-                      SizedBox(height: 12),
-                      CustomIconButton(
-                        boxShadow: [],
-                        icon: Icon(Icons.logout),
-                        title: 'Logout',
-                        onPressed: () {
-                          context.read<AuthBloc>().add(const LogoutEvent());
-                        },
-                      ),
                       const SizedBox(height: 12),
                     ],
                   ),
@@ -364,49 +389,52 @@ class _CustomSidebarState extends State<CustomSidebar> {
 
   Widget _buildMenuTile(BuildContext context, SidebarItem item) {
     final selected = _isSelected(context, item);
-    return Material(
-      color: selected
-          ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
-          : Colors.transparent,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: selected
+            ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
+            : Colors.transparent,
         borderRadius: BorderRadius.circular(10),
-        onTap: () => _handleTap(context, item),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          child: Row(
-            children: [
-              if (item.icon != null)
-                Icon(
-                  item.icon,
-                  size: 20,
-                  color: selected
-                      ? Theme.of(context).colorScheme.primary
-                      : Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.8),
-                ),
-              if (item.icon != null) const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  item.label,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => _handleTap(context, item),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            child: Row(
+              children: [
+                if (item.icon != null)
+                  Icon(
+                    item.icon,
+                    size: 20,
                     color: selected
                         ? Theme.of(context).colorScheme.primary
                         : Theme.of(
                             context,
                           ).colorScheme.onSurface.withOpacity(0.8),
                   ),
+                if (item.icon != null) const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    item.label,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      color: selected
+                          ? Theme.of(context).colorScheme.primary
+                          : Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withOpacity(0.8),
+                    ),
+                  ),
                 ),
-              ),
-              if (selected)
-                Icon(
-                  Icons.circle,
-                  size: 8,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-            ],
+                if (selected)
+                  Icon(
+                    Icons.circle,
+                    size: 8,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+              ],
+            ),
           ),
         ),
       ),

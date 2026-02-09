@@ -106,7 +106,7 @@ class RoomDetailView extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 if (context.can(
-                                  PermissionKeys.manageRooms,
+                                  PermissionKeys.updateRooms,
                                 )) ...[
                                   SizedBox(
                                     width: 200,
