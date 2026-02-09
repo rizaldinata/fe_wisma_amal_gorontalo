@@ -6,6 +6,7 @@ import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/domain/entity/permission_entity.dart';
 import 'package:frontend/domain/entity/table/tabel_colum.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/presentation/bloc/permission/permission_bloc.dart';
 import 'package:frontend/presentation/bloc/permission/permission_event.dart';
 import 'package:frontend/presentation/bloc/permission/permission_state.dart';
@@ -35,6 +36,31 @@ class PermissionView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bool canView = context.can('view-permission');
+
+    if (!canView) {
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.lock_outline, size: 100, color: Colors.red),
+              SizedBox(height: 16),
+              Text(
+                'Akses Ditolak',
+                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              ),
+              Text('Anda tidak memiliki izin untuk melihat halaman ini.'),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final bool canCreate = context.can('create-permission');
+    final bool canUpdate = context.can('update-permission');
+    final bool canDelete = context.can('delete-permission');
+
     return Scaffold(
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -49,9 +75,14 @@ class PermissionView extends StatelessWidget {
                   style: Theme.of(context).textTheme.headlineLarge,
                 ),
                 BasicButton(
-                  onPressed: () => _showPermissionForm(context),
+                  onPressed: canCreate
+                      ? () => _showPermissionForm(context)
+                      : null,
                   label: 'Tambah Izin',
-                  leadIcon: const Icon(Icons.add, color: Colors.white),
+                  leadIcon: Icon(
+                    Icons.add,
+                    color: canCreate ? Colors.white : Colors.grey,
+                  ),
                 ),
               ],
             ),
@@ -97,30 +128,53 @@ class PermissionView extends StatelessWidget {
                                 PermissionDetailRoute(id: p.id),
                               );
                             },
+                            tooltip: 'Lihat Detail',
                           ),
                           IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.orange),
-                            onPressed: () =>
-                                _showPermissionForm(context, permission: p),
+                            icon: Icon(
+                              Icons.edit,
+                              color: canUpdate
+                                  ? Colors.orange
+                                  : Colors.grey.withAlpha(100),
+                            ),
+                            onPressed: canUpdate
+                                ? () => _showPermissionForm(
+                                    context,
+                                    permission: p,
+                                  )
+                                : null,
+                            tooltip: canUpdate
+                                ? 'Ubah Izin'
+                                : 'Tidak memiliki akses',
                           ),
                           IconButton(
-                            icon: const Icon(Icons.delete, color: Colors.red),
-                            onPressed: () async {
-                              final confirm = await AppDialog.show(
-                                context,
-                                title: 'Hapus Izin',
-                                message:
-                                    'Apakah Anda yakin ingin menghapus izin "${p.name}"?',
-                                type: AppDialogType.danger,
-                                confirmLabel: 'Hapus',
-                              );
+                            icon: Icon(
+                              Icons.delete,
+                              color: canDelete
+                                  ? Colors.red
+                                  : Colors.grey.withAlpha(100),
+                            ),
+                            onPressed: canDelete
+                                ? () async {
+                                    final confirm = await AppDialog.show(
+                                      context,
+                                      title: 'Hapus Izin',
+                                      message:
+                                          'Apakah Anda yakin ingin menghapus izin "${p.name}"?',
+                                      type: AppDialogType.danger,
+                                      confirmLabel: 'Hapus',
+                                    );
 
-                              if (confirm == true) {
-                                context.read<PermissionBloc>().add(
-                                  DeletePermissionEvent(p.id),
-                                );
-                              }
-                            },
+                                    if (confirm == true) {
+                                      context.read<PermissionBloc>().add(
+                                        DeletePermissionEvent(p.id),
+                                      );
+                                    }
+                                  }
+                                : null,
+                            tooltip: canDelete
+                                ? 'Hapus Izin'
+                                : 'Tidak memiliki akses',
                           ),
                         ],
                       ),
