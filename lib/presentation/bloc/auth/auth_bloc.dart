@@ -68,13 +68,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         final permissions = Permissions(
           storage.getPermissions()?.toSet() ?? {},
         );
-        final updatedUser = UserEntity(
-          id: currentUser.id,
-          name: currentUser.name,
-          email: currentUser.email,
-          roles: currentUser.roles,
-          permissions: permissions,
-        );
+        final updatedUser = currentUser.copyWith(permissions: permissions);
         emit(state.copyWith(userInfo: updatedUser));
       }
     } on AppException catch (e) {
@@ -112,9 +106,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     print('Initializing login status...');
     final status = await auth.isLoggedIn();
+
+    // Endpoint permission bisa diakses tanpa atau dengan token,
+    // jadi aman untuk selalu refresh di awal.
     try {
       await auth.getPermissions();
-    } catch (_) {}
+    } catch (e) {
+      debugPrint('Failed to refresh permissions on init: $e');
+    }
+
     loginStatusNotifier.isLoggedIn = status;
     print('Login status initialized: $status');
 
@@ -134,7 +134,15 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
       emit(state.copyWith(isLoggedIn: status, userInfo: userInfo));
     } else {
-      emit(state.copyWith(isLoggedIn: status));
+      final permissions = Permissions(storage.getPermissions()?.toSet() ?? {});
+      final guestUser = UserEntity(
+        id: null,
+        name: 'Guest',
+        email: '',
+        roles: const [],
+        permissions: permissions,
+      );
+      emit(state.copyWith(isLoggedIn: status, userInfo: guestUser));
     }
   }
 

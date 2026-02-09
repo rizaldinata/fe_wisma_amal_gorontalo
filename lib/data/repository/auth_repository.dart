@@ -27,7 +27,7 @@ class AuthRepository {
   Future<void> getPermissions() async {
     try {
       final response = await datasource.getPermissions();
-      _savePermissions(Permissions(response.data.toSet()));
+      await _savePermissions(Permissions(response.data.toSet()));
     } catch (e) {
       rethrow;
     }
@@ -77,10 +77,14 @@ class AuthRepository {
   }
 
   Future<void> _savePermissions(Permissions permissions) async {
+    // await storage.clear();
     await storage.setPermissions(permissions.raw);
+
+    print('Permissions saved: ${permissions.raw}');
   }
 
   Future<void> _saveUserInfo(UserEntity user) async {
+    // await storage.clear();
     await storage.setString(StorageConstant.email, user.email);
     await storage.setString(StorageConstant.userName, user.name);
     await storage.setInt(StorageConstant.userId, user.id ?? 0);

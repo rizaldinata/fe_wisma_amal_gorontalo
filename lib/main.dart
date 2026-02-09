@@ -66,6 +66,8 @@ class MyApp extends StatelessWidget {
 extension PermissionContext on BuildContext {
   bool can(String permission) {
     final auth = watch<AuthBloc>().state;
+    print('Checking permission: $permission');
+    print('User permissions: ${auth.userInfo?.permissions?.raw}');
     return auth.userInfo?.permissions?.can(permission) ?? false;
   }
 }
