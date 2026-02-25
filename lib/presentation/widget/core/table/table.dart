@@ -6,12 +6,16 @@ class TableCard extends StatelessWidget {
   final String title;
   final List<TableColumn> columns;
   final List<List<dynamic>> rows;
+  final Widget? actions;
+  final String? emptyMessage;
 
   const TableCard({
     super.key,
     required this.title,
     required this.columns,
     required this.rows,
+    this.actions,
+    this.emptyMessage,
   });
 
   @override
@@ -20,11 +24,24 @@ class TableCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _Header(title: title),
+          _Header(title: title, actions: actions),
           const SizedBox(height: 16),
           _TableHeader(columns: columns),
           const SizedBox(height: 8),
-          ...rows.map((row) => _TableRow(columns: columns, values: row)),
+          if (rows.isEmpty && emptyMessage != null)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 32),
+              child: Center(
+                child: Text(
+                  emptyMessage!,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+            )
+          else
+            ...rows.map((row) => _TableRow(columns: columns, values: row)),
         ],
       ),
     );
@@ -33,28 +50,38 @@ class TableCard extends StatelessWidget {
 
 class _Header extends StatelessWidget {
   final String title;
+  final Widget? actions;
 
-  const _Header({required this.title});
+  const _Header({required this.title, this.actions});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Wrap(
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 12,
+      runSpacing: 12,
       children: [
-        Container(
-          width: 6,
-          height: 20,
-          decoration: BoxDecoration(
-            color: Colors.deepPurple,
-            borderRadius: BorderRadius.circular(4),
-          ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 6,
+              height: 20,
+              decoration: BoxDecoration(
+                color: Colors.deepPurple,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ],
         ),
-        const SizedBox(width: 10),
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
-        ),
+        if (actions != null) ...[const Spacer(), actions!],
       ],
     );
   }

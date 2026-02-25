@@ -45,14 +45,13 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                       hasAccess: true,
                     ),
 
-
                   if (context.can(PermissionKeys.viewPermission))
-                  SidebarItem(
-                    label: 'Izin',
-                    icon: Icons.check_circle_outline,
-                    page: const PermissionRoute(),
-                    hasAccess: context.can('access-permission-management'),
-                  ),
+                    SidebarItem(
+                      label: 'Izin',
+                      icon: Icons.check_circle_outline,
+                      page: const PermissionRoute(),
+                      hasAccess: context.can('access-permission-management'),
+                    ),
                   SidebarItem(
                     label: 'Peran',
                     icon: Icons.security,
@@ -118,12 +117,12 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                       SidebarItem(
                         label: 'Inventaris',
                         icon: Icons.inventory,
-                        page: const InventoryAndMaintenancePlaceholderRoute(),
+                        page: const InventoryRoute(),
                       ),
                       SidebarItem(
                         label: 'Pemeliharaan',
                         icon: Icons.build,
-                        page: const InventoryAndMaintenancePlaceholderRoute(),
+                        page: const MaintananceRoute(),
                       ),
                     ],
                   ),

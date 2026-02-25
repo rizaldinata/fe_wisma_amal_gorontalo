@@ -32,5 +32,8 @@ class RouteConstant {
   static const String financeName = 'finances';
 
   // Manajemen Inventaris & Pemeliharaan
-  static const String inventoryAndMaintenanceName = 'inventory-maintenance';
+  static const String inventory = 'inventory';
+  static const String inventoryForm = '$inventory/form';
+  static const String maintanance = 'maintanance';
+  static const String maintananceForm = '$maintanance/form';
 }

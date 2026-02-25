@@ -77,11 +77,28 @@ class AppRouter extends RootStackRouter {
           page: FinancePlaceholderRoute.page,
         ),
 
-        // manajemen inventaris & pemeliharaan
+        // manajemen inventaris
         AutoRoute(
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
-          path: RouteConstant.inventoryAndMaintenanceName,
-          page: InventoryAndMaintenancePlaceholderRoute.page,
+          path: RouteConstant.inventory,
+          page: InventoryRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.inventoryForm,
+          page: InventoryFormRoute.page,
+        ),
+
+        // manajemen maintanance
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.maintanance,
+          page: MaintananceRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.maintananceForm,
+          page: MaintananceFormRoute.page,
         ),
 
         // pengaturan

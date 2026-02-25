@@ -14,34 +14,34 @@ class ApiConfig {
   static const String PRODUCTION = 'production';
   static const String DEVELOP = 'develop';
 
-  static const String currentMode = DEVELOP;
+  static const String currentMode = PRODUCTION;
 
   factory ApiConfig.getServerUrl() {
     if (kReleaseMode) {
-      return ApiConfig(baseUrl: 'https://api.wismaamalgorontalo.site');
+      return ApiConfig(baseUrl: 'https://api.wismaamal.com');
     } else {
       switch (currentMode) {
         case PRODUCTION:
-          return ApiConfig(baseUrl: 'https://api.wismaamalgorontalo.site');
+          return ApiConfig(baseUrl: 'https://api.wismaamal.com');
         case DEVELOP:
           return ApiConfig(baseUrl: 'http://127.0.0.1:8000');
         default:
-          return ApiConfig(baseUrl: 'https://api.wismaamalgorontalo.site');
+          return ApiConfig(baseUrl: 'https://api.wismaamal.com');
       }
     }
   }
 
   ApiConfig getUrl() {
     if (kReleaseMode) {
-      return ApiConfig(baseUrl: 'https://api.wismaamalgorontalo.site/api');
+      return ApiConfig(baseUrl: 'https://api.wismaamal.com/api');
     } else {
       switch (currentMode) {
         case PRODUCTION:
-          return ApiConfig(baseUrl: 'https://api.wismaamalgorontalo.site/api');
+          return ApiConfig(baseUrl: 'https://api.wismaamal.com/api');
         case DEVELOP:
           return ApiConfig(baseUrl: 'http://127.0.0.1:8000/api');
         default:
-          return ApiConfig(baseUrl: 'https://api.wismaamalgorontalo.site/api');
+          return ApiConfig(baseUrl: 'https://api.wismaamal.com/api');
       }
     }
   }
@@ -53,7 +53,7 @@ class ApiConfig {
       const ApiConfig(baseUrl: 'http://localhost:8000/api');
 
   factory ApiConfig.production() =>
-      const ApiConfig(baseUrl: 'https://api.wismaamalgorontalo.site/api');
+      const ApiConfig(baseUrl: 'https://api.wismaamal.com/api');
 
   final String baseUrl;
   final Duration connectTimeout;
