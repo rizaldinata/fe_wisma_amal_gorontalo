@@ -1,15 +1,27 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:frontend/core/services/network/exception.dart';
-import 'package:frontend/data/repository/room_repository.dart';
+import 'package:frontend/domain/usecase/room/create_room_usecase.dart';
+import 'package:frontend/domain/usecase/room/delete_room_usecase.dart';
+import 'package:frontend/domain/usecase/room/get_rooms_usecase.dart';
+import 'package:frontend/domain/usecase/room/update_room_usecase.dart';
+import 'package:frontend/domain/usecase/usecase.dart';
 import 'package:frontend/presentation/bloc/room_list/room_event.dart';
 import 'package:frontend/presentation/bloc/room_list/room_state.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 class RoomBloc extends Bloc<RoomEvent, RoomState> {
-  final RoomRepository repository;
+  final GetRoomsUseCase getRoomsUseCase;
+  final CreateRoomUseCase createRoomUseCase;
+  final UpdateRoomUseCase updateRoomUseCase;
+  final DeleteRoomUseCase deleteRoomUseCase;
 
-  RoomBloc(this.repository) : super(const RoomState()) {
+  RoomBloc({
+    required this.getRoomsUseCase,
+    required this.createRoomUseCase,
+    required this.updateRoomUseCase,
+    required this.deleteRoomUseCase,
+  }) : super(const RoomState()) {
     on<GetRoomsEvent>(_onGetRooms);
     on<AddRoomEvent>(_onAddRoom);
     on<UpdateRoomEvent>(_onUpdateRoom);
@@ -22,7 +34,7 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
   Future<void> _onGetRooms(GetRoomsEvent event, Emitter<RoomState> emit) async {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     try {
-      final rooms = await repository.getRooms();
+      final rooms = await getRoomsUseCase(NoParams());
       emit(
         state.copyWith(
           status: FormzSubmissionStatus.success,
@@ -44,7 +56,7 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
   Future<void> _onAddRoom(AddRoomEvent event, Emitter<RoomState> emit) async {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     try {
-      await repository.createRoom(event.room);
+      await createRoomUseCase(event.room);
       emit(
         state.copyWith(
           status: FormzSubmissionStatus.success,
@@ -77,7 +89,7 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
   ) async {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     try {
-      await repository.updateRoom(event.room);
+      await updateRoomUseCase(event.room);
       emit(
         state.copyWith(
           status: FormzSubmissionStatus.success,
@@ -110,7 +122,7 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
   ) async {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     try {
-      await repository.deleteRoom(event.id);
+      await deleteRoomUseCase(event.id);
       emit(
         state.copyWith(
           status: FormzSubmissionStatus.success,

@@ -5,7 +5,11 @@ import 'package:equatable/equatable.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:formz/formz.dart';
 import 'package:frontend/core/utils/image_utils.dart';
-import 'package:frontend/data/repository/room_repository.dart';
+import 'package:frontend/domain/usecase/room/create_room_usecase.dart';
+import 'package:frontend/domain/usecase/room/delete_room_image_usecase.dart';
+import 'package:frontend/domain/usecase/room/get_room_by_id_usecase.dart';
+import 'package:frontend/domain/usecase/room/update_room_usecase.dart';
+import 'package:frontend/domain/usecase/room/upload_room_image_usecase.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/presentation/pages/room_form/form_room.dart';
 import 'package:frontend/presentation/widget/core/image/image_carousel.dart';
@@ -16,9 +20,19 @@ part 'form_room_event.dart';
 part 'form_room_state.dart';
 
 class FormRoomBloc extends Bloc<FormRoomEvent, FormRoomState> {
-  RoomRepository repository;
+  final CreateRoomUseCase createRoomUseCase;
+  final GetRoomByIdUseCase getRoomByIdUseCase;
+  final UpdateRoomUseCase updateRoomUseCase;
+  final DeleteRoomImageUseCase deleteRoomImageUseCase;
+  final UploadRoomImageUseCase uploadRoomImageUseCase;
 
-  FormRoomBloc({required this.repository}) : super(const FormRoomState()) {
+  FormRoomBloc({
+    required this.createRoomUseCase,
+    required this.getRoomByIdUseCase,
+    required this.updateRoomUseCase,
+    required this.deleteRoomImageUseCase,
+    required this.uploadRoomImageUseCase,
+  }) : super(const FormRoomState()) {
     on<LoadFormRoomEvent>(_onLoadFormRoom);
     on<SubmitFormRoomEvent>(_onSubmitFormRoom);
     on<EditFormRoomEvent>(_onEditFormRoom);
@@ -151,7 +165,7 @@ class FormRoomBloc extends Bloc<FormRoomEvent, FormRoomState> {
   ) async {
     try {
       emit(state.copyWith(submitStatus: FormzSubmissionStatus.inProgress));
-      final newRoom = await repository.createRoom(event.roomData);
+      final newRoom = await createRoomUseCase(event.roomData);
       emit(
         state.copyWith(
           room: newRoom,
@@ -175,7 +189,7 @@ class FormRoomBloc extends Bloc<FormRoomEvent, FormRoomState> {
     try {
       if (event.roomId != null) {
         emit(state.copyWith(loadStatus: FormzSubmissionStatus.inProgress));
-        final room = await repository.getRoomById(event.roomId!);
+        final room = await getRoomByIdUseCase(event.roomId!);
 
         final imageFiles = room.imageUrl
             ?.map(
@@ -217,9 +231,9 @@ class FormRoomBloc extends Bloc<FormRoomEvent, FormRoomState> {
       emit(state.copyWith(submitStatus: FormzSubmissionStatus.inProgress));
       RoomEntity processedRoom;
       if (event.formMode == FormMode.edit) {
-        processedRoom = await repository.updateRoom(event.roomData);
+        processedRoom = await updateRoomUseCase(event.roomData);
       } else {
-        processedRoom = await repository.createRoom(
+        processedRoom = await createRoomUseCase(
           event.roomData.copyWith(status: RoomStatusEnum.available),
         );
       }
@@ -230,9 +244,11 @@ class FormRoomBloc extends Bloc<FormRoomEvent, FormRoomState> {
       for (var image in state.imageUrlsToDelete) {
         if (image.id != null) {
           print("deleting image:${image.id}");
-          await repository.deleteRoomImage(
-            processedRoom.id,
-            int.parse(image.id!),
+          await deleteRoomImageUseCase(
+            DeleteRoomImageParams(
+              roomId: processedRoom.id,
+              imageId: int.parse(image.id!),
+            ),
           );
         }
       }
@@ -247,7 +263,12 @@ class FormRoomBloc extends Bloc<FormRoomEvent, FormRoomState> {
         print("uploading new images");
         final files = newImages.map((e) => e.file!).toList();
         try {
-          await repository.uploadRoomImage(processedRoom.id, files);
+          await uploadRoomImageUseCase(
+            UploadRoomImageParams(
+              roomId: processedRoom.id,
+              files: files,
+            ),
+          );
         } catch (e) {
           print('Error uploading images: $e');
           // We still consider it a success if the room was saved,
@@ -279,7 +300,7 @@ class FormRoomBloc extends Bloc<FormRoomEvent, FormRoomState> {
   ) async {
     try {
       emit(state.copyWith(editStatus: FormzSubmissionStatus.inProgress));
-      final updatedRoom = await repository.updateRoom(event.roomData);
+      final updatedRoom = await updateRoomUseCase(event.roomData);
       emit(
         state.copyWith(
           room: updatedRoom,

@@ -7,7 +7,13 @@ import 'package:frontend/core/constant/storage_constant.dart';
 import 'package:frontend/core/services/network/exception.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
 import 'package:frontend/data/model/auth/auth_request_model.dart';
-import 'package:frontend/data/repository/auth_repository.dart';
+import 'package:frontend/domain/usecase/auth/check_session_usecase.dart';
+import 'package:frontend/domain/usecase/auth/get_permissions_usecase.dart';
+import 'package:frontend/domain/usecase/auth/is_logged_in_usecase.dart';
+import 'package:frontend/domain/usecase/auth/login_usecase.dart';
+import 'package:frontend/domain/usecase/auth/logout_usecase.dart';
+import 'package:frontend/domain/usecase/auth/register_usecase.dart';
+import 'package:frontend/domain/usecase/usecase.dart';
 import 'package:frontend/domain/entity/permission_entity.dart';
 import 'package:frontend/domain/entity/user_entity.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
@@ -28,13 +34,25 @@ class AuthStateNotifier extends ChangeNotifier {
 }
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
-  final AuthRepository auth;
+  final CheckSessionUseCase checkSessionUseCase;
+  final GetPermissionsUseCase getPermissionsUseCase;
+  final LoginUseCase loginUseCase;
+  final RegisterUseCase registerUseCase;
+  final LogoutUseCase logoutUseCase;
+  final IsLoggedInUseCase isLoggedInUseCase;
   final SharedPrefsStorage storage;
   final AuthStateNotifier loginStatusNotifier = AuthStateNotifier();
   Timer? _sessionTimer;
 
-  AuthBloc({required this.auth, required this.storage})
-    : super(const AuthState()) {
+  AuthBloc({
+    required this.checkSessionUseCase,
+    required this.getPermissionsUseCase,
+    required this.loginUseCase,
+    required this.registerUseCase,
+    required this.logoutUseCase,
+    required this.isLoggedInUseCase,
+    required this.storage,
+  }) : super(const AuthState()) {
     on<InitLoginStatusEvent>(_onInitLoginStatus);
     on<LoginEvent>(_onLogin);
     on<RegisterEvent>(_onRegister);
@@ -60,7 +78,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   ) async {
     try {
       // Ambil ulang permissions dari server dan simpan ke SharedPreferences
-      await auth.getPermissions();
+      await getPermissionsUseCase(NoParams());
 
       // Setelah tersimpan di storage, sinkronkan kembali ke state.userInfo
       final currentUser = state.userInfo;
@@ -84,7 +102,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _checkSession() async {
     try {
-      final isValid = await auth.checkSession();
+      final isValid = await checkSessionUseCase(NoParams());
       if (!isValid) {
         add(const LogoutEvent());
         AppSnackbar.showError('Sesi telah berakhir. Silakan login kembali.');
@@ -105,12 +123,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     print('Initializing login status...');
-    final status = await auth.isLoggedIn();
+    final status = await isLoggedInUseCase(NoParams());
 
     // Endpoint permission bisa diakses tanpa atau dengan token,
     // jadi aman untuk selalu refresh di awal.
     try {
-      await auth.getPermissions();
+      await getPermissionsUseCase(NoParams());
     } catch (e) {
       debugPrint('Failed to refresh permissions on init: $e');
     }
@@ -155,11 +173,11 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
 
     try {
-      final result = await auth.login(
+      final result = await loginUseCase(
         AuthRequestModel(email: event.email, password: event.password),
       );
 
-      final isLoggedIn = await auth.isLoggedIn();
+      final isLoggedIn = await isLoggedInUseCase(NoParams());
 
       if (isLoggedIn) {
         add(const GetUserInfoEvent());
@@ -201,7 +219,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     );
 
     try {
-      final result = await auth.register(
+      final result = await registerUseCase(
         AuthRequestModel(
           email: event.email,
           password: event.password,
@@ -209,7 +227,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         ),
       );
 
-      final isLoggedIn = await auth.isLoggedIn();
+      final isLoggedIn = await isLoggedInUseCase(NoParams());
 
       if (isLoggedIn) {
         add(const GetUserInfoEvent());
@@ -245,7 +263,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   Future<void> _onLogout(LogoutEvent event, Emitter<AuthState> emit) async {
     try {
       emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
-      await auth.logout();
+      await logoutUseCase(NoParams());
       emit(
         const AuthState(
           status: FormzSubmissionStatus.initial,

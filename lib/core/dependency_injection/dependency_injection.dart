@@ -13,6 +13,7 @@ import 'package:frontend/core/dependency_injection/datasource.dart';
 import 'package:frontend/core/dependency_injection/network.dart';
 import 'package:frontend/core/dependency_injection/repository.dart';
 import 'package:frontend/core/dependency_injection/storage.dart';
+import 'package:frontend/core/dependency_injection/usecase.dart';
 import 'package:get_it/get_it.dart';
 
 final GetIt serviceLocator = GetIt.instance;
@@ -33,5 +34,6 @@ Future<void> initializeDependencies() async {
   await initializeNetwork();
   await initializeDatasource();
   await initializeRepository();
+  await initializeUseCase();
   await initializeBloc();
 }

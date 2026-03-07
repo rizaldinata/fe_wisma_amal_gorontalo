@@ -1,15 +1,27 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:frontend/core/services/network/exception.dart';
-import 'package:frontend/data/repository/permission_repository.dart';
+import 'package:frontend/domain/usecase/permission/create_permission_usecase.dart';
+import 'package:frontend/domain/usecase/permission/delete_permission_usecase.dart';
+import 'package:frontend/domain/usecase/permission/get_permission_list_usecase.dart';
+import 'package:frontend/domain/usecase/permission/update_permission_usecase.dart';
+import 'package:frontend/domain/usecase/usecase.dart';
 import 'package:frontend/presentation/bloc/permission/permission_event.dart';
 import 'package:frontend/presentation/bloc/permission/permission_state.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 class PermissionBloc extends Bloc<PermissionEvent, PermissionState> {
-  final PermissionRepository repository;
+  final GetPermissionListUseCase getPermissionsUseCase;
+  final CreatePermissionUseCase createPermissionUseCase;
+  final UpdatePermissionUseCase updatePermissionUseCase;
+  final DeletePermissionUseCase deletePermissionUseCase;
 
-  PermissionBloc(this.repository) : super(const PermissionState()) {
+  PermissionBloc({
+    required this.getPermissionsUseCase,
+    required this.createPermissionUseCase,
+    required this.updatePermissionUseCase,
+    required this.deletePermissionUseCase,
+  }) : super(const PermissionState()) {
     on<GetPermissionsEvent>(_onGetPermissions);
     on<AddPermissionEvent>(_onAddPermission);
     on<UpdatePermissionEvent>(_onUpdatePermission);
@@ -22,7 +34,7 @@ class PermissionBloc extends Bloc<PermissionEvent, PermissionState> {
   ) async {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     try {
-      final result = await repository.getPermissions();
+      final result = await getPermissionsUseCase(NoParams());
       emit(
         state.copyWith(
           status: FormzSubmissionStatus.success,
@@ -53,7 +65,7 @@ class PermissionBloc extends Bloc<PermissionEvent, PermissionState> {
   ) async {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     try {
-      await repository.createPermission(event.permission);
+      await createPermissionUseCase(event.permission);
       emit(
         state.copyWith(
           status: FormzSubmissionStatus.success,
@@ -85,7 +97,7 @@ class PermissionBloc extends Bloc<PermissionEvent, PermissionState> {
   ) async {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     try {
-      await repository.updatePermission(event.permission);
+      await updatePermissionUseCase(event.permission);
       emit(
         state.copyWith(
           status: FormzSubmissionStatus.success,
@@ -117,7 +129,7 @@ class PermissionBloc extends Bloc<PermissionEvent, PermissionState> {
   ) async {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     try {
-      final success = await repository.deletePermission(event.id);
+      final success = await deletePermissionUseCase(event.id);
       if (success) {
         emit(
           state.copyWith(

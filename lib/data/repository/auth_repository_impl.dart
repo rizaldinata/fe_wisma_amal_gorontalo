@@ -5,7 +5,9 @@ import 'package:frontend/data/datasource/auth_datasource.dart';
 import 'package:frontend/domain/entity/permission_entity.dart';
 import 'package:frontend/domain/entity/user_entity.dart';
 
-class AuthRepository {
+import 'package:frontend/domain/repository/auth_repository.dart';
+
+class AuthRepositoryImpl implements AuthRepository {
   AuthDatasource datasource;
   final SharedPrefsStorage storage;
   final SecureStorageService secureStorage;
@@ -15,6 +17,7 @@ class AuthRepository {
     required this.secureStorage,
   });
 
+  @override
   Future<bool> checkSession() async {
     try {
       final result = await datasource.checkSession();
@@ -24,6 +27,7 @@ class AuthRepository {
     }
   }
 
+  @override
   Future<void> getPermissions() async {
     try {
       final response = await datasource.getPermissions();
@@ -33,6 +37,7 @@ class AuthRepository {
     }
   }
 
+  @override
   Future<UserEntity> register(request) async {
     try {
       final response = await datasource.register(request);
@@ -50,6 +55,7 @@ class AuthRepository {
     }
   }
 
+  @override
   Future<UserEntity> login(request) async {
     try {
       final response = await datasource.login(request);
@@ -67,6 +73,7 @@ class AuthRepository {
     }
   }
 
+  @override
   Future<bool> logout() async {
     final result = await datasource.logout();
     if (result) {
@@ -94,6 +101,7 @@ class AuthRepository {
     }
   }
 
+  @override
   Future<bool> isLoggedIn() async {
     final token = await secureStorage.get(StorageConstant.token);
     return token != null;

@@ -3,7 +3,8 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:formz/formz.dart';
 import 'package:frontend/core/services/network/exception.dart';
-import 'package:frontend/data/repository/room_repository.dart';
+import 'package:frontend/domain/usecase/room/get_room_by_id_usecase.dart';
+import 'package:frontend/domain/usecase/room/update_room_usecase.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
@@ -11,9 +12,13 @@ part 'detail_room_event.dart';
 part 'detail_room_state.dart';
 
 class DetailRoomBloc extends Bloc<DetailRoomEvent, DetailRoomState> {
-  RoomRepository repository;
+  final GetRoomByIdUseCase getRoomByIdUseCase;
+  final UpdateRoomUseCase updateRoomUseCase;
 
-  DetailRoomBloc({required this.repository}) : super(const DetailRoomState()) {
+  DetailRoomBloc({
+    required this.getRoomByIdUseCase,
+    required this.updateRoomUseCase,
+  }) : super(const DetailRoomState()) {
     on<LoadDetailRoomEvent>(_onLoadDetailRoom);
     on<UpdateRoomEvent>(_onUpdateRoom);
     // on<DeleteRoomEvent>(_onDeleteRoom);
@@ -25,7 +30,7 @@ class DetailRoomBloc extends Bloc<DetailRoomEvent, DetailRoomState> {
   ) async {
     try {
       emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
-      final room = await repository.getRoomById(event.roomId);
+      final room = await getRoomByIdUseCase(event.roomId);
       emit(state.copyWith(status: FormzSubmissionStatus.success, room: room));
     } on AppException catch (e) {
       AppSnackbar.showError('Gagal memuat detail kamar: ${e.message}');

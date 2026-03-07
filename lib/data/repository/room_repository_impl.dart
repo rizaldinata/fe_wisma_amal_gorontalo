@@ -3,11 +3,14 @@ import 'package:frontend/data/datasource/room_datasource.dart';
 import 'package:frontend/data/model/room/room_model.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
 
-class RoomRepository {
+import 'package:frontend/domain/repository/room_repository.dart';
+
+class RoomRepositoryImpl implements RoomRepository {
   final RoomDatasource datasource;
 
   RoomRepository({required this.datasource});
 
+  @override
   Future<List<RoomEntity>> getRooms() async {
     try {
       final response = await datasource.getRooms();
@@ -17,6 +20,7 @@ class RoomRepository {
     }
   }
 
+  @override
   Future<RoomEntity> createRoom(RoomEntity room) async {
     try {
       final response = await datasource.createRoom(RoomModel.fromDomain(room));
@@ -26,6 +30,7 @@ class RoomRepository {
     }
   }
 
+  @override
   Future<RoomEntity> getRoomById(int id) async {
     try {
       final response = await datasource.getRoomById(id);
@@ -35,6 +40,7 @@ class RoomRepository {
     }
   }
 
+  @override
   Future<RoomEntity> updateRoom(RoomEntity room) async {
     try {
       final response = await datasource.updateRoom(RoomModel.fromDomain(room));
@@ -45,14 +51,17 @@ class RoomRepository {
     }
   }
 
+  @override
   Future<bool> deleteRoom(int id) async {
     return await datasource.deleteRoom(id);
   }
 
+  @override
   Future<bool> uploadRoomImage(int roomId, List<PlatformFile> files) async {
     return await datasource.uploadRoomImage(files: files, roomId: roomId);
   }
 
+  @override
   Future<bool> deleteRoomImage(int roomId, int imageId) async {
     return await datasource.deleteRoomImage(roomId: roomId, imageId: imageId);
   }
