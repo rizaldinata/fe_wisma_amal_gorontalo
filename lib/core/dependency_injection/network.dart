@@ -6,7 +6,7 @@ import 'package:frontend/core/services/storage/secure_storage.dart';
 
 Future<void> initializeNetwork() async {
   serviceLocator.registerSingleton<Dio>(Dio());
-  serviceLocator.registerSingleton<ApiConfig>(ApiConfig.production().getUrl());
+  serviceLocator.registerSingleton<ApiConfig>(ApiConfig.getUrl());
   serviceLocator.registerSingleton(
     DioClient(
       apiConfig: serviceLocator<ApiConfig>(),

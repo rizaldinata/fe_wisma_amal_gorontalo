@@ -31,7 +31,7 @@ class ApiConfig {
     }
   }
 
-  ApiConfig getUrl() {
+  factory ApiConfig.getUrl() {
     if (kReleaseMode) {
       return ApiConfig(baseUrl: 'https://api.wismaamal.com/api');
     } else {

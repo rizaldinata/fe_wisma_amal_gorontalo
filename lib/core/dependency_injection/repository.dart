@@ -20,8 +20,6 @@ Future<void> initializeRepository() async {
       secureStorage: serviceLocator.get(),
     ),
   );
-
-  // TAMBAHAN BARU
   serviceLocator.registerFactory<RoomRepository>(
     () => RoomRepositoryImpl(datasource: serviceLocator.get<RoomDatasource>()),
   );
