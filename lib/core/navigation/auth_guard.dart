@@ -5,7 +5,7 @@ import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/core/services/storage/secure_storage.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
-import 'package:frontend/data/repository/auth_repository.dart';
+import 'package:frontend/domain/repository/auth_repository.dart';
 
 class AuthGuard extends AutoRouteGuard {
   AuthRepository authRepository;

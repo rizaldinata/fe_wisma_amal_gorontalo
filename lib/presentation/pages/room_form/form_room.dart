@@ -6,7 +6,6 @@ import 'package:flutter/services.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/utils/formatter/digit_formatter.dart';
 import 'package:frontend/core/utils/image_utils.dart';
-import 'package:frontend/data/repository/room_repository.dart';
 import 'package:frontend/presentation/bloc/detail_room/detail_room_bloc.dart';
 import 'package:frontend/presentation/bloc/form_room/form_room_bloc.dart';
 import 'package:frontend/presentation/widget/core/appbar/custom_appbar.dart';
@@ -29,9 +28,13 @@ class AddRoomPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          FormRoomBloc(repository: serviceLocator.get<RoomRepository>())
-            ..add(const LoadFormRoomEvent()),
+      create: (context) => FormRoomBloc(
+        createRoomUseCase: serviceLocator.get(),
+        getRoomByIdUseCase: serviceLocator.get(),
+        updateRoomUseCase: serviceLocator.get(),
+        deleteRoomImageUseCase: serviceLocator.get(),
+        uploadRoomImageUseCase: serviceLocator.get(),
+      )..add(const LoadFormRoomEvent()),
       child: const FormRoomView(formMode: FormMode.add),
     );
   }
@@ -46,9 +49,13 @@ class EditRoomPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          FormRoomBloc(repository: serviceLocator.get<RoomRepository>())
-            ..add(LoadFormRoomEvent(roomId: roomId)),
+      create: (context) => FormRoomBloc(
+        createRoomUseCase: serviceLocator.get(),
+        getRoomByIdUseCase: serviceLocator.get(),
+        updateRoomUseCase: serviceLocator.get(),
+        deleteRoomImageUseCase: serviceLocator.get(),
+        uploadRoomImageUseCase: serviceLocator.get(),
+      )..add(LoadFormRoomEvent(roomId: roomId)),
       child: FormRoomView(formMode: FormMode.edit, roomId: roomId),
     );
   }

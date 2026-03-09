@@ -8,7 +8,7 @@ import 'package:frontend/domain/repository/room_repository.dart';
 class RoomRepositoryImpl implements RoomRepository {
   final RoomDatasource datasource;
 
-  RoomRepository({required this.datasource});
+  RoomRepositoryImpl({required this.datasource});
 
   @override
   Future<List<RoomEntity>> getRooms() async {

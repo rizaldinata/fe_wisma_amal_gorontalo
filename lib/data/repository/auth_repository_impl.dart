@@ -8,14 +8,15 @@ import 'package:frontend/domain/entity/user_entity.dart';
 import 'package:frontend/domain/repository/auth_repository.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  AuthDatasource datasource;
-  final SharedPrefsStorage storage;
-  final SecureStorageService secureStorage;
-  AuthRepository({
+  AuthRepositoryImpl({
     required this.datasource,
     required this.storage,
     required this.secureStorage,
   });
+
+  final AuthDatasource datasource;
+  final SharedPrefsStorage storage;
+  final SecureStorageService secureStorage;
 
   @override
   Future<bool> checkSession() async {

@@ -22,9 +22,10 @@ class RoomDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          DetailRoomBloc(repository: serviceLocator.get())
-            ..add(LoadDetailRoomEvent(roomId)),
+      create: (context) => DetailRoomBloc(
+        getRoomByIdUseCase: serviceLocator.get(),
+        updateRoomUseCase: serviceLocator.get(),
+      )..add(LoadDetailRoomEvent(roomId)),
       child: const RoomDetailView(),
     );
   }

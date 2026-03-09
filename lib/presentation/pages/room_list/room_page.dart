@@ -24,7 +24,12 @@ class RoomPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => RoomBloc(serviceLocator.get())..add(GetRoomsEvent()),
+      create: (context) => RoomBloc(
+        createRoomUseCase: serviceLocator.get(),
+        deleteRoomUseCase: serviceLocator.get(),
+        getRoomsUseCase: serviceLocator.get(),
+        updateRoomUseCase: serviceLocator.get(),
+      )..add(GetRoomsEvent()),
       child: const RoomView(),
     );
   }

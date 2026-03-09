@@ -7,7 +7,7 @@ import 'package:frontend/domain/repository/permission_repository.dart';
 class PermissionRepositoryImpl implements PermissionRepository {
   final PermissionDatasource datasource;
 
-  PermissionRepository({required this.datasource});
+  PermissionRepositoryImpl({required this.datasource});
 
   @override
   Future<List<PermissionEntity>> getPermissions() async {

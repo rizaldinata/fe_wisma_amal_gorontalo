@@ -4,7 +4,7 @@ import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auth_guard.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
-import 'package:frontend/data/repository/auth_repository.dart';
+import 'package:frontend/domain/repository/auth_repository.dart';
 import 'package:frontend/presentation/pages/permission/permission_page.dart';
 
 @AutoRouterConfig()
