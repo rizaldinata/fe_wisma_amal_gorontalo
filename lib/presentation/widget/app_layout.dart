@@ -90,7 +90,7 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                           SidebarItem(
                             label: 'Reservasi',
                             icon: Icons.book_online,
-                            page: const RoomAndReservationPlaceholderRoute(),
+                            page: const ReservationRoute(),
                           ),
                       ],
                     ),
