@@ -40,7 +40,7 @@ class AppRouter extends RootStackRouter {
         // manajemen penghuni
         AutoRoute(
           path: RouteConstant.residentName,
-          page: ResidentPlaceholderRoute.page,
+          page: ResidentRoute.page,
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
         ),
 

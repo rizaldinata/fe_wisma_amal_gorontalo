@@ -68,7 +68,7 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                       SidebarItem(
                         label: 'penghuni',
                         icon: Icons.person,
-                        page: const ResidentPlaceholderRoute(),
+                        page: const ResidentRoute(),
                       ),
                     ],
                   ),
