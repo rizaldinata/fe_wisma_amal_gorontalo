@@ -73,8 +73,8 @@ class AppRouter extends RootStackRouter {
         // manajemen keuangan
         AutoRoute(
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
-          path: RouteConstant.financeName,
-          page: FinancePlaceholderRoute.page,
+          path: RouteConstant.financeDashboardName,
+          page: FinanceDashboardRoute.page,
         ),
 
         // manajemen inventaris

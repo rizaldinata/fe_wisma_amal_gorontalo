@@ -1,5 +1,3 @@
-import 'package:frontend/data/model/auth/user_session_model.dart';
-
 class BaseResponseModel<T> {
   final bool status;
   final String message;

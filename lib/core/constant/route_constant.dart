@@ -36,4 +36,7 @@ class RouteConstant {
   static const String inventoryForm = '$inventory/form';
   static const String maintanance = 'maintanance';
   static const String maintananceForm = '$maintanance/form';
+
+  // Modul Finance
+  static const String financeDashboardName = 'finance/dashboard';
 }

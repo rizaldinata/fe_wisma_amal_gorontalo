@@ -14,7 +14,7 @@ class ApiConfig {
   static const String PRODUCTION = 'production';
   static const String DEVELOP = 'develop';
 
-  static const String currentMode = PRODUCTION;
+  static const String currentMode = DEVELOP;
 
   factory ApiConfig.getServerUrl() {
     if (kReleaseMode) {

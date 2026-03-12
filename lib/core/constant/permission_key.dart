@@ -52,4 +52,7 @@ abstract class PermissionKeys {
   static const deletePermission = 'delete-permission';
   static const updatePermission = 'update-permission';
   static const createPermission = 'create-permission';
+
+  // finance
+  static const String financeDashboardView = 'finance-dashboard-view';
 }

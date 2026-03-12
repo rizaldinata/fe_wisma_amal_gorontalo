@@ -6,6 +6,8 @@ import 'package:frontend/domain/usecase/auth/is_logged_in_usecase.dart';
 import 'package:frontend/domain/usecase/auth/login_usecase.dart';
 import 'package:frontend/domain/usecase/auth/logout_usecase.dart';
 import 'package:frontend/domain/usecase/auth/register_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_due_invoices_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_pending_payments_usecase.dart';
 import 'package:frontend/domain/usecase/permission/create_permission_usecase.dart';
 import 'package:frontend/domain/usecase/permission/delete_permission_usecase.dart';
 import 'package:frontend/domain/usecase/permission/get_permission_list_usecase.dart';
@@ -19,6 +21,8 @@ import 'package:frontend/domain/usecase/room/delete_room_image_usecase.dart';
 import 'package:frontend/domain/usecase/room/upload_room_image_usecase.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/detail_room/detail_room_bloc.dart';
+import 'package:frontend/presentation/bloc/finance_dashboard/finance_dashboard_bloc.dart'
+    show FinanceDashboardBloc;
 import 'package:frontend/presentation/bloc/form_room/form_room_bloc.dart';
 import 'package:frontend/presentation/bloc/permission/permission_bloc.dart';
 import 'package:frontend/presentation/bloc/room_list/room_bloc.dart';
@@ -68,6 +72,13 @@ Future<void> initializeBloc() async {
       updateRoomUseCase: serviceLocator.get<UpdateRoomUseCase>(),
       deleteRoomImageUseCase: serviceLocator.get<DeleteRoomImageUseCase>(),
       uploadRoomImageUseCase: serviceLocator.get<UploadRoomImageUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<FinanceDashboardBloc>(
+    () => FinanceDashboardBloc(
+      serviceLocator.get<GetDueInvoicesUseCase>(),
+      serviceLocator.get<GetPendingPaymentsUseCase>(),
     ),
   );
 }
