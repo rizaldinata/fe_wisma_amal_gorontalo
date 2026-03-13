@@ -1,3 +1,6 @@
+import 'package:frontend/domain/entity/finance/kpi_entity.dart';
+import 'package:frontend/domain/entity/finance/revenue_entity.dart';
+
 import '../../domain/entity/finance/invoice_entity.dart';
 import '../../domain/entity/finance/payment_entity.dart';
 import '../../domain/repository/finance_repository.dart';
@@ -26,5 +29,15 @@ class FinanceRepositoryImpl implements FinanceRepository {
     } catch (e) {
       rethrow;
     }
+  }
+
+  @override
+  Future<KpiEntity> getKpiSummary() async {
+    return await remoteDatasource.getKpiSummary();
+  }
+
+  @override
+  Future<List<RevenueEntity>> getRevenueChart() async {
+    return await remoteDatasource.getRevenueChart();
   }
 }

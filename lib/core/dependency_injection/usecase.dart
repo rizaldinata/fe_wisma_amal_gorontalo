@@ -10,7 +10,9 @@ import 'package:frontend/domain/usecase/auth/login_usecase.dart';
 import 'package:frontend/domain/usecase/auth/logout_usecase.dart';
 import 'package:frontend/domain/usecase/auth/register_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_due_invoices_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_kpi_summary_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_pending_payments_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_revenue_chart_usecase.dart';
 import 'package:frontend/domain/usecase/permission/create_permission_usecase.dart';
 import 'package:frontend/domain/usecase/permission/delete_permission_usecase.dart';
 import 'package:frontend/domain/usecase/permission/get_permission_list_usecase.dart';
@@ -87,5 +89,11 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => GetPendingPaymentsUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetKpiSummaryUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetRevenueChartUseCase(serviceLocator.get<FinanceRepository>()),
   );
 }
