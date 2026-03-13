@@ -96,18 +96,22 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                     ),
 
                   // manajemen keuangan
-                  SidebarItem(
-                    label: 'Keuangan',
-                    icon: Icons.monetization_on,
-                    hasAccess: true,
-                    children: [
-                      SidebarItem(
-                        label: 'Pembayaran',
-                        icon: Icons.payment,
-                        page: const FinancePlaceholderRoute(),
-                      ),
-                    ],
-                  ),
+                  if (context.can(PermissionKeys.financeDashboardView))
+                    SidebarItem(
+                      label: 'Keuangan',
+                      icon: Icons.monetization_on,
+                      hasAccess: true,
+                      children: [
+                        SidebarItem(
+                          label:
+                              'Dashboard', // <-- Ubah dari 'Pembayaran' menjadi 'Dashboard'
+                          icon: Icons
+                              .dashboard_outlined, // <-- Ubah icon agar lebih relevan
+                          page:
+                              const FinanceDashboardRoute(), // <-- Ubah route-nya ke yang baru
+                        ),
+                      ],
+                    ),
 
                   SidebarItem(
                     label: 'Inventaris & Pemiliharaan',

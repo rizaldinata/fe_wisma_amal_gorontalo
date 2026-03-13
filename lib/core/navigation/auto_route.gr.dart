@@ -13,28 +13,28 @@ import 'package:auto_route/auto_route.dart' as _i17;
 import 'package:flutter/material.dart' as _i18;
 import 'package:frontend/domain/entity/inventory_entity.dart' as _i19;
 import 'package:frontend/domain/entity/maintenance_entity.dart' as _i20;
-import 'package:frontend/presentation/pages/auth/login_page.dart' as _i8;
-import 'package:frontend/presentation/pages/auth/register_page.dart' as _i13;
+import 'package:frontend/presentation/pages/auth/login_page.dart' as _i9;
+import 'package:frontend/presentation/pages/auth/register_page.dart' as _i14;
 import 'package:frontend/presentation/pages/dashboard/dashboard.dart' as _i3;
 import 'package:frontend/presentation/pages/detail_room/room_detail.dart'
     as _i15;
-import 'package:frontend/presentation/pages/inventory/inventory_form_page.dart'
-    as _i5;
-import 'package:frontend/presentation/pages/inventory/inventory_page.dart'
-    as _i6;
-import 'package:frontend/presentation/pages/landing/landing_page.dart' as _i7;
-import 'package:frontend/presentation/pages/maintanance/maintanance_form_page.dart'
-    as _i9;
-import 'package:frontend/presentation/pages/maintanance/maintanance_page.dart'
-    as _i10;
-import 'package:frontend/presentation/pages/permission/permission_detail_page.dart'
-    as _i11;
-import 'package:frontend/presentation/pages/permission/permission_page.dart'
-    as _i12;
-import 'package:frontend/presentation/pages/placeholder/placeholder_page.dart'
+import 'package:frontend/presentation/pages/finance/finance_dashboard_page.dart'
     as _i4;
-import 'package:frontend/presentation/pages/reservation_list/reservation_page.dart'
-    as _i14;
+import 'package:frontend/presentation/pages/inventory/inventory_form_page.dart'
+    as _i6;
+import 'package:frontend/presentation/pages/inventory/inventory_page.dart'
+    as _i7;
+import 'package:frontend/presentation/pages/landing/landing_page.dart' as _i8;
+import 'package:frontend/presentation/pages/maintanance/maintanance_form_page.dart'
+    as _i10;
+import 'package:frontend/presentation/pages/maintanance/maintanance_page.dart'
+    as _i11;
+import 'package:frontend/presentation/pages/permission/permission_detail_page.dart'
+    as _i12;
+import 'package:frontend/presentation/pages/permission/permission_page.dart'
+    as _i13;
+import 'package:frontend/presentation/pages/placeholder/placeholder_page.dart'
+    as _i5;
 import 'package:frontend/presentation/pages/room_form/form_room.dart' as _i1;
 import 'package:frontend/presentation/pages/room_list/room_page.dart' as _i16;
 import 'package:frontend/presentation/widget/app_layout.dart' as _i2;
@@ -139,7 +139,23 @@ class EditRoomRouteArgs {
 }
 
 /// generated route for
-/// [_i4.FinancePlaceholderPage]
+/// [_i4.FinanceDashboardPage]
+class FinanceDashboardRoute extends _i17.PageRouteInfo<void> {
+  const FinanceDashboardRoute({List<_i17.PageRouteInfo>? children})
+    : super(FinanceDashboardRoute.name, initialChildren: children);
+
+  static const String name = 'FinanceDashboardRoute';
+
+  static _i17.PageInfo page = _i17.PageInfo(
+    name,
+    builder: (data) {
+      return const _i4.FinanceDashboardPage();
+    },
+  );
+}
+
+/// generated route for
+/// [_i5.FinancePlaceholderPage]
 class FinancePlaceholderRoute extends _i17.PageRouteInfo<void> {
   const FinancePlaceholderRoute({List<_i17.PageRouteInfo>? children})
     : super(FinancePlaceholderRoute.name, initialChildren: children);
@@ -149,13 +165,13 @@ class FinancePlaceholderRoute extends _i17.PageRouteInfo<void> {
   static _i17.PageInfo page = _i17.PageInfo(
     name,
     builder: (data) {
-      return const _i4.FinancePlaceholderPage();
+      return const _i5.FinancePlaceholderPage();
     },
   );
 }
 
 /// generated route for
-/// [_i4.InventoryAndMaintenancePlaceholderPage]
+/// [_i5.InventoryAndMaintenancePlaceholderPage]
 class InventoryAndMaintenancePlaceholderRoute extends _i17.PageRouteInfo<void> {
   const InventoryAndMaintenancePlaceholderRoute({
     List<_i17.PageRouteInfo>? children,
@@ -169,13 +185,13 @@ class InventoryAndMaintenancePlaceholderRoute extends _i17.PageRouteInfo<void> {
   static _i17.PageInfo page = _i17.PageInfo(
     name,
     builder: (data) {
-      return const _i4.InventoryAndMaintenancePlaceholderPage();
+      return const _i5.InventoryAndMaintenancePlaceholderPage();
     },
   );
 }
 
 /// generated route for
-/// [_i5.InventoryFormPage]
+/// [_i6.InventoryFormPage]
 class InventoryFormRoute extends _i17.PageRouteInfo<InventoryFormRouteArgs> {
   InventoryFormRoute({
     _i18.Key? key,
@@ -195,7 +211,7 @@ class InventoryFormRoute extends _i17.PageRouteInfo<InventoryFormRouteArgs> {
       final args = data.argsAs<InventoryFormRouteArgs>(
         orElse: () => const InventoryFormRouteArgs(),
       );
-      return _i5.InventoryFormPage(
+      return _i6.InventoryFormPage(
         key: args.key,
         inventoryData: args.inventoryData,
       );
@@ -227,7 +243,7 @@ class InventoryFormRouteArgs {
 }
 
 /// generated route for
-/// [_i6.InventoryPage]
+/// [_i7.InventoryPage]
 class InventoryRoute extends _i17.PageRouteInfo<void> {
   const InventoryRoute({List<_i17.PageRouteInfo>? children})
     : super(InventoryRoute.name, initialChildren: children);
@@ -237,13 +253,13 @@ class InventoryRoute extends _i17.PageRouteInfo<void> {
   static _i17.PageInfo page = _i17.PageInfo(
     name,
     builder: (data) {
-      return const _i6.InventoryPage();
+      return const _i7.InventoryPage();
     },
   );
 }
 
 /// generated route for
-/// [_i7.LandingPage]
+/// [_i8.LandingPage]
 class LandingRoute extends _i17.PageRouteInfo<void> {
   const LandingRoute({List<_i17.PageRouteInfo>? children})
     : super(LandingRoute.name, initialChildren: children);
@@ -253,13 +269,13 @@ class LandingRoute extends _i17.PageRouteInfo<void> {
   static _i17.PageInfo page = _i17.PageInfo(
     name,
     builder: (data) {
-      return const _i7.LandingPage();
+      return const _i8.LandingPage();
     },
   );
 }
 
 /// generated route for
-/// [_i8.LoginPage]
+/// [_i9.LoginPage]
 class LoginRoute extends _i17.PageRouteInfo<LoginRouteArgs> {
   LoginRoute({
     _i18.Key? key,
@@ -281,7 +297,7 @@ class LoginRoute extends _i17.PageRouteInfo<LoginRouteArgs> {
       final args = data.argsAs<LoginRouteArgs>(
         orElse: () => LoginRouteArgs(reason: queryParams.optString('reason')),
       );
-      return _i8.LoginPage(key: args.key, reason: args.reason);
+      return _i9.LoginPage(key: args.key, reason: args.reason);
     },
   );
 }
@@ -310,7 +326,7 @@ class LoginRouteArgs {
 }
 
 /// generated route for
-/// [_i9.MaintananceFormPage]
+/// [_i10.MaintananceFormPage]
 class MaintananceFormRoute
     extends _i17.PageRouteInfo<MaintananceFormRouteArgs> {
   MaintananceFormRoute({
@@ -334,7 +350,7 @@ class MaintananceFormRoute
       final args = data.argsAs<MaintananceFormRouteArgs>(
         orElse: () => const MaintananceFormRouteArgs(),
       );
-      return _i9.MaintananceFormPage(
+      return _i10.MaintananceFormPage(
         key: args.key,
         maintenanceData: args.maintenanceData,
       );
@@ -366,7 +382,7 @@ class MaintananceFormRouteArgs {
 }
 
 /// generated route for
-/// [_i10.MaintanancePage]
+/// [_i11.MaintanancePage]
 class MaintananceRoute extends _i17.PageRouteInfo<void> {
   const MaintananceRoute({List<_i17.PageRouteInfo>? children})
     : super(MaintananceRoute.name, initialChildren: children);
@@ -376,13 +392,13 @@ class MaintananceRoute extends _i17.PageRouteInfo<void> {
   static _i17.PageInfo page = _i17.PageInfo(
     name,
     builder: (data) {
-      return const _i10.MaintanancePage();
+      return const _i11.MaintanancePage();
     },
   );
 }
 
 /// generated route for
-/// [_i11.PermissionDetailPage]
+/// [_i12.PermissionDetailPage]
 class PermissionDetailRoute
     extends _i17.PageRouteInfo<PermissionDetailRouteArgs> {
   PermissionDetailRoute({
@@ -405,7 +421,7 @@ class PermissionDetailRoute
       final args = data.argsAs<PermissionDetailRouteArgs>(
         orElse: () => PermissionDetailRouteArgs(id: pathParams.getInt('id')),
       );
-      return _i11.PermissionDetailPage(key: args.key, id: args.id);
+      return _i12.PermissionDetailPage(key: args.key, id: args.id);
     },
   );
 }
@@ -434,7 +450,7 @@ class PermissionDetailRouteArgs {
 }
 
 /// generated route for
-/// [_i12.PermissionPage]
+/// [_i13.PermissionPage]
 class PermissionRoute extends _i17.PageRouteInfo<void> {
   const PermissionRoute({List<_i17.PageRouteInfo>? children})
     : super(PermissionRoute.name, initialChildren: children);
@@ -444,13 +460,13 @@ class PermissionRoute extends _i17.PageRouteInfo<void> {
   static _i17.PageInfo page = _i17.PageInfo(
     name,
     builder: (data) {
-      return const _i12.PermissionPage();
+      return const _i13.PermissionPage();
     },
   );
 }
 
 /// generated route for
-/// [_i4.PermissionPlaceholderPage]
+/// [_i5.PermissionPlaceholderPage]
 class PermissionPlaceholderRoute extends _i17.PageRouteInfo<void> {
   const PermissionPlaceholderRoute({List<_i17.PageRouteInfo>? children})
     : super(PermissionPlaceholderRoute.name, initialChildren: children);
@@ -460,13 +476,13 @@ class PermissionPlaceholderRoute extends _i17.PageRouteInfo<void> {
   static _i17.PageInfo page = _i17.PageInfo(
     name,
     builder: (data) {
-      return const _i4.PermissionPlaceholderPage();
+      return const _i5.PermissionPlaceholderPage();
     },
   );
 }
 
 /// generated route for
-/// [_i13.RegisterPage]
+/// [_i14.RegisterPage]
 class RegisterRoute extends _i17.PageRouteInfo<RegisterRouteArgs> {
   RegisterRoute({_i18.Key? key, List<_i17.PageRouteInfo>? children})
     : super(
@@ -483,7 +499,7 @@ class RegisterRoute extends _i17.PageRouteInfo<RegisterRouteArgs> {
       final args = data.argsAs<RegisterRouteArgs>(
         orElse: () => const RegisterRouteArgs(),
       );
-      return _i13.RegisterPage(key: args.key);
+      return _i14.RegisterPage(key: args.key);
     },
   );
 }
@@ -526,7 +542,7 @@ class ReservationRoute extends _i17.PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [_i4.ResidentPlaceholderPage]
+/// [_i5.ResidentPlaceholderPage]
 class ResidentPlaceholderRoute extends _i17.PageRouteInfo<void> {
   const ResidentPlaceholderRoute({List<_i17.PageRouteInfo>? children})
     : super(ResidentPlaceholderRoute.name, initialChildren: children);
@@ -536,13 +552,13 @@ class ResidentPlaceholderRoute extends _i17.PageRouteInfo<void> {
   static _i17.PageInfo page = _i17.PageInfo(
     name,
     builder: (data) {
-      return const _i4.ResidentPlaceholderPage();
+      return const _i5.ResidentPlaceholderPage();
     },
   );
 }
 
 /// generated route for
-/// [_i4.RolePlaceholderPage]
+/// [_i5.RolePlaceholderPage]
 class RolePlaceholderRoute extends _i17.PageRouteInfo<void> {
   const RolePlaceholderRoute({List<_i17.PageRouteInfo>? children})
     : super(RolePlaceholderRoute.name, initialChildren: children);
@@ -552,13 +568,13 @@ class RolePlaceholderRoute extends _i17.PageRouteInfo<void> {
   static _i17.PageInfo page = _i17.PageInfo(
     name,
     builder: (data) {
-      return const _i4.RolePlaceholderPage();
+      return const _i5.RolePlaceholderPage();
     },
   );
 }
 
 /// generated route for
-/// [_i4.RoomAndReservationPlaceholderPage]
+/// [_i5.RoomAndReservationPlaceholderPage]
 class RoomAndReservationPlaceholderRoute extends _i17.PageRouteInfo<void> {
   const RoomAndReservationPlaceholderRoute({List<_i17.PageRouteInfo>? children})
     : super(RoomAndReservationPlaceholderRoute.name, initialChildren: children);
@@ -568,7 +584,7 @@ class RoomAndReservationPlaceholderRoute extends _i17.PageRouteInfo<void> {
   static _i17.PageInfo page = _i17.PageInfo(
     name,
     builder: (data) {
-      return const _i4.RoomAndReservationPlaceholderPage();
+      return const _i5.RoomAndReservationPlaceholderPage();
     },
   );
 }
@@ -641,7 +657,7 @@ class RoomRoute extends _i17.PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [_i4.SettingPlaceholderPage]
+/// [_i5.SettingPlaceholderPage]
 class SettingPlaceholderRoute extends _i17.PageRouteInfo<void> {
   const SettingPlaceholderRoute({List<_i17.PageRouteInfo>? children})
     : super(SettingPlaceholderRoute.name, initialChildren: children);
@@ -651,7 +667,7 @@ class SettingPlaceholderRoute extends _i17.PageRouteInfo<void> {
   static _i17.PageInfo page = _i17.PageInfo(
     name,
     builder: (data) {
-      return const _i4.SettingPlaceholderPage();
+      return const _i5.SettingPlaceholderPage();
     },
   );
 }
