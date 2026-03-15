@@ -92,22 +92,31 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                             icon: Icons.book_online,
                             page: const ReservationRoute(),
                           ),
+                        SidebarItem(
+                          label: 'Jadwal Kamar',
+                          icon: Icons.calendar_month_outlined,
+                          page: const RoomScheduleRoute(),
+                        ),
                       ],
                     ),
 
                   // manajemen keuangan
-                  SidebarItem(
-                    label: 'Keuangan',
-                    icon: Icons.monetization_on,
-                    hasAccess: true,
-                    children: [
-                      SidebarItem(
-                        label: 'Pembayaran',
-                        icon: Icons.payment,
-                        page: const FinancePlaceholderRoute(),
-                      ),
-                    ],
-                  ),
+                  if (context.can(PermissionKeys.financeDashboardView))
+                    SidebarItem(
+                      label: 'Keuangan',
+                      icon: Icons.monetization_on,
+                      hasAccess: true,
+                      children: [
+                        SidebarItem(
+                          label:
+                              'Dashboard', // <-- Ubah dari 'Pembayaran' menjadi 'Dashboard'
+                          icon: Icons
+                              .dashboard_outlined, // <-- Ubah icon agar lebih relevan
+                          page:
+                              const FinanceDashboardRoute(), // <-- Ubah route-nya ke yang baru
+                        ),
+                      ],
+                    ),
 
                   SidebarItem(
                     label: 'Inventaris & Pemiliharaan',

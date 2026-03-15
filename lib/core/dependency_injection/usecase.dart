@@ -1,5 +1,6 @@
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/domain/repository/auth_repository.dart';
+import 'package:frontend/domain/repository/finance_repository.dart';
 import 'package:frontend/domain/repository/permission_repository.dart';
 import 'package:frontend/domain/repository/room_repository.dart';
 import 'package:frontend/domain/usecase/auth/check_session_usecase.dart';
@@ -8,6 +9,10 @@ import 'package:frontend/domain/usecase/auth/is_logged_in_usecase.dart';
 import 'package:frontend/domain/usecase/auth/login_usecase.dart';
 import 'package:frontend/domain/usecase/auth/logout_usecase.dart';
 import 'package:frontend/domain/usecase/auth/register_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_due_invoices_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_kpi_summary_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_pending_payments_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_revenue_chart_usecase.dart';
 import 'package:frontend/domain/usecase/permission/create_permission_usecase.dart';
 import 'package:frontend/domain/usecase/permission/delete_permission_usecase.dart';
 import 'package:frontend/domain/usecase/permission/get_permission_list_usecase.dart';
@@ -22,25 +27,73 @@ import 'package:frontend/domain/usecase/room/upload_room_image_usecase.dart';
 
 Future<void> initializeUseCase() async {
   // Auth UseCases
-  serviceLocator.registerFactory(() => CheckSessionUseCase(serviceLocator.get<AuthRepository>()));
-  serviceLocator.registerFactory(() => GetPermissionsUseCase(serviceLocator.get<AuthRepository>()));
-  serviceLocator.registerFactory(() => LoginUseCase(serviceLocator.get<AuthRepository>()));
-  serviceLocator.registerFactory(() => RegisterUseCase(serviceLocator.get<AuthRepository>()));
-  serviceLocator.registerFactory(() => LogoutUseCase(serviceLocator.get<AuthRepository>()));
-  serviceLocator.registerFactory(() => IsLoggedInUseCase(serviceLocator.get<AuthRepository>()));
+  serviceLocator.registerFactory(
+    () => CheckSessionUseCase(serviceLocator.get<AuthRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetPermissionsUseCase(serviceLocator.get<AuthRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => LoginUseCase(serviceLocator.get<AuthRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => RegisterUseCase(serviceLocator.get<AuthRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => LogoutUseCase(serviceLocator.get<AuthRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => IsLoggedInUseCase(serviceLocator.get<AuthRepository>()),
+  );
 
   // Room UseCases
-  serviceLocator.registerFactory(() => GetRoomsUseCase(serviceLocator.get<RoomRepository>()));
-  serviceLocator.registerFactory(() => CreateRoomUseCase(serviceLocator.get<RoomRepository>()));
-  serviceLocator.registerFactory(() => GetRoomByIdUseCase(serviceLocator.get<RoomRepository>()));
-  serviceLocator.registerFactory(() => UpdateRoomUseCase(serviceLocator.get<RoomRepository>()));
-  serviceLocator.registerFactory(() => DeleteRoomUseCase(serviceLocator.get<RoomRepository>()));
-  serviceLocator.registerFactory(() => UploadRoomImageUseCase(serviceLocator.get<RoomRepository>()));
-  serviceLocator.registerFactory(() => DeleteRoomImageUseCase(serviceLocator.get<RoomRepository>()));
+  serviceLocator.registerFactory(
+    () => GetRoomsUseCase(serviceLocator.get<RoomRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateRoomUseCase(serviceLocator.get<RoomRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetRoomByIdUseCase(serviceLocator.get<RoomRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateRoomUseCase(serviceLocator.get<RoomRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => DeleteRoomUseCase(serviceLocator.get<RoomRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UploadRoomImageUseCase(serviceLocator.get<RoomRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => DeleteRoomImageUseCase(serviceLocator.get<RoomRepository>()),
+  );
 
   // Permission UseCases
-  serviceLocator.registerFactory(() => GetPermissionListUseCase(serviceLocator.get<PermissionRepository>()));
-  serviceLocator.registerFactory(() => CreatePermissionUseCase(serviceLocator.get<PermissionRepository>()));
-  serviceLocator.registerFactory(() => UpdatePermissionUseCase(serviceLocator.get<PermissionRepository>()));
-  serviceLocator.registerFactory(() => DeletePermissionUseCase(serviceLocator.get<PermissionRepository>()));
+  serviceLocator.registerFactory(
+    () => GetPermissionListUseCase(serviceLocator.get<PermissionRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreatePermissionUseCase(serviceLocator.get<PermissionRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdatePermissionUseCase(serviceLocator.get<PermissionRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => DeletePermissionUseCase(serviceLocator.get<PermissionRepository>()),
+  );
+
+  // Finance UseCases
+  serviceLocator.registerFactory(
+    () => GetDueInvoicesUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetPendingPaymentsUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetKpiSummaryUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetRevenueChartUseCase(serviceLocator.get<FinanceRepository>()),
+  );
 }
