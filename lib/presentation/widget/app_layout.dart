@@ -92,6 +92,11 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                             icon: Icons.book_online,
                             page: const ReservationRoute(),
                           ),
+                        SidebarItem(
+                          label: 'Jadwal Kamar',
+                          icon: Icons.calendar_month_outlined,
+                          page: const RoomScheduleRoute(),
+                        ),
                       ],
                     ),
 
