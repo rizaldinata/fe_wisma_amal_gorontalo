@@ -76,6 +76,12 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                         page:
                             const ContractResidentRoute(),
                       ),
+                      SidebarItem(
+                        label: 'Daftar Tamu',
+                        icon: Icons.groups,
+                        page:
+                            const GuestListRoute(), // <-- Ganti rute placeholder dengan ini
+                      ),
                     ],
                   ),
                   if (context.can(PermissionKeys.viewRooms) ||
