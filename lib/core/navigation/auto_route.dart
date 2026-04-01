@@ -43,6 +43,11 @@ class AppRouter extends RootStackRouter {
           page: ResidentRoute.page,
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
         ),
+        AutoRoute(
+          path: '${RouteConstant.residentName}/contracts',
+          page: ContractResidentRoute.page,
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+        ),
 
         // manajemen kamar & reservasi
         AutoRoute(

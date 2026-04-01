@@ -70,6 +70,12 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                         icon: Icons.person,
                         page: const ResidentRoute(),
                       ),
+                      SidebarItem(
+                        label: 'Kontrak Sewa',
+                        icon: Icons.description,
+                        page:
+                            const ContractResidentRoute(),
+                      ),
                     ],
                   ),
                   if (context.can(PermissionKeys.viewRooms) ||

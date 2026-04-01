@@ -25,7 +25,8 @@ class ResidentPage extends StatelessWidget {
     });
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      // 1. IMPLEMENTASI WARNA LATAR HALAMAN (Light Gray)
+      backgroundColor: const Color(0xFFF3F4F6), 
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(28, 22, 28, 28),
         child: Column(
@@ -76,7 +77,7 @@ class ResidentPage extends StatelessWidget {
                 const SizedBox(width: 16),
                 Expanded(
                   child: _ResidentStatCard(
-                    title: 'kamar Tersedia',
+                    title: 'Kamar Tersedia', // Diperbaiki kapitalisasinya
                     count: '12',
                     icon: Icons.bedroom_parent_outlined,
                     iconColor: const Color(0xFF248746),
@@ -88,6 +89,8 @@ class ResidentPage extends StatelessWidget {
             const SizedBox(height: 24),
 
             BasicCard(
+              // 2. IMPLEMENTASI WARNA LATAR KARTU TABEL (Putih Bersih)
+              color: Colors.white, 
               borderRadius: BorderRadius.circular(24),
               padding: const EdgeInsets.fromLTRB(34, 22, 34, 24),
               child: Column(
@@ -100,7 +103,8 @@ class ResidentPage extends StatelessWidget {
                         width: 14,
                         height: 38,
                         decoration: BoxDecoration(
-                          color: const Color(0xFFA794F2),
+                          // 3. WARNA DEKORASI JUDUL (Ungu Pastel)
+                          color: const Color(0xFFA794F2), 
                           borderRadius: BorderRadius.circular(9),
                         ),
                       ),
@@ -122,7 +126,8 @@ class ResidentPage extends StatelessWidget {
                     height: 34,
                     padding: const EdgeInsets.symmetric(horizontal: 10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE7E7E7),
+                      // 4. WARNA LATAR HEADER KOLOM TABEL (Abu-abu sangat muda)
+                      color: const Color(0xFFF3F4F6), // Diubah dari E7E7E7 agar lebih soft sesuai mockup
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Row(
@@ -233,6 +238,10 @@ class ResidentPage extends StatelessWidget {
   }
 }
 
+// -----------------------------------------------------------------------------
+// PRIVATE WIDGETS (Sengaja diletakkan di file yang sama agar rapi sesuai kodenya)
+// -----------------------------------------------------------------------------
+
 class _ResidentStatCard extends StatelessWidget {
   const _ResidentStatCard({
     required this.title,
@@ -251,7 +260,7 @@ class _ResidentStatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasicCard(
-      color: Colors.white,
+      color: Colors.white, // Kartu statistik juga diberi background putih
       borderRadius: BorderRadius.circular(15),
       padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
       child: Row(

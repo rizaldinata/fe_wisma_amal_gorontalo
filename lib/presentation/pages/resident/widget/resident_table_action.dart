@@ -32,8 +32,7 @@ class ResidentTableAction extends StatelessWidget {
                     decoration: InputDecoration(
                       isDense: true,
                       hintText: 'Cari...',
-                      hintStyle: Theme.of(context).textTheme.bodySmall
-                          ?.copyWith(
+                      hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
                             fontSize: 12,
                             color: const Color(0xFF7A7A7A),
                           ),
