@@ -60,12 +60,27 @@ class _RoomViewState extends State<RoomView>
     return BlocBuilder<RoomBloc, RoomState>(
       builder: (context, state) {
         return Scaffold(
+          backgroundColor: theme.colorScheme.surface,
           body: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Text(
+                    'Kelola Kamar',
+                    style: theme.textTheme.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Kelola Sistem Kost Anda dengan Mudah',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
                   Row(
                     children: [
                       StatCard(
