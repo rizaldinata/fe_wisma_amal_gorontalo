@@ -79,13 +79,12 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                       icon: Icons.room,
                       hasAccess: true,
                       children: [
-                        if (context.can(PermissionKeys.viewRooms))
-                          SidebarItem(
-                            label: 'Kamar',
-                            icon: Icons.meeting_room,
-                            page: RoomRoute(),
-                          ),
-
+                        // if (context.can(PermissionKeys.viewRooms))
+                        SidebarItem(
+                          label: 'Kamar',
+                          icon: Icons.meeting_room,
+                          page: RoomRoute(),
+                        ),
                         if (context.can(PermissionKeys.viewLease))
                           SidebarItem(
                             label: 'Reservasi',
@@ -108,12 +107,9 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                       hasAccess: true,
                       children: [
                         SidebarItem(
-                          label:
-                              'Dashboard', // <-- Ubah dari 'Pembayaran' menjadi 'Dashboard'
-                          icon: Icons
-                              .dashboard_outlined, // <-- Ubah icon agar lebih relevan
-                          page:
-                              const FinanceDashboardRoute(), // <-- Ubah route-nya ke yang baru
+                          label: 'Dashboard',
+                          icon: Icons.dashboard_outlined,
+                          page: const FinanceDashboardRoute(),
                         ),
                       ],
                     ),
@@ -133,6 +129,11 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                         icon: Icons.build,
                         page: const MaintananceRoute(),
                       ),
+                      SidebarItem(
+                        label: 'Laporan Kerusakan',
+                        icon: Icons.report_problem_outlined,
+                        page: const MaintenanceReportListRoute(),
+                      ),
                     ],
                   ),
 
@@ -144,7 +145,6 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                   ),
                 ],
               ),
-              // Expanded(child: AutoRouter()),
               Expanded(child: AutoRouter()),
             ],
           );

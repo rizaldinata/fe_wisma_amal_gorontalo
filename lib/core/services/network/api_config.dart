@@ -24,7 +24,7 @@ class ApiConfig {
         case PRODUCTION:
           return ApiConfig(baseUrl: 'https://api.wismaamal.com');
         case DEVELOP:
-          return ApiConfig(baseUrl: 'http://127.0.0.1:8000');
+          return ApiConfig(baseUrl: 'http://localhost');
         default:
           return ApiConfig(baseUrl: 'https://api.wismaamal.com');
       }
@@ -39,7 +39,7 @@ class ApiConfig {
         case PRODUCTION:
           return ApiConfig(baseUrl: 'https://api.wismaamal.com/api');
         case DEVELOP:
-          return ApiConfig(baseUrl: 'http://127.0.0.1:8000/api');
+          return ApiConfig(baseUrl: 'http://localhost/api');
         default:
           return ApiConfig(baseUrl: 'https://api.wismaamal.com/api');
       }

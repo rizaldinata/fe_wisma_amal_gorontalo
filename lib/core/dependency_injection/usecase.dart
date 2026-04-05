@@ -24,6 +24,12 @@ import 'package:frontend/domain/usecase/room/get_room_by_id_usecase.dart';
 import 'package:frontend/domain/usecase/room/get_rooms_usecase.dart';
 import 'package:frontend/domain/usecase/room/update_room_usecase.dart';
 import 'package:frontend/domain/usecase/room/upload_room_image_usecase.dart';
+import 'package:frontend/domain/usecase/maintenance/get_my_requests_usecase.dart';
+import 'package:frontend/domain/usecase/maintenance/get_all_requests_usecase.dart';
+import 'package:frontend/domain/usecase/maintenance/get_detail_usecase.dart';
+import 'package:frontend/domain/usecase/maintenance/create_request_usecase.dart';
+import 'package:frontend/domain/usecase/maintenance/add_update_usecase.dart';
+import 'package:frontend/domain/repository/maintenance_repository.dart';
 
 Future<void> initializeUseCase() async {
   // Auth UseCases
@@ -95,5 +101,22 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => GetRevenueChartUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+
+  // Maintenance UseCases
+  serviceLocator.registerFactory(
+    () => GetMyRequestsUseCase(serviceLocator.get<MaintenanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetAllRequestsUseCase(serviceLocator.get<MaintenanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetDetailUseCase(serviceLocator.get<MaintenanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateRequestUseCase(serviceLocator.get<MaintenanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => AddUpdateUseCase(serviceLocator.get<MaintenanceRepository>()),
   );
 }

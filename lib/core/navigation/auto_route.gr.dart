@@ -29,6 +29,12 @@ import 'package:frontend/presentation/pages/maintanance/maintanance_form_page.da
     as _i10;
 import 'package:frontend/presentation/pages/maintanance/maintanance_page.dart'
     as _i11;
+import 'package:frontend/presentation/pages/maintenance_report/maintenance_report_list_page.dart'
+    as _i24;
+import 'package:frontend/presentation/pages/maintenance_report/maintenance_create_report_page.dart'
+    as _i25;
+import 'package:frontend/presentation/pages/maintenance_report/maintenance_report_detail_page.dart'
+    as _i26;
 import 'package:frontend/presentation/pages/permission/permission_detail_page.dart'
     as _i12;
 import 'package:frontend/presentation/pages/permission/permission_page.dart'
@@ -707,4 +713,89 @@ class SettingPlaceholderRoute extends _i20.PageRouteInfo<void> {
       return const _i5.SettingPlaceholderPage();
     },
   );
+}
+
+/// generated route for
+/// [_i24.MaintenanceReportListPage]
+class MaintenanceReportListRoute extends _i20.PageRouteInfo<void> {
+  const MaintenanceReportListRoute({List<_i20.PageRouteInfo>? children})
+    : super(MaintenanceReportListRoute.name, initialChildren: children);
+
+  static const String name = 'MaintenanceReportListRoute';
+
+  static _i20.PageInfo page = _i20.PageInfo(
+    name,
+    builder: (data) {
+      return const _i24.MaintenanceReportListPage();
+    },
+  );
+}
+
+/// generated route for
+/// [_i25.MaintenanceCreateReportPage]
+class MaintenanceCreateReportRoute extends _i20.PageRouteInfo<void> {
+  const MaintenanceCreateReportRoute({List<_i20.PageRouteInfo>? children})
+    : super(MaintenanceCreateReportRoute.name, initialChildren: children);
+
+  static const String name = 'MaintenanceCreateReportRoute';
+
+  static _i20.PageInfo page = _i20.PageInfo(
+    name,
+    builder: (data) {
+      return const _i25.MaintenanceCreateReportPage();
+    },
+  );
+}
+
+/// generated route for
+/// [_i26.MaintenanceReportDetailPage]
+class MaintenanceReportDetailRoute
+    extends _i20.PageRouteInfo<MaintenanceReportDetailRouteArgs> {
+  MaintenanceReportDetailRoute({
+    _i21.Key? key,
+    required int id,
+    List<_i20.PageRouteInfo>? children,
+  }) : super(
+         MaintenanceReportDetailRoute.name,
+         args: MaintenanceReportDetailRouteArgs(key: key, id: id),
+         rawPathParams: {'id': id},
+         initialChildren: children,
+       );
+
+  static const String name = 'MaintenanceReportDetailRoute';
+
+  static _i20.PageInfo page = _i20.PageInfo(
+    name,
+    builder: (data) {
+      final pathParams = data.inheritedPathParams;
+      final args = data.argsAs<MaintenanceReportDetailRouteArgs>(
+        orElse: () =>
+            MaintenanceReportDetailRouteArgs(id: pathParams.getInt('id')),
+      );
+      return _i26.MaintenanceReportDetailPage(key: args.key, id: args.id);
+    },
+  );
+}
+
+class MaintenanceReportDetailRouteArgs {
+  const MaintenanceReportDetailRouteArgs({this.key, required this.id});
+
+  final _i21.Key? key;
+
+  final int id;
+
+  @override
+  String toString() {
+    return 'MaintenanceReportDetailRouteArgs{key: $key, id: $id}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! MaintenanceReportDetailRouteArgs) return false;
+    return key == other.key && id == other.id;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ id.hashCode;
 }
