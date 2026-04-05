@@ -10,7 +10,6 @@ import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/textform/textform.dart';
-import 'dart:io';
 
 @RoutePage()
 class MaintenanceCreateReportPage extends StatelessWidget {
@@ -38,7 +37,7 @@ class _CreateReportViewState extends State<_CreateReportView> {
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
 
-  List<String> _selectedImagePaths = [];
+  List<PlatformFile> _selectedImages = [];
 
   @override
   void dispose() {
@@ -52,19 +51,29 @@ class _CreateReportViewState extends State<_CreateReportView> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.image,
       allowMultiple: true,
+      withData: true, // Load bytes for all platforms
     );
     if (result != null) {
       setState(() {
-        // Prevent duplicates
-        final newPaths = result.paths.whereType<String>().toList();
-        final merged = {..._selectedImagePaths, ...newPaths}.toList();
-        _selectedImagePaths = merged.take(6).toList(); // max 6 photos
+        // Prevent duplicates by checking name
+        final newFiles = result.files;
+        final currentNames = _selectedImages.map((f) => f.name).toSet();
+        
+        for (var file in newFiles) {
+          if (!currentNames.contains(file.name)) {
+            _selectedImages.add(file);
+          }
+        }
+        
+        if (_selectedImages.length > 6) {
+          _selectedImages = _selectedImages.sublist(0, 6);
+        }
       });
     }
   }
 
   void _removeImage(int index) {
-    setState(() => _selectedImagePaths.removeAt(index));
+    setState(() => _selectedImages.removeAt(index));
   }
 
   void _handleSubmit(BuildContext context) {
@@ -74,7 +83,7 @@ class _CreateReportViewState extends State<_CreateReportView> {
       SubmitMaintenanceRequest(
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
-        imagePaths: _selectedImagePaths.isEmpty ? null : _selectedImagePaths,
+        images: _selectedImages.isEmpty ? null : _selectedImages,
       ),
     );
   }
@@ -213,10 +222,10 @@ class _CreateReportViewState extends State<_CreateReportView> {
                                   ),
                                   const Spacer(),
                                   Text(
-                                    '${_selectedImagePaths.length}/6',
+                                    '${_selectedImages.length}/6',
                                     style: theme.textTheme.labelMedium
                                         ?.copyWith(
-                                      color: _selectedImagePaths.length >= 6
+                                      color: _selectedImages.length >= 6
                                           ? theme.colorScheme.error
                                           : theme.colorScheme.onSurfaceVariant,
                                     ),
@@ -233,13 +242,13 @@ class _CreateReportViewState extends State<_CreateReportView> {
                               const SizedBox(height: 16),
 
                               // Image grid
-                              if (_selectedImagePaths.isNotEmpty)
+                              if (_selectedImages.isNotEmpty)
                                 _ImageGrid(
-                                  imagePaths: _selectedImagePaths,
+                                  images: _selectedImages,
                                   onRemove: _removeImage,
                                 ),
 
-                              if (_selectedImagePaths.length < 6)
+                              if (_selectedImages.length < 6)
                                 _AddPhotoButton(onTap: _pickImages),
                             ],
                           ),
@@ -363,8 +372,8 @@ class _SectionTitle extends StatelessWidget {
 }
 
 class _ImageGrid extends StatelessWidget {
-  const _ImageGrid({required this.imagePaths, required this.onRemove});
-  final List<String> imagePaths;
+  const _ImageGrid({required this.images, required this.onRemove});
+  final List<PlatformFile> images;
   final void Function(int) onRemove;
 
   @override
@@ -372,9 +381,9 @@ class _ImageGrid extends StatelessWidget {
     return Wrap(
       spacing: 10,
       runSpacing: 10,
-      children: List.generate(imagePaths.length, (index) {
+      children: List.generate(images.length, (index) {
         return _ImageThumbnail(
-          path: imagePaths[index],
+          file: images[index],
           onRemove: () => onRemove(index),
         );
       }),
@@ -383,8 +392,8 @@ class _ImageGrid extends StatelessWidget {
 }
 
 class _ImageThumbnail extends StatelessWidget {
-  const _ImageThumbnail({required this.path, required this.onRemove});
-  final String path;
+  const _ImageThumbnail({required this.file, required this.onRemove});
+  final PlatformFile file;
   final VoidCallback onRemove;
 
   @override
@@ -393,12 +402,26 @@ class _ImageThumbnail extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(10),
-          child: Image.file(
-            File(path),
-            width: 90,
-            height: 90,
-            fit: BoxFit.cover,
-          ),
+          child: file.bytes != null
+              ? Image.memory(
+                  file.bytes!,
+                  width: 90,
+                  height: 90,
+                  fit: BoxFit.cover,
+                )
+              : Image.network(
+                  // Fallback (though bytes should be here)
+                  '',
+                  width: 90,
+                  height: 90,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => Container(
+                    width: 90,
+                    height: 90,
+                    color: Colors.grey.shade200,
+                    child: const Icon(Icons.image_outlined, color: Colors.grey),
+                  ),
+                ),
         ),
         Positioned(
           top: 4,

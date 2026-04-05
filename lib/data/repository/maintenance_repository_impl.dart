@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import '../../domain/entity/maintenance_request_entity.dart';
 import '../../domain/repository/maintenance_repository.dart';
 import '../datasource/maintenance_remote_datasource.dart';
@@ -30,13 +31,13 @@ class MaintenanceRepositoryImpl implements MaintenanceRepository {
     required String title,
     required String description,
     int? roomId,
-    List<String>? imagePaths,
+    List<PlatformFile>? images,
   }) async {
     final response = await defaultDataSource.createReport(
       title: title,
       description: description,
       roomId: roomId,
-      imagePaths: imagePaths,
+      images: images,
     );
     return response.toEntity();
   }
@@ -46,13 +47,13 @@ class MaintenanceRepositoryImpl implements MaintenanceRepository {
     required int requestId,
     required String description,
     String? status,
-    List<String>? imagePaths,
+    List<PlatformFile>? images,
   }) async {
     final response = await defaultDataSource.addUpdateReply(
       requestId: requestId,
       description: description,
       status: status,
-      imagePaths: imagePaths,
+      images: images,
     );
     return response.toEntity();
   }

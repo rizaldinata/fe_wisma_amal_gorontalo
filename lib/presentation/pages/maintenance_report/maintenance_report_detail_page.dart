@@ -18,7 +18,6 @@ import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/textform/textform.dart';
 import 'package:intl/intl.dart';
-import 'dart:io';
 
 @RoutePage()
 class MaintenanceReportDetailPage extends StatelessWidget {
@@ -438,7 +437,7 @@ class _AdminReplyFormState extends State<_AdminReplyForm> {
   final _formKey = GlobalKey<FormState>();
   final _descriptionController = TextEditingController();
   String? _selectedStatus;
-  List<String> _imagePaths = [];
+  List<PlatformFile> _selectedImages = [];
 
   final _statusOptions = [
     'pending',
@@ -464,12 +463,22 @@ class _AdminReplyFormState extends State<_AdminReplyForm> {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.image,
       allowMultiple: true,
+      withData: true,
     );
     if (result != null) {
       setState(() {
-        final newPaths = result.paths.whereType<String>().toList();
-        final merged = {..._imagePaths, ...newPaths}.toList();
-        _imagePaths = merged.take(4).toList();
+        final newFiles = result.files;
+        final currentNames = _selectedImages.map((f) => f.name).toSet();
+        
+        for (var file in newFiles) {
+          if (!currentNames.contains(file.name)) {
+            _selectedImages.add(file);
+          }
+        }
+        
+        if (_selectedImages.length > 4) {
+          _selectedImages = _selectedImages.sublist(0, 4);
+        }
       });
     }
   }
@@ -482,7 +491,7 @@ class _AdminReplyFormState extends State<_AdminReplyForm> {
         requestId: widget.requestId,
         description: _descriptionController.text.trim(),
         status: _selectedStatus,
-        imagePaths: _imagePaths.isEmpty ? null : _imagePaths,
+        images: _selectedImages.isEmpty ? null : _selectedImages,
       ),
     );
 
@@ -490,7 +499,7 @@ class _AdminReplyFormState extends State<_AdminReplyForm> {
     _descriptionController.clear();
     setState(() {
       _selectedStatus = null;
-      _imagePaths = [];
+      _selectedImages = [];
     });
   }
 
@@ -561,28 +570,36 @@ class _AdminReplyFormState extends State<_AdminReplyForm> {
           const SizedBox(height: 16),
 
           // Photo
-          if (_imagePaths.isNotEmpty)
+          if (_selectedImages.isNotEmpty)
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: List.generate(_imagePaths.length, (i) {
+              children: List.generate(_selectedImages.length, (i) {
+                final file = _selectedImages[i];
                 return Stack(
                   children: [
                     ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.file(
-                        File(_imagePaths[i]),
-                        width: 70,
-                        height: 70,
-                        fit: BoxFit.cover,
-                      ),
+                      child: file.bytes != null
+                          ? Image.memory(
+                              file.bytes!,
+                              width: 70,
+                              height: 70,
+                              fit: BoxFit.cover,
+                            )
+                          : Container(
+                              width: 70,
+                              height: 70,
+                              color: Colors.grey.shade200,
+                              child: const Icon(Icons.image_outlined),
+                            ),
                     ),
                     Positioned(
                       top: 2,
                       right: 2,
                       child: GestureDetector(
                         onTap: () =>
-                            setState(() => _imagePaths.removeAt(i)),
+                            setState(() => _selectedImages.removeAt(i)),
                         child: Container(
                           padding: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
@@ -598,7 +615,7 @@ class _AdminReplyFormState extends State<_AdminReplyForm> {
                 );
               }),
             ),
-          if (_imagePaths.length < 4)
+          if (_selectedImages.length < 4)
             TextButton.icon(
               onPressed: _pickImages,
               icon: const Icon(Icons.attach_file_rounded, size: 16),
