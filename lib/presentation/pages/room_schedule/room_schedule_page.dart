@@ -84,8 +84,13 @@ class _RoomSchedulePageState extends State<RoomSchedulePage> {
                                       title: 'Filter Kamar',
                                       hint: 'Semua Kamar',
                                       value: _selectedRoom,
-                                      items: const ['Semua Kamar', 'Kamar 101', 'Kamar 102'],
-                                      onChanged: (v) => setState(() => _selectedRoom = v),
+                                      items: const [
+                                        'Semua Kamar',
+                                        'Kamar 101',
+                                        'Kamar 102',
+                                      ],
+                                      onChanged: (v) =>
+                                          setState(() => _selectedRoom = v),
                                     ),
                                   ),
                                   const SizedBox(width: 16),
@@ -95,8 +100,14 @@ class _RoomSchedulePageState extends State<RoomSchedulePage> {
                                       title: 'Status Reservasi',
                                       hint: 'Semua Status',
                                       value: _selectedStatus,
-                                      items: const ['Semua Status', 'Pending', 'Ongoing', 'Completed'],
-                                      onChanged: (v) => setState(() => _selectedStatus = v),
+                                      items: const [
+                                        'Semua Status',
+                                        'Pending',
+                                        'Ongoing',
+                                        'Completed',
+                                      ],
+                                      onChanged: (v) =>
+                                          setState(() => _selectedStatus = v),
                                     ),
                                   ),
                                 ],
@@ -188,23 +199,19 @@ class _MonthNavigator extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.chevron_left),
-          ),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.chevron_left)),
           const VerticalDivider(width: 1),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
               'Januari 2025',
-              style: theme.textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           const VerticalDivider(width: 1),
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.chevron_right),
-          ),
+          IconButton(onPressed: () {}, icon: const Icon(Icons.chevron_right)),
         ],
       ),
     );
@@ -269,7 +276,10 @@ class _LegendItem extends StatelessWidget {
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(4),
-            border: Border.all(color: theme.colorScheme.outlineVariant, width: 0.5),
+            border: Border.all(
+              color: theme.colorScheme.outlineVariant,
+              width: 0.5,
+            ),
           ),
         ),
         const SizedBox(width: 8),

@@ -14,6 +14,9 @@ import 'package:frontend/domain/repository/auth_repository.dart';
 import 'package:frontend/domain/repository/finance_repository.dart';
 import 'package:frontend/domain/repository/permission_repository.dart';
 import 'package:frontend/domain/repository/room_repository.dart';
+import 'package:frontend/data/repository/maintenance_repository_impl.dart';
+import 'package:frontend/domain/repository/maintenance_repository.dart';
+import 'package:frontend/data/datasource/maintenance_remote_datasource.dart';
 
 Future<void> initializeRepository() async {
   serviceLocator.registerFactory<AuthRepository>(
@@ -36,6 +39,12 @@ Future<void> initializeRepository() async {
   serviceLocator.registerFactory<FinanceRepository>(
     () => FinanceRepositoryImpl(
       remoteDatasource: serviceLocator<FinanceRemoteDatasource>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<MaintenanceRepository>(
+    () => MaintenanceRepositoryImpl(
+      defaultDataSource: serviceLocator<MaintenanceRemoteDataSource>(),
     ),
   );
 }

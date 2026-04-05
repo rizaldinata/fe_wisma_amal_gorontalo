@@ -39,6 +39,11 @@ class RouteConstant {
   static const String maintanance = 'maintanance';
   static const String maintananceForm = '$maintanance/form';
 
+  // Laporan Kerusakan
+  static const String maintenanceReport = 'maintenance-reports';
+  static const String maintenanceReportCreate = '$maintenanceReport/create';
+  static const String maintenanceReportDetail = '$maintenanceReport/:id';
+
   // Modul Finance
   static const String financeDashboardName = 'finance/dashboard';
 }

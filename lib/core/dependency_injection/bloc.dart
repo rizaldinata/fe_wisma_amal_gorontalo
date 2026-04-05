@@ -23,11 +23,18 @@ import 'package:frontend/domain/usecase/room/delete_room_image_usecase.dart';
 import 'package:frontend/domain/usecase/room/upload_room_image_usecase.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/detail_room/detail_room_bloc.dart';
-import 'package:frontend/presentation/bloc/finance_dashboard/finance_dashboard_bloc.dart'
-    show FinanceDashboardBloc;
 import 'package:frontend/presentation/bloc/form_room/form_room_bloc.dart';
+import 'package:frontend/presentation/bloc/finance_dashboard/finance_dashboard_bloc.dart';
 import 'package:frontend/presentation/bloc/permission/permission_bloc.dart';
 import 'package:frontend/presentation/bloc/room_list/room_bloc.dart';
+import 'package:frontend/presentation/bloc/maintenance_list/maintenance_list_bloc.dart';
+import 'package:frontend/presentation/bloc/maintenance_detail/maintenance_detail_bloc.dart';
+import 'package:frontend/presentation/bloc/maintenance_action/maintenance_action_bloc.dart';
+import 'package:frontend/domain/usecase/maintenance/get_my_requests_usecase.dart';
+import 'package:frontend/domain/usecase/maintenance/get_all_requests_usecase.dart';
+import 'package:frontend/domain/usecase/maintenance/get_detail_usecase.dart';
+import 'package:frontend/domain/usecase/maintenance/create_request_usecase.dart';
+import 'package:frontend/domain/usecase/maintenance/add_update_usecase.dart';
 
 Future<void> initializeBloc() async {
   serviceLocator.registerFactory<AuthBloc>(
@@ -83,6 +90,27 @@ Future<void> initializeBloc() async {
       serviceLocator.get<GetPendingPaymentsUseCase>(),
       serviceLocator.get<GetKpiSummaryUseCase>(),
       serviceLocator.get<GetRevenueChartUseCase>(),
+    ),
+  );
+
+  // Maintenance Blocs
+  serviceLocator.registerFactory<MaintenanceListBloc>(
+    () => MaintenanceListBloc(
+      getMyRequestsUseCase: serviceLocator.get<GetMyRequestsUseCase>(),
+      getAllRequestsUseCase: serviceLocator.get<GetAllRequestsUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<MaintenanceDetailBloc>(
+    () => MaintenanceDetailBloc(
+      getDetailUseCase: serviceLocator.get<GetDetailUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<MaintenanceActionBloc>(
+    () => MaintenanceActionBloc(
+      createRequestUseCase: serviceLocator.get<CreateRequestUseCase>(),
+      addUpdateUseCase: serviceLocator.get<AddUpdateUseCase>(),
     ),
   );
 }

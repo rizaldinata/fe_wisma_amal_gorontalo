@@ -1,11 +1,10 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auth_guard.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/domain/repository/auth_repository.dart';
-import 'package:frontend/presentation/pages/permission/permission_page.dart';
+
 
 @AutoRouterConfig()
 class AppRouter extends RootStackRouter {
@@ -40,7 +39,7 @@ class AppRouter extends RootStackRouter {
         // manajemen penghuni
         AutoRoute(
           path: RouteConstant.residentName,
-          page: ResidentPlaceholderRoute.page,
+          page: ResidentRoute.page,
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
         ),
 
@@ -99,7 +98,7 @@ class AppRouter extends RootStackRouter {
           page: InventoryFormRoute.page,
         ),
 
-        // manajemen maintanance
+        // manajemen maintanance (jadwal)
         AutoRoute(
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: RouteConstant.maintanance,
@@ -109,6 +108,23 @@ class AppRouter extends RootStackRouter {
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: RouteConstant.maintananceForm,
           page: MaintananceFormRoute.page,
+        ),
+
+        // laporan kerusakan
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.maintenanceReport,
+          page: MaintenanceReportListRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.maintenanceReportCreate,
+          page: MaintenanceCreateReportRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: '${RouteConstant.maintenanceReport}/:id',
+          page: MaintenanceReportDetailRoute.page,
         ),
 
         // pengaturan
