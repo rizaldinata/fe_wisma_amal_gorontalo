@@ -58,8 +58,16 @@ class _ReservationViewState extends State<ReservationView> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Kelola Sistem Kost Anda dengan Mudah',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+
                   const SizedBox(height: 24),
-                  
+
                   // ── TOP STAT CARDS ──
                   Row(
                     children: [
@@ -67,7 +75,11 @@ class _ReservationViewState extends State<ReservationView> {
                         child: StatCard(
                           title: 'Total kamar',
                           count: '10',
-                          icon: const Icon(Icons.bed_outlined, size: 24, color: Color(0xFF3F51B5)),
+                          icon: const Icon(
+                            Icons.bed_outlined,
+                            size: 24,
+                            color: Color(0xFF3F51B5),
+                          ),
                           color: const Color(0xFFC5CAE9),
                         ),
                       ),
@@ -76,7 +88,11 @@ class _ReservationViewState extends State<ReservationView> {
                         child: StatCard(
                           title: 'Reservasi Masuk',
                           count: '3',
-                          icon: const Icon(Icons.insert_drive_file_outlined, size: 24, color: Color(0xFFFFA000)),
+                          icon: const Icon(
+                            Icons.insert_drive_file_outlined,
+                            size: 24,
+                            color: Color(0xFFFFA000),
+                          ),
                           color: const Color(0xFFFFECB3),
                         ),
                       ),
@@ -85,7 +101,11 @@ class _ReservationViewState extends State<ReservationView> {
                         child: StatCard(
                           title: 'Pembayaran Valid',
                           count: '10',
-                          icon: const Icon(Icons.assignment_turned_in_outlined, size: 24, color: Color(0xFF43A047)),
+                          icon: const Icon(
+                            Icons.assignment_turned_in_outlined,
+                            size: 24,
+                            color: Color(0xFF43A047),
+                          ),
                           color: const Color(0xFFDCEDC8),
                         ),
                       ),
@@ -106,18 +126,21 @@ class _ReservationViewState extends State<ReservationView> {
                       TableColumn(label: 'Status Pembayaran', flex: 3),
                       TableColumn(label: 'Action', flex: 1),
                     ],
-                    rows: List.generate(5, (index) => [
-                      'RSV001',
-                      'Bagus Alfian',
-                      'A201',
-                      'Harian',
-                      '12 Feb 2025 - 18 Feb 2025',
-                      const Align(
-                        alignment: Alignment.centerLeft,
-                        child: ReservationStatusBadge(status: 'Lunas'),
-                      ),
-                      _buildEditButton(),
-                    ]),
+                    rows: List.generate(
+                      5,
+                      (index) => [
+                        'RSV001',
+                        'Bagus Alfian',
+                        'A201',
+                        'Harian',
+                        '12 Feb 2025 - 18 Feb 2025',
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: ReservationStatusBadge(status: 'Lunas'),
+                        ),
+                        _buildEditButton(),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -157,18 +180,12 @@ class _ReservationViewState extends State<ReservationView> {
         ),
         const SizedBox(width: 12),
         // Date Range
-        const _SmallFilterDropdown(
-          hint: '1 February 2025',
-          width: 160,
-        ),
+        const _SmallFilterDropdown(hint: '1 February 2025', width: 160),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 8),
           child: Icon(Icons.remove, size: 16),
         ),
-        const _SmallFilterDropdown(
-          hint: '1 Maret 2025',
-          width: 160,
-        ),
+        const _SmallFilterDropdown(hint: '1 Maret 2025', width: 160),
       ],
     );
   }
@@ -182,9 +199,7 @@ class _ReservationViewState extends State<ReservationView> {
           backgroundColor: const Color(0xFFFFC107),
           foregroundColor: Colors.white,
           padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(4),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
         ),
         child: const Text('Edit', style: TextStyle(fontSize: 11)),
       ),
@@ -215,10 +230,7 @@ class _SmallFilterDropdown extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (icon != null) ...[
-            Icon(icon, size: 18),
-            const SizedBox(width: 8),
-          ],
+          if (icon != null) ...[Icon(icon, size: 18), const SizedBox(width: 8)],
           Expanded(
             child: Text(
               hint,
