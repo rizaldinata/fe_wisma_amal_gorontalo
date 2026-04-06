@@ -28,7 +28,7 @@ class MaintenanceActionBloc extends Bloc<MaintenanceActionEvent, MaintenanceActi
           title: event.title,
           description: event.description,
           roomId: event.roomId,
-          imagePaths: event.imagePaths,
+          images: event.images,
         ),
       );
       emit(const MaintenanceActionSuccess('Laporan berhasil dibuat.'));
@@ -50,7 +50,7 @@ class MaintenanceActionBloc extends Bloc<MaintenanceActionEvent, MaintenanceActi
           requestId: event.requestId,
           description: event.description,
           status: event.status,
-          imagePaths: event.imagePaths,
+          images: event.images,
         ),
       );
       emit(const MaintenanceActionSuccess('Update progres berhasil.'));

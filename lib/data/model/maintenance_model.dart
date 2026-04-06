@@ -21,7 +21,7 @@ class MaintenanceTimelineModel {
   factory MaintenanceTimelineModel.fromJson(Map<String, dynamic> json) {
     return MaintenanceTimelineModel(
       id: json['id'],
-      userName: json['user']['name'],
+      userName: json['user']?['name'] ?? 'System',
       status: json['status'] != null ? MaintenanceStatus.fromValue(json['status']) : null,
       description: json['description'],
       images: List<String>.from(json['images'] ?? []),
@@ -93,7 +93,7 @@ class MaintenanceRequestModel {
   factory MaintenanceRequestModel.fromJson(Map<String, dynamic> json) {
     return MaintenanceRequestModel(
       id: json['id'],
-      residentName: json['resident']?['name'] ?? 'Unknown',
+      residentName: json['resident']?['name'] ?? json['resident_name'] ?? 'Unknown',
       room: json['room'] != null ? MaintenanceRoomModel.fromJson(json['room']) : null,
       title: json['title'],
       description: json['description'],

@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import '../entity/maintenance_request_entity.dart';
 
 abstract class MaintenanceRepository {
@@ -5,12 +6,12 @@ abstract class MaintenanceRepository {
   Future<List<MaintenanceRequestEntity>> getAllRequests();
   Future<MaintenanceRequestEntity> getReportById(int id);
   
-  /// Creates a report. images is a list of file paths.
+  /// Creates a report. images is a list of PlatformFile.
   Future<MaintenanceRequestEntity> createReport({
     required String title,
     required String description,
     int? roomId,
-    List<String>? imagePaths,
+    List<PlatformFile>? images,
   });
 
   /// Adds a timeline update.
@@ -18,6 +19,6 @@ abstract class MaintenanceRepository {
     required int requestId,
     required String description,
     String? status,
-    List<String>? imagePaths,
+    List<PlatformFile>? images,
   });
 }

@@ -1,4 +1,6 @@
 import 'package:dio/dio.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import '../model/maintenance_model.dart';
 import '../../../core/services/network/dio_client.dart';
 import '../../../core/services/network/exception.dart';
@@ -11,13 +13,13 @@ abstract class MaintenanceRemoteDataSource {
     required String title,
     required String description,
     int? roomId,
-    List<String>? imagePaths,
+    List<PlatformFile>? images,
   });
   Future<MaintenanceTimelineModel> addUpdateReply({
     required int requestId,
     required String description,
     String? status,
-    List<String>? imagePaths,
+    List<PlatformFile>? images,
   });
 }
 
@@ -59,7 +61,7 @@ class MaintenanceRemoteDataSourceImpl implements MaintenanceRemoteDataSource {
     required String title,
     required String description,
     int? roomId,
-    List<String>? imagePaths,
+    List<PlatformFile>? images,
   }) async {
     final formData = FormData.fromMap({
       'title': title,
@@ -67,12 +69,15 @@ class MaintenanceRemoteDataSourceImpl implements MaintenanceRemoteDataSource {
       if (roomId != null) 'room_id': roomId,
     });
 
-    if (imagePaths != null && imagePaths.isNotEmpty) {
-      for (int i = 0; i < imagePaths.length; i++) {
+    if (images != null && images.isNotEmpty) {
+      for (int i = 0; i < images.length; i++) {
+        final file = images[i];
         formData.files.add(
           MapEntry(
             'images[$i]',
-            await MultipartFile.fromFile(imagePaths[i]),
+            kIsWeb 
+              ? MultipartFile.fromBytes(file.bytes!, filename: file.name)
+              : await MultipartFile.fromFile(file.path!, filename: file.name),
           ),
         );
       }
@@ -87,19 +92,22 @@ class MaintenanceRemoteDataSourceImpl implements MaintenanceRemoteDataSource {
     required int requestId,
     required String description,
     String? status,
-    List<String>? imagePaths,
+    List<PlatformFile>? images,
   }) async {
     final formData = FormData.fromMap({
       'description': description,
       if (status != null) 'status': status,
     });
 
-    if (imagePaths != null && imagePaths.isNotEmpty) {
-      for (int i = 0; i < imagePaths.length; i++) {
+    if (images != null && images.isNotEmpty) {
+      for (int i = 0; i < images.length; i++) {
+        final file = images[i];
         formData.files.add(
           MapEntry(
             'images[$i]',
-            await MultipartFile.fromFile(imagePaths[i]),
+            kIsWeb 
+              ? MultipartFile.fromBytes(file.bytes!, filename: file.name)
+              : await MultipartFile.fromFile(file.path!, filename: file.name),
           ),
         );
       }
