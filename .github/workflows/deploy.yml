@@ -3,7 +3,7 @@ name: Build and Deploy Frontend
 on:
   push:
     branches:
-      - main # Change this to your deployment branch if different
+      - develop # Change this to your deployment branch if different
 
 permissions:
   contents: read
