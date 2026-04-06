@@ -3,6 +3,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/core/services/network/api_config.dart';
 import 'package:frontend/domain/entity/maintenance_request_entity.dart';
 import 'package:frontend/domain/entity/maintenance_status.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
@@ -30,12 +31,11 @@ class MaintenanceReportDetailPage extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create: (_) => serviceLocator<MaintenanceDetailBloc>()
-            ..add(FetchMaintenanceDetail(id)),
+          create: (_) =>
+              serviceLocator<MaintenanceDetailBloc>()
+                ..add(FetchMaintenanceDetail(id)),
         ),
-        BlocProvider(
-          create: (_) => serviceLocator<MaintenanceActionBloc>(),
-        ),
+        BlocProvider(create: (_) => serviceLocator<MaintenanceActionBloc>()),
       ],
       child: const _DetailView(),
     );
@@ -75,15 +75,22 @@ class _DetailView extends StatelessWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.error_outline_rounded,
-                        size: 56,
-                        color: theme.colorScheme.error),
+                    Icon(
+                      Icons.error_outline_rounded,
+                      size: 56,
+                      color: theme.colorScheme.error,
+                    ),
                     const SizedBox(height: 12),
-                    Text('Gagal memuat detail', style: theme.textTheme.titleMedium),
+                    Text(
+                      'Gagal memuat detail',
+                      style: theme.textTheme.titleMedium,
+                    ),
                     const SizedBox(height: 8),
-                    Text(state.message,
-                        style: theme.textTheme.bodySmall,
-                        textAlign: TextAlign.center),
+                    Text(
+                      state.message,
+                      style: theme.textTheme.bodySmall,
+                      textAlign: TextAlign.center,
+                    ),
                   ],
                 ),
               );
@@ -111,7 +118,8 @@ class _DetailContent extends StatelessWidget {
     final theme = Theme.of(context);
     final dateFormat = DateFormat('dd MMMM yyyy, HH:mm', 'id_ID');
     final authState = context.watch<AuthBloc>().state;
-    final isAdmin = authState.isLoggedIn &&
+    final isAdmin =
+        authState.isLoggedIn &&
         (authState.userInfo?.roles.any(
               (r) => r == 'admin' || r == 'super-admin',
             ) ??
@@ -140,7 +148,10 @@ class _DetailContent extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Detail Laporan', style: theme.textTheme.headlineLarge),
+                    Text(
+                      'Detail Laporan',
+                      style: theme.textTheme.headlineLarge,
+                    ),
                     Text(
                       'ID #${request.id}',
                       style: theme.textTheme.bodyMedium?.copyWith(
@@ -229,7 +240,11 @@ class _DetailContent extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 12),
-                          _NetworkImageGrid(imageUrls: request.images),
+                          _NetworkImageGrid(
+                            imageUrls: request.images
+                                .map((e) => ApiConfig.getStorageUrl(e))
+                                .toList(),
+                          ),
                         ],
                       ],
                     ),
@@ -256,8 +271,9 @@ class _DetailContent extends StatelessWidget {
                                   Opacity(
                                     opacity: 0.35,
                                     child: const Icon(
-                                        Icons.pending_actions_outlined,
-                                        size: 48),
+                                      Icons.pending_actions_outlined,
+                                      size: 48,
+                                    ),
                                   ),
                                   const SizedBox(height: 12),
                                   Text(
@@ -279,9 +295,7 @@ class _DetailContent extends StatelessWidget {
                   // ── Admin Reply Form ──
                   if (isAdmin) ...[
                     const SizedBox(height: 16),
-                    BasicCard(
-                      child: _AdminReplyForm(requestId: request.id),
-                    ),
+                    BasicCard(child: _AdminReplyForm(requestId: request.id)),
                   ],
 
                   const SizedBox(height: 24),
@@ -383,8 +397,9 @@ class _Timeline extends StatelessWidget {
                           color: theme.colorScheme.surfaceContainerLowest,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: theme.colorScheme.outlineVariant
-                                .withOpacity(0.5),
+                            color: theme.colorScheme.outlineVariant.withOpacity(
+                              0.5,
+                            ),
                           ),
                         ),
                         child: Text(
@@ -398,7 +413,12 @@ class _Timeline extends StatelessWidget {
                       // Images
                       if (item.images.isNotEmpty) ...[
                         const SizedBox(height: 10),
-                        _NetworkImageGrid(imageUrls: item.images, maxWidth: 80),
+                        _NetworkImageGrid(
+                          imageUrls: item.images
+                              .map((e) => ApiConfig.getStorageUrl(e))
+                              .toList(),
+                          maxWidth: 80,
+                        ),
                       ],
                     ],
                   ),
@@ -439,12 +459,7 @@ class _AdminReplyFormState extends State<_AdminReplyForm> {
   String? _selectedStatus;
   List<PlatformFile> _selectedImages = [];
 
-  final _statusOptions = [
-    'pending',
-    'in_progress',
-    'completed',
-    'cancelled',
-  ];
+  final _statusOptions = ['pending', 'in_progress', 'completed', 'cancelled'];
 
   final _statusLabels = {
     'pending': 'Menunggu',
@@ -469,13 +484,13 @@ class _AdminReplyFormState extends State<_AdminReplyForm> {
       setState(() {
         final newFiles = result.files;
         final currentNames = _selectedImages.map((f) => f.name).toSet();
-        
+
         for (var file in newFiles) {
           if (!currentNames.contains(file.name)) {
             _selectedImages.add(file);
           }
         }
-        
+
         if (_selectedImages.length > 4) {
           _selectedImages = _selectedImages.sublist(0, 4);
         }
@@ -519,8 +534,7 @@ class _AdminReplyFormState extends State<_AdminReplyForm> {
           const SizedBox(height: 16),
 
           // Status Selector (optional)
-          Text('Perbarui Status (opsional)',
-              style: theme.textTheme.titleSmall),
+          Text('Perbarui Status (opsional)', style: theme.textTheme.titleSmall),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -539,8 +553,7 @@ class _AdminReplyFormState extends State<_AdminReplyForm> {
                   color: isSelected
                       ? _statusChipColor(s)
                       : theme.colorScheme.onSurfaceVariant,
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.normal,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
                 ),
                 side: BorderSide(
                   color: isSelected
@@ -606,8 +619,11 @@ class _AdminReplyFormState extends State<_AdminReplyForm> {
                             color: Colors.black54,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.close,
-                              size: 12, color: Colors.white),
+                          child: const Icon(
+                            Icons.close,
+                            size: 12,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -638,10 +654,14 @@ class _AdminReplyFormState extends State<_AdminReplyForm> {
                       isLoading: isLoading,
                       leadIcon: isLoading
                           ? const SizedBox.shrink()
-                          : const Icon(Icons.send_rounded,
-                              size: 16, color: Colors.white),
-                      onPressed:
-                          isLoading ? null : () => _handleSubmit(context),
+                          : const Icon(
+                              Icons.send_rounded,
+                              size: 16,
+                              color: Colors.white,
+                            ),
+                      onPressed: isLoading
+                          ? null
+                          : () => _handleSubmit(context),
                     ),
                   ),
                 ],
@@ -728,10 +748,7 @@ class _MetaChip extends StatelessWidget {
 }
 
 class _NetworkImageGrid extends StatelessWidget {
-  const _NetworkImageGrid({
-    required this.imageUrls,
-    this.maxWidth = 100,
-  });
+  const _NetworkImageGrid({required this.imageUrls, this.maxWidth = 100});
   final List<String> imageUrls;
   final double maxWidth;
 
@@ -752,8 +769,10 @@ class _NetworkImageGrid extends StatelessWidget {
               width: maxWidth,
               height: maxWidth,
               color: Colors.grey.shade200,
-              child:
-                  const Icon(Icons.broken_image_outlined, color: Colors.grey),
+              child: const Icon(
+                Icons.broken_image_outlined,
+                color: Colors.grey,
+              ),
             ),
           ),
         );

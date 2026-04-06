@@ -14,7 +14,7 @@ class ApiConfig {
   static const String PRODUCTION = 'production';
   static const String DEVELOP = 'develop';
 
-  static const String currentMode = DEVELOP;
+  static const String currentMode = PRODUCTION;
 
   factory ApiConfig.getServerUrl() {
     if (kReleaseMode) {
@@ -54,6 +54,23 @@ class ApiConfig {
 
   factory ApiConfig.production() =>
       const ApiConfig(baseUrl: 'https://api.wismaamal.com/api');
+
+  static String getStorageUrl(String? path) {
+    if (path == null || path.isEmpty) return '';
+    final baseUrl = ApiConfig.getServerUrl().baseUrl;
+
+    // Remove all whitespace, newlines, and invisible control characters/non-ASCII chars
+    String cleanPath = path
+        .replaceAll(RegExp(r'\s+'), '') // Remove all whitespace (including \n \r \t)
+        .replaceAll(RegExp(r'[^\x20-\x7E]'), '') // Remove non-printable/hidden characters
+        .trim();
+
+    if (cleanPath.startsWith('http')) return cleanPath;
+
+    // Ensure single slash between base and path
+    final hasSlash = cleanPath.startsWith('/');
+    return '$baseUrl${hasSlash ? cleanPath : '/$cleanPath'}';
+  }
 
   final String baseUrl;
   final Duration connectTimeout;
