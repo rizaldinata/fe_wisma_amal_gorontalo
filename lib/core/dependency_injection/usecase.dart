@@ -13,6 +13,10 @@ import 'package:frontend/domain/usecase/finance/get_due_invoices_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_kpi_summary_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_pending_payments_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_revenue_chart_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_expenses_usecase.dart';
+import 'package:frontend/domain/usecase/finance/create_expense_usecase.dart';
+import 'package:frontend/domain/usecase/finance/update_expense_usecase.dart';
+import 'package:frontend/domain/usecase/finance/delete_expense_usecase.dart';
 import 'package:frontend/domain/usecase/permission/create_permission_usecase.dart';
 import 'package:frontend/domain/usecase/permission/delete_permission_usecase.dart';
 import 'package:frontend/domain/usecase/permission/get_permission_list_usecase.dart';
@@ -101,6 +105,18 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => GetRevenueChartUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetExpensesUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateExpenseUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateExpenseUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => DeleteExpenseUseCase(serviceLocator.get<FinanceRepository>()),
   );
 
   // Maintenance UseCases

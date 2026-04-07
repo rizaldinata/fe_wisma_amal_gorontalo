@@ -3,12 +3,18 @@ import '../model/finance/invoice_model.dart';
 import '../model/finance/payment_model.dart';
 import '../model/finance/kpi_model.dart';
 import '../model/finance/revenue_model.dart';
+import '../model/finance/expense_model.dart';
 
 abstract class FinanceRemoteDatasource {
   Future<List<InvoiceModel>> getDueInvoices();
   Future<List<PaymentModel>> getPendingPayments();
   Future<KpiModel> getKpiSummary();
   Future<List<RevenueModel>> getRevenueChart();
+
+  Future<List<ExpenseModel>> getExpenses();
+  Future<ExpenseModel> createExpense(ExpenseModel expense);
+  Future<ExpenseModel> updateExpense(ExpenseModel expense);
+  Future<void> deleteExpense(int id);
 }
 
 class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
@@ -65,12 +71,24 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
           (data['datasets'] as List).isNotEmpty) {
         List<dynamic> labels = data['labels'];
         List<dynamic> chartData = data['datasets'][0]['data'];
+        List<dynamic> monthlyData = (data['datasets'] as List).length > 1
+            ? data['datasets'][1]['data']
+            : [];
+        List<dynamic> dailyData = (data['datasets'] as List).length > 2
+            ? data['datasets'][2]['data']
+            : [];
 
         for (int i = 0; i < labels.length; i++) {
           result.add(
             RevenueModel(
               month: labels[i].toString(),
               total: double.tryParse(chartData[i].toString()) ?? 0.0,
+              monthlyRentTotal: monthlyData.length > i
+                  ? (double.tryParse(monthlyData[i].toString()) ?? 0.0)
+                  : 0.0,
+              dailyRentTotal: dailyData.length > i
+                  ? (double.tryParse(dailyData[i].toString()) ?? 0.0)
+                  : 0.0,
             ),
           );
         }
@@ -79,5 +97,35 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
     } catch (e) {
       rethrow;
     }
+  }
+
+  @override
+  Future<List<ExpenseModel>> getExpenses() async {
+    final response = await _dioClient.get('/finance/expenses');
+    final List<dynamic> data = response.data['data'] ?? [];
+    return data.map((json) => ExpenseModel.fromJson(json)).toList();
+  }
+
+  @override
+  Future<ExpenseModel> createExpense(ExpenseModel expense) async {
+    final response = await _dioClient.post(
+      '/finance/expenses',
+      data: expense.toJson(),
+    );
+    return ExpenseModel.fromJson(response.data['data']);
+  }
+
+  @override
+  Future<ExpenseModel> updateExpense(ExpenseModel expense) async {
+    final response = await _dioClient.put(
+      '/finance/expenses/${expense.id}',
+      data: expense.toJson(),
+    );
+    return ExpenseModel.fromJson(response.data['data']);
+  }
+
+  @override
+  Future<void> deleteExpense(int id) async {
+    await _dioClient.delete('/finance/expenses/$id');
   }
 }

@@ -111,6 +111,11 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                           icon: Icons.dashboard_outlined,
                           page: const FinanceDashboardRoute(),
                         ),
+                        SidebarItem(
+                          label: 'Pengeluaran',
+                          icon: Icons.receipt_long,
+                          page: const ExpenseListRoute(),
+                        ),
                       ],
                     ),
 
