@@ -49,7 +49,11 @@ class RouteConstant {
 
   // Modul Finance
   static const String financeDashboardName = 'finance/dashboard';
+<<<<<<< HEAD
 
   // Form Identitas Pengguna
   static const String identityFormName = 'profile/identity';
+=======
+  static const String financeExpenseName = 'finance/expenses';
+>>>>>>> 43b91d5 (Feat(add-page-finance-sidebar): add page expense)
 }

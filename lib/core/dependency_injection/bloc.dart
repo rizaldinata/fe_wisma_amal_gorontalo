@@ -10,6 +10,10 @@ import 'package:frontend/domain/usecase/finance/get_due_invoices_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_kpi_summary_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_pending_payments_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_revenue_chart_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_expenses_usecase.dart';
+import 'package:frontend/domain/usecase/finance/create_expense_usecase.dart';
+import 'package:frontend/domain/usecase/finance/update_expense_usecase.dart';
+import 'package:frontend/domain/usecase/finance/delete_expense_usecase.dart';
 import 'package:frontend/domain/usecase/permission/create_permission_usecase.dart';
 import 'package:frontend/domain/usecase/permission/delete_permission_usecase.dart';
 import 'package:frontend/domain/usecase/permission/get_permission_list_usecase.dart';
@@ -25,6 +29,7 @@ import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/detail_room/detail_room_bloc.dart';
 import 'package:frontend/presentation/bloc/form_room/form_room_bloc.dart';
 import 'package:frontend/presentation/bloc/finance_dashboard/finance_dashboard_bloc.dart';
+import 'package:frontend/presentation/bloc/expense/expense_bloc.dart';
 import 'package:frontend/presentation/bloc/permission/permission_bloc.dart';
 import 'package:frontend/presentation/bloc/room_list/room_bloc.dart';
 import 'package:frontend/presentation/bloc/maintenance_list/maintenance_list_bloc.dart';
@@ -101,6 +106,15 @@ Future<void> initializeBloc() async {
       serviceLocator.get<GetPendingPaymentsUseCase>(),
       serviceLocator.get<GetKpiSummaryUseCase>(),
       serviceLocator.get<GetRevenueChartUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<ExpenseBloc>(
+    () => ExpenseBloc(
+      getExpensesUseCase: serviceLocator.get<GetExpensesUseCase>(),
+      createExpenseUseCase: serviceLocator.get<CreateExpenseUseCase>(),
+      updateExpenseUseCase: serviceLocator.get<UpdateExpenseUseCase>(),
+      deleteExpenseUseCase: serviceLocator.get<DeleteExpenseUseCase>(),
     ),
   );
 

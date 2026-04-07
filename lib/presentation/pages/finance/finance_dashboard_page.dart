@@ -165,6 +165,18 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
           Colors.green,
         ),
         _buildStatCard(
+          'Pendapatan Bulanan',
+          formatRupiah(kpi.revenueMonthlyRents),
+          Icons.calendar_month,
+          Colors.purple,
+        ),
+        _buildStatCard(
+          'Pendapatan Harian',
+          formatRupiah(kpi.revenueDailyRents),
+          Icons.today,
+          Colors.teal,
+        ),
+        _buildStatCard(
           'Total Tunggakan',
           formatRupiah(kpi.dueInvoicesTotal),
           Icons.money_off,
@@ -262,7 +274,7 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   Tooltip(
-                    message: formatRupiah(data.total),
+                    message: "Total: ${formatRupiah(data.total)}\nBulanan: ${formatRupiah(data.monthlyRentTotal)}\nHarian: ${formatRupiah(data.dailyRentTotal)}",
                     child: Container(
                       width: 40,
                       height: barHeight == 0 ? 5 : barHeight,

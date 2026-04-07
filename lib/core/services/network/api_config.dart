@@ -28,7 +28,7 @@ class ApiConfig {
         case PRODUCTION:
           return ApiConfig(baseUrl: productionURL);
         case DEVELOP:
-          return ApiConfig(baseUrl: localURl);
+          return ApiConfig(baseUrl: 'http://127.0.0.1:8000');
         default:
           return ApiConfig(baseUrl: productionURL);
       }
@@ -43,7 +43,11 @@ class ApiConfig {
         case PRODUCTION:
           return ApiConfig(baseUrl: "$productionURL/api");
         case DEVELOP:
+<<<<<<< HEAD
           return ApiConfig(baseUrl: "$localURl/api");
+=======
+          return ApiConfig(baseUrl: 'http://127.0.0.1:8000/api');
+>>>>>>> 43b91d5 (Feat(add-page-finance-sidebar): add page expense)
         default:
           return ApiConfig(baseUrl: "$productionURL/api");
       }
