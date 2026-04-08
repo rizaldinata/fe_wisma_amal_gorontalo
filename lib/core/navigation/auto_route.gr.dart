@@ -9,15 +9,15 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-import 'package:auto_route/auto_route.dart' as _i21;
-import 'package:flutter/material.dart' as _i22;
-import 'package:frontend/domain/entity/inventory_entity.dart' as _i23;
-import 'package:frontend/domain/entity/maintenance_entity.dart' as _i24;
+import 'package:auto_route/auto_route.dart' as _i22;
+import 'package:flutter/material.dart' as _i23;
+import 'package:frontend/domain/entity/inventory_entity.dart' as _i24;
+import 'package:frontend/domain/entity/maintenance_entity.dart' as _i25;
 import 'package:frontend/presentation/pages/auth/login_page.dart' as _i11;
-import 'package:frontend/presentation/pages/auth/register_page.dart' as _i16;
+import 'package:frontend/presentation/pages/auth/register_page.dart' as _i17;
 import 'package:frontend/presentation/pages/dashboard/dashboard.dart' as _i4;
 import 'package:frontend/presentation/pages/detail_room/room_detail.dart'
-    as _i19;
+    as _i20;
 import 'package:frontend/presentation/pages/finance/finance_dashboard_page.dart'
     as _i5;
 import 'package:frontend/presentation/pages/inventory/inventory_form_page.dart'
@@ -36,26 +36,28 @@ import 'package:frontend/presentation/pages/permission/permission_page.dart'
 import 'package:frontend/presentation/pages/placeholder/placeholder_page.dart'
     as _i6;
 import 'package:frontend/presentation/pages/reservation_list/reservation_page.dart'
-    as _i17;
+    as _i18;
 import 'package:frontend/presentation/pages/resident/contract_resident_page.dart'
     as _i3;
 import 'package:frontend/presentation/pages/resident/guest_list_page.dart'
     as _i7;
+import 'package:frontend/presentation/pages/resident/profile_user_page.dart'
+    as _i16;
 import 'package:frontend/presentation/pages/resident/resident_page.dart'
-    as _i18;
+    as _i19;
 import 'package:frontend/presentation/pages/room_form/form_room.dart' as _i1;
-import 'package:frontend/presentation/pages/room_list/room_page.dart' as _i20;
+import 'package:frontend/presentation/pages/room_list/room_page.dart' as _i21;
 import 'package:frontend/presentation/widget/app_layout.dart' as _i2;
 
 /// generated route for
 /// [_i1.AddRoomPage]
-class AddRoomRoute extends _i21.PageRouteInfo<void> {
-  const AddRoomRoute({List<_i21.PageRouteInfo>? children})
+class AddRoomRoute extends _i22.PageRouteInfo<void> {
+  const AddRoomRoute({List<_i22.PageRouteInfo>? children})
     : super(AddRoomRoute.name, initialChildren: children);
 
   static const String name = 'AddRoomRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i1.AddRoomPage();
@@ -65,13 +67,13 @@ class AddRoomRoute extends _i21.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i2.AppLayoutPage]
-class AppLayoutRoute extends _i21.PageRouteInfo<void> {
-  const AppLayoutRoute({List<_i21.PageRouteInfo>? children})
+class AppLayoutRoute extends _i22.PageRouteInfo<void> {
+  const AppLayoutRoute({List<_i22.PageRouteInfo>? children})
     : super(AppLayoutRoute.name, initialChildren: children);
 
   static const String name = 'AppLayoutRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i2.AppLayoutPage();
@@ -81,13 +83,13 @@ class AppLayoutRoute extends _i21.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i3.ContractResidentPage]
-class ContractResidentRoute extends _i21.PageRouteInfo<void> {
-  const ContractResidentRoute({List<_i21.PageRouteInfo>? children})
+class ContractResidentRoute extends _i22.PageRouteInfo<void> {
+  const ContractResidentRoute({List<_i22.PageRouteInfo>? children})
     : super(ContractResidentRoute.name, initialChildren: children);
 
   static const String name = 'ContractResidentRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i3.ContractResidentPage();
@@ -97,13 +99,13 @@ class ContractResidentRoute extends _i21.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i4.DashboardPage]
-class DashboardRoute extends _i21.PageRouteInfo<void> {
-  const DashboardRoute({List<_i21.PageRouteInfo>? children})
+class DashboardRoute extends _i22.PageRouteInfo<void> {
+  const DashboardRoute({List<_i22.PageRouteInfo>? children})
     : super(DashboardRoute.name, initialChildren: children);
 
   static const String name = 'DashboardRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i4.DashboardPage();
@@ -113,11 +115,11 @@ class DashboardRoute extends _i21.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i1.EditRoomPage]
-class EditRoomRoute extends _i21.PageRouteInfo<EditRoomRouteArgs> {
+class EditRoomRoute extends _i22.PageRouteInfo<EditRoomRouteArgs> {
   EditRoomRoute({
-    _i22.Key? key,
+    _i23.Key? key,
     required int roomId,
-    List<_i21.PageRouteInfo>? children,
+    List<_i22.PageRouteInfo>? children,
   }) : super(
          EditRoomRoute.name,
          args: EditRoomRouteArgs(key: key, roomId: roomId),
@@ -127,7 +129,7 @@ class EditRoomRoute extends _i21.PageRouteInfo<EditRoomRouteArgs> {
 
   static const String name = 'EditRoomRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       final pathParams = data.inheritedPathParams;
@@ -142,7 +144,7 @@ class EditRoomRoute extends _i21.PageRouteInfo<EditRoomRouteArgs> {
 class EditRoomRouteArgs {
   const EditRoomRouteArgs({this.key, required this.roomId});
 
-  final _i22.Key? key;
+  final _i23.Key? key;
 
   final int roomId;
 
@@ -164,13 +166,13 @@ class EditRoomRouteArgs {
 
 /// generated route for
 /// [_i5.FinanceDashboardPage]
-class FinanceDashboardRoute extends _i21.PageRouteInfo<void> {
-  const FinanceDashboardRoute({List<_i21.PageRouteInfo>? children})
+class FinanceDashboardRoute extends _i22.PageRouteInfo<void> {
+  const FinanceDashboardRoute({List<_i22.PageRouteInfo>? children})
     : super(FinanceDashboardRoute.name, initialChildren: children);
 
   static const String name = 'FinanceDashboardRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i5.FinanceDashboardPage();
@@ -180,13 +182,13 @@ class FinanceDashboardRoute extends _i21.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i6.FinancePlaceholderPage]
-class FinancePlaceholderRoute extends _i21.PageRouteInfo<void> {
-  const FinancePlaceholderRoute({List<_i21.PageRouteInfo>? children})
+class FinancePlaceholderRoute extends _i22.PageRouteInfo<void> {
+  const FinancePlaceholderRoute({List<_i22.PageRouteInfo>? children})
     : super(FinancePlaceholderRoute.name, initialChildren: children);
 
   static const String name = 'FinancePlaceholderRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i6.FinancePlaceholderPage();
@@ -196,13 +198,13 @@ class FinancePlaceholderRoute extends _i21.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i7.GuestListPage]
-class GuestListRoute extends _i21.PageRouteInfo<void> {
-  const GuestListRoute({List<_i21.PageRouteInfo>? children})
+class GuestListRoute extends _i22.PageRouteInfo<void> {
+  const GuestListRoute({List<_i22.PageRouteInfo>? children})
     : super(GuestListRoute.name, initialChildren: children);
 
   static const String name = 'GuestListRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i7.GuestListPage();
@@ -212,9 +214,9 @@ class GuestListRoute extends _i21.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i6.InventoryAndMaintenancePlaceholderPage]
-class InventoryAndMaintenancePlaceholderRoute extends _i21.PageRouteInfo<void> {
+class InventoryAndMaintenancePlaceholderRoute extends _i22.PageRouteInfo<void> {
   const InventoryAndMaintenancePlaceholderRoute({
-    List<_i21.PageRouteInfo>? children,
+    List<_i22.PageRouteInfo>? children,
   }) : super(
          InventoryAndMaintenancePlaceholderRoute.name,
          initialChildren: children,
@@ -222,7 +224,7 @@ class InventoryAndMaintenancePlaceholderRoute extends _i21.PageRouteInfo<void> {
 
   static const String name = 'InventoryAndMaintenancePlaceholderRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i6.InventoryAndMaintenancePlaceholderPage();
@@ -232,11 +234,11 @@ class InventoryAndMaintenancePlaceholderRoute extends _i21.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i8.InventoryFormPage]
-class InventoryFormRoute extends _i21.PageRouteInfo<InventoryFormRouteArgs> {
+class InventoryFormRoute extends _i22.PageRouteInfo<InventoryFormRouteArgs> {
   InventoryFormRoute({
-    _i22.Key? key,
-    _i23.InventoryEntity? inventoryData,
-    List<_i21.PageRouteInfo>? children,
+    _i23.Key? key,
+    _i24.InventoryEntity? inventoryData,
+    List<_i22.PageRouteInfo>? children,
   }) : super(
          InventoryFormRoute.name,
          args: InventoryFormRouteArgs(key: key, inventoryData: inventoryData),
@@ -245,7 +247,7 @@ class InventoryFormRoute extends _i21.PageRouteInfo<InventoryFormRouteArgs> {
 
   static const String name = 'InventoryFormRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<InventoryFormRouteArgs>(
@@ -262,9 +264,9 @@ class InventoryFormRoute extends _i21.PageRouteInfo<InventoryFormRouteArgs> {
 class InventoryFormRouteArgs {
   const InventoryFormRouteArgs({this.key, this.inventoryData});
 
-  final _i22.Key? key;
+  final _i23.Key? key;
 
-  final _i23.InventoryEntity? inventoryData;
+  final _i24.InventoryEntity? inventoryData;
 
   @override
   String toString() {
@@ -284,13 +286,13 @@ class InventoryFormRouteArgs {
 
 /// generated route for
 /// [_i9.InventoryPage]
-class InventoryRoute extends _i21.PageRouteInfo<void> {
-  const InventoryRoute({List<_i21.PageRouteInfo>? children})
+class InventoryRoute extends _i22.PageRouteInfo<void> {
+  const InventoryRoute({List<_i22.PageRouteInfo>? children})
     : super(InventoryRoute.name, initialChildren: children);
 
   static const String name = 'InventoryRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i9.InventoryPage();
@@ -300,13 +302,13 @@ class InventoryRoute extends _i21.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i10.LandingPage]
-class LandingRoute extends _i21.PageRouteInfo<void> {
-  const LandingRoute({List<_i21.PageRouteInfo>? children})
+class LandingRoute extends _i22.PageRouteInfo<void> {
+  const LandingRoute({List<_i22.PageRouteInfo>? children})
     : super(LandingRoute.name, initialChildren: children);
 
   static const String name = 'LandingRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i10.LandingPage();
@@ -316,11 +318,11 @@ class LandingRoute extends _i21.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i11.LoginPage]
-class LoginRoute extends _i21.PageRouteInfo<LoginRouteArgs> {
+class LoginRoute extends _i22.PageRouteInfo<LoginRouteArgs> {
   LoginRoute({
-    _i22.Key? key,
+    _i23.Key? key,
     String? reason,
-    List<_i21.PageRouteInfo>? children,
+    List<_i22.PageRouteInfo>? children,
   }) : super(
          LoginRoute.name,
          args: LoginRouteArgs(key: key, reason: reason),
@@ -330,7 +332,7 @@ class LoginRoute extends _i21.PageRouteInfo<LoginRouteArgs> {
 
   static const String name = 'LoginRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       final queryParams = data.queryParams;
@@ -345,7 +347,7 @@ class LoginRoute extends _i21.PageRouteInfo<LoginRouteArgs> {
 class LoginRouteArgs {
   const LoginRouteArgs({this.key, this.reason});
 
-  final _i22.Key? key;
+  final _i23.Key? key;
 
   final String? reason;
 
@@ -368,11 +370,11 @@ class LoginRouteArgs {
 /// generated route for
 /// [_i12.MaintananceFormPage]
 class MaintananceFormRoute
-    extends _i21.PageRouteInfo<MaintananceFormRouteArgs> {
+    extends _i22.PageRouteInfo<MaintananceFormRouteArgs> {
   MaintananceFormRoute({
-    _i22.Key? key,
-    _i24.MaintenanceEntity? maintenanceData,
-    List<_i21.PageRouteInfo>? children,
+    _i23.Key? key,
+    _i25.MaintenanceEntity? maintenanceData,
+    List<_i22.PageRouteInfo>? children,
   }) : super(
          MaintananceFormRoute.name,
          args: MaintananceFormRouteArgs(
@@ -384,7 +386,7 @@ class MaintananceFormRoute
 
   static const String name = 'MaintananceFormRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<MaintananceFormRouteArgs>(
@@ -401,9 +403,9 @@ class MaintananceFormRoute
 class MaintananceFormRouteArgs {
   const MaintananceFormRouteArgs({this.key, this.maintenanceData});
 
-  final _i22.Key? key;
+  final _i23.Key? key;
 
-  final _i24.MaintenanceEntity? maintenanceData;
+  final _i25.MaintenanceEntity? maintenanceData;
 
   @override
   String toString() {
@@ -423,13 +425,13 @@ class MaintananceFormRouteArgs {
 
 /// generated route for
 /// [_i13.MaintanancePage]
-class MaintananceRoute extends _i21.PageRouteInfo<void> {
-  const MaintananceRoute({List<_i21.PageRouteInfo>? children})
+class MaintananceRoute extends _i22.PageRouteInfo<void> {
+  const MaintananceRoute({List<_i22.PageRouteInfo>? children})
     : super(MaintananceRoute.name, initialChildren: children);
 
   static const String name = 'MaintananceRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i13.MaintanancePage();
@@ -440,11 +442,11 @@ class MaintananceRoute extends _i21.PageRouteInfo<void> {
 /// generated route for
 /// [_i14.PermissionDetailPage]
 class PermissionDetailRoute
-    extends _i21.PageRouteInfo<PermissionDetailRouteArgs> {
+    extends _i22.PageRouteInfo<PermissionDetailRouteArgs> {
   PermissionDetailRoute({
-    _i22.Key? key,
+    _i23.Key? key,
     required int id,
-    List<_i21.PageRouteInfo>? children,
+    List<_i22.PageRouteInfo>? children,
   }) : super(
          PermissionDetailRoute.name,
          args: PermissionDetailRouteArgs(key: key, id: id),
@@ -454,7 +456,7 @@ class PermissionDetailRoute
 
   static const String name = 'PermissionDetailRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       final pathParams = data.inheritedPathParams;
@@ -469,7 +471,7 @@ class PermissionDetailRoute
 class PermissionDetailRouteArgs {
   const PermissionDetailRouteArgs({this.key, required this.id});
 
-  final _i22.Key? key;
+  final _i23.Key? key;
 
   final int id;
 
@@ -491,13 +493,13 @@ class PermissionDetailRouteArgs {
 
 /// generated route for
 /// [_i15.PermissionPage]
-class PermissionRoute extends _i21.PageRouteInfo<void> {
-  const PermissionRoute({List<_i21.PageRouteInfo>? children})
+class PermissionRoute extends _i22.PageRouteInfo<void> {
+  const PermissionRoute({List<_i22.PageRouteInfo>? children})
     : super(PermissionRoute.name, initialChildren: children);
 
   static const String name = 'PermissionRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i15.PermissionPage();
@@ -507,13 +509,13 @@ class PermissionRoute extends _i21.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i6.PermissionPlaceholderPage]
-class PermissionPlaceholderRoute extends _i21.PageRouteInfo<void> {
-  const PermissionPlaceholderRoute({List<_i21.PageRouteInfo>? children})
+class PermissionPlaceholderRoute extends _i22.PageRouteInfo<void> {
+  const PermissionPlaceholderRoute({List<_i22.PageRouteInfo>? children})
     : super(PermissionPlaceholderRoute.name, initialChildren: children);
 
   static const String name = 'PermissionPlaceholderRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i6.PermissionPlaceholderPage();
@@ -522,9 +524,25 @@ class PermissionPlaceholderRoute extends _i21.PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [_i16.RegisterPage]
-class RegisterRoute extends _i21.PageRouteInfo<RegisterRouteArgs> {
-  RegisterRoute({_i22.Key? key, List<_i21.PageRouteInfo>? children})
+/// [_i16.ProfileUserPage]
+class ProfileUserRoute extends _i22.PageRouteInfo<void> {
+  const ProfileUserRoute({List<_i22.PageRouteInfo>? children})
+    : super(ProfileUserRoute.name, initialChildren: children);
+
+  static const String name = 'ProfileUserRoute';
+
+  static _i22.PageInfo page = _i22.PageInfo(
+    name,
+    builder: (data) {
+      return const _i16.ProfileUserPage();
+    },
+  );
+}
+
+/// generated route for
+/// [_i17.RegisterPage]
+class RegisterRoute extends _i22.PageRouteInfo<RegisterRouteArgs> {
+  RegisterRoute({_i23.Key? key, List<_i22.PageRouteInfo>? children})
     : super(
         RegisterRoute.name,
         args: RegisterRouteArgs(key: key),
@@ -533,13 +551,13 @@ class RegisterRoute extends _i21.PageRouteInfo<RegisterRouteArgs> {
 
   static const String name = 'RegisterRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       final args = data.argsAs<RegisterRouteArgs>(
         orElse: () => const RegisterRouteArgs(),
       );
-      return _i16.RegisterPage(key: args.key);
+      return _i17.RegisterPage(key: args.key);
     },
   );
 }
@@ -547,7 +565,7 @@ class RegisterRoute extends _i21.PageRouteInfo<RegisterRouteArgs> {
 class RegisterRouteArgs {
   const RegisterRouteArgs({this.key});
 
-  final _i22.Key? key;
+  final _i23.Key? key;
 
   @override
   String toString() {
@@ -566,46 +584,46 @@ class RegisterRouteArgs {
 }
 
 /// generated route for
-/// [_i17.ReservationPage]
-class ReservationRoute extends _i21.PageRouteInfo<void> {
-  const ReservationRoute({List<_i21.PageRouteInfo>? children})
+/// [_i18.ReservationPage]
+class ReservationRoute extends _i22.PageRouteInfo<void> {
+  const ReservationRoute({List<_i22.PageRouteInfo>? children})
     : super(ReservationRoute.name, initialChildren: children);
 
   static const String name = 'ReservationRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
-      return const _i17.ReservationPage();
+      return const _i18.ReservationPage();
     },
   );
 }
 
 /// generated route for
-/// [_i18.ResidentPage]
-class ResidentRoute extends _i21.PageRouteInfo<void> {
-  const ResidentRoute({List<_i21.PageRouteInfo>? children})
+/// [_i19.ResidentPage]
+class ResidentRoute extends _i22.PageRouteInfo<void> {
+  const ResidentRoute({List<_i22.PageRouteInfo>? children})
     : super(ResidentRoute.name, initialChildren: children);
 
   static const String name = 'ResidentRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
-      return const _i18.ResidentPage();
+      return const _i19.ResidentPage();
     },
   );
 }
 
 /// generated route for
 /// [_i6.ResidentPlaceholderPage]
-class ResidentPlaceholderRoute extends _i21.PageRouteInfo<void> {
-  const ResidentPlaceholderRoute({List<_i21.PageRouteInfo>? children})
+class ResidentPlaceholderRoute extends _i22.PageRouteInfo<void> {
+  const ResidentPlaceholderRoute({List<_i22.PageRouteInfo>? children})
     : super(ResidentPlaceholderRoute.name, initialChildren: children);
 
   static const String name = 'ResidentPlaceholderRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i6.ResidentPlaceholderPage();
@@ -615,13 +633,13 @@ class ResidentPlaceholderRoute extends _i21.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i6.RolePlaceholderPage]
-class RolePlaceholderRoute extends _i21.PageRouteInfo<void> {
-  const RolePlaceholderRoute({List<_i21.PageRouteInfo>? children})
+class RolePlaceholderRoute extends _i22.PageRouteInfo<void> {
+  const RolePlaceholderRoute({List<_i22.PageRouteInfo>? children})
     : super(RolePlaceholderRoute.name, initialChildren: children);
 
   static const String name = 'RolePlaceholderRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i6.RolePlaceholderPage();
@@ -631,13 +649,13 @@ class RolePlaceholderRoute extends _i21.PageRouteInfo<void> {
 
 /// generated route for
 /// [_i6.RoomAndReservationPlaceholderPage]
-class RoomAndReservationPlaceholderRoute extends _i21.PageRouteInfo<void> {
-  const RoomAndReservationPlaceholderRoute({List<_i21.PageRouteInfo>? children})
+class RoomAndReservationPlaceholderRoute extends _i22.PageRouteInfo<void> {
+  const RoomAndReservationPlaceholderRoute({List<_i22.PageRouteInfo>? children})
     : super(RoomAndReservationPlaceholderRoute.name, initialChildren: children);
 
   static const String name = 'RoomAndReservationPlaceholderRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i6.RoomAndReservationPlaceholderPage();
@@ -646,12 +664,12 @@ class RoomAndReservationPlaceholderRoute extends _i21.PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [_i19.RoomDetailPage]
-class RoomDetailRoute extends _i21.PageRouteInfo<RoomDetailRouteArgs> {
+/// [_i20.RoomDetailPage]
+class RoomDetailRoute extends _i22.PageRouteInfo<RoomDetailRouteArgs> {
   RoomDetailRoute({
-    _i22.Key? key,
+    _i23.Key? key,
     required int roomId,
-    List<_i21.PageRouteInfo>? children,
+    List<_i22.PageRouteInfo>? children,
   }) : super(
          RoomDetailRoute.name,
          args: RoomDetailRouteArgs(key: key, roomId: roomId),
@@ -661,14 +679,14 @@ class RoomDetailRoute extends _i21.PageRouteInfo<RoomDetailRouteArgs> {
 
   static const String name = 'RoomDetailRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       final pathParams = data.inheritedPathParams;
       final args = data.argsAs<RoomDetailRouteArgs>(
         orElse: () => RoomDetailRouteArgs(roomId: pathParams.getInt('id')),
       );
-      return _i19.RoomDetailPage(key: args.key, roomId: args.roomId);
+      return _i20.RoomDetailPage(key: args.key, roomId: args.roomId);
     },
   );
 }
@@ -676,7 +694,7 @@ class RoomDetailRoute extends _i21.PageRouteInfo<RoomDetailRouteArgs> {
 class RoomDetailRouteArgs {
   const RoomDetailRouteArgs({this.key, required this.roomId});
 
-  final _i22.Key? key;
+  final _i23.Key? key;
 
   final int roomId;
 
@@ -697,30 +715,30 @@ class RoomDetailRouteArgs {
 }
 
 /// generated route for
-/// [_i20.RoomPage]
-class RoomRoute extends _i21.PageRouteInfo<void> {
-  const RoomRoute({List<_i21.PageRouteInfo>? children})
+/// [_i21.RoomPage]
+class RoomRoute extends _i22.PageRouteInfo<void> {
+  const RoomRoute({List<_i22.PageRouteInfo>? children})
     : super(RoomRoute.name, initialChildren: children);
 
   static const String name = 'RoomRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
-      return const _i20.RoomPage();
+      return const _i21.RoomPage();
     },
   );
 }
 
 /// generated route for
 /// [_i6.SettingPlaceholderPage]
-class SettingPlaceholderRoute extends _i21.PageRouteInfo<void> {
-  const SettingPlaceholderRoute({List<_i21.PageRouteInfo>? children})
+class SettingPlaceholderRoute extends _i22.PageRouteInfo<void> {
+  const SettingPlaceholderRoute({List<_i22.PageRouteInfo>? children})
     : super(SettingPlaceholderRoute.name, initialChildren: children);
 
   static const String name = 'SettingPlaceholderRoute';
 
-  static _i21.PageInfo page = _i21.PageInfo(
+  static _i22.PageInfo page = _i22.PageInfo(
     name,
     builder: (data) {
       return const _i6.SettingPlaceholderPage();

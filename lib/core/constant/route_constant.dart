@@ -19,6 +19,7 @@ class RouteConstant {
 
   // Manajemen penghuni
   static const String residentName = 'residents';
+  static const String residentProfileName = '$residentName/profile';
 
   // Manajemen kamar & reservasi
   static const String roomAndReservationName = 'room-reservations';
