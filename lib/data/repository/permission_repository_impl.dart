@@ -1,0 +1,51 @@
+import 'package:frontend/data/datasource/permission_datasource.dart';
+import 'package:frontend/data/model/auth/permission_model.dart';
+import 'package:frontend/domain/entity/permission_entity.dart';
+
+import 'package:frontend/domain/repository/permission_repository.dart';
+
+class PermissionRepositoryImpl implements PermissionRepository {
+  final PermissionDatasource datasource;
+
+  PermissionRepositoryImpl({required this.datasource});
+
+  @override
+  Future<List<PermissionEntity>> getPermissions() async {
+    try {
+      final response = await datasource.getPermissions();
+      return response.data.map((e) => e.toEntity()).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<PermissionEntity> createPermission(PermissionEntity permission) async {
+    try {
+      final response = await datasource.createPermission(
+        PermissionModel.fromEntity(permission),
+      );
+      return response.data.toEntity();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<PermissionEntity> updatePermission(PermissionEntity permission) async {
+    try {
+      final response = await datasource.updatePermission(
+        permission.id,
+        PermissionModel.fromEntity(permission),
+      );
+      return response.data.toEntity();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<bool> deletePermission(int id) async {
+    return await datasource.deletePermission(id);
+  }
+}

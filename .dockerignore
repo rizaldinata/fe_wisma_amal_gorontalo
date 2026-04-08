@@ -1,0 +1,11 @@
+.git
+.github
+build
+.dart_tool
+pubspec.lock
+ios
+android
+macos
+linux
+windows
+test
