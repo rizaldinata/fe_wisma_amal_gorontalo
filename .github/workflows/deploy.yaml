@@ -60,9 +60,9 @@ jobs:
           REMOTE_USER: ${{ secrets.REMOTE_USER }}
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          printf "%s" "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh -o StrictHostKeyChecking=no $REMOTE_USER@100.125.64.93 << 'EOF'
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no ${{ secrets.REMOTE_USER }}@100.125.64.93 "bash -s" << 'EOF'
             cd ~/wisma-amal-deploy
             docker compose pull frontend
             docker compose up -d frontend
