@@ -1,3 +1,4 @@
+name: Build and Deploy Frontend
 
 on:
   push:
@@ -64,4 +65,4 @@ jobs:
           ${{ secrets.SSH_PRIVATE_KEY }}
           EOF
           chmod 600 ~/.ssh/id_rsa
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "${{ secrets.REMOTE_USER }}@100.125.64.93" "cd ~/wisma-amal-deploy && docker compose pull frontend && docker compose up -d --force-recreate frontend"
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "${{ secrets.REMOTE_USER }}@100.125.64.93" "cd ~/wisma-amal-deploy && docker compose pull frontend && docker compose up -d frontend"

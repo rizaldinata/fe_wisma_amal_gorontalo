@@ -30,14 +30,14 @@ class MaintenanceRemoteDataSourceImpl implements MaintenanceRemoteDataSource {
 
   @override
   Future<List<MaintenanceRequestModel>> getMyRequests() async {
-    final response = await dioClient.get('/v1/maintenance/my-requests');
+    final response = await dioClient.get('/v1/damage-reports/my-reports');
     final data = response.data['data'] as List;
     return data.map((json) => MaintenanceRequestModel.fromJson(json)).toList();
   }
 
   @override
   Future<List<MaintenanceRequestModel>> getAllRequests() async {
-    final response = await dioClient.get('/v1/maintenance/admin/requests');
+    final response = await dioClient.get('/v1/damage-reports/admin/');
     final data = response.data['data'] as List;
     return data.map((json) => MaintenanceRequestModel.fromJson(json)).toList();
   }
@@ -45,11 +45,11 @@ class MaintenanceRemoteDataSourceImpl implements MaintenanceRemoteDataSource {
   @override
   Future<MaintenanceRequestModel> getReportById(int id) async {
     try {
-      final response = await dioClient.get('/v1/maintenance/requests/$id');
+      final response = await dioClient.get('/v1/damage-reports/$id');
       return MaintenanceRequestModel.fromJson(response.data['data']);
     } on AppException catch (e) {
       if (e.code == 403 || e.code == 404 || e.code == 401) {
-        final adminResponse = await dioClient.get('/v1/maintenance/admin/requests/$id');
+        final adminResponse = await dioClient.get('/v1/damage-reports/admin/$id');
         return MaintenanceRequestModel.fromJson(adminResponse.data['data']);
       }
       rethrow;
@@ -83,7 +83,7 @@ class MaintenanceRemoteDataSourceImpl implements MaintenanceRemoteDataSource {
       }
     }
 
-    final response = await dioClient.post('/v1/maintenance/requests', data: formData);
+    final response = await dioClient.post('/v1/damage-reports/', data: formData);
     return MaintenanceRequestModel.fromJson(response.data['data']);
   }
 
@@ -113,7 +113,7 @@ class MaintenanceRemoteDataSourceImpl implements MaintenanceRemoteDataSource {
       }
     }
 
-    final response = await dioClient.post('/v1/maintenance/admin/requests/$requestId/updates', data: formData);
+    final response = await dioClient.post('/v1/damage-reports/admin/$requestId/updates', data: formData);
     return MaintenanceTimelineModel.fromJson(response.data['data']);
   }
 }

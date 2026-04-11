@@ -5,6 +5,8 @@ import 'package:frontend/data/datasource/finance_datasource.dart';
 import 'package:frontend/data/datasource/permission_datasource.dart';
 import 'package:frontend/data/datasource/room_datasource.dart';
 import 'package:frontend/data/datasource/maintenance_remote_datasource.dart';
+import 'package:frontend/data/datasource/inventory_datasource.dart';
+import 'package:frontend/data/datasource/schedule_datasource.dart';
 
 Future<void> initializeDatasource() async {
   serviceLocator.registerFactory<AuthDatasource>(
@@ -25,5 +27,13 @@ Future<void> initializeDatasource() async {
 
   serviceLocator.registerFactory<MaintenanceRemoteDataSource>(
     () => MaintenanceRemoteDataSourceImpl(dioClient: serviceLocator<DioClient>()),
+  );
+
+  serviceLocator.registerFactory<InventoryRemoteDatasource>(
+    () => InventoryRemoteDatasourceImpl(dioClient: serviceLocator<DioClient>()),
+  );
+
+  serviceLocator.registerFactory<ScheduleRemoteDatasource>(
+    () => ScheduleRemoteDatasourceImpl(dioClient: serviceLocator<DioClient>()),
   );
 }

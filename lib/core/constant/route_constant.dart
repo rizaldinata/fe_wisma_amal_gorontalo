@@ -38,6 +38,7 @@ class RouteConstant {
   static const String inventoryForm = '$inventory/form';
   static const String maintanance = 'maintanance';
   static const String maintananceForm = '$maintanance/form';
+  static const String maintananceDetail = '$maintanance/detail';
 
   // Laporan Kerusakan
   static const String maintenanceReport = 'maintenance-reports';

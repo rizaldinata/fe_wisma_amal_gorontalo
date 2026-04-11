@@ -16,53 +16,47 @@ class ApiConfig {
 
   static const String currentMode = DEVELOP;
 
+  // static const String localURl = 'http://localhost:8000';
+  static const String localURl = 'https://api.wismaamal.com';
+  static const String productionURL = 'https://alfian.taild9066e.ts.net/be';
+
   factory ApiConfig.getServerUrl() {
     if (kReleaseMode) {
-      return ApiConfig(baseUrl: 'https://api.wismaamal.com');
+      return ApiConfig(baseUrl: productionURL);
     } else {
       switch (currentMode) {
         case PRODUCTION:
-          return ApiConfig(baseUrl: 'https://api.wismaamal.com');
+          return ApiConfig(baseUrl: productionURL);
         case DEVELOP:
-          return ApiConfig(baseUrl: 'http://localhost');
+          return ApiConfig(baseUrl: localURl);
         default:
-          return ApiConfig(baseUrl: 'https://api.wismaamal.com');
+          return ApiConfig(baseUrl: productionURL);
       }
     }
   }
 
   factory ApiConfig.getUrl() {
     if (kReleaseMode) {
-      return ApiConfig(baseUrl: 'https://api.wismaamal.com/api');
+      return ApiConfig(baseUrl: "$productionURL/api");
     } else {
       switch (currentMode) {
         case PRODUCTION:
-          return ApiConfig(baseUrl: 'https://api.wismaamal.com/api');
+          return ApiConfig(baseUrl: "$productionURL/api");
         case DEVELOP:
-          return ApiConfig(baseUrl: 'http://localhost/api');
+          return ApiConfig(baseUrl: "$localURl/api");
         default:
-          return ApiConfig(baseUrl: 'https://api.wismaamal.com/api');
+          return ApiConfig(baseUrl: "$productionURL/api");
       }
     }
   }
-
-  factory ApiConfig.defaultConfig() =>
-      const ApiConfig(baseUrl: 'https://localhost:8000/api');
-
-  factory ApiConfig.development() =>
-      const ApiConfig(baseUrl: 'http://localhost:8000/api');
-
-  factory ApiConfig.production() =>
-      const ApiConfig(baseUrl: 'https://api.wismaamal.com/api');
 
   static String getStorageUrl(String? path) {
     if (path == null || path.isEmpty) return '';
     final baseUrl = ApiConfig.getServerUrl().baseUrl;
 
-    // Remove all whitespace, newlines, and invisible control characters/non-ASCII chars
     String cleanPath = path
-        .replaceAll(RegExp(r'\s+'), '') // Remove all whitespace (including \n \r \t)
-        .replaceAll(RegExp(r'[^\x20-\x7E]'), '') // Remove non-printable/hidden characters
+        .replaceAll(RegExp(r'\s+'), '')
+        .replaceAll(RegExp(r'[^\x20-\x7E]'), '')
         .trim();
 
     if (cleanPath.startsWith('http')) return cleanPath;
