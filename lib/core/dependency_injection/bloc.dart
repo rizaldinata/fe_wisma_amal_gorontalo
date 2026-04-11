@@ -41,6 +41,12 @@ import 'package:frontend/domain/usecase/inventory/inventory_action_usecases.dart
 import 'package:frontend/presentation/bloc/inventory/inventory_action_bloc.dart';
 import 'package:frontend/presentation/bloc/inventory/inventory_list_bloc.dart';
 
+import 'package:frontend/domain/usecase/schedule/schedule_usecases.dart';
+import 'package:frontend/domain/usecase/schedule/add_schedule_update_usecase.dart';
+import 'package:frontend/presentation/bloc/schedule/schedule_list_bloc.dart';
+import 'package:frontend/presentation/bloc/schedule/schedule_action_bloc.dart';
+import 'package:frontend/presentation/bloc/schedule_detail/schedule_detail_bloc.dart';
+
 Future<void> initializeBloc() async {
   serviceLocator.registerFactory<AuthBloc>(
     () => AuthBloc(
@@ -131,6 +137,28 @@ Future<void> initializeBloc() async {
       createInventoryUseCase: serviceLocator.get<CreateInventoryUseCase>(),
       updateInventoryUseCase: serviceLocator.get<UpdateInventoryUseCase>(),
       deleteInventoryUseCase: serviceLocator.get<DeleteInventoryUseCase>(),
+    ),
+  );
+
+  // Schedule BLoCs
+  serviceLocator.registerFactory<ScheduleListBloc>(
+    () => ScheduleListBloc(
+      getSchedulesUseCase: serviceLocator.get<GetSchedulesUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<ScheduleActionBloc>(
+    () => ScheduleActionBloc(
+      createScheduleUseCase: serviceLocator.get<CreateScheduleUseCase>(),
+      updateScheduleUseCase: serviceLocator.get<UpdateScheduleUseCase>(),
+      deleteScheduleUseCase: serviceLocator.get<DeleteScheduleUseCase>(),
+      addScheduleUpdateUseCase: serviceLocator.get<AddScheduleUpdateUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<ScheduleDetailBloc>(
+    () => ScheduleDetailBloc(
+      getScheduleByIdUseCase: serviceLocator.get<GetScheduleByIdUseCase>(),
     ),
   );
 }

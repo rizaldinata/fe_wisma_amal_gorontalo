@@ -20,6 +20,9 @@ import 'package:frontend/data/datasource/maintenance_remote_datasource.dart';
 import 'package:frontend/data/repository/inventory_repository_impl.dart';
 import 'package:frontend/domain/repository/inventory_repository.dart';
 import 'package:frontend/data/datasource/inventory_datasource.dart';
+import 'package:frontend/data/repository/schedule_repository_impl.dart';
+import 'package:frontend/domain/repository/schedule_repository.dart';
+import 'package:frontend/data/datasource/schedule_datasource.dart';
 
 Future<void> initializeRepository() async {
   serviceLocator.registerFactory<AuthRepository>(
@@ -54,6 +57,12 @@ Future<void> initializeRepository() async {
   serviceLocator.registerFactory<InventoryRepository>(
     () => InventoryRepositoryImpl(
       remoteDatasource: serviceLocator<InventoryRemoteDatasource>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<ScheduleRepository>(
+    () => ScheduleRepositoryImpl(
+      remoteDatasource: serviceLocator<ScheduleRemoteDatasource>(),
     ),
   );
 }

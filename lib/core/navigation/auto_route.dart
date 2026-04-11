@@ -109,6 +109,11 @@ class AppRouter extends RootStackRouter {
           path: RouteConstant.maintananceForm,
           page: MaintananceFormRoute.page,
         ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.maintananceDetail,
+          page: MaintananceDetailRoute.page,
+        ),
 
         // laporan kerusakan
         AutoRoute(
