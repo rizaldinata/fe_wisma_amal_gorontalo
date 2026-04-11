@@ -31,6 +31,13 @@ import 'package:frontend/domain/usecase/maintenance/create_request_usecase.dart'
 import 'package:frontend/domain/usecase/maintenance/add_update_usecase.dart';
 import 'package:frontend/domain/repository/maintenance_repository.dart';
 
+import 'package:frontend/domain/repository/inventory_repository.dart';
+import 'package:frontend/domain/usecase/inventory/get_inventories_usecase.dart';
+import 'package:frontend/domain/usecase/inventory/inventory_action_usecases.dart';
+import 'package:frontend/domain/repository/schedule_repository.dart';
+import 'package:frontend/domain/usecase/schedule/schedule_usecases.dart';
+import 'package:frontend/domain/usecase/schedule/add_schedule_update_usecase.dart';
+
 Future<void> initializeUseCase() async {
   // Auth UseCases
   serviceLocator.registerFactory(
@@ -118,5 +125,42 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => AddUpdateUseCase(serviceLocator.get<MaintenanceRepository>()),
+  );
+
+  // Inventory UseCases
+  serviceLocator.registerFactory(
+    () => GetInventoriesUseCase(serviceLocator.get<InventoryRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetInventoryByIdUseCase(serviceLocator.get<InventoryRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateInventoryUseCase(serviceLocator.get<InventoryRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateInventoryUseCase(serviceLocator.get<InventoryRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => DeleteInventoryUseCase(serviceLocator.get<InventoryRepository>()),
+  );
+
+  // Schedule UseCases
+  serviceLocator.registerFactory(
+    () => GetSchedulesUseCase(serviceLocator.get<ScheduleRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetScheduleByIdUseCase(serviceLocator.get<ScheduleRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateScheduleUseCase(serviceLocator.get<ScheduleRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateScheduleUseCase(serviceLocator.get<ScheduleRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => DeleteScheduleUseCase(serviceLocator.get<ScheduleRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => AddScheduleUpdateUseCase(serviceLocator.get<ScheduleRepository>()),
   );
 }
