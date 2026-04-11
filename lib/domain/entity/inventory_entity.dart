@@ -35,106 +35,38 @@ enum InventoryCondition {
   static InventoryCondition fromString(String value) {
     switch (value.toLowerCase()) {
       case 'baik':
+      case 'good':
         return InventoryCondition.baik;
       case 'cukup':
+      case 'fair':
         return InventoryCondition.cukup;
       case 'rusak ringan':
+      case 'broken':
         return InventoryCondition.rusakRingan;
       case 'rusak berat':
+      case 'lost':
         return InventoryCondition.rusakBerat;
       default:
-        throw ArgumentError('Invalid inventory condition: $value');
+        // Defaulting to baik if parsing fails or provide a fallback
+        return InventoryCondition.baik;
+    }
+  }
+  
+  String toBackendString() {
+    switch (this) {
+      case InventoryCondition.baik:
+        return 'good';
+      case InventoryCondition.cukup:
+        return 'fair';
+      case InventoryCondition.rusakRingan:
+        return 'broken';
+      case InventoryCondition.rusakBerat:
+        return 'lost';
     }
   }
 
   static List<String> get displayNames =>
       InventoryCondition.values.map((e) => e.displayName).toList();
-}
-
-enum InventoryType {
-  umum,
-  alatKerja,
-  elektronik,
-  furniture;
-
-  String get displayName {
-    switch (this) {
-      case InventoryType.umum:
-        return 'Umum';
-      case InventoryType.alatKerja:
-        return 'Alat Kerja';
-      case InventoryType.elektronik:
-        return 'Elektronik';
-      case InventoryType.furniture:
-        return 'Furniture';
-    }
-  }
-
-  static InventoryType fromString(String value) {
-    switch (value.toLowerCase()) {
-      case 'umum':
-        return InventoryType.umum;
-      case 'alat kerja':
-        return InventoryType.alatKerja;
-      case 'elektronik':
-        return InventoryType.elektronik;
-      case 'furniture':
-        return InventoryType.furniture;
-      default:
-        throw ArgumentError('Invalid inventory type: $value');
-    }
-  }
-
-  static List<String> get displayNames =>
-      InventoryType.values.map((e) => e.displayName).toList();
-}
-
-enum InventoryCategory {
-  kebersihan,
-  makananMinuman,
-  alatKerja,
-  elektronik,
-  furniture,
-  lainnya;
-
-  String get displayName {
-    switch (this) {
-      case InventoryCategory.kebersihan:
-        return 'Kebersihan';
-      case InventoryCategory.makananMinuman:
-        return 'Makanan & Minuman';
-      case InventoryCategory.alatKerja:
-        return 'Alat Kerja';
-      case InventoryCategory.elektronik:
-        return 'Elektronik';
-      case InventoryCategory.furniture:
-        return 'Furniture';
-      case InventoryCategory.lainnya:
-        return 'Lainnya';
-    }
-  }
-
-  static InventoryCategory fromString(String value) {
-    switch (value.toLowerCase()) {
-      case 'kebersihan':
-        return InventoryCategory.kebersihan;
-      case 'makanan & minuman':
-        return InventoryCategory.makananMinuman;
-      case 'alat kerja':
-        return InventoryCategory.alatKerja;
-      case 'elektronik':
-        return InventoryCategory.elektronik;
-      case 'furniture':
-        return InventoryCategory.furniture;
-      case 'lainnya':
-        return InventoryCategory.lainnya;
-      default:
-        throw ArgumentError('Invalid inventory category: $value');
-    }
-  }
-
-  static List<String> get displayNames =>
-      InventoryCategory.values.map((e) => e.displayName).toList();
 }
 
 class InventoryEntity {
@@ -143,8 +75,7 @@ class InventoryEntity {
   final String keterangan;
   final int jumlah;
   final InventoryCondition kondisi;
-  final InventoryType jenis;
-  final InventoryCategory kategori;
+  final double? purchasePrice;
 
   const InventoryEntity({
     this.id,
@@ -152,8 +83,7 @@ class InventoryEntity {
     required this.keterangan,
     required this.jumlah,
     required this.kondisi,
-    required this.jenis,
-    required this.kategori,
+    this.purchasePrice,
   });
 
   InventoryEntity copyWith({
@@ -162,8 +92,7 @@ class InventoryEntity {
     String? keterangan,
     int? jumlah,
     InventoryCondition? kondisi,
-    InventoryType? jenis,
-    InventoryCategory? kategori,
+    double? purchasePrice,
   }) {
     return InventoryEntity(
       id: id ?? this.id,
@@ -171,8 +100,7 @@ class InventoryEntity {
       keterangan: keterangan ?? this.keterangan,
       jumlah: jumlah ?? this.jumlah,
       kondisi: kondisi ?? this.kondisi,
-      jenis: jenis ?? this.jenis,
-      kategori: kategori ?? this.kategori,
+      purchasePrice: purchasePrice ?? this.purchasePrice,
     );
   }
 
@@ -183,39 +111,8 @@ class InventoryEntity {
         keterangan: '',
         jumlah: 0,
         kondisi: InventoryCondition.baik,
-        jenis: InventoryType.umum,
-        kategori: InventoryCategory.lainnya,
+        purchasePrice: null,
       );
-
-  /// Convert to Map for compatibility / serialization
-  Map<String, dynamic> toMap() {
-    return {
-      if (id != null) 'id': id,
-      'nama': nama,
-      'keterangan': keterangan,
-      'jumlah': jumlah,
-      'kondisi': kondisi.displayName,
-      'jenis': jenis.displayName,
-      'kategori': kategori.displayName,
-    };
-  }
-
-  /// Create from Map (useful for model → entity conversion)
-  factory InventoryEntity.fromMap(Map<String, dynamic> map) {
-    return InventoryEntity(
-      id: map['id'] as int?,
-      nama: map['nama'] as String? ?? '',
-      keterangan: map['keterangan'] as String? ?? '',
-      jumlah: map['jumlah'] as int? ?? 0,
-      kondisi: InventoryCondition.fromString(
-        map['kondisi'] as String? ?? 'Baik',
-      ),
-      jenis: InventoryType.fromString(map['jenis'] as String? ?? 'Umum'),
-      kategori: InventoryCategory.fromString(
-        map['kategori'] as String? ?? 'Lainnya',
-      ),
-    );
-  }
 
   @override
   bool operator ==(Object other) {
@@ -226,15 +123,14 @@ class InventoryEntity {
         other.keterangan == keterangan &&
         other.jumlah == jumlah &&
         other.kondisi == kondisi &&
-        other.jenis == jenis &&
-        other.kategori == kategori;
+        other.purchasePrice == purchasePrice;
   }
 
   @override
   int get hashCode =>
-      Object.hash(id, nama, keterangan, jumlah, kondisi, jenis, kategori);
+      Object.hash(id, nama, keterangan, jumlah, kondisi, purchasePrice);
 
   @override
   String toString() =>
-      'InventoryEntity(id: $id, nama: $nama, jumlah: $jumlah, kondisi: ${kondisi.displayName}, jenis: ${jenis.displayName}, kategori: ${kategori.displayName})';
+      'InventoryEntity(id: $id, nama: $nama, jumlah: $jumlah, kondisi: ${kondisi.displayName}, purchasePrice: $purchasePrice)';
 }

@@ -1,9 +1,12 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
-import 'package:frontend/domain/entity/inventory_entity.dart';
+import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/domain/entity/table/tabel_colum.dart';
+import 'package:frontend/presentation/bloc/inventory/inventory_list_bloc.dart';
 import 'package:frontend/presentation/widget/core/table/table.dart';
+import 'package:intl/intl.dart';
 
 @RoutePage()
 class InventoryPage extends StatelessWidget {
@@ -11,107 +14,95 @@ class InventoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const InventoryView();
+    return BlocProvider(
+      create: (context) => serviceLocator<InventoryListBloc>()..add(FetchInventories()),
+      child: const InventoryView(),
+    );
   }
 }
 
 class InventoryView extends StatelessWidget {
   const InventoryView({super.key});
 
-  // TODO: Replace with real data from backend / BLoC
-  static final List<InventoryEntity> _dummyInventory = [
-    const InventoryEntity(
-      nama: 'Sapu lantai',
-      keterangan: 'Sapu lantai untuk lantai 2',
-      jumlah: 3,
-      kondisi: InventoryCondition.baik,
-      jenis: InventoryType.umum,
-      kategori: InventoryCategory.kebersihan,
-    ),
-    const InventoryEntity(
-      nama: 'Galon air',
-      keterangan: 'Galon air untuk lantai 3',
-      jumlah: 4,
-      kondisi: InventoryCondition.baik,
-      jenis: InventoryType.umum,
-      kategori: InventoryCategory.makananMinuman,
-    ),
-    const InventoryEntity(
-      nama: 'Obeng Set',
-      keterangan: 'Obeng perkakas',
-      jumlah: 2,
-      kondisi: InventoryCondition.cukup,
-      jenis: InventoryType.alatKerja,
-      kategori: InventoryCategory.alatKerja,
-    ),
-    const InventoryEntity(
-      nama: 'Bor Listrik',
-      keterangan: 'Bor listrik merk xiaomi',
-      jumlah: 2,
-      kondisi: InventoryCondition.cukup,
-      jenis: InventoryType.alatKerja,
-      kategori: InventoryCategory.alatKerja,
-    ),
-  ];
+  String _formatCurrency(double? price) {
+    if (price == null) return '-';
+    final formatCurrency = NumberFormat.currency(
+        locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    return formatCurrency.format(price);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        child: BlocBuilder<InventoryListBloc, InventoryListState>(
+          builder: (context, state) {
+            return SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Inventory',
-                    style: Theme.of(context).textTheme.headlineLarge,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Inventory',
+                        style: Theme.of(context).textTheme.headlineLarge,
+                      ),
+                      ElevatedButton.icon(
+                        onPressed: () async {
+                          final result = await context.router.push(InventoryFormRoute());
+                          if (result == true && context.mounted) {
+                            context.read<InventoryListBloc>().add(FetchInventories());
+                          }
+                        },
+                        icon: const Icon(Icons.add, size: 18),
+                        label: const Text('Tambah Inventaris'),
+                      ),
+                    ],
                   ),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      context.router.push(InventoryFormRoute());
-                    },
-                    icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Tambah Inventaris'),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              TableCard(
-                title: 'Inventaris',
-                columns: const [
-                  TableColumn(label: 'Nama', flex: 2),
-                  TableColumn(label: 'Keterangan', flex: 3),
-                  TableColumn(label: 'Jumlah'),
-                  TableColumn(label: 'Kondisi'),
-                  TableColumn(label: 'Jenis'),
-                  TableColumn(label: 'Kategori', flex: 2),
-                  TableColumn(label: '', flex: 1),
-                ],
-                rows: _dummyInventory.map((item) {
-                  return [
-                    item.nama,
-                    item.keterangan,
-                    item.jumlah.toString(),
-                    item.kondisi.displayName,
-                    item.jenis.displayName,
-                    item.kategori.displayName,
-                    _EditButton(
-                      onPressed: () {
-                        context.router.push(
-                          InventoryFormRoute(inventoryData: item),
-                        );
-                      },
+                  const SizedBox(height: 24),
+                  if (state is InventoryListLoading)
+                    const Center(child: CircularProgressIndicator())
+                  else if (state is InventoryListError)
+                    Center(child: Text('Gagal mengambil data: ${state.message}'))
+                  else if (state is InventoryListLoaded) ...[
+                    TableCard(
+                      title: 'Daftar Barang',
+                      columns: const [
+                        TableColumn(label: 'Nama', flex: 2),
+                        TableColumn(label: 'Keterangan', flex: 3),
+                        TableColumn(label: 'Jumlah'),
+                        TableColumn(label: 'Kondisi'),
+                        TableColumn(label: 'Harga Beli', flex: 2),
+                        TableColumn(label: '', flex: 1),
+                      ],
+                      rows: state.inventories.map((item) {
+                        return [
+                          item.nama,
+                          item.keterangan.isNotEmpty ? item.keterangan : '-',
+                          item.jumlah.toString(),
+                          item.kondisi.displayName,
+                          _formatCurrency(item.purchasePrice),
+                          _EditButton(
+                            onPressed: () async {
+                              final result = await context.router.push(
+                                InventoryFormRoute(inventoryData: item),
+                              );
+                              if (result == true && context.mounted) {
+                                context.read<InventoryListBloc>().add(FetchInventories());
+                              }
+                            },
+                          ),
+                        ];
+                      }).toList(),
                     ),
-                  ];
-                }).toList(),
+                  ],
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );

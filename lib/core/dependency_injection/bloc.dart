@@ -36,6 +36,11 @@ import 'package:frontend/domain/usecase/maintenance/get_detail_usecase.dart';
 import 'package:frontend/domain/usecase/maintenance/create_request_usecase.dart';
 import 'package:frontend/domain/usecase/maintenance/add_update_usecase.dart';
 
+import 'package:frontend/domain/usecase/inventory/get_inventories_usecase.dart';
+import 'package:frontend/domain/usecase/inventory/inventory_action_usecases.dart';
+import 'package:frontend/presentation/bloc/inventory/inventory_action_bloc.dart';
+import 'package:frontend/presentation/bloc/inventory/inventory_list_bloc.dart';
+
 Future<void> initializeBloc() async {
   serviceLocator.registerFactory<AuthBloc>(
     () => AuthBloc(
@@ -111,6 +116,21 @@ Future<void> initializeBloc() async {
     () => MaintenanceActionBloc(
       createRequestUseCase: serviceLocator.get<CreateRequestUseCase>(),
       addUpdateUseCase: serviceLocator.get<AddUpdateUseCase>(),
+    ),
+  );
+
+  // Inventory Blocs
+  serviceLocator.registerFactory<InventoryListBloc>(
+    () => InventoryListBloc(
+      getInventoriesUseCase: serviceLocator.get<GetInventoriesUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<InventoryActionBloc>(
+    () => InventoryActionBloc(
+      createInventoryUseCase: serviceLocator.get<CreateInventoryUseCase>(),
+      updateInventoryUseCase: serviceLocator.get<UpdateInventoryUseCase>(),
+      deleteInventoryUseCase: serviceLocator.get<DeleteInventoryUseCase>(),
     ),
   );
 }
