@@ -288,8 +288,8 @@ class _InventoryFormViewState extends State<_InventoryFormView> {
                             const SizedBox(width: 20),
                             Expanded(
                               child: CustomTextForm(
-                                title: 'Harga Beli (Rp)',
-                                hintText: 'Opsional',
+                                title: 'Total Harga Beli (Rp)',
+                                hintText: 'Total biaya pembelian',
                                 keyboardType: TextInputType.number,
                                 controller: _hargaBeliController,
                                 inputFormatters: [

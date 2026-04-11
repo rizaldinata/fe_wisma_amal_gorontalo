@@ -75,7 +75,7 @@ class InventoryView extends StatelessWidget {
                         TableColumn(label: 'Keterangan', flex: 3),
                         TableColumn(label: 'Jumlah'),
                         TableColumn(label: 'Kondisi'),
-                        TableColumn(label: 'Harga Beli', flex: 2),
+                        TableColumn(label: 'Total Harga', flex: 2),
                         TableColumn(label: '', flex: 1),
                       ],
                       rows: state.inventories.map((item) {
