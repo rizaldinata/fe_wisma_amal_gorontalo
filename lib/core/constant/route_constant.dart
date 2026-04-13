@@ -28,6 +28,8 @@ class RouteConstant {
   static const String editRoomName =
       '$roomAndReservationName/$detailRoomName/form';
   static const String reservationName = '$roomAndReservationName/reservations';
+  static const String reservationDetailFormName =
+      'reservation-detail-form';
   static const String roomScheduleName = '$roomAndReservationName/schedule';
 
   // Manajemen Keuangan
@@ -47,4 +49,7 @@ class RouteConstant {
 
   // Modul Finance
   static const String financeDashboardName = 'finance/dashboard';
+
+  // Form Identitas Pengguna
+  static const String identityFormName = 'profile/identity';
 }

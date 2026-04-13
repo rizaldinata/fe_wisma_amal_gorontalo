@@ -5,7 +5,6 @@ import 'package:frontend/core/navigation/auth_guard.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/domain/repository/auth_repository.dart';
 
-
 @AutoRouterConfig()
 class AppRouter extends RootStackRouter {
   @override
@@ -48,6 +47,17 @@ class AppRouter extends RootStackRouter {
           initial: true,
           path: RouteConstant.roomName,
           page: RoomRoute.page,
+        ),
+        // form identitas pengguna
+        AutoRoute(
+          // guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.identityFormName,
+          page: IdentityFormRoute.page,
+        ),
+        // form detail reservasi
+        AutoRoute(
+          path: RouteConstant.reservationDetailFormName,
+          page: ReservationDetailFormRoute.page,
         ),
         AutoRoute(
           path: RouteConstant.detailRoomName,

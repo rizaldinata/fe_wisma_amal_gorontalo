@@ -225,7 +225,12 @@ class RoomDetailView extends StatelessWidget {
                                   ),
                                   SizedBox(height: 20),
                                   BasicButton(
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      // Tambahkan navigasi ini:
+                                      context.router.push(
+                                        const IdentityFormRoute(),
+                                      );
+                                    },
                                     label: 'Pesan Sekarang',
                                   ),
                                 ],
