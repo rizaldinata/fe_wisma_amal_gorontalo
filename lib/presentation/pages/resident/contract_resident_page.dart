@@ -9,20 +9,9 @@ class ContractResidentPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Generate dummy data sesuai mockup
-    final contractRows = List<_ContractRowData>.generate(8, (index) {
-      return const _ContractRowData(
-        id: '1',
-        nama: 'Dwi Rahmawati',
-        kamar: 'AC203',
-        identitas: 'KTP',
-        masuk: '12 Agustus 2024',
-        keluar: '22 September 2025',
-      );
-    });
+    final List<_ContractRowData> contractRows = [];
 
     return Scaffold(
-      // Warna latar belakang abu-abu muda sesuai mockup
       backgroundColor: const Color(0xFFF3F4F6),
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(28, 22, 28, 28),
@@ -49,7 +38,6 @@ class ContractResidentPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Bagian Header Tabel (Judul & Aksi)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -71,13 +59,11 @@ class ContractResidentPage extends StatelessWidget {
                             ),
                       ),
                       const Spacer(),
-                      // Memanggil widget Search & Filter lokal
                       const ResidentTableAction(),
                     ],
                   ),
                   const SizedBox(height: 24),
 
-                  // Header Kolom Tabel
                   Container(
                     height: 34,
                     padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -99,7 +85,6 @@ class ContractResidentPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
 
-                  // Isi Data Tabel
                   ...contractRows.map((row) {
                     return Padding(
                       padding: const EdgeInsets.symmetric(vertical: 4),
@@ -112,7 +97,6 @@ class ContractResidentPage extends StatelessWidget {
                           _BodyCell(value: row.masuk, flex: 3, align: TextAlign.center),
                           _BodyCell(value: row.keluar, flex: 3, align: TextAlign.center),
 
-                          // Kolom Aksi (Tombol icon Mata warna gelap)
                           Expanded(
                             flex: 1,
                             child: Align(
@@ -138,9 +122,6 @@ class ContractResidentPage extends StatelessWidget {
   }
 }
 
-// -----------------------------------------------------------------------------
-// PRIVATE WIDGETS (Helper khusus untuk merender baris & kolom halaman ini)
-// -----------------------------------------------------------------------------
 
 class _HeaderCell extends StatelessWidget {
   const _HeaderCell({
@@ -243,7 +224,7 @@ class _ActionSquareButton extends StatelessWidget {
   }
 }
 
-// Data Model Dummy
+// Data Model
 class _ContractRowData {
   const _ContractRowData({
     required this.id,
