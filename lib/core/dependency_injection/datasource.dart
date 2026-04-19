@@ -5,8 +5,7 @@ import 'package:frontend/data/datasource/finance_datasource.dart';
 import 'package:frontend/data/datasource/permission_datasource.dart';
 import 'package:frontend/data/datasource/room_datasource.dart';
 import 'package:frontend/data/datasource/maintenance_remote_datasource.dart';
-import 'package:frontend/data/datasource/inventory_datasource.dart';
-import 'package:frontend/data/datasource/schedule_datasource.dart';
+import 'package:frontend/data/datasource/setting_datasource.dart';
 
 Future<void> initializeDatasource() async {
   serviceLocator.registerFactory<AuthDatasource>(
@@ -29,11 +28,16 @@ Future<void> initializeDatasource() async {
     () => MaintenanceRemoteDataSourceImpl(dioClient: serviceLocator<DioClient>()),
   );
 
+<<<<<<< HEAD
   serviceLocator.registerFactory<InventoryRemoteDatasource>(
     () => InventoryRemoteDatasourceImpl(dioClient: serviceLocator<DioClient>()),
   );
 
   serviceLocator.registerFactory<ScheduleRemoteDatasource>(
     () => ScheduleRemoteDatasourceImpl(dioClient: serviceLocator<DioClient>()),
+=======
+  serviceLocator.registerLazySingleton<SettingDatasource>(
+    () => SettingDatasourceImpl(serviceLocator.get<DioClient>()),
+>>>>>>> 86d495e (Feat(add page setting): improve page finance & add page setting ui)
   );
 }

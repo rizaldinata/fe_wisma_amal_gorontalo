@@ -8,23 +8,18 @@ class ExpenseModel extends ExpenseEntity {
     required super.date,
     super.category,
     super.notes,
+    super.isIntegrated,
   });
 
   factory ExpenseModel.fromJson(Map<String, dynamic> json) {
-    String safeDate = json['expense_date']?.toString() ?? '';
-    if (safeDate.isEmpty) {
-      safeDate = DateTime.now().toIso8601String();
-    }
-
     return ExpenseModel(
       id: json['id'] ?? 0,
       title: json['title'] ?? '',
-      amount: json['amount'] != null
-          ? double.tryParse(json['amount'].toString()) ?? 0.0
-          : 0.0,
-      date: safeDate,
-      category: json['category'],
-      notes: json['notes'],
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      date: json['expense_date'] ?? json['created_at'] ?? '',
+      category: json['source'],
+      notes: json['description'],
+      isIntegrated: json['is_integrated'] ?? false,
     );
   }
 
@@ -34,7 +29,8 @@ class ExpenseModel extends ExpenseEntity {
       'amount': amount,
       'expense_date': date,      
       'category': category,
-      'description': notes,      
+      'description': notes,  
+      'is_integrated': isIntegrated,    
     };
   }
 }

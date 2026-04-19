@@ -1,6 +1,5 @@
 import 'package:frontend/domain/entity/finance/kpi_entity.dart';
 import 'package:frontend/domain/entity/finance/revenue_entity.dart';
-
 import '../../domain/entity/finance/invoice_entity.dart';
 import '../../domain/entity/finance/payment_entity.dart';
 import '../../domain/entity/finance/expense_entity.dart';
@@ -17,6 +16,16 @@ class FinanceRepositoryImpl implements FinanceRepository {
   Future<List<InvoiceEntity>> getDueInvoices() async {
     try {
       final models = await remoteDatasource.getDueInvoices();
+      return models;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<InvoiceEntity>> getInvoices() async {
+    try {
+      final models = await remoteDatasource.getInvoices();
       return models;
     } catch (e) {
       rethrow;
@@ -77,5 +86,25 @@ class FinanceRepositoryImpl implements FinanceRepository {
   @override
   Future<void> deleteExpense(int id) async {
     return await remoteDatasource.deleteExpense(id);
+  }
+
+  @override
+  Future<bool> verifyPayment(int paymentId, bool isApproved, String? adminNotes) async {
+    try {
+      await remoteDatasource.verifyPayment(paymentId, isApproved, adminNotes);
+      return true;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<bool> refundPayment(int paymentId, String reason) async {
+    try {
+      await remoteDatasource.refundPayment(paymentId, reason);
+      return true;
+    } catch (e) {
+      rethrow;
+    }
   }
 }

@@ -4,9 +4,11 @@ import '../model/finance/payment_model.dart';
 import '../model/finance/kpi_model.dart';
 import '../model/finance/revenue_model.dart';
 import '../model/finance/expense_model.dart';
+import '../model/base_response_model.dart';
 
 abstract class FinanceRemoteDatasource {
   Future<List<InvoiceModel>> getDueInvoices();
+  Future<List<InvoiceModel>> getInvoices();
   Future<List<PaymentModel>> getPendingPayments();
   Future<KpiModel> getKpiSummary();
   Future<List<RevenueModel>> getRevenueChart();
@@ -15,6 +17,8 @@ abstract class FinanceRemoteDatasource {
   Future<ExpenseModel> createExpense(ExpenseModel expense);
   Future<ExpenseModel> updateExpense(ExpenseModel expense);
   Future<void> deleteExpense(int id);
+  Future<void> verifyPayment(int paymentId, bool isApproved, String? adminNotes);
+  Future<void> refundPayment(int paymentId, String reason);
 }
 
 class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
@@ -26,6 +30,17 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
   Future<List<InvoiceModel>> getDueInvoices() async {
     try {
       final response = await _dioClient.get('/finance/dashboard/due-invoices');
+      final List<dynamic> data = response.data['data'] ?? [];
+      return data.map((json) => InvoiceModel.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<InvoiceModel>> getInvoices() async {
+    try {
+      final response = await _dioClient.get('/finance/invoices');
       final List<dynamic> data = response.data['data'] ?? [];
       return data.map((json) => InvoiceModel.fromJson(json)).toList();
     } catch (e) {
@@ -127,5 +142,35 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
   @override
   Future<void> deleteExpense(int id) async {
     await _dioClient.delete('/finance/expenses/$id');
+  }
+
+  @override
+  Future<void> verifyPayment(int paymentId, bool isApproved, String? adminNotes) async {
+    try {
+      await _dioClient.post(
+        '/finance/payments/$paymentId/verify',
+        data: {
+          'is_approved': isApproved,
+          'admin_notes': adminNotes,
+        },
+      );
+    } catch (e) {
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> refundPayment(int paymentId, String reason) async {
+    try {
+      await _dioClient.post(
+        '/finance/payments/$paymentId/refund',
+        data: {
+          'reason': reason,
+        },
+      );
+    } catch (e) {
+      rethrow;
+    }
   }
 }

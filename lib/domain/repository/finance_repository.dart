@@ -6,6 +6,7 @@ import '../entity/finance/expense_entity.dart';
 
 abstract class FinanceRepository {
   Future<List<InvoiceEntity>> getDueInvoices();
+  Future<List<InvoiceEntity>> getInvoices();
   Future<List<PaymentEntity>> getPendingPayments();
   Future<KpiEntity> getKpiSummary();
   Future<List<RevenueEntity>> getRevenueChart();
@@ -15,4 +16,10 @@ abstract class FinanceRepository {
   Future<ExpenseEntity> createExpense(ExpenseEntity expense);
   Future<ExpenseEntity> updateExpense(ExpenseEntity expense);
   Future<void> deleteExpense(int id);
+
+  //verifikasi pembayaran
+  Future<bool> verifyPayment(int paymentId, bool isApproved, String? adminNotes);
+
+  //refund pembayaran
+  Future<bool> refundPayment(int paymentId, String reason);
 }

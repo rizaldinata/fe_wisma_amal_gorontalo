@@ -5,6 +5,7 @@ class ExpenseEntity {
   final String date;
   final String? category;
   final String? notes;
+  final bool isIntegrated;
 
   ExpenseEntity({
     required this.id,
@@ -13,5 +14,6 @@ class ExpenseEntity {
     required this.date,
     this.category,
     this.notes,
+    this.isIntegrated = false,
   });
 }
