@@ -23,6 +23,7 @@ class RegisterPage extends StatelessWidget {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController passwordConfirmController =
       TextEditingController();
+  final TextEditingController phoneNumberController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -45,20 +46,20 @@ class RegisterPage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 50),
               child: Row(
                 children: [
-                  Text(
-                    'Wisma Amal',
-                    style: StyleConstant.customTextStyle.copyWith(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  // Text(
+                  //   'Wisma Amal',
+                  //   style: StyleConstant.customTextStyle.copyWith(
+                  //     fontSize: 25,
+                  //     fontWeight: FontWeight.bold,
+                  //   ),
+                  // ),
                 ],
               ),
             ),
           ),
           Center(
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 700, maxHeight: 1000),
+              constraints: BoxConstraints(maxWidth: 900, maxHeight: 1000),
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 30, horizontal: 40),
                 decoration: BoxDecoration(
@@ -73,7 +74,7 @@ class RegisterPage extends StatelessWidget {
                   ],
                 ),
                 // height: 700,
-                width: 600,
+                // width: 600,
                 child: BlocConsumer<AuthBloc, AuthState>(
                   listener: (context, state) {
                     if (state.status.isFailure) {
@@ -113,34 +114,57 @@ class RegisterPage extends StatelessWidget {
                             ),
                           ),
                           SizedBox(height: 30),
-                          CustomTextForm(
-                            controller: usernameController,
-                            title: 'Username',
-                            hintText: 'John Doe',
-                            isRequired: true,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Username tidak boleh kosong';
-                              }
+                          Row(
+                            children: [
+                              Expanded(
+                                child: CustomTextForm(
+                                  controller: usernameController,
+                                  title: 'Username',
+                                  hintText: 'John Doe',
+                                  isRequired: true,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Username tidak boleh kosong';
+                                    }
 
-                              return null;
-                            },
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              SizedBox(width: 20),
+                              Expanded(
+                                child: CustomTextForm(
+                                  controller: emailController,
+                                  title: 'Email',
+                                  hintText: 'johnDoe@mail.com',
+                                  isRequired: true,
+                                  keyboardType: TextInputType.emailAddress,
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'Email tidak boleh kosong';
+                                    }
+                                    if (!RegExp(
+                                      r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                    ).hasMatch(value)) {
+                                      return 'Format email tidak valid';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                            ],
                           ),
+
                           SizedBox(height: 20),
                           CustomTextForm(
-                            controller: emailController,
-                            title: 'Email',
-                            hintText: 'johnDoe@mail.com',
+                            controller: phoneNumberController,
+                            title: 'Nomor Telepon',
+                            hintText: '08123456789',
                             isRequired: true,
-                            keyboardType: TextInputType.emailAddress,
+                            keyboardType: TextInputType.phone,
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'Email tidak boleh kosong';
-                              }
-                              if (!RegExp(
-                                r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$',
-                              ).hasMatch(value)) {
-                                return 'Format email tidak valid';
+                                return 'Nomor telepon tidak boleh kosong';
                               }
                               return null;
                             },
@@ -204,6 +228,8 @@ class RegisterPage extends StatelessWidget {
                                           password: passwordController.text,
                                           passwordConfirm:
                                               passwordConfirmController.text,
+                                          phoneNumber:
+                                              phoneNumberController.text,
                                         ),
                                       );
                                     } else {

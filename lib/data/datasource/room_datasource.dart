@@ -20,6 +20,11 @@ class RoomDatasource {
       return BaseResponseModel<List<RoomModel>>.fromJson(response.data, (json) {
         if (json is List) {
           return json.map((e) => RoomModel.fromJson(e)).toList();
+        } else if (json is Map && json.containsKey('data')) {
+          final data = json['data'];
+          if (data is List) {
+            return data.map((e) => RoomModel.fromJson(e)).toList();
+          }
         }
         return [];
       });

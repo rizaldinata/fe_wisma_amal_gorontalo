@@ -16,8 +16,8 @@ class ApiConfig {
 
   static const String currentMode = DEVELOP;
 
-  // static const String localURl = 'http://localhost:8000';
-  static const String localURl = 'https://api.wismaamal.com';
+  static const String localURl = 'http://localhost:8000';
+  // static const String localURl = 'https://api.wismaamal.com';
   static const String productionURL = 'https://alfian.taild9066e.ts.net/be';
 
   factory ApiConfig.getServerUrl() {
