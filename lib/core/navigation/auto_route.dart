@@ -78,6 +78,8 @@ class AppRouter extends RootStackRouter {
           path: RouteConstant.roomScheduleName,
           page: RoomScheduleRoute.page,
         ),
+       
+
 
         // manajemen keuangan
         AutoRoute(
@@ -89,6 +91,16 @@ class AppRouter extends RootStackRouter {
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: RouteConstant.financeExpenseName,
           page: ExpenseListRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.financeInvoiceName,
+          page: InvoiceListRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.paymentVerificationName,
+          page: PaymentVerificationRoute.page,
         ),
 
         // manajemen inventaris
@@ -136,7 +148,7 @@ class AppRouter extends RootStackRouter {
         AutoRoute(
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: RouteConstant.settingName,
-          page: SettingPlaceholderRoute.page,
+          page: SettingRoute.page,
         ),
       ],
     ),

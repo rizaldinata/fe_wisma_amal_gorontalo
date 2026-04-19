@@ -204,19 +204,23 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
                                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                               ),
                               const SizedBox(width: 8),
-                              PopupMenuButton<String>(
-                                onSelected: (value) {
-                                  if (value == 'edit') {
-                                    _showExpenseDialog(expense);
-                                  } else if (value == 'delete') {
-                                    _confirmDelete(expense);
-                                  }
-                                },
-                                itemBuilder: (context) => [
-                                  const PopupMenuItem(value: 'edit', child: Text('Ubah')),
-                                  const PopupMenuItem(value: 'delete', child: Text('Hapus', style: TextStyle(color: Colors.red))),
-                                ],
-                              ),
+                              
+                              if (expense.isIntegrated)
+                                CustomChip(label: 'Sistem', color: Colors.blue.shade100)
+                              else
+                                PopupMenuButton<String>(
+                                  onSelected: (value) {
+                                    if (value == 'edit') {
+                                      _showExpenseDialog(expense);
+                                    } else if (value == 'delete') {
+                                      _confirmDelete(expense);
+                                    }
+                                  },
+                                  itemBuilder: (context) => [
+                                    const PopupMenuItem(value: 'edit', child: Text('Ubah')),
+                                    const PopupMenuItem(value: 'delete', child: Text('Hapus', style: TextStyle(color: Colors.red))),
+                                  ],
+                                ),
                             ],
                           ),
                         ),

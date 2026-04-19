@@ -3,12 +3,16 @@ import 'package:frontend/domain/repository/auth_repository.dart';
 import 'package:frontend/domain/repository/finance_repository.dart';
 import 'package:frontend/domain/repository/permission_repository.dart';
 import 'package:frontend/domain/repository/room_repository.dart';
+import 'package:frontend/domain/repository/setting_repository.dart';
 import 'package:frontend/domain/usecase/auth/check_session_usecase.dart';
 import 'package:frontend/domain/usecase/auth/get_permissions_usecase.dart';
 import 'package:frontend/domain/usecase/auth/is_logged_in_usecase.dart';
 import 'package:frontend/domain/usecase/auth/login_usecase.dart';
 import 'package:frontend/domain/usecase/auth/logout_usecase.dart';
 import 'package:frontend/domain/usecase/auth/register_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_invoices_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_settings_usecase.dart';
+import 'package:frontend/domain/usecase/setting/update_settings_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_due_invoices_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_kpi_summary_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_pending_payments_usecase.dart';
@@ -34,6 +38,8 @@ import 'package:frontend/domain/usecase/maintenance/get_detail_usecase.dart';
 import 'package:frontend/domain/usecase/maintenance/create_request_usecase.dart';
 import 'package:frontend/domain/usecase/maintenance/add_update_usecase.dart';
 import 'package:frontend/domain/repository/maintenance_repository.dart';
+import 'package:frontend/domain/usecase/finance/verify_payment_usecase.dart';
+import 'package:frontend/domain/usecase/finance/refund_payment_usecase.dart';
 
 Future<void> initializeUseCase() async {
   // Auth UseCases
@@ -95,6 +101,9 @@ Future<void> initializeUseCase() async {
 
   // Finance UseCases
   serviceLocator.registerFactory(
+    () => GetInvoicesUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
     () => GetDueInvoicesUseCase(serviceLocator.get<FinanceRepository>()),
   );
   serviceLocator.registerFactory(
@@ -117,6 +126,20 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => DeleteExpenseUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => VerifyPaymentUseCase(serviceLocator.get<FinanceRepository>()),
+  );  
+  serviceLocator.registerFactory(
+    () => RefundPaymentUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+
+  // Setting UseCases
+  serviceLocator.registerFactory(
+    () => GetSettingsUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateBulkSettingsUseCase(serviceLocator.get<SettingRepository>()),
   );
 
   // Maintenance UseCases

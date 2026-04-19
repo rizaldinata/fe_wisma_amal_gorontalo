@@ -39,11 +39,6 @@ class InventoryAndMaintenancePlaceholderPage extends EmptyPlaceholderPage {
     : super(title: 'Inventaris & Pemeliharaan');
 }
 
-// wrapper untuk menu pengaturan
-@RoutePage(name: 'SettingPlaceholderRoute')
-class SettingPlaceholderPage extends EmptyPlaceholderPage {
-  const SettingPlaceholderPage({super.key}) : super(title: 'Pengaturan');
-}
 
 class EmptyPlaceholderPage extends StatelessWidget {
   final String title;

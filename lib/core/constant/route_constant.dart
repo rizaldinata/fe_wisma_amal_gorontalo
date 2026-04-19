@@ -47,4 +47,6 @@ class RouteConstant {
   // Modul Finance
   static const String financeDashboardName = 'finance/dashboard';
   static const String financeExpenseName = 'finance/expenses';
+  static const String financeInvoiceName = 'finance/invoices';
+  static const String paymentVerificationName = 'finance/payment-verification';
 }
