@@ -16,8 +16,8 @@ class ApiConfig {
 
   static const String currentMode = DEVELOP;
 
-  // static const String localURl = 'http://localhost:8000';
-  static const String localURl = 'https://api.wismaamal.com';
+  static const String localURl = 'http://localhost:8000';
+  // static const String localURl = 'https://api.wismaamal.com';
   static const String productionURL = 'https://alfian.taild9066e.ts.net/be';
 
   factory ApiConfig.getServerUrl() {
@@ -43,11 +43,7 @@ class ApiConfig {
         case PRODUCTION:
           return ApiConfig(baseUrl: "$productionURL/api");
         case DEVELOP:
-<<<<<<< HEAD
           return ApiConfig(baseUrl: "$localURl/api");
-=======
-          return ApiConfig(baseUrl: 'http://127.0.0.1:8000/api');
->>>>>>> 43b91d5 (Feat(add-page-finance-sidebar): add page expense)
         default:
           return ApiConfig(baseUrl: "$productionURL/api");
       }

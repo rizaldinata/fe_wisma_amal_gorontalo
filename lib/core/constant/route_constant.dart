@@ -28,8 +28,7 @@ class RouteConstant {
   static const String editRoomName =
       '$roomAndReservationName/$detailRoomName/form';
   static const String reservationName = '$roomAndReservationName/reservations';
-  static const String reservationDetailFormName =
-      'reservation-detail-form';
+  static const String reservationDetailFormName = 'reservation-detail-form';
   static const String roomScheduleName = '$roomAndReservationName/schedule';
 
   // Manajemen Keuangan
@@ -49,16 +48,12 @@ class RouteConstant {
 
   // Modul Finance
   static const String financeDashboardName = 'finance/dashboard';
-<<<<<<< HEAD
 
   // Form Identitas Pengguna
   static const String identityFormName = 'profile/identity';
-=======
+
   static const String financeExpenseName = 'finance/expenses';
-<<<<<<< HEAD
->>>>>>> 43b91d5 (Feat(add-page-finance-sidebar): add page expense)
-=======
+
   static const String financeInvoiceName = 'finance/invoices';
   static const String paymentVerificationName = 'finance/payment-verification';
->>>>>>> 86d495e (Feat(add page setting): improve page finance & add page setting ui)
 }
