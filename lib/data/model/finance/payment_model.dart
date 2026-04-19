@@ -9,6 +9,8 @@ class PaymentModel extends PaymentEntity {
     super.transactionId,
     required super.status,
     super.adminNotes,
+    required super.amount,
+    required super.paymentDate,
   });
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) {
@@ -20,6 +22,8 @@ class PaymentModel extends PaymentEntity {
       transactionId: json['transaction_id'],
       status: json['status'] ?? 'pending',
       adminNotes: json['admin_notes'],
+      amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      paymentDate: json['payment_date'] ?? json['created_at'] ?? '', 
     );
   }
 }

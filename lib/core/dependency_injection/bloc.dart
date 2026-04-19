@@ -10,6 +10,10 @@ import 'package:frontend/domain/usecase/finance/get_due_invoices_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_kpi_summary_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_pending_payments_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_revenue_chart_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_expenses_usecase.dart';
+import 'package:frontend/domain/usecase/finance/create_expense_usecase.dart';
+import 'package:frontend/domain/usecase/finance/update_expense_usecase.dart';
+import 'package:frontend/domain/usecase/finance/delete_expense_usecase.dart';
 import 'package:frontend/domain/usecase/permission/create_permission_usecase.dart';
 import 'package:frontend/domain/usecase/permission/delete_permission_usecase.dart';
 import 'package:frontend/domain/usecase/permission/get_permission_list_usecase.dart';
@@ -25,6 +29,12 @@ import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/detail_room/detail_room_bloc.dart';
 import 'package:frontend/presentation/bloc/form_room/form_room_bloc.dart';
 import 'package:frontend/presentation/bloc/finance_dashboard/finance_dashboard_bloc.dart';
+import 'package:frontend/domain/usecase/finance/get_invoices_usecase.dart';
+import 'package:frontend/presentation/bloc/invoice/invoice_bloc.dart';
+import 'package:frontend/presentation/bloc/setting/setting_bloc.dart';
+import 'package:frontend/domain/usecase/setting/get_settings_usecase.dart';
+import 'package:frontend/domain/usecase/setting/update_settings_usecase.dart';
+import 'package:frontend/presentation/bloc/expense/expense_bloc.dart';
 import 'package:frontend/presentation/bloc/permission/permission_bloc.dart';
 import 'package:frontend/presentation/bloc/room_list/room_bloc.dart';
 import 'package:frontend/presentation/bloc/maintenance_list/maintenance_list_bloc.dart';
@@ -35,6 +45,9 @@ import 'package:frontend/domain/usecase/maintenance/get_all_requests_usecase.dar
 import 'package:frontend/domain/usecase/maintenance/get_detail_usecase.dart';
 import 'package:frontend/domain/usecase/maintenance/create_request_usecase.dart';
 import 'package:frontend/domain/usecase/maintenance/add_update_usecase.dart';
+import 'package:frontend/domain/usecase/finance/verify_payment_usecase.dart';
+import 'package:frontend/domain/usecase/finance/refund_payment_usecase.dart';
+import 'package:frontend/presentation/bloc/payment_verification/payment_verification_bloc.dart';
 
 import 'package:frontend/domain/usecase/inventory/get_inventories_usecase.dart';
 import 'package:frontend/domain/usecase/inventory/inventory_action_usecases.dart';
@@ -101,6 +114,36 @@ Future<void> initializeBloc() async {
       serviceLocator.get<GetPendingPaymentsUseCase>(),
       serviceLocator.get<GetKpiSummaryUseCase>(),
       serviceLocator.get<GetRevenueChartUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<InvoiceBloc>(
+    () => InvoiceBloc(
+      getInvoicesUseCase: serviceLocator.get<GetInvoicesUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<SettingBloc>(
+    () => SettingBloc(
+      getSettingsUseCase: serviceLocator.get<GetSettingsUseCase>(),
+      updateBulkSettingsUseCase: serviceLocator.get<UpdateBulkSettingsUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<ExpenseBloc>(
+    () => ExpenseBloc(
+      getExpensesUseCase: serviceLocator.get<GetExpensesUseCase>(),
+      createExpenseUseCase: serviceLocator.get<CreateExpenseUseCase>(),
+      updateExpenseUseCase: serviceLocator.get<UpdateExpenseUseCase>(),
+      deleteExpenseUseCase: serviceLocator.get<DeleteExpenseUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<PaymentVerificationBloc>(
+    () => PaymentVerificationBloc(
+      getPendingPaymentsUseCase: serviceLocator.get<GetPendingPaymentsUseCase>(),
+      verifyPaymentUseCase: serviceLocator.get<VerifyPaymentUseCase>(),
+      refundPaymentUseCase: serviceLocator.get<RefundPaymentUseCase>(),
     ),
   );
 

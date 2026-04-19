@@ -111,6 +111,21 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                           icon: Icons.dashboard_outlined,
                           page: const FinanceDashboardRoute(),
                         ),
+                        SidebarItem(
+                          label: 'Pengeluaran',
+                          icon: Icons.receipt_long,
+                          page: const ExpenseListRoute(),
+                        ),
+                        SidebarItem(
+                          label: 'Daftar Tagihan',
+                          icon: Icons.description_outlined,
+                          page: const InvoiceListRoute(),
+                        ),
+                        SidebarItem(
+                          label: 'Verifikasi Pembayaran',
+                          icon: Icons.check_circle_outline,
+                          page: const PaymentVerificationRoute(),
+                        ),
                       ],
                     ),
 
@@ -141,7 +156,7 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                   SidebarItem(
                     label: 'Pengaturan',
                     icon: Icons.settings,
-                    page: SettingPlaceholderRoute(),
+                    page: const SettingRoute(),
                   ),
                 ],
               ),
