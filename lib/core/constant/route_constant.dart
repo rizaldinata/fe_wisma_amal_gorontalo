@@ -16,6 +16,10 @@ class RouteConstant {
   static const String permissionName = 'permissions';
   static const String roleName = 'role';
   static const String settingName = 'setting';
+  static const String userManagementName = 'users';
+  static const String profileName = 'profile';
+  static const String editProfileName = 'edit-profile';
+  static const String changePasswordName = 'change-password';
 
   // Manajemen penghuni
   static const String residentName = 'residents';

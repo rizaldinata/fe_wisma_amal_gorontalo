@@ -83,28 +83,40 @@ class _RoomViewState extends State<RoomView>
                   const SizedBox(height: 32),
                   Row(
                     children: [
-                      StatCard(
-                        title: 'Total Rooms',
-                        count: state.rooms.length.toString(),
-                        color: Colors.green.shade100,
+                      Expanded(
+                        child: StatCard(
+                          title: 'Total Rooms',
+                          count: state.rooms.length.toString(),
+                          color: Colors.green.shade100,
+                          icon: const Icon(Icons.bed_outlined),
+                        ),
                       ),
                       const SizedBox(width: 16),
-                      StatCard(
-                        title: 'Available Rooms',
-                        count: state.availableRooms.length.toString(),
-                        color: colorScheme.primaryContainer,
+                      Expanded(
+                        child: StatCard(
+                          title: 'Available',
+                          count: state.availableRooms.length.toString(),
+                          color: colorScheme.primaryContainer,
+                          icon: const Icon(Icons.check_circle_outline),
+                        ),
                       ),
                       const SizedBox(width: 16),
-                      StatCard(
-                        title: 'Occupied Rooms',
-                        count: state.occupiedRooms.length.toString(),
-                        color: colorScheme.errorContainer,
+                      Expanded(
+                        child: StatCard(
+                          title: 'Occupied',
+                          count: state.occupiedRooms.length.toString(),
+                          color: colorScheme.errorContainer,
+                          icon: const Icon(Icons.person_outline),
+                        ),
                       ),
                       const SizedBox(width: 16),
-                      StatCard(
-                        title: 'Maintenance Rooms',
-                        count: state.maintenanceRooms.length.toString(),
-                        color: colorScheme.secondaryContainer,
+                      Expanded(
+                        child: StatCard(
+                          title: 'Maintenance',
+                          count: state.maintenanceRooms.length.toString(),
+                          color: colorScheme.secondaryContainer,
+                          icon: const Icon(Icons.build_circle_outlined),
+                        ),
                       ),
                     ],
                   ),
@@ -235,7 +247,7 @@ class _RoomViewState extends State<RoomView>
             physics: const NeverScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: constraints.maxWidth ~/ 300,
+              crossAxisCount: (constraints.maxWidth ~/ 300).clamp(1, 10),
               crossAxisSpacing: 30,
               mainAxisSpacing: 16,
               childAspectRatio: 0.6,
