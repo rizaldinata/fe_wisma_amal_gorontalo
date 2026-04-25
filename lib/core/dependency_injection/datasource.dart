@@ -8,6 +8,7 @@ import 'package:frontend/data/datasource/room_datasource.dart';
 import 'package:frontend/data/datasource/maintenance_remote_datasource.dart';
 import 'package:frontend/data/datasource/schedule_datasource.dart';
 import 'package:frontend/data/datasource/setting_datasource.dart';
+import 'package:frontend/data/datasource/resident_datasource.dart';
 
 Future<void> initializeDatasource() async {
   serviceLocator.registerFactory<AuthDatasource>(
@@ -40,5 +41,8 @@ Future<void> initializeDatasource() async {
   );
   serviceLocator.registerLazySingleton<SettingDatasource>(
     () => SettingDatasourceImpl(serviceLocator.get<DioClient>()),
+  );
+  serviceLocator.registerFactory<ResidentDatasource>(
+    () => ResidentDatasource(dioClient: serviceLocator<DioClient>()),
   );
 }

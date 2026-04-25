@@ -6,12 +6,27 @@ import 'package:frontend/core/constant/endpoint_constant.dart';
 import 'package:frontend/core/services/network/dio_client.dart';
 import 'package:frontend/data/model/base_response_model.dart';
 import 'package:frontend/data/model/room/room_model.dart';
+import 'package:frontend/data/model/room/room_schedule_model.dart';
 import 'package:file_picker/file_picker.dart';
 
 class RoomDatasource {
   final DioClient dioClient;
 
   RoomDatasource({required this.dioClient});
+
+  Future<BaseResponseModel<List<RoomScheduleModel>>> getRoomSchedules() async {
+    try {
+      final response = await dioClient.get(EndpointConstant.roomSchedulesEndpoint);
+      return BaseResponseModel<List<RoomScheduleModel>>.fromJson(response.data, (json) {
+        if (json is List) {
+          return json.map((e) => RoomScheduleModel.fromJson(e)).toList();
+        }
+        return [];
+      });
+    } catch (e) {
+      rethrow;
+    }
+  }
 
   Future<BaseResponseModel<List<RoomModel>>> getRooms() async {
     try {

@@ -51,6 +51,7 @@ class RouteConstant {
 
   // Form Identitas Pengguna
   static const String identityFormName = 'profile/identity';
+  static const String completeProfileName = 'profile/complete';
 
   static const String financeExpenseName = 'finance/expenses';
 

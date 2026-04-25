@@ -60,6 +60,11 @@ class AppRouter extends RootStackRouter {
           page: ReservationDetailFormRoute.page,
         ),
         AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.completeProfileName,
+          page: CompleteProfileRoute.page,
+        ),
+        AutoRoute(
           path: RouteConstant.detailRoomName,
           page: RoomDetailRoute.page,
         ),
@@ -84,12 +89,10 @@ class AppRouter extends RootStackRouter {
           page: ReservationRoute.page,
         ),
         AutoRoute(
-          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          guards: [],
           path: RouteConstant.roomScheduleName,
           page: RoomScheduleRoute.page,
         ),
-       
-
 
         // manajemen keuangan
         AutoRoute(
