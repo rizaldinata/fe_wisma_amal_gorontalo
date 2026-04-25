@@ -51,6 +51,13 @@ import 'package:frontend/domain/usecase/finance/verify_payment_usecase.dart';
 import 'package:frontend/domain/usecase/finance/refund_payment_usecase.dart';
 import 'package:frontend/presentation/bloc/payment_verification/payment_verification_bloc.dart';
 import 'package:frontend/presentation/bloc/resident/complete_profile/complete_profile_bloc.dart';
+import 'package:frontend/presentation/bloc/user_management/user_management_bloc.dart';
+import 'package:frontend/presentation/bloc/profile/profile_bloc.dart';
+import 'package:frontend/domain/usecase/profile/profile_usecases.dart';
+import 'package:frontend/domain/usecase/user/get_all_users_usecase.dart';
+import 'package:frontend/domain/usecase/user/update_user_usecase.dart';
+import 'package:frontend/domain/usecase/user/delete_user_usecase.dart';
+import 'package:frontend/domain/usecase/user/create_user_usecase.dart';
 
 import 'package:frontend/domain/usecase/inventory/get_inventories_usecase.dart';
 import 'package:frontend/domain/usecase/inventory/inventory_action_usecases.dart';
@@ -216,5 +223,22 @@ Future<void> initializeBloc() async {
 
   serviceLocator.registerFactory<CompleteProfileBloc>(
     () => CompleteProfileBloc(repository: serviceLocator()),
+  );
+
+  serviceLocator.registerFactory<UserManagementBloc>(
+    () => UserManagementBloc(
+      getAllUsersUseCase: serviceLocator.get<GetAllUsersUseCase>(),
+      updateUserUseCase: serviceLocator.get<UpdateUserUseCase>(),
+      deleteUserUseCase: serviceLocator.get<DeleteUserUseCase>(),
+      createUserUseCase: serviceLocator.get<CreateUserUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<ProfileBloc>(
+    () => ProfileBloc(
+      getProfileUseCase: serviceLocator.get<GetProfileUseCase>(),
+      updateProfileUseCase: serviceLocator.get<UpdateProfileUseCase>(),
+      changePasswordUseCase: serviceLocator.get<ChangePasswordUseCase>(),
+    ),
   );
 }

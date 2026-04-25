@@ -4,6 +4,13 @@ import 'package:frontend/domain/repository/finance_repository.dart';
 import 'package:frontend/domain/repository/permission_repository.dart';
 import 'package:frontend/domain/repository/room_repository.dart';
 import 'package:frontend/domain/repository/setting_repository.dart';
+import 'package:frontend/domain/repository/user_repository.dart';
+import 'package:frontend/domain/repository/profile_repository.dart';
+import 'package:frontend/domain/usecase/user/get_all_users_usecase.dart';
+import 'package:frontend/domain/usecase/user/update_user_usecase.dart';
+import 'package:frontend/domain/usecase/user/delete_user_usecase.dart';
+import 'package:frontend/domain/usecase/user/create_user_usecase.dart';
+import 'package:frontend/domain/usecase/profile/profile_usecases.dart';
 import 'package:frontend/domain/usecase/auth/check_session_usecase.dart';
 import 'package:frontend/domain/usecase/auth/get_permissions_usecase.dart';
 import 'package:frontend/domain/usecase/auth/is_logged_in_usecase.dart';
@@ -205,5 +212,30 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => AddScheduleUpdateUseCase(serviceLocator.get<ScheduleRepository>()),
+  );
+  
+  // User Management UseCases
+  serviceLocator.registerFactory(
+    () => GetAllUsersUseCase(serviceLocator.get<UserRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateUserUseCase(serviceLocator.get<UserRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => DeleteUserUseCase(serviceLocator.get<UserRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateUserUseCase(serviceLocator.get<UserRepository>()),
+  );
+
+  // Profile UseCases
+  serviceLocator.registerFactory(
+    () => GetProfileUseCase(serviceLocator.get<ProfileRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateProfileUseCase(serviceLocator.get<ProfileRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => ChangePasswordUseCase(serviceLocator.get<ProfileRepository>()),
   );
 }

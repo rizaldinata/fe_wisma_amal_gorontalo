@@ -9,6 +9,8 @@ import 'package:frontend/data/datasource/maintenance_remote_datasource.dart';
 import 'package:frontend/data/datasource/schedule_datasource.dart';
 import 'package:frontend/data/datasource/setting_datasource.dart';
 import 'package:frontend/data/datasource/resident_datasource.dart';
+import 'package:frontend/data/datasource/user_datasource.dart';
+import 'package:frontend/data/datasource/profile_datasource.dart';
 
 Future<void> initializeDatasource() async {
   serviceLocator.registerFactory<AuthDatasource>(
@@ -44,5 +46,11 @@ Future<void> initializeDatasource() async {
   );
   serviceLocator.registerFactory<ResidentDatasource>(
     () => ResidentDatasource(dioClient: serviceLocator<DioClient>()),
+  );
+  serviceLocator.registerFactory<UserDataSource>(
+    () => UserDataSource(serviceLocator<DioClient>()),
+  );
+  serviceLocator.registerFactory<ProfileDataSource>(
+    () => ProfileDataSource(serviceLocator<DioClient>()),
   );
 }

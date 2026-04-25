@@ -28,6 +28,12 @@ import 'package:frontend/domain/repository/schedule_repository.dart';
 import 'package:frontend/domain/repository/setting_repository.dart';
 import 'package:frontend/data/repository/resident_repository_impl.dart';
 import 'package:frontend/domain/repository/resident_repository.dart';
+import 'package:frontend/data/datasource/user_datasource.dart';
+import 'package:frontend/data/repository/user_repository_impl.dart';
+import 'package:frontend/domain/repository/user_repository.dart';
+import 'package:frontend/data/datasource/profile_datasource.dart';
+import 'package:frontend/data/repository/profile_repository_impl.dart';
+import 'package:frontend/domain/repository/profile_repository.dart';
 
 Future<void> initializeRepository() async {
   serviceLocator.registerFactory<AuthRepository>(
@@ -78,5 +84,11 @@ Future<void> initializeRepository() async {
   );
   serviceLocator.registerFactory<ResidentRepository>(
     () => ResidentRepositoryImpl(datasource: serviceLocator.get()),
+  );
+  serviceLocator.registerFactory<UserRepository>(
+    () => UserRepositoryImpl(serviceLocator.get<UserDataSource>()),
+  );
+  serviceLocator.registerFactory<ProfileRepository>(
+    () => ProfileRepositoryImpl(serviceLocator.get<ProfileDataSource>()),
   );
 }

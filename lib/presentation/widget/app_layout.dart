@@ -61,6 +61,13 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                       page: RolePlaceholderRoute(),
                       hasAccess: true,
                     ),
+                  if (context.can(PermissionKeys.viewUser))
+                    SidebarItem(
+                      label: 'Manajemen Akun',
+                      icon: Icons.manage_accounts,
+                      page: const UserManagementRoute(),
+                      hasAccess: true,
+                    ),
 
                   // manajemen penghuni (Admin)
                   if (context.can(PermissionKeys.accessResidentManagement))
@@ -209,6 +216,12 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                       label: 'Pengaturan',
                       icon: Icons.settings,
                       page: const SettingRoute(),
+                    ),
+                  if (!isGuest)
+                    SidebarItem(
+                      label: 'Profil Saya',
+                      icon: Icons.person_outline,
+                      page: const ProfileRoute(),
                     ),
                 ],
               ),

@@ -25,7 +25,6 @@ class ResidentPage extends StatelessWidget {
     });
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
       body: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(28, 22, 28, 28),
         child: Column(
