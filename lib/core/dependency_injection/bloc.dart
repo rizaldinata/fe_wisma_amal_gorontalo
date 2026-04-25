@@ -20,6 +20,7 @@ import 'package:frontend/domain/usecase/permission/get_permission_list_usecase.d
 import 'package:frontend/domain/usecase/permission/update_permission_usecase.dart';
 import 'package:frontend/domain/usecase/room/create_room_usecase.dart';
 import 'package:frontend/domain/usecase/room/delete_room_usecase.dart';
+import 'package:frontend/domain/usecase/room/get_room_schedules_usecase.dart';
 import 'package:frontend/domain/usecase/room/get_rooms_usecase.dart';
 import 'package:frontend/domain/usecase/room/update_room_usecase.dart';
 import 'package:frontend/domain/usecase/room/get_room_by_id_usecase.dart';
@@ -37,6 +38,7 @@ import 'package:frontend/domain/usecase/setting/update_settings_usecase.dart';
 import 'package:frontend/presentation/bloc/expense/expense_bloc.dart';
 import 'package:frontend/presentation/bloc/permission/permission_bloc.dart';
 import 'package:frontend/presentation/bloc/room_list/room_bloc.dart';
+import 'package:frontend/presentation/bloc/room/room_schedule/room_schedule_bloc.dart';
 import 'package:frontend/presentation/bloc/maintenance_list/maintenance_list_bloc.dart';
 import 'package:frontend/presentation/bloc/maintenance_detail/maintenance_detail_bloc.dart';
 import 'package:frontend/presentation/bloc/maintenance_action/maintenance_action_bloc.dart';
@@ -48,6 +50,7 @@ import 'package:frontend/domain/usecase/maintenance/add_update_usecase.dart';
 import 'package:frontend/domain/usecase/finance/verify_payment_usecase.dart';
 import 'package:frontend/domain/usecase/finance/refund_payment_usecase.dart';
 import 'package:frontend/presentation/bloc/payment_verification/payment_verification_bloc.dart';
+import 'package:frontend/presentation/bloc/resident/complete_profile/complete_profile_bloc.dart';
 
 import 'package:frontend/domain/usecase/inventory/get_inventories_usecase.dart';
 import 'package:frontend/domain/usecase/inventory/inventory_action_usecases.dart';
@@ -105,6 +108,12 @@ Future<void> initializeBloc() async {
       updateRoomUseCase: serviceLocator.get<UpdateRoomUseCase>(),
       deleteRoomImageUseCase: serviceLocator.get<DeleteRoomImageUseCase>(),
       uploadRoomImageUseCase: serviceLocator.get<UploadRoomImageUseCase>(),
+    ),
+  );
+  
+  serviceLocator.registerFactory<RoomScheduleBloc>(
+    () => RoomScheduleBloc(
+      getRoomSchedulesUseCase: serviceLocator.get<GetRoomSchedulesUseCase>(),
     ),
   );
 
@@ -203,5 +212,9 @@ Future<void> initializeBloc() async {
     () => ScheduleDetailBloc(
       getScheduleByIdUseCase: serviceLocator.get<GetScheduleByIdUseCase>(),
     ),
+  );
+
+  serviceLocator.registerFactory<CompleteProfileBloc>(
+    () => CompleteProfileBloc(repository: serviceLocator()),
   );
 }

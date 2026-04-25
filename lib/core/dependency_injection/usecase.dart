@@ -29,6 +29,7 @@ import 'package:frontend/domain/usecase/room/create_room_usecase.dart';
 import 'package:frontend/domain/usecase/room/delete_room_image_usecase.dart';
 import 'package:frontend/domain/usecase/room/delete_room_usecase.dart';
 import 'package:frontend/domain/usecase/room/get_room_by_id_usecase.dart';
+import 'package:frontend/domain/usecase/room/get_room_schedules_usecase.dart';
 import 'package:frontend/domain/usecase/room/get_rooms_usecase.dart';
 import 'package:frontend/domain/usecase/room/update_room_usecase.dart';
 import 'package:frontend/domain/usecase/room/upload_room_image_usecase.dart';
@@ -72,6 +73,9 @@ Future<void> initializeUseCase() async {
   // Room UseCases
   serviceLocator.registerFactory(
     () => GetRoomsUseCase(serviceLocator.get<RoomRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetRoomSchedulesUseCase(serviceLocator.get<RoomRepository>()),
   );
   serviceLocator.registerFactory(
     () => CreateRoomUseCase(serviceLocator.get<RoomRepository>()),

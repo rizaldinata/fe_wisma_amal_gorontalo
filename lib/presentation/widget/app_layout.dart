@@ -31,6 +31,8 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
       backgroundColor: StyleConstant.backgroundColor,
       body: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
+          final isGuest = !state.isLoggedIn;
+
           return Row(
             children: [
               CustomSidebar(
@@ -50,36 +52,71 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                       label: 'Izin',
                       icon: Icons.check_circle_outline,
                       page: const PermissionRoute(),
-                      hasAccess: context.can('access-permission-management'),
+                      hasAccess: true,
                     ),
-                  SidebarItem(
-                    label: 'Peran',
-                    icon: Icons.security,
-                    page: RolePlaceholderRoute(),
-                    hasAccess: true,
-                  ),
+                  if (context.can(PermissionKeys.viewRole))
+                    SidebarItem(
+                      label: 'Peran',
+                      icon: Icons.security,
+                      page: RolePlaceholderRoute(),
+                      hasAccess: true,
+                    ),
 
-                  // manajemen penghuni
-                  SidebarItem(
-                    label: 'Penghuni',
-                    icon: Icons.people,
-                    hasAccess: true,
-                    children: [
-                      SidebarItem(
-                        label: 'penghuni',
-                        icon: Icons.person,
-                        page: const ResidentRoute(),
-                      ),
-                    ],
-                  ),
+                  // manajemen penghuni (Admin)
+                  if (context.can(PermissionKeys.accessResidentManagement))
+                    SidebarItem(
+                      label: 'Manajemen Penghuni',
+                      icon: Icons.admin_panel_settings,
+                      hasAccess: true,
+                      children: [
+                        SidebarItem(
+                          label: 'Daftar Penghuni',
+                          icon: Icons.people,
+                          page: const ResidentRoute(),
+                        ),
+                      ],
+                    ),
+
+                  // Area Penghuni (Khusus Resident)
+                  if (context.can(PermissionKeys.accessResidentArea))
+                    SidebarItem(
+                      label: 'Area Penghuni',
+                      icon: Icons.home_work_outlined,
+                      hasAccess: true,
+                      children: [
+                        SidebarItem(
+                          label: 'Profil Saya',
+                          icon: Icons.person_pin_outlined,
+                          page: const CompleteProfileRoute(), // Untuk saat ini arahkan ke sini untuk melihat/edit data
+                        ),
+                        if (context.can(PermissionKeys.createMaintenance))
+                          SidebarItem(
+                            label: 'Lapor Kerusakan',
+                            icon: Icons.report_problem_outlined,
+                            page: const MaintenanceCreateReportRoute(),
+                          ),
+                        if (context.can(PermissionKeys.viewMaintenance))
+                          SidebarItem(
+                            label: 'Jadwal Pemeliharaan',
+                            icon: Icons.calendar_today_outlined,
+                            page: const MaintananceRoute(),
+                          ),
+                        if (context.can(PermissionKeys.viewMaintenance))
+                          SidebarItem(
+                            label: 'Status Laporan',
+                            icon: Icons.track_changes_outlined,
+                            page: const MaintenanceReportListRoute(),
+                          ),
+                      ],
+                    ),
                   if (context.can(PermissionKeys.viewRooms) ||
-                      context.can(PermissionKeys.viewLease))
+                      context.can(PermissionKeys.viewLease) ||
+                      isGuest)
                     SidebarItem(
                       label: 'Kamar & Reservasi',
                       icon: Icons.room,
                       hasAccess: true,
                       children: [
-                        // if (context.can(PermissionKeys.viewRooms))
                         SidebarItem(
                           label: 'Kamar',
                           icon: Icons.meeting_room,
@@ -129,35 +166,50 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                       ],
                     ),
 
-                  SidebarItem(
-                    label: 'Inventaris & Pemiliharaan',
-                    icon: Icons.inventory,
-                    hasAccess: true,
-                    children: [
-                      SidebarItem(
-                        label: 'Inventaris',
-                        icon: Icons.inventory,
-                        page: const InventoryRoute(),
-                      ),
-                      SidebarItem(
-                        label: 'Pemeliharaan',
-                        icon: Icons.build,
-                        page: const MaintananceRoute(),
-                      ),
-                      SidebarItem(
-                        label: 'Laporan Kerusakan',
-                        icon: Icons.report_problem_outlined,
-                        page: const MaintenanceReportListRoute(),
-                      ),
-                    ],
-                  ),
+                  if (context.can(PermissionKeys.accessInventory) ||
+                      context.can(PermissionKeys.accessMaintenance))
+                    SidebarItem(
+                      label: 'Inventaris & Pemiliharaan',
+                      icon: Icons.inventory,
+                      hasAccess: true,
+                      children: [
+                        if (context.can(PermissionKeys.viewInventory))
+                          SidebarItem(
+                            label: 'Inventaris',
+                            icon: Icons.inventory,
+                            page: const InventoryRoute(),
+                          ),
+                        if (context.can(PermissionKeys.accessMaintenance))
+                          SidebarItem(
+                            label: 'Pemeliharaan',
+                            icon: Icons.build,
+                            page: const MaintananceRoute(),
+                          ),
+                        if (context.can(PermissionKeys.viewDamageReport))
+                          SidebarItem(
+                            label: 'Laporan Kerusakan',
+                            icon: Icons.report_problem_outlined,
+                            page: const MaintenanceReportListRoute(),
+                          ),
+                      ],
+                    ),
+
+                  // profil completion
+                  if (context.can(PermissionKeys.completeResidentProfile) &&
+                      !context.can(PermissionKeys.accessResidentArea))
+                    SidebarItem(
+                      label: 'Lengkapi Profil',
+                      icon: Icons.assignment_ind_outlined,
+                      page: const CompleteProfileRoute(),
+                    ),
 
                   // pengaturan
-                  SidebarItem(
-                    label: 'Pengaturan',
-                    icon: Icons.settings,
-                    page: const SettingRoute(),
-                  ),
+                  if (context.can(PermissionKeys.settingManagementAccess))
+                    SidebarItem(
+                      label: 'Pengaturan',
+                      icon: Icons.settings,
+                      page: const SettingRoute(),
+                    ),
                 ],
               ),
               Expanded(child: AutoRouter()),

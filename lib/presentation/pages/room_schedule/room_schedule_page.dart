@@ -1,7 +1,14 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/domain/entity/room/room_schedule_entity.dart';
+import 'package:frontend/presentation/bloc/room/room_schedule/room_schedule_bloc.dart';
+import 'package:frontend/presentation/bloc/room/room_schedule/room_schedule_event.dart';
+import 'package:frontend/presentation/bloc/room/room_schedule/room_schedule_state.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:frontend/presentation/widget/core/textform/dropdown_field.dart';
+import 'package:intl/intl.dart';
 
 import 'package:frontend/presentation/pages/room_schedule/widget/room_availability_grid.dart';
 
@@ -16,178 +23,227 @@ class RoomSchedulePage extends StatefulWidget {
 class _RoomSchedulePageState extends State<RoomSchedulePage> {
   String? _selectedRoom = 'Semua Kamar';
   String? _selectedStatus = 'Semua Status';
+  DateTime _currentMonth = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      backgroundColor: theme.colorScheme.surface,
-      body: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Jadwal Kamar',
-                style: theme.textTheme.headlineLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Kelola Sistem Kost Anda dengan Mudah',
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 32),
-              BasicCard(
-                padding: const EdgeInsets.all(32),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Card Header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Jadwal Kamar - Januari 2025',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+    return BlocProvider(
+      create: (context) => serviceLocator.get<RoomScheduleBloc>()..add(FetchRoomSchedules()),
+      child: Scaffold(
+        backgroundColor: theme.colorScheme.surface,
+        body: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: BlocBuilder<RoomScheduleBloc, RoomScheduleState>(
+            builder: (context, state) {
+              if (state is RoomScheduleLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (state is RoomScheduleError) {
+                return Center(child: Text('Error: ${state.message}'));
+              }
+
+              if (state is RoomScheduleLoaded) {
+                final filteredRooms = _getFilteredRooms(state.schedules);
+                final gridData = _convertToGridData(filteredRooms);
+
+                return SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Jadwal Kamar',
+                        style: theme.textTheme.headlineLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
                         ),
-                        Row(
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Kelola Sistem Kost Anda dengan Mudah',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 32),
+                      BasicCard(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _MonthNavigator(),
-                            const SizedBox(width: 16),
-                            _FilterToggleButton(),
+                            // Card Header
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'Jadwal Kamar - ${DateFormat('MMMM yyyy').format(_currentMonth)}',
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    _MonthNavigator(
+                                      currentMonth: _currentMonth,
+                                      onChanged: (newMonth) {
+                                        setState(() => _currentMonth = newMonth);
+                                      },
+                                    ),
+                                    const SizedBox(width: 16),
+                                    _FilterToggleButton(),
+                                  ],
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            // Filters and Stats Row
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          SizedBox(
+                                            width: 200,
+                                            child: CustomDropdownField(
+                                              title: 'Filter Kamar',
+                                              hint: 'Semua Kamar',
+                                              value: _selectedRoom,
+                                              items: [
+                                                'Semua Kamar',
+                                                ...state.schedules.map((e) => e.number),
+                                              ],
+                                              onChanged: (v) =>
+                                                  setState(() => _selectedRoom = v),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          SizedBox(
+                                            width: 200,
+                                            child: CustomDropdownField(
+                                              title: 'Status Reservasi',
+                                              hint: 'Semua Status',
+                                              value: _selectedStatus,
+                                              items: const [
+                                                'Semua Status',
+                                                'Pending',
+                                                'Ongoing',
+                                                'Completed',
+                                              ],
+                                              onChanged: (v) =>
+                                                  setState(() => _selectedStatus = v),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 24),
+                                      _StatusLegend(),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 24),
+                                _TotalBookingStat(count: _calculateTotalBookings(state.schedules)),
+                              ],
+                            ),
+                            const SizedBox(height: 40),
+                            // Room Schedule Grid
+                            RoomAvailabilityGrid(
+                              daysInMonth: DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day,
+                              monthYear: DateFormat('MMMM yyyy').format(_currentMonth),
+                              rooms: gridData,
+                            ),
                           ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    // Filters and Stats Row
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  SizedBox(
-                                    width: 200,
-                                    child: CustomDropdownField(
-                                      title: 'Filter Kamar',
-                                      hint: 'Semua Kamar',
-                                      value: _selectedRoom,
-                                      items: const [
-                                        'Semua Kamar',
-                                        'Kamar 101',
-                                        'Kamar 102',
-                                      ],
-                                      onChanged: (v) =>
-                                          setState(() => _selectedRoom = v),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 16),
-                                  SizedBox(
-                                    width: 200,
-                                    child: CustomDropdownField(
-                                      title: 'Status Reservasi',
-                                      hint: 'Semua Status',
-                                      value: _selectedStatus,
-                                      items: const [
-                                        'Semua Status',
-                                        'Pending',
-                                        'Ongoing',
-                                        'Completed',
-                                      ],
-                                      onChanged: (v) =>
-                                          setState(() => _selectedStatus = v),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 24),
-                              _StatusLegend(),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        _TotalBookingStat(count: 15),
-                      ],
-                    ),
-                    const SizedBox(height: 40),
-                    // Room Schedule Grid
-                    RoomAvailabilityGrid(
-                      daysInMonth: 31,
-                      monthYear: 'Januari 2025',
-                      rooms: [
-                        RoomGridData(
-                          roomNumber: 'Kamar 101',
-                          roomType: 'AC - Lantai 1',
-                          dailyStatus: {
-                            0: RoomDayStatus.pending,
-                            1: RoomDayStatus.pending,
-                            2: RoomDayStatus.pending,
-                          },
-                        ),
-                        RoomGridData(
-                          roomNumber: 'Kamar 102',
-                          roomType: 'AC - Lantai 1',
-                          dailyStatus: {
-                            5: RoomDayStatus.ongoing,
-                            6: RoomDayStatus.ongoing,
-                            7: RoomDayStatus.ongoing,
-                            8: RoomDayStatus.ongoing,
-                          },
-                        ),
-                        RoomGridData(
-                          roomNumber: 'Kamar 103',
-                          roomType: 'Kipas - Lantai 1',
-                          dailyStatus: {
-                            10: RoomDayStatus.completed,
-                            11: RoomDayStatus.completed,
-                            12: RoomDayStatus.completed,
-                          },
-                        ),
-                        RoomGridData(
-                          roomNumber: 'Kamar 104',
-                          roomType: 'Kipas - Lantai 1',
-                          dailyStatus: {},
-                        ),
-                        RoomGridData(
-                          roomNumber: 'Kamar 105',
-                          roomType: 'AC - Lantai 1',
-                          dailyStatus: {
-                            15: RoomDayStatus.ongoing,
-                            16: RoomDayStatus.ongoing,
-                            20: RoomDayStatus.pending,
-                          },
-                        ),
-                        RoomGridData(
-                          roomNumber: 'Kamar 106',
-                          roomType: 'AC - Lantai 1',
-                          dailyStatus: {},
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
+                      ),
+                    ],
+                  ),
+                );
+              }
+
+              return const SizedBox.shrink();
+            },
           ),
         ),
       ),
     );
   }
+
+  List<RoomScheduleEntity> _getFilteredRooms(List<RoomScheduleEntity> rooms) {
+    return rooms.where((room) {
+      if (_selectedRoom != 'Semua Kamar' && room.number != _selectedRoom) {
+        return false;
+      }
+      // Status filter can be more complex if needed
+      return true;
+    }).toList();
+  }
+
+  List<RoomGridData> _convertToGridData(List<RoomScheduleEntity> rooms) {
+    return rooms.map((room) {
+      final Map<int, RoomDayStatus> dailyStatus = {};
+      final daysInMonth = DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day;
+
+      for (int day = 0; day < daysInMonth; day++) {
+        final date = DateTime(_currentMonth.year, _currentMonth.month, day + 1);
+        
+        for (final lease in room.schedules) {
+          final start = DateTime.parse(lease.startDate);
+          final end = DateTime.parse(lease.endDate);
+
+          // Check if date is between start and end (inclusive)
+          if ((date.isAfter(start) || date.isAtSameMomentAs(start)) &&
+              (date.isBefore(end) || date.isAtSameMomentAs(end))) {
+            
+            RoomDayStatus status;
+            switch (lease.status.toLowerCase()) {
+              case 'pending':
+                status = RoomDayStatus.pending;
+                break;
+              case 'active':
+                status = RoomDayStatus.ongoing;
+                break;
+              case 'expired':
+                status = RoomDayStatus.completed;
+                break;
+              default:
+                status = RoomDayStatus.available;
+            }
+            
+            if (status != RoomDayStatus.available) {
+              dailyStatus[day] = status;
+              break; // One status per day per room for now
+            }
+          }
+        }
+      }
+
+      return RoomGridData(
+        roomNumber: room.number,
+        roomType: room.title,
+        dailyStatus: dailyStatus,
+      );
+    }).toList();
+  }
+
+  int _calculateTotalBookings(List<RoomScheduleEntity> rooms) {
+    int total = 0;
+    for (var room in rooms) {
+      total += room.schedules.length;
+    }
+    return total;
+  }
 }
 
 class _MonthNavigator extends StatelessWidget {
+  final DateTime currentMonth;
+  final Function(DateTime) onChanged;
+
+  const _MonthNavigator({required this.currentMonth, required this.onChanged});
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -199,19 +255,29 @@ class _MonthNavigator extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.chevron_left)),
+          IconButton(
+            onPressed: () {
+              onChanged(DateTime(currentMonth.year, currentMonth.month - 1));
+            },
+            icon: const Icon(Icons.chevron_left),
+          ),
           const VerticalDivider(width: 1),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: Text(
-              'Januari 2025',
+              DateFormat('MMMM yyyy').format(currentMonth),
               style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
           const VerticalDivider(width: 1),
-          IconButton(onPressed: () {}, icon: const Icon(Icons.chevron_right)),
+          IconButton(
+            onPressed: () {
+              onChanged(DateTime(currentMonth.year, currentMonth.month + 1));
+            },
+            icon: const Icon(Icons.chevron_right),
+          ),
         ],
       ),
     );
