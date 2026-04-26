@@ -16,6 +16,10 @@ class RouteConstant {
   static const String permissionName = 'permissions';
   static const String roleName = 'role';
   static const String settingName = 'setting';
+  static const String userManagementName = 'users';
+  static const String profileName = 'profile';
+  static const String editProfileName = 'edit-profile';
+  static const String changePasswordName = 'change-password';
 
   // Manajemen penghuni
   static const String residentName = 'residents';
@@ -29,6 +33,8 @@ class RouteConstant {
   static const String editRoomName =
       '$roomAndReservationName/$detailRoomName/form';
   static const String reservationName = '$roomAndReservationName/reservations';
+  static const String reservationDetailFormName = 'reservation-detail-form';
+  static const String roomScheduleName = '$roomAndReservationName/schedule';
 
   // Manajemen Keuangan
   static const String financeName = 'finances';
@@ -38,7 +44,22 @@ class RouteConstant {
   static const String inventoryForm = '$inventory/form';
   static const String maintanance = 'maintanance';
   static const String maintananceForm = '$maintanance/form';
+  static const String maintananceDetail = '$maintanance/detail';
+
+  // Laporan Kerusakan
+  static const String maintenanceReport = 'maintenance-reports';
+  static const String maintenanceReportCreate = '$maintenanceReport/create';
+  static const String maintenanceReportDetail = '$maintenanceReport/:id';
 
   // Modul Finance
   static const String financeDashboardName = 'finance/dashboard';
+
+  // Form Identitas Pengguna
+  static const String identityFormName = 'profile/identity';
+  static const String completeProfileName = 'profile/complete';
+
+  static const String financeExpenseName = 'finance/expenses';
+
+  static const String financeInvoiceName = 'finance/invoices';
+  static const String paymentVerificationName = 'finance/payment-verification';
 }

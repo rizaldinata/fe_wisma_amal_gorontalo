@@ -6,6 +6,8 @@ class PaymentEntity {
   final String? transactionId;
   final String status;
   final String? adminNotes;
+  final double amount;
+  final String paymentDate;
 
   PaymentEntity({
     required this.id,
@@ -15,5 +17,7 @@ class PaymentEntity {
     this.transactionId,
     required this.status,
     this.adminNotes,
+    required this.amount,
+    required this.paymentDate,
   });
 }

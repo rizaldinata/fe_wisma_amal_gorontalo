@@ -1,11 +1,9 @@
 import 'package:auto_route/auto_route.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:frontend/core/constant/route_constant.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auth_guard.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/domain/repository/auth_repository.dart';
-import 'package:frontend/presentation/pages/permission/permission_page.dart';
 
 @AutoRouterConfig()
 class AppRouter extends RootStackRouter {
@@ -65,6 +63,22 @@ class AppRouter extends RootStackRouter {
           path: RouteConstant.roomName,
           page: RoomRoute.page,
         ),
+        // form identitas pengguna
+        AutoRoute(
+          // guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.identityFormName,
+          page: IdentityFormRoute.page,
+        ),
+        // form detail reservasi
+        AutoRoute(
+          path: RouteConstant.reservationDetailFormName,
+          page: ReservationDetailFormRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.completeProfileName,
+          page: CompleteProfileRoute.page,
+        ),
         AutoRoute(
           path: RouteConstant.detailRoomName,
           page: RoomDetailRoute.page,
@@ -89,12 +103,32 @@ class AppRouter extends RootStackRouter {
           path: RouteConstant.reservationName,
           page: ReservationRoute.page,
         ),
+        AutoRoute(
+          guards: [],
+          path: RouteConstant.roomScheduleName,
+          page: RoomScheduleRoute.page,
+        ),
 
         // manajemen keuangan
         AutoRoute(
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: RouteConstant.financeDashboardName,
           page: FinanceDashboardRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.financeExpenseName,
+          page: ExpenseListRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.financeInvoiceName,
+          page: InvoiceListRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.paymentVerificationName,
+          page: PaymentVerificationRoute.page,
         ),
 
         // manajemen inventaris
@@ -109,7 +143,7 @@ class AppRouter extends RootStackRouter {
           page: InventoryFormRoute.page,
         ),
 
-        // manajemen maintanance
+        // manajemen maintanance (jadwal)
         AutoRoute(
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: RouteConstant.maintanance,
@@ -120,12 +154,54 @@ class AppRouter extends RootStackRouter {
           path: RouteConstant.maintananceForm,
           page: MaintananceFormRoute.page,
         ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.maintananceDetail,
+          page: MaintananceDetailRoute.page,
+        ),
+
+        // laporan kerusakan
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.maintenanceReport,
+          page: MaintenanceReportListRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.maintenanceReportCreate,
+          page: MaintenanceCreateReportRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: '${RouteConstant.maintenanceReport}/:id',
+          page: MaintenanceReportDetailRoute.page,
+        ),
 
         // pengaturan
         AutoRoute(
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: RouteConstant.settingName,
-          page: SettingPlaceholderRoute.page,
+          page: SettingRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.userManagementName,
+          page: UserManagementRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.profileName,
+          page: ProfileRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.editProfileName,
+          page: EditProfileRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.changePasswordName,
+          page: ChangePasswordRoute.page,
         ),
       ],
     ),

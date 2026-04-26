@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
-import 'package:frontend/core/constant/permission_key.dart';
 import 'package:frontend/core/constant/style_constant.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';

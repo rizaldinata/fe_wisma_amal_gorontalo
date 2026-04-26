@@ -60,6 +60,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<GetUserInfoEvent>(_onGetUserInfo);
     on<GetPermissionsEvent>(_onGetPermissions);
     on<ToggleObscureTextEvent>(_onToggleObscureText);
+    on<SessionExpiredEvent>(_onSessionExpired);
     on<ResetStateEvent>((event, emit) {
       emit(const AuthState());
     });
@@ -224,6 +225,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           email: event.email,
           password: event.password,
           username: event.username,
+          passwordConfirmation: event.passwordConfirm,
+          phoneNumber: event.phoneNumber,
         ),
       );
 
@@ -288,6 +291,38 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           isLoggedIn: false,
         ),
       );
+    }
+  }
+
+  Future<void> _onSessionExpired(
+    SessionExpiredEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    print('Handling Session Expired Event...');
+    try {
+      // 1. Clear local storage & token directly to be sure
+      await storage.clear();
+      // insecure but since secureStorage is internal to repository, we use repository via logoutUseCase or similar
+      // Actually, better to use the repository functionality if possible
+      // but logoutUseCase might call the API.
+      // Let's just reset the state and let the session initialization handle it.
+      
+      // Emit guest state
+      emit(
+        const AuthState(
+          status: FormzSubmissionStatus.initial,
+          isLoggedIn: false,
+        ),
+      );
+      
+      loginStatusNotifier.isLoggedIn = false;
+      
+      // Update permissions as guest
+      await getPermissionsUseCase(NoParams());
+      
+      AppSnackbar.showError('Sesi sudah habis. Silakan login kembali.');
+    } catch (e) {
+      print('Error during session expiration handling: $e');
     }
   }
 

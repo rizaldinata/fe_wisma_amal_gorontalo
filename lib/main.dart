@@ -10,12 +10,14 @@ import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:frontend/presentation/bloc/app/app_bloc.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
 Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id_ID', null);
   await initializeDependencies();
   usePathUrlStrategy();
 

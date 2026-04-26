@@ -8,6 +8,7 @@ class TableCard extends StatelessWidget {
   final List<List<dynamic>> rows;
   final Widget? actions;
   final String? emptyMessage;
+  final Function(int)? onRowTap;
 
   const TableCard({
     super.key,
@@ -16,6 +17,7 @@ class TableCard extends StatelessWidget {
     required this.rows,
     this.actions,
     this.emptyMessage,
+    this.onRowTap,
   });
 
   @override
@@ -41,7 +43,15 @@ class TableCard extends StatelessWidget {
               ),
             )
           else
-            ...rows.map((row) => _TableRow(columns: columns, values: row)),
+            ...rows.asMap().entries.map((entry) {
+              final index = entry.key;
+              final row = entry.value;
+              return _TableRow(
+                columns: columns,
+                values: row,
+                onTap: onRowTap != null ? () => onRowTap!(index) : null,
+              );
+            }),
         ],
       ),
     );
@@ -57,6 +67,7 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
+      alignment: WrapAlignment.spaceBetween,
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: 12,
       runSpacing: 12,
@@ -81,7 +92,7 @@ class _Header extends StatelessWidget {
             ),
           ],
         ),
-        if (actions != null) ...[const Spacer(), actions!],
+        if (actions != null) actions!,
       ],
     );
   }
@@ -119,32 +130,36 @@ class _TableHeader extends StatelessWidget {
 class _TableRow extends StatelessWidget {
   final List<TableColumn> columns;
   final List<dynamic> values;
+  final VoidCallback? onTap;
 
-  const _TableRow({required this.columns, required this.values});
+  const _TableRow({required this.columns, required this.values, this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Colors.black12)),
-      ),
-      child: Row(
-        children: List.generate(values.length, (index) {
-          final column = columns[index];
-          final value = values[index];
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: Colors.black12)),
+        ),
+        child: Row(
+          children: List.generate(values.length, (index) {
+            final column = columns[index];
+            final value = values[index];
 
-          return Expanded(
-            flex: column.flex,
-            child: value is Widget
-                ? value
-                : Text(
-                    value.toString(),
-                    textAlign: column.align,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-          );
-        }),
+            return Expanded(
+              flex: column.flex,
+              child: value is Widget
+                  ? value
+                  : Text(
+                      value.toString(),
+                      textAlign: column.align,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+            );
+          }),
+        ),
       ),
     );
   }

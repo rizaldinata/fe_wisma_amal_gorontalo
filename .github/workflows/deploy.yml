@@ -1,40 +1,69 @@
-# Nama workflow yang akan muncul di tab "Actions" GitHub
-name: Deploy Flutter Web to GitHub Pages
+name: Build and Deploy Frontend
 
-# Pemicu: workflow ini berjalan setiap kali ada push ke branch 'development'
 on:
   push:
     branches:
       - develop
 
-jobs:
-  build-and-deploy:
-    # Menggunakan environment Ubuntu terbaru
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
+  packages: write
 
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
     steps:
-      # 1. Meng-clone repositori Anda ke dalam runner
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Menyiapkan Flutter SDK
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          channel: "stable" # Anda bisa ganti ke 'beta' atau versi spesifik
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      # 3. Menginstall dependensi proyek
-      - name: Install dependencies
-        run: flutter pub get
-
-      # 4. Membangun aplikasi Flutter web
-      # PENTING: Ganti <nama-repositori> dengan nama repo Anda!
-      - name: Build Flutter web
-        run: flutter build web --base-href /fe_wisma_amal_gorontalo/
-
-      # 5. Menerapkan hasil build ke branch 'gh-pages'
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Extract metadata for Docker
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build/web # Direktori tempat hasil build disimpan
+          images: ghcr.io/ALFIAN-code/frontend-wisma-amal
+          tags: |
+            type=raw,value=latest
+            type=sha,format=short
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          no-cache: true
+#          cache-from: type=gha
+#          cache-to: type=gha,mode=max
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Connect to Tailscale
+        uses: tailscale/github-action@v2
+        with:
+          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
+
+      - name: Update VPS service
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          REMOTE_USER: ${{ secrets.REMOTE_USER }}
+        run: |
+          set -x
+          mkdir -p ~/.ssh
+          cat << 'EOF' > ~/.ssh/id_rsa
+          ${{ secrets.SSH_PRIVATE_KEY }}
+          EOF
+          chmod 600 ~/.ssh/id_rsa
+          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "${{ secrets.REMOTE_USER }}@100.125.64.93" "cd ~/wisma-amal-deploy && docker compose pull frontend && docker compose up -d --force-recreate frontend && docker image prune -f"

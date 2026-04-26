@@ -1,14 +1,13 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:formz/formz.dart';
+import 'package:frontend/domain/entity/table/tabel_colum.dart';
 import 'package:frontend/presentation/bloc/reservation_list/reservation_bloc.dart';
 import 'package:frontend/presentation/bloc/reservation_list/reservation_event.dart';
 import 'package:frontend/presentation/bloc/reservation_list/reservation_state.dart';
-import 'package:frontend/presentation/pages/reservation_list/widget/reservation_card.dart';
-import 'package:frontend/presentation/widget/core/botton/button.dart';
-import 'package:frontend/presentation/widget/core/card/basic_card.dart';
+import 'package:frontend/presentation/pages/reservation_list/widget/reservation_status_badge.dart';
 import 'package:frontend/presentation/widget/core/card/stat_card.dart';
+import 'package:frontend/presentation/widget/core/table/table.dart';
 
 @RoutePage()
 class ReservationPage extends StatelessWidget {
@@ -30,119 +29,118 @@ class ReservationView extends StatefulWidget {
   State<ReservationView> createState() => _ReservationViewState();
 }
 
-class _ReservationViewState extends State<ReservationView>
-    with SingleTickerProviderStateMixin {
-  late final TabController _controller;
+class _ReservationViewState extends State<ReservationView> {
+  final TextEditingController _searchController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    _controller = TabController(length: 3, vsync: this);
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return BlocBuilder<ReservationBloc, ReservationState>(
       builder: (context, state) {
         return Scaffold(
+          backgroundColor: theme.colorScheme.surface,
           body: SingleChildScrollView(
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(24.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // ── STAT CARDS ──
-                  Row(
-                    children: [
-                      StatCard(
-                        title: 'Total Reservasi',
-                        count: state.reservations.length.toString(),
-                        color: Colors.green.shade100,
-                      ),
-                      const SizedBox(width: 16),
-                      StatCard(
-                        title: 'Aktif',
-                        count: state.aktifReservations.length.toString(),
-                        color: colorScheme.primaryContainer,
-                      ),
-                      const SizedBox(width: 16),
-                      StatCard(
-                        title: 'Pending',
-                        count: state.pendingReservations.length.toString(),
-                        color: Colors.orange.shade100,
-                      ),
-                      const SizedBox(width: 16),
-                      StatCard(
-                        title: 'Selesai',
-                        count: state.selesaiReservations.length.toString(),
-                        color: colorScheme.secondaryContainer,
-                      ),
-                    ],
+                  Text(
+                    'Data Reservasi',
+                    style: theme.textTheme.headlineLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Kelola Sistem Kost Anda dengan Mudah',
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant,
+                    ),
+                  ),
 
-                  // ── TAB BAR + TOMBOL ──
+                  const SizedBox(height: 24),
+
+                  // ── TOP STAT CARDS ──
                   Row(
                     children: [
                       Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(8),
+                        child: StatCard(
+                          title: 'Total kamar',
+                          count: '10',
+                          icon: const Icon(
+                            Icons.bed_outlined,
+                            size: 24,
+                            color: Color(0xFF3F51B5),
                           ),
-                          child: TabBar(
-                            controller: _controller,
-                            indicator: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withAlpha(50),
-                            ),
-                            dividerColor: Colors.transparent,
-                            indicatorSize: TabBarIndicatorSize.tab,
-                            tabs: const [
-                              Tab(text: 'Semua'),
-                              Tab(text: 'Aktif'),
-                              Tab(text: 'Pending'),
-                            ],
-                          ),
+                          color: const Color(0xFFC5CAE9),
                         ),
                       ),
                       const SizedBox(width: 20),
-                      BasicButton(
-                        onPressed: () {
-                          // TODO: navigasi ke form tambah reservasi
-                        },
-                        label: 'Tambah Reservasi',
-                        leadIcon: const Icon(Icons.add),
+                      Expanded(
+                        child: StatCard(
+                          title: 'Reservasi Masuk',
+                          count: '3',
+                          icon: const Icon(
+                            Icons.insert_drive_file_outlined,
+                            size: 24,
+                            color: Color(0xFFFFA000),
+                          ),
+                          color: const Color(0xFFFFECB3),
+                        ),
+                      ),
+                      const SizedBox(width: 20),
+                      Expanded(
+                        child: StatCard(
+                          title: 'Pembayaran Valid',
+                          count: '10',
+                          icon: const Icon(
+                            Icons.assignment_turned_in_outlined,
+                            size: 24,
+                            color: Color(0xFF43A047),
+                          ),
+                          color: const Color(0xFFDCEDC8),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 32),
 
-                  // ── CONTENT ──
-                  AnimatedBuilder(
-                    animation: _controller,
-                    builder: (context, child) {
-                      final List<Map<String, dynamic>> currentReservations;
-                      switch (_controller.index) {
-                        case 0:
-                          currentReservations = state.reservations;
-                          break;
-                        case 1:
-                          currentReservations = state.aktifReservations;
-                          break;
-                        case 2:
-                          currentReservations = state.pendingReservations;
-                          break;
-                        default:
-                          currentReservations = state.reservations;
-                      }
-                      return _buildReservationList(currentReservations, state);
-                    },
+                  // ── DATA TABLE CARD ──
+                  TableCard(
+                    title: 'Data Reservasi',
+                    actions: _buildHeaderFilters(context),
+                    columns: const [
+                      TableColumn(label: 'Id', flex: 1),
+                      TableColumn(label: 'Nama', flex: 3),
+                      TableColumn(label: 'kamar', flex: 1),
+                      TableColumn(label: 'Jenis Sewa', flex: 2),
+                      TableColumn(label: 'Periode', flex: 4),
+                      TableColumn(label: 'Status Pembayaran', flex: 3),
+                      TableColumn(label: 'Action', flex: 1),
+                    ],
+                    rows: List.generate(
+                      5,
+                      (index) => [
+                        'RSV001',
+                        'Bagus Alfian',
+                        'A201',
+                        'Harian',
+                        '12 Feb 2025 - 18 Feb 2025',
+                        const Align(
+                          alignment: Alignment.centerLeft,
+                          child: ReservationStatusBadge(status: 'Lunas'),
+                        ),
+                        _buildEditButton(),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -153,73 +151,96 @@ class _ReservationViewState extends State<ReservationView>
     );
   }
 
-  Widget _buildReservationList(
-    List<Map<String, dynamic>> reservations,
-    ReservationState state,
-  ) {
-    if (state.status == FormzSubmissionStatus.inProgress) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(20.0),
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
-    if (state.status == FormzSubmissionStatus.failure) {
-      return Center(
-        child: Text(
-          'Gagal memuat reservasi: ${state.errorMessage}',
-          style: const TextStyle(color: Colors.red),
-        ),
-      );
-    }
-
-    if (reservations.isEmpty) {
-      return BasicCard(
-        child: SizedBox(
-          height: 300,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.book_online_outlined, size: 64, color: Colors.grey),
-                SizedBox(height: 16),
-                Text(
-                  'Tidak ada reservasi',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
-                ),
-              ],
+  Widget _buildHeaderFilters(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // Search
+        SizedBox(
+          width: 250,
+          height: 40,
+          child: TextField(
+            controller: _searchController,
+            decoration: InputDecoration(
+              hintText: 'Cari...',
+              prefixIcon: const Icon(Icons.search, size: 20),
+              contentPadding: const EdgeInsets.symmetric(vertical: 0),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
           ),
         ),
-      );
-    }
-
-    return BasicCard(
-      child: ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        itemCount: reservations.length,
-        itemBuilder: (context, index) {
-          final item = reservations[index];
-          return ReservationCard(
-            guestName: item['guestName'] ?? '',
-            roomTitle: item['roomTitle'] ?? '',
-            checkIn: item['checkIn'] ?? '',
-            checkOut: item['checkOut'] ?? '',
-            status: item['status'] ?? '',
-            onTap: () {},
-          );
-        },
-      ),
+        const SizedBox(width: 12),
+        // Sort
+        const _SmallFilterDropdown(
+          hint: 'Urutkan',
+          icon: Icons.filter_list,
+          width: 110,
+        ),
+        const SizedBox(width: 12),
+        // Date Range
+        const _SmallFilterDropdown(hint: '1 February 2025', width: 160),
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          child: Icon(Icons.remove, size: 16),
+        ),
+        const _SmallFilterDropdown(hint: '1 Maret 2025', width: 160),
+      ],
     );
   }
 
+  Widget _buildEditButton() {
+    return SizedBox(
+      height: 30,
+      child: ElevatedButton(
+        onPressed: () {},
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFFFFC107),
+          foregroundColor: Colors.white,
+          padding: EdgeInsets.zero,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+        ),
+        child: const Text('Edit', style: TextStyle(fontSize: 11)),
+      ),
+    );
+  }
+}
+
+class _SmallFilterDropdown extends StatelessWidget {
+  final String hint;
+  final IconData? icon;
+  final double width;
+
+  const _SmallFilterDropdown({
+    required this.hint,
+    this.icon,
+    required this.width,
+  });
+
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey.shade400),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          if (icon != null) ...[Icon(icon, size: 18), const SizedBox(width: 8)],
+          Expanded(
+            child: Text(
+              hint,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 13),
+            ),
+          ),
+          const Icon(Icons.arrow_drop_down),
+        ],
+      ),
+    );
   }
 }
