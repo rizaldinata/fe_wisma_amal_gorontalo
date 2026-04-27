@@ -4,12 +4,36 @@ import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'widget/resident_table_action.dart';
 
 @RoutePage()
-class ContractResidentPage extends StatelessWidget {
+class ContractResidentPage extends StatefulWidget {
   const ContractResidentPage({super.key});
 
   @override
+  State<ContractResidentPage> createState() => _ContractResidentPageState();
+}
+
+class _ContractResidentPageState extends State<ContractResidentPage> {
+  final TextEditingController _searchController = TextEditingController();
+  String _selectedStatus = 'Semua';
+  String _selectedPayment = 'Semua';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final List<_ContractRowData> contractRows = [];
+    final List<_ContractRowData> contractRows = [
+      const _ContractRowData(
+        id: '1',
+        nama: 'John Doe',
+        kamar: 'A1',
+        identitas: '1234567890',
+        masuk: '2023-01-01',
+        keluar: '2024-01-01',
+      )
+    ];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF3F4F6),
@@ -59,7 +83,22 @@ class ContractResidentPage extends StatelessWidget {
                             ),
                       ),
                       const Spacer(),
-                      const ResidentTableAction(),
+                      ResidentTableAction(
+                        searchController: _searchController,
+                        onSearchChanged: (_) => setState(() {}),
+                        selectedStatus: _selectedStatus,
+                        selectedPayment: _selectedPayment,
+                        onStatusChanged: (value) {
+                          setState(() {
+                            _selectedStatus = value;
+                          });
+                        },
+                        onPaymentChanged: (value) {
+                          setState(() {
+                            _selectedPayment = value;
+                          });
+                        },
+                      ),
                     ],
                   ),
                   const SizedBox(height: 24),

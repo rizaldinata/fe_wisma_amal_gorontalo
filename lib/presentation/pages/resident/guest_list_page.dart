@@ -8,8 +8,23 @@ import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'widget/resident_table_action.dart';
 
 @RoutePage()
-class GuestListPage extends StatelessWidget {
+class GuestListPage extends StatefulWidget {
   const GuestListPage({super.key});
+
+  @override
+  State<GuestListPage> createState() => _GuestListPageState();
+}
+
+class _GuestListPageState extends State<GuestListPage> {
+  final TextEditingController _searchController = TextEditingController();
+  String _selectedStatus = 'Semua';
+  String _selectedPayment = 'Semua';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,7 +91,22 @@ class GuestListPage extends StatelessWidget {
                       const Spacer(),
                       
                       // Search & Filter
-                      const ResidentTableAction(),
+                      ResidentTableAction(
+                        searchController: _searchController,
+                        onSearchChanged: (_) => setState(() {}),
+                        selectedStatus: _selectedStatus,
+                        selectedPayment: _selectedPayment,
+                        onStatusChanged: (value) {
+                          setState(() {
+                            _selectedStatus = value;
+                          });
+                        },
+                        onPaymentChanged: (value) {
+                          setState(() {
+                            _selectedPayment = value;
+                          });
+                        },
+                      ),
                       const SizedBox(width: 12),
                       
                       // Tombol Tambah Tamu (Biru)

@@ -19,8 +19,23 @@ class ResidentPage extends StatelessWidget {
   }
 }
 
-class _ResidentView extends StatelessWidget {
+class _ResidentView extends StatefulWidget {
   const _ResidentView();
+
+  @override
+  State<_ResidentView> createState() => _ResidentViewState();
+}
+
+class _ResidentViewState extends State<_ResidentView> {
+  final TextEditingController _searchController = TextEditingController();
+  String _selectedStatus = 'Semua';
+  String _selectedPayment = 'Semua';
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +56,20 @@ class _ResidentView extends StatelessWidget {
           if (state is ResidentLoaded) {
             final data = state.data;
             final stats = data.stats;
-            final residentRows = data.residents;
+            final query = _searchController.text.trim().toLowerCase();
+
+            final residentRows = data.residents.where((row) {
+              final matchesSearch = query.isEmpty ||
+                  row.nama.toLowerCase().contains(query) ||
+                  row.kamar.toLowerCase().contains(query) ||
+                  row.kontak.toLowerCase().contains(query);
+
+              final matchesStatus = _selectedStatus == 'Semua' || row.status == _selectedStatus;
+              final matchesPayment =
+                  _selectedPayment == 'Semua' || row.detailBayar == _selectedPayment;
+
+              return matchesSearch && matchesStatus && matchesPayment;
+            }).toList();
 
             return SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(28, 22, 28, 28),
@@ -132,7 +160,22 @@ class _ResidentView extends StatelessWidget {
                               ),
                             ),
                             const Spacer(),
-                            const ResidentTableAction(),
+                            ResidentTableAction(
+                              searchController: _searchController,
+                              onSearchChanged: (_) => setState(() {}),
+                              selectedStatus: _selectedStatus,
+                              selectedPayment: _selectedPayment,
+                              onStatusChanged: (value) {
+                                setState(() {
+                                  _selectedStatus = value;
+                                });
+                              },
+                              onPaymentChanged: (value) {
+                                setState(() {
+                                  _selectedPayment = value;
+                                });
+                              },
+                            ),
                           ],
                         ),
                         const SizedBox(height: 24),
