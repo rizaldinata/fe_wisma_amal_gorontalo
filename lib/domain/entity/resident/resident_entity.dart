@@ -5,9 +5,18 @@ class ResidentResponse {
   ResidentResponse({required this.stats, required this.residents});
 
   factory ResidentResponse.fromJson(Map<String, dynamic> json) {
+    final data = json['data'] as Map<String, dynamic>? ?? <String, dynamic>{};
+    final statsJson = data['stats'] as Map<String, dynamic>? ?? <String, dynamic>{};
+
+    final dynamic residentsPayload = data['residents'];
+    final List<dynamic> residentsList =
+        residentsPayload is Map<String, dynamic>
+            ? (residentsPayload['data'] as List<dynamic>? ?? <dynamic>[])
+            : (residentsPayload as List<dynamic>? ?? <dynamic>[]);
+
     return ResidentResponse(
-      stats: ResidentStats.fromJson(json['data']['stats']),
-      residents: (json['data']['residents'] as List)
+      stats: ResidentStats.fromJson(statsJson),
+      residents: residentsList
           .map((item) => ResidentItem.fromJson(item))
           .toList(),
     );

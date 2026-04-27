@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/presentation/bloc/resident/resident_bloc.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'widget/resident_table_action.dart';
@@ -11,9 +12,8 @@ class ResidentPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 1. Bungkus dengan Provider dan panggil event Fetch
     return BlocProvider(
-      create: (context) => ResidentBloc()..add(FetchResidents()),
+      create: (context) => serviceLocator<ResidentBloc>()..add(FetchResidents()),
       child: const _ResidentView(),
     );
   }

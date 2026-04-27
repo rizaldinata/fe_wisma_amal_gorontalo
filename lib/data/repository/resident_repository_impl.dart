@@ -1,4 +1,5 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:frontend/domain/entity/resident/resident_entity.dart';
 import 'package:frontend/data/datasource/resident_datasource.dart';
 import 'package:frontend/domain/entity/resident/resident_profile_entity.dart';
 import 'package:frontend/domain/repository/resident_repository.dart';
@@ -7,6 +8,16 @@ class ResidentRepositoryImpl implements ResidentRepository {
   final ResidentDatasource datasource;
 
   ResidentRepositoryImpl({required this.datasource});
+
+  @override
+  Future<ResidentResponse> getAdminResidents() async {
+    try {
+      final response = await datasource.getAdminResidents();
+      return response;
+    } catch (e) {
+      rethrow;
+    }
+  }
 
   @override
   Future<ResidentProfileEntity> getProfile() async {

@@ -55,6 +55,8 @@ import 'package:frontend/domain/usecase/inventory/inventory_action_usecases.dart
 import 'package:frontend/domain/repository/schedule_repository.dart';
 import 'package:frontend/domain/usecase/schedule/schedule_usecases.dart';
 import 'package:frontend/domain/usecase/schedule/add_schedule_update_usecase.dart';
+import 'package:frontend/domain/repository/resident_repository.dart';
+import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
 
 Future<void> initializeUseCase() async {
   // Auth UseCases
@@ -237,5 +239,10 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => ChangePasswordUseCase(serviceLocator.get<ProfileRepository>()),
+  );
+
+  // Resident UseCases
+  serviceLocator.registerFactory(
+    () => GetAdminResidentsUseCase(serviceLocator.get<ResidentRepository>()),
   );
 }
