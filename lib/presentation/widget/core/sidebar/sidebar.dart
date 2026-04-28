@@ -228,8 +228,8 @@ class _CustomSidebarState extends State<CustomSidebar> {
                           minHeight: 30,
                         ),
                         children: const [
-                          Icon(Icons.dark_mode_rounded, size: 18),
                           Icon(Icons.light_mode_rounded, size: 18),
+                          Icon(Icons.dark_mode_rounded, size: 18),
                         ],
                       ),
 

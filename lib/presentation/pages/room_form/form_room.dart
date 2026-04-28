@@ -165,7 +165,7 @@ class _FormRoomViewState extends State<FormRoomView> {
         return Scaffold(
           appBar: CustomAppbar(
             icon: const Icon(Icons.arrow_back),
-            title: 'Back',
+            title: 'Kembali',
           ),
           body: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),

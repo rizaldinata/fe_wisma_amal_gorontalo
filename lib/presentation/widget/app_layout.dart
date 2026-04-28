@@ -94,7 +94,8 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                         SidebarItem(
                           label: 'Profil Saya',
                           icon: Icons.person_pin_outlined,
-                          page: const CompleteProfileRoute(), // Untuk saat ini arahkan ke sini untuk melihat/edit data
+                          page:
+                              const CompleteProfileRoute(), // Untuk saat ini arahkan ke sini untuk melihat/edit data
                         ),
                         if (context.can(PermissionKeys.createMaintenance))
                           SidebarItem(
@@ -129,17 +130,18 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                           icon: Icons.meeting_room,
                           page: RoomRoute(),
                         ),
-                        if (context.can(PermissionKeys.viewLease))
+                        if (context.can(PermissionKeys.accessAdminPanel))
                           SidebarItem(
                             label: 'Reservasi',
                             icon: Icons.book_online,
                             page: const ReservationRoute(),
                           ),
-                        SidebarItem(
-                          label: 'Jadwal Kamar',
-                          icon: Icons.calendar_month_outlined,
-                          page: const RoomScheduleRoute(),
-                        ),
+                        if (context.can(PermissionKeys.accessAdminPanel))
+                          SidebarItem(
+                            label: 'Jadwal Kamar',
+                            icon: Icons.calendar_month_outlined,
+                            page: const RoomScheduleRoute(),
+                          ),
                       ],
                     ),
 

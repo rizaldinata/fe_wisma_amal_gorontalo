@@ -68,7 +68,6 @@ class _ReservationViewState extends State<ReservationView> {
 
                   const SizedBox(height: 24),
 
-                  // ── TOP STAT CARDS ──
                   Row(
                     children: [
                       Expanded(
@@ -113,7 +112,6 @@ class _ReservationViewState extends State<ReservationView> {
                   ),
                   const SizedBox(height: 32),
 
-                  // ── DATA TABLE CARD ──
                   TableCard(
                     title: 'Data Reservasi',
                     actions: _buildHeaderFilters(context),
@@ -155,7 +153,6 @@ class _ReservationViewState extends State<ReservationView> {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        // Search
         SizedBox(
           width: 250,
           height: 40,
@@ -172,14 +169,12 @@ class _ReservationViewState extends State<ReservationView> {
           ),
         ),
         const SizedBox(width: 12),
-        // Sort
         const _SmallFilterDropdown(
           hint: 'Urutkan',
           icon: Icons.filter_list,
           width: 110,
         ),
         const SizedBox(width: 12),
-        // Date Range
         const _SmallFilterDropdown(hint: '1 February 2025', width: 160),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 8),

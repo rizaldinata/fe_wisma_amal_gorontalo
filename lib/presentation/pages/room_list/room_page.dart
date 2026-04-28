@@ -68,7 +68,9 @@ class _RoomViewState extends State<RoomView>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Kelola Kamar',
+                    context.can(PermissionKeys.createRooms)
+                        ? 'Kelola Kamar'
+                        : 'Daftar Kamar Tersedia',
                     style: theme.textTheme.headlineLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
