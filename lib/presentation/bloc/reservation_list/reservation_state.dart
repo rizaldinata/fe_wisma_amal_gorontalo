@@ -1,18 +1,21 @@
 import 'package:equatable/equatable.dart';
 import 'package:formz/formz.dart';
+import 'package:frontend/domain/entity/reservation_entity.dart';
 
 class ReservationState extends Equatable {
   final FormzSubmissionStatus status;
-  final List<Map<String, dynamic>> reservations;
+  final List<ReservationEntity> reservations;
   final String? errorMessage;
   final String? successMessage;
 
-  List<Map<String, dynamic>> get aktifReservations =>
-      reservations.where((r) => r['status'] == 'Aktif').toList();
-  List<Map<String, dynamic>> get pendingReservations =>
-      reservations.where((r) => r['status'] == 'Pending').toList();
-  List<Map<String, dynamic>> get selesaiReservations =>
-      reservations.where((r) => r['status'] == 'Selesai').toList();
+  List<ReservationEntity> get activeReservations =>
+      reservations.where((r) => r.status == 'active').toList();
+
+  List<ReservationEntity> get pendingReservations =>
+      reservations.where((r) => r.status == 'pending').toList();
+
+  List<ReservationEntity> get cancelledReservations =>
+      reservations.where((r) => r.status == 'cancelled').toList();
 
   const ReservationState({
     this.status = FormzSubmissionStatus.initial,
@@ -23,7 +26,7 @@ class ReservationState extends Equatable {
 
   ReservationState copyWith({
     FormzSubmissionStatus? status,
-    List<Map<String, dynamic>>? reservations,
+    List<ReservationEntity>? reservations,
     String? errorMessage,
     String? successMessage,
   }) {
@@ -36,5 +39,10 @@ class ReservationState extends Equatable {
   }
 
   @override
-  List<Object?> get props => [status, reservations, errorMessage, successMessage];
+  List<Object?> get props => [
+        status,
+        reservations,
+        errorMessage,
+        successMessage,
+      ];
 }

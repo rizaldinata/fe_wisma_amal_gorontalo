@@ -70,6 +70,9 @@ import 'package:frontend/presentation/bloc/schedule/schedule_list_bloc.dart';
 import 'package:frontend/presentation/bloc/schedule/schedule_action_bloc.dart';
 import 'package:frontend/presentation/bloc/schedule_detail/schedule_detail_bloc.dart';
 
+import 'package:frontend/domain/usecase/reservation/get_reservations_usecase.dart';
+import 'package:frontend/presentation/bloc/reservation_list/reservation_bloc.dart';
+
 Future<void> initializeBloc() async {
   serviceLocator.registerFactory<AuthBloc>(
     () => AuthBloc(
@@ -117,7 +120,7 @@ Future<void> initializeBloc() async {
       uploadRoomImageUseCase: serviceLocator.get<UploadRoomImageUseCase>(),
     ),
   );
-  
+
   serviceLocator.registerFactory<RoomScheduleBloc>(
     () => RoomScheduleBloc(
       getRoomSchedulesUseCase: serviceLocator.get<GetRoomSchedulesUseCase>(),
@@ -142,7 +145,8 @@ Future<void> initializeBloc() async {
   serviceLocator.registerFactory<SettingBloc>(
     () => SettingBloc(
       getSettingsUseCase: serviceLocator.get<GetSettingsUseCase>(),
-      updateBulkSettingsUseCase: serviceLocator.get<UpdateBulkSettingsUseCase>(),
+      updateBulkSettingsUseCase: serviceLocator
+          .get<UpdateBulkSettingsUseCase>(),
     ),
   );
 
@@ -157,7 +161,8 @@ Future<void> initializeBloc() async {
 
   serviceLocator.registerFactory<PaymentVerificationBloc>(
     () => PaymentVerificationBloc(
-      getPendingPaymentsUseCase: serviceLocator.get<GetPendingPaymentsUseCase>(),
+      getPendingPaymentsUseCase: serviceLocator
+          .get<GetPendingPaymentsUseCase>(),
       verifyPaymentUseCase: serviceLocator.get<VerifyPaymentUseCase>(),
       refundPaymentUseCase: serviceLocator.get<RefundPaymentUseCase>(),
     ),
@@ -239,6 +244,13 @@ Future<void> initializeBloc() async {
       getProfileUseCase: serviceLocator.get<GetProfileUseCase>(),
       updateProfileUseCase: serviceLocator.get<UpdateProfileUseCase>(),
       changePasswordUseCase: serviceLocator.get<ChangePasswordUseCase>(),
+    ),
+  );
+
+// reservation blocs
+  serviceLocator.registerFactory<ReservationBloc>(
+    () => ReservationBloc(
+      getReservationsUseCase: serviceLocator<GetReservationsUseCase>(),
     ),
   );
 }
