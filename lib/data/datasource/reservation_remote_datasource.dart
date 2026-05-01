@@ -35,4 +35,18 @@ class ReservationRemoteDatasource {
       rethrow;
     }
   }
+
+  Future<void> updateReservationStatus({
+    required int reservationId,
+    required String status,
+  }) async {
+    try {
+      await dioClient.patch(
+        '/rentals/$reservationId/status',
+        data: {'status': status},
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

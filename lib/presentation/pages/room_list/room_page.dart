@@ -87,36 +87,39 @@ class _RoomViewState extends State<RoomView>
                     children: [
                       Expanded(
                         child: StatCard(
-                          title: 'Total Rooms',
+                          title: 'Total Kamar',
                           count: state.rooms.length.toString(),
-                          color: Colors.green.shade100,
+                          color: Colors.green.shade200,
                           icon: const Icon(Icons.bed_outlined),
                         ),
                       ),
                       const SizedBox(width: 16),
+
                       Expanded(
                         child: StatCard(
-                          title: 'Available',
+                          title: 'Tersedia',
                           count: state.availableRooms.length.toString(),
-                          color: colorScheme.primaryContainer,
+                          color: Colors.deepPurple.shade300,
                           icon: const Icon(Icons.check_circle_outline),
                         ),
                       ),
                       const SizedBox(width: 16),
+
                       Expanded(
                         child: StatCard(
-                          title: 'Occupied',
+                          title: 'Terisi',
                           count: state.occupiedRooms.length.toString(),
-                          color: colorScheme.errorContainer,
+                          color: Colors.red.shade400,
                           icon: const Icon(Icons.person_outline),
                         ),
                       ),
                       const SizedBox(width: 16),
+
                       Expanded(
                         child: StatCard(
-                          title: 'Maintenance',
+                          title: 'Perbaikan',
                           count: state.maintenanceRooms.length.toString(),
-                          color: colorScheme.secondaryContainer,
+                          color: Colors.deepPurple.shade500,
                           icon: const Icon(Icons.build_circle_outlined),
                         ),
                       ),
@@ -141,10 +144,10 @@ class _RoomViewState extends State<RoomView>
                             dividerColor: Colors.transparent,
                             indicatorSize: TabBarIndicatorSize.tab,
                             tabs: const [
-                              Tab(text: 'All'),
-                              Tab(text: 'Available'),
-                              Tab(text: 'Occupied'),
-                              Tab(text: 'Maintenance'),
+                              Tab(text: 'Semua'),
+                              Tab(text: 'Tersedia'),
+                              Tab(text: 'Terisi'),
+                              Tab(text: 'Perbaikan'),
                             ],
                             controller: _controller,
                           ),
