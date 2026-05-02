@@ -13,7 +13,7 @@ import '../../widget/core/chip/custom_chip.dart';
 
 @RoutePage()
 class ExpenseListPage extends StatefulWidget {
-  const ExpenseListPage({Key? key}) : super(key: key);
+  const ExpenseListPage({super.key});
 
   @override
   State<ExpenseListPage> createState() => _ExpenseListPageState();
