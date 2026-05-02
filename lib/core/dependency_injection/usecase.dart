@@ -55,8 +55,9 @@ import 'package:frontend/domain/usecase/inventory/inventory_action_usecases.dart
 import 'package:frontend/domain/repository/schedule_repository.dart';
 import 'package:frontend/domain/usecase/schedule/schedule_usecases.dart';
 import 'package:frontend/domain/usecase/schedule/add_schedule_update_usecase.dart';
-import 'package:frontend/domain/repository/resident_repository.dart';
-import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
+import 'package:frontend/domain/repository/reservation_repository.dart';
+import 'package:frontend/domain/usecase/reservation/get_reservations_usecase.dart';
+import 'package:frontend/domain/usecase/reservation/update_reservation_status_usecase.dart';
 
 Future<void> initializeUseCase() async {
   // Auth UseCases
@@ -149,7 +150,7 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => VerifyPaymentUseCase(serviceLocator.get<FinanceRepository>()),
-  );  
+  );
   serviceLocator.registerFactory(
     () => RefundPaymentUseCase(serviceLocator.get<FinanceRepository>()),
   );
@@ -215,7 +216,7 @@ Future<void> initializeUseCase() async {
   serviceLocator.registerFactory(
     () => AddScheduleUpdateUseCase(serviceLocator.get<ScheduleRepository>()),
   );
-  
+
   // User Management UseCases
   serviceLocator.registerFactory(
     () => GetAllUsersUseCase(serviceLocator.get<UserRepository>()),
@@ -241,8 +242,13 @@ Future<void> initializeUseCase() async {
     () => ChangePasswordUseCase(serviceLocator.get<ProfileRepository>()),
   );
 
-  // Resident UseCases
+  // Reservation UseCases
   serviceLocator.registerFactory(
-    () => GetAdminResidentsUseCase(serviceLocator.get<ResidentRepository>()),
+    () => GetReservationsUseCase(serviceLocator<ReservationRepository>()),
+  );
+
+  serviceLocator.registerFactory(
+    () =>
+        UpdateReservationStatusUseCase(serviceLocator<ReservationRepository>()),
   );
 }

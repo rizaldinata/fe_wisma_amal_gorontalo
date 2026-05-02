@@ -49,7 +49,7 @@ class RoomDetailView extends StatelessWidget {
           return Scaffold(
             appBar: CustomAppbar(
               icon: const Icon(Icons.arrow_back),
-              title: 'Room Detail',
+              title: 'Detail Kamar',
             ),
             body: Center(
               child: Text(
@@ -62,7 +62,7 @@ class RoomDetailView extends StatelessWidget {
         return Scaffold(
           appBar: CustomAppbar(
             icon: const Icon(Icons.arrow_back),
-            title: 'Room Detail',
+            title: 'Detail Kamar',
           ),
           body: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -226,7 +226,6 @@ class RoomDetailView extends StatelessWidget {
                                   SizedBox(height: 20),
                                   BasicButton(
                                     onPressed: () {
-                                      // Tambahkan navigasi ini:
                                       context.router.push(
                                         const IdentityFormRoute(),
                                       );

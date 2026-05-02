@@ -106,6 +106,28 @@ class DioClient {
     }
   }
 
+  Future<Response<T>> patch<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParams,
+    Options? options,
+  }) async {
+    try {
+      return await _dio.patch<T>(
+        path,
+        data: data,
+        queryParameters: queryParams,
+        options: options,
+      );
+    } on DioException catch (e) {
+      if (e.error is AppException) throw e.error!;
+
+      throw AppException.fromDioError(e);
+    } catch (e) {
+      throw AppException.other(e);
+    }
+  }
+
   Future<Response<T>> delete<T>(
     String path, {
     dynamic data,
@@ -164,6 +186,20 @@ class DioClient {
     Options? options,
   }) async {
     return await _dio.put<T>(
+      path,
+      data: data,
+      queryParameters: queryParams,
+      options: options,
+    );
+  }
+
+  Future<Response<T>> patchWithoutException<T>(
+    String path, {
+    dynamic data,
+    Map<String, dynamic>? queryParams,
+    Options? options,
+  }) async {
+    return await _dio.patch<T>(
       path,
       data: data,
       queryParameters: queryParams,
