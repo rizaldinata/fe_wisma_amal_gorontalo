@@ -16,7 +16,7 @@ import '../../../domain/entity/finance/revenue_entity.dart';
 
 @RoutePage()
 class FinanceDashboardPage extends StatefulWidget {
-  const FinanceDashboardPage({Key? key}) : super(key: key);
+  const FinanceDashboardPage({super.key});
 
   @override
   State<FinanceDashboardPage> createState() => _FinanceDashboardPageState();
