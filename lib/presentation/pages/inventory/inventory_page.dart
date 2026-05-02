@@ -14,8 +14,8 @@ class InventoryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => serviceLocator<InventoryListBloc>()..add(FetchInventories()),
+    return BlocProvider.value(
+      value: serviceLocator<InventoryListBloc>()..add(FetchInventories()),
       child: const InventoryView(),
     );
   }
@@ -27,7 +27,10 @@ class InventoryView extends StatelessWidget {
   String _formatCurrency(double? price) {
     if (price == null) return '-';
     final formatCurrency = NumberFormat.currency(
-        locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
     return formatCurrency.format(price);
   }
 
@@ -52,9 +55,13 @@ class InventoryView extends StatelessWidget {
                       ),
                       ElevatedButton.icon(
                         onPressed: () async {
-                          final result = await context.router.push(InventoryFormRoute());
+                          final result = await context.router.push(
+                            InventoryFormRoute(),
+                          );
                           if (result == true && context.mounted) {
-                            context.read<InventoryListBloc>().add(FetchInventories());
+                            context.read<InventoryListBloc>().add(
+                              FetchInventories(),
+                            );
                           }
                         },
                         icon: const Icon(Icons.add, size: 18),
@@ -66,7 +73,9 @@ class InventoryView extends StatelessWidget {
                   if (state is InventoryListLoading)
                     const Center(child: CircularProgressIndicator())
                   else if (state is InventoryListError)
-                    Center(child: Text('Gagal mengambil data: ${state.message}'))
+                    Center(
+                      child: Text('Gagal mengambil data: ${state.message}'),
+                    )
                   else if (state is InventoryListLoaded) ...[
                     TableCard(
                       title: 'Daftar Barang',
@@ -91,7 +100,9 @@ class InventoryView extends StatelessWidget {
                                 InventoryFormRoute(inventoryData: item),
                               );
                               if (result == true && context.mounted) {
-                                context.read<InventoryListBloc>().add(FetchInventories());
+                                context.read<InventoryListBloc>().add(
+                                  FetchInventories(),
+                                );
                               }
                             },
                           ),

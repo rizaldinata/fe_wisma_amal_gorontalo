@@ -14,7 +14,7 @@ class RouteConstant {
   static const String dashboardName = 'dashboard';
   static const String landingName = 'landing';
   static const String permissionName = 'permissions';
-  static const String roleName = 'role';
+  static const String roleName = 'roles';
   static const String settingName = 'setting';
   static const String userManagementName = 'users';
   static const String profileName = 'profile';

@@ -18,6 +18,7 @@ import 'package:frontend/domain/usecase/permission/create_permission_usecase.dar
 import 'package:frontend/domain/usecase/permission/delete_permission_usecase.dart';
 import 'package:frontend/domain/usecase/permission/get_permission_list_usecase.dart';
 import 'package:frontend/domain/usecase/permission/update_permission_usecase.dart';
+import 'package:frontend/domain/usecase/role/role_usecases.dart';
 import 'package:frontend/domain/usecase/room/create_room_usecase.dart';
 import 'package:frontend/domain/usecase/room/delete_room_usecase.dart';
 import 'package:frontend/domain/usecase/room/get_room_schedules_usecase.dart';
@@ -32,6 +33,7 @@ import 'package:frontend/presentation/bloc/form_room/form_room_bloc.dart';
 import 'package:frontend/presentation/bloc/finance_dashboard/finance_dashboard_bloc.dart';
 import 'package:frontend/domain/usecase/finance/get_invoices_usecase.dart';
 import 'package:frontend/presentation/bloc/invoice/invoice_bloc.dart';
+import 'package:frontend/presentation/bloc/role/role_bloc.dart';
 import 'package:frontend/presentation/bloc/setting/setting_bloc.dart';
 import 'package:frontend/domain/usecase/setting/get_settings_usecase.dart';
 import 'package:frontend/domain/usecase/setting/update_settings_usecase.dart';
@@ -75,7 +77,7 @@ import 'package:frontend/domain/usecase/reservation/update_reservation_status_us
 import 'package:frontend/presentation/bloc/reservation_list/reservation_bloc.dart';
 
 Future<void> initializeBloc() async {
-  serviceLocator.registerFactory<AuthBloc>(
+  serviceLocator.registerLazySingleton<AuthBloc>(
     () => AuthBloc(
       checkSessionUseCase: serviceLocator.get<CheckSessionUseCase>(),
       getPermissionsUseCase: serviceLocator.get<GetPermissionsUseCase>(),
@@ -87,7 +89,7 @@ Future<void> initializeBloc() async {
     ),
   );
 
-  serviceLocator.registerFactory<PermissionBloc>(
+  serviceLocator.registerLazySingleton<PermissionBloc>(
     () => PermissionBloc(
       getPermissionsUseCase: serviceLocator.get<GetPermissionListUseCase>(),
       createPermissionUseCase: serviceLocator.get<CreatePermissionUseCase>(),
@@ -96,7 +98,7 @@ Future<void> initializeBloc() async {
     ),
   );
 
-  serviceLocator.registerFactory<RoomBloc>(
+  serviceLocator.registerLazySingleton<RoomBloc>(
     () => RoomBloc(
       getRoomsUseCase: serviceLocator.get<GetRoomsUseCase>(),
       createRoomUseCase: serviceLocator.get<CreateRoomUseCase>(),
@@ -105,14 +107,14 @@ Future<void> initializeBloc() async {
     ),
   );
 
-  serviceLocator.registerFactory<DetailRoomBloc>(
+  serviceLocator.registerLazySingleton<DetailRoomBloc>(
     () => DetailRoomBloc(
       getRoomByIdUseCase: serviceLocator.get<GetRoomByIdUseCase>(),
       updateRoomUseCase: serviceLocator.get<UpdateRoomUseCase>(),
     ),
   );
 
-  serviceLocator.registerFactory<FormRoomBloc>(
+  serviceLocator.registerLazySingleton<FormRoomBloc>(
     () => FormRoomBloc(
       createRoomUseCase: serviceLocator.get<CreateRoomUseCase>(),
       getRoomByIdUseCase: serviceLocator.get<GetRoomByIdUseCase>(),
@@ -122,13 +124,13 @@ Future<void> initializeBloc() async {
     ),
   );
 
-  serviceLocator.registerFactory<RoomScheduleBloc>(
+  serviceLocator.registerLazySingleton<RoomScheduleBloc>(
     () => RoomScheduleBloc(
       getRoomSchedulesUseCase: serviceLocator.get<GetRoomSchedulesUseCase>(),
     ),
   );
 
-  serviceLocator.registerFactory<FinanceDashboardBloc>(
+  serviceLocator.registerLazySingleton<FinanceDashboardBloc>(
     () => FinanceDashboardBloc(
       serviceLocator.get<GetDueInvoicesUseCase>(),
       serviceLocator.get<GetPendingPaymentsUseCase>(),
@@ -137,13 +139,13 @@ Future<void> initializeBloc() async {
     ),
   );
 
-  serviceLocator.registerFactory<InvoiceBloc>(
+  serviceLocator.registerLazySingleton<InvoiceBloc>(
     () => InvoiceBloc(
       getInvoicesUseCase: serviceLocator.get<GetInvoicesUseCase>(),
     ),
   );
 
-  serviceLocator.registerFactory<SettingBloc>(
+  serviceLocator.registerLazySingleton<SettingBloc>(
     () => SettingBloc(
       getSettingsUseCase: serviceLocator.get<GetSettingsUseCase>(),
       updateBulkSettingsUseCase: serviceLocator
@@ -151,7 +153,7 @@ Future<void> initializeBloc() async {
     ),
   );
 
-  serviceLocator.registerFactory<ExpenseBloc>(
+  serviceLocator.registerLazySingleton<ExpenseBloc>(
     () => ExpenseBloc(
       getExpensesUseCase: serviceLocator.get<GetExpensesUseCase>(),
       createExpenseUseCase: serviceLocator.get<CreateExpenseUseCase>(),
@@ -160,7 +162,7 @@ Future<void> initializeBloc() async {
     ),
   );
 
-  serviceLocator.registerFactory<PaymentVerificationBloc>(
+  serviceLocator.registerLazySingleton<PaymentVerificationBloc>(
     () => PaymentVerificationBloc(
       getPendingPaymentsUseCase: serviceLocator
           .get<GetPendingPaymentsUseCase>(),
@@ -170,20 +172,20 @@ Future<void> initializeBloc() async {
   );
 
   // Maintenance Blocs
-  serviceLocator.registerFactory<MaintenanceListBloc>(
+  serviceLocator.registerLazySingleton<MaintenanceListBloc>(
     () => MaintenanceListBloc(
       getMyRequestsUseCase: serviceLocator.get<GetMyRequestsUseCase>(),
       getAllRequestsUseCase: serviceLocator.get<GetAllRequestsUseCase>(),
     ),
   );
 
-  serviceLocator.registerFactory<MaintenanceDetailBloc>(
+  serviceLocator.registerLazySingleton<MaintenanceDetailBloc>(
     () => MaintenanceDetailBloc(
       getDetailUseCase: serviceLocator.get<GetDetailUseCase>(),
     ),
   );
 
-  serviceLocator.registerFactory<MaintenanceActionBloc>(
+  serviceLocator.registerLazySingleton<MaintenanceActionBloc>(
     () => MaintenanceActionBloc(
       createRequestUseCase: serviceLocator.get<CreateRequestUseCase>(),
       addUpdateUseCase: serviceLocator.get<AddUpdateUseCase>(),
@@ -191,13 +193,13 @@ Future<void> initializeBloc() async {
   );
 
   // Inventory Blocs
-  serviceLocator.registerFactory<InventoryListBloc>(
+  serviceLocator.registerLazySingleton<InventoryListBloc>(
     () => InventoryListBloc(
       getInventoriesUseCase: serviceLocator.get<GetInventoriesUseCase>(),
     ),
   );
 
-  serviceLocator.registerFactory<InventoryActionBloc>(
+  serviceLocator.registerLazySingleton<InventoryActionBloc>(
     () => InventoryActionBloc(
       createInventoryUseCase: serviceLocator.get<CreateInventoryUseCase>(),
       updateInventoryUseCase: serviceLocator.get<UpdateInventoryUseCase>(),
@@ -206,13 +208,13 @@ Future<void> initializeBloc() async {
   );
 
   // Schedule BLoCs
-  serviceLocator.registerFactory<ScheduleListBloc>(
+  serviceLocator.registerLazySingleton<ScheduleListBloc>(
     () => ScheduleListBloc(
       getSchedulesUseCase: serviceLocator.get<GetSchedulesUseCase>(),
     ),
   );
 
-  serviceLocator.registerFactory<ScheduleActionBloc>(
+  serviceLocator.registerLazySingleton<ScheduleActionBloc>(
     () => ScheduleActionBloc(
       createScheduleUseCase: serviceLocator.get<CreateScheduleUseCase>(),
       updateScheduleUseCase: serviceLocator.get<UpdateScheduleUseCase>(),
@@ -221,17 +223,17 @@ Future<void> initializeBloc() async {
     ),
   );
 
-  serviceLocator.registerFactory<ScheduleDetailBloc>(
+  serviceLocator.registerLazySingleton<ScheduleDetailBloc>(
     () => ScheduleDetailBloc(
       getScheduleByIdUseCase: serviceLocator.get<GetScheduleByIdUseCase>(),
     ),
   );
 
-  serviceLocator.registerFactory<CompleteProfileBloc>(
+  serviceLocator.registerLazySingleton<CompleteProfileBloc>(
     () => CompleteProfileBloc(repository: serviceLocator()),
   );
 
-  serviceLocator.registerFactory<UserManagementBloc>(
+  serviceLocator.registerLazySingleton<UserManagementBloc>(
     () => UserManagementBloc(
       getAllUsersUseCase: serviceLocator.get<GetAllUsersUseCase>(),
       updateUserUseCase: serviceLocator.get<UpdateUserUseCase>(),
@@ -240,7 +242,7 @@ Future<void> initializeBloc() async {
     ),
   );
 
-  serviceLocator.registerFactory<ProfileBloc>(
+  serviceLocator.registerLazySingleton<ProfileBloc>(
     () => ProfileBloc(
       getProfileUseCase: serviceLocator.get<GetProfileUseCase>(),
       updateProfileUseCase: serviceLocator.get<UpdateProfileUseCase>(),
@@ -249,12 +251,23 @@ Future<void> initializeBloc() async {
   );
 
   // reservation blocs
-  serviceLocator.registerFactory<ReservationBloc>(
+  serviceLocator.registerLazySingleton<ReservationBloc>(
     () => ReservationBloc(
       getReservationsUseCase: serviceLocator<GetReservationsUseCase>(),
 
       updateReservationStatusUseCase:
           serviceLocator<UpdateReservationStatusUseCase>(),
+    ),
+  );
+
+  // Role Blocs
+  serviceLocator.registerLazySingleton<RoleBloc>(
+    () => RoleBloc(
+      createRoleUseCase: serviceLocator.get<CreateRoleUseCase>(),
+      getAllPermissionsUseCase: serviceLocator.get<GetAllPermissionsUseCase>(),
+      updateRoleUseCase: serviceLocator.get<UpdateRoleUseCase>(),
+      deleteRoleUseCase: serviceLocator.get<DeleteRoleUseCase>(),
+      getAllRolesUseCase: serviceLocator.get<GetAllRolesUseCase>(),
     ),
   );
 }

@@ -20,9 +20,8 @@ class PermissionDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          serviceLocator<PermissionBloc>()..add(GetPermissionsEvent()),
+    return BlocProvider.value(
+      value: serviceLocator<PermissionBloc>()..add(GetPermissionsEvent()),
       child: Scaffold(
         appBar: CustomAppbar(
           icon: const Icon(Icons.arrow_back),

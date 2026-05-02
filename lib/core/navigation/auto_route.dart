@@ -31,7 +31,7 @@ class AppRouter extends RootStackRouter {
         ),
         AutoRoute(
           path: RouteConstant.roleName,
-          page: RolePlaceholderRoute.page,
+          page: RoleManagementRoute.page,
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
         ),
 

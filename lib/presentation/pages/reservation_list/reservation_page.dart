@@ -28,9 +28,8 @@ class ReservationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          serviceLocator<ReservationBloc>()..add(GetReservationsEvent()),
+    return BlocProvider.value(
+      value: serviceLocator<ReservationBloc>()..add(GetReservationsEvent()),
 
       child: const ReservationView(),
     );

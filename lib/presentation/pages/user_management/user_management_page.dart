@@ -18,9 +18,8 @@ class UserManagementPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          serviceLocator<UserManagementBloc>()..add(FetchUsers()),
+    return BlocProvider.value(
+      value: serviceLocator<UserManagementBloc>()..add(FetchUsers()),
       child: const UserManagementView(),
     );
   }

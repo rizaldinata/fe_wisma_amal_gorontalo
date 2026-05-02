@@ -7,7 +7,7 @@ class UserModel {
   final DateTime? emailVerifiedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final List<Role> roles;
+  final List<RoleModel> roles;
 
   UserModel({
     required this.id,
@@ -29,7 +29,7 @@ class UserModel {
           : null,
       createdAt: DateTime.parse(json['created_at']),
       updatedAt: DateTime.parse(json['updated_at']),
-      roles: (json['roles'] as List).map((e) => Role.fromJson(e)).toList(),
+      roles: (json['roles'] as List).map((e) => RoleModel.fromJson(e)).toList(),
     );
   }
 }
