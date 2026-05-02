@@ -8,7 +8,7 @@ abstract class FinanceRepository {
   Future<List<InvoiceEntity>> getDueInvoices();
   Future<List<InvoiceEntity>> getInvoices();
   Future<List<PaymentEntity>> getPendingPayments();
-  Future<KpiEntity> getKpiSummary();
+  Future<KpiEntity> getKpiSummary({int? month, int? year});
   Future<List<RevenueEntity>> getRevenueChart();
 
   // Expense

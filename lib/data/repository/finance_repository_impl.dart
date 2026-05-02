@@ -43,8 +43,8 @@ class FinanceRepositoryImpl implements FinanceRepository {
   }
 
   @override
-  Future<KpiEntity> getKpiSummary() async {
-    return await remoteDatasource.getKpiSummary();
+  Future<KpiEntity> getKpiSummary({int? month, int? year}) async {
+    return await remoteDatasource.getKpiSummary(month: month, year: year);
   }
 
   @override
