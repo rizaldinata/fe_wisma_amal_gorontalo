@@ -12,8 +12,8 @@ class EditProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => serviceLocator<ProfileBloc>()..add(FetchProfile()),
+    return BlocProvider.value(
+      value: serviceLocator<ProfileBloc>()..add(FetchProfile()),
       child: const EditProfileView(),
     );
   }

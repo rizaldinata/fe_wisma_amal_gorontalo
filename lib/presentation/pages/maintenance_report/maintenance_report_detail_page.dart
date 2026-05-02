@@ -30,12 +30,13 @@ class MaintenanceReportDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (_) =>
-              serviceLocator<MaintenanceDetailBloc>()
-                ..add(FetchMaintenanceDetail(id)),
+        BlocProvider.value(
+          value: serviceLocator<MaintenanceDetailBloc>()
+            ..add(FetchMaintenanceDetail(id)),
         ),
-        BlocProvider(create: (_) => serviceLocator<MaintenanceActionBloc>()),
+        BlocProvider.value(
+          value: serviceLocator<MaintenanceActionBloc>(),
+        ),
       ],
       child: const _DetailView(),
     );

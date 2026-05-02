@@ -46,9 +46,8 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return BlocProvider(
-      create: (context) =>
-          serviceLocator<CompleteProfileBloc>()..add(LoadProfileEvent()),
+    return BlocProvider.value(
+      value: serviceLocator<CompleteProfileBloc>()..add(LoadProfileEvent()),
       child: BlocListener<CompleteProfileBloc, CompleteProfileState>(
         listener: (context, state) {
           if (state is CompleteProfileLoaded) {

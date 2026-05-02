@@ -17,8 +17,8 @@ class MaintenanceCreateReportPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => serviceLocator<MaintenanceActionBloc>(),
+    return BlocProvider.value(
+      value: serviceLocator<MaintenanceActionBloc>(),
       child: const _CreateReportView(),
     );
   }

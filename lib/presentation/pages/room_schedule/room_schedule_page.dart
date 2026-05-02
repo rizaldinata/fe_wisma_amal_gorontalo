@@ -31,8 +31,8 @@ class _RoomSchedulePageState extends State<RoomSchedulePage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return BlocProvider(
-      create: (context) =>
+    return BlocProvider.value(
+      value:
           serviceLocator.get<RoomScheduleBloc>()..add(FetchRoomSchedules()),
 
       child: Scaffold(

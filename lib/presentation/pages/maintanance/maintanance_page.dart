@@ -23,11 +23,12 @@ class MaintanancePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(
-          create: (_) =>
-              serviceLocator<ScheduleListBloc>()..add(FetchSchedules()),
+        BlocProvider.value(
+          value: serviceLocator<ScheduleListBloc>()..add(FetchSchedules()),
         ),
-        BlocProvider(create: (_) => serviceLocator<ScheduleActionBloc>()),
+        BlocProvider.value(
+          value: serviceLocator<ScheduleActionBloc>(),
+        ),
       ],
       child: const _MaintananceView(),
     );

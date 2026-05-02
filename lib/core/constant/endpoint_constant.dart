@@ -14,6 +14,7 @@ class EndpointConstant {
   static const String permissionEndpoint = '/permissions';
   static const String allPermissionsEndpoint = '/permissions/all';
   static const String roomsEndpoint = '/rooms';
+  static const String adminRolesEndpoint = '/admin/roles';
 
   static deleteRoomImage({required int roomId, required int imageId}) =>
       '/rooms/$roomId/images/$imageId';

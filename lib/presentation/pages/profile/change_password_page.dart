@@ -12,8 +12,8 @@ class ChangePasswordPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => serviceLocator<ProfileBloc>(),
+    return BlocProvider.value(
+      value: serviceLocator<ProfileBloc>(),
       child: const ChangePasswordView(),
     );
   }
