@@ -28,6 +28,7 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
           final isGuest = !state.isLoggedIn;
           final roles = state.userInfo?.roles ?? [];
           final isMember = roles.contains('member');
+          final isResident = roles.contains('resident');
 
           return Row(
             children: [
@@ -91,7 +92,7 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                     ),
 
                   // ─── Area Penghuni (Khusus Resident/Member) ────────
-                  if (isMember)
+                  if (isResident || isMember)
                     SidebarItem(
                       label: 'Area Penghuni',
                       icon: Icons.home_work_outlined,
@@ -100,26 +101,23 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                         SidebarItem(
                           label: 'Profil Saya',
                           icon: Icons.person_pin_outlined,
-                          page: const CompleteProfileRoute(),
+                          page: const ProfileRoute(),
                         ),
-                        if (context.can(PermissionKeys.createDamageReport))
-                          SidebarItem(
-                            label: 'Lapor Kerusakan',
-                            icon: Icons.report_problem_outlined,
-                            page: const MaintenanceCreateReportRoute(),
-                          ),
-                        if (context.can(PermissionKeys.viewMyDamageReport))
-                          SidebarItem(
-                            label: 'Status Laporan',
-                            icon: Icons.track_changes_outlined,
-                            page: const MaintenanceReportListRoute(),
-                          ),
-                        if (context.can(PermissionKeys.viewMaintenance))
-                          SidebarItem(
-                            label: 'Jadwal Pemeliharaan',
-                            icon: Icons.calendar_today_outlined,
-                            page: const MaintananceRoute(),
-                          ),
+                        SidebarItem(
+                          label: 'Lapor Kerusakan',
+                          icon: Icons.report_problem_outlined,
+                          page: const MaintenanceCreateReportRoute(),
+                        ),
+                        SidebarItem(
+                          label: 'Status Laporan',
+                          icon: Icons.track_changes_outlined,
+                          page: const MaintenanceReportListRoute(),
+                        ),
+                        SidebarItem(
+                          label: 'Jadwal Pemeliharaan',
+                          icon: Icons.calendar_today_outlined,
+                          page: const MaintananceRoute(),
+                        ),
                       ],
                     ),
 
@@ -187,9 +185,11 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                     ),
 
                   // ─── Inventaris & Pemeliharaan ─────────────────────
-                  if (context.can(PermissionKeys.viewInventory) ||
-                      context.can(PermissionKeys.viewMaintenance) ||
-                      context.can(PermissionKeys.viewDamageReport))
+                  if (!isResident &&
+                      !isMember &&
+                      (context.can(PermissionKeys.viewInventory) ||
+                          context.can(PermissionKeys.viewMaintenance) ||
+                          context.can(PermissionKeys.viewDamageReport)))
                     SidebarItem(
                       label: 'Inventaris & Pemiliharaan',
                       icon: Icons.inventory,
@@ -217,7 +217,8 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                     ),
 
                   // ─── Lengkapi Profil (member baru yang belum melengkapi) ──
-                  if (context.can(PermissionKeys.completeResidentProfile) && !isMember)
+                  if (context.can(PermissionKeys.completeResidentProfile) &&
+                      !isMember)
                     SidebarItem(
                       label: 'Lengkapi Profil',
                       icon: Icons.assignment_ind_outlined,
@@ -233,7 +234,7 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                     ),
 
                   // ─── Profil Saya (semua user login) ───────────────
-                  if (!isGuest)
+                  if (!isGuest && !isResident)
                     SidebarItem(
                       label: 'Profil Saya',
                       icon: Icons.person_outline,
