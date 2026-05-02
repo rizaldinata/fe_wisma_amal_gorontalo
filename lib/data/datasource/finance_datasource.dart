@@ -10,7 +10,7 @@ abstract class FinanceRemoteDatasource {
   Future<List<InvoiceModel>> getDueInvoices();
   Future<List<InvoiceModel>> getInvoices();
   Future<List<PaymentModel>> getPendingPayments();
-  Future<KpiModel> getKpiSummary();
+  Future<KpiModel> getKpiSummary({int? month, int? year});
   Future<List<RevenueModel>> getRevenueChart();
 
   Future<List<ExpenseModel>> getExpenses();
@@ -40,7 +40,8 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
   @override
   Future<List<InvoiceModel>> getInvoices() async {
     try {
-      final response = await _dioClient.get('/finance/invoices');
+      // per_page=200 agar semua tagihan terambil untuk client-side pagination
+      final response = await _dioClient.get('/finance/invoices', queryParams: {'per_page': 200});
       final List<dynamic> data = response.data['data'] ?? [];
       return data.map((json) => InvoiceModel.fromJson(json)).toList();
     } catch (e) {
@@ -62,9 +63,16 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
   }
 
   @override
-  Future<KpiModel> getKpiSummary() async {
+  Future<KpiModel> getKpiSummary({int? month, int? year}) async {
     try {
-      final response = await _dioClient.get('/finance/dashboard/kpi-summary');
+      final Map<String, dynamic> queryParams = {};
+      if (month != null) queryParams['month'] = month;
+      if (year != null) queryParams['year'] = year;
+
+      final response = await _dioClient.get(
+        '/finance/dashboard/kpi-summary',
+        queryParams: queryParams,
+      );
       final data = response.data['data'] ?? {};
       return KpiModel.fromJson(data);
     } catch (e) {
@@ -116,7 +124,8 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
 
   @override
   Future<List<ExpenseModel>> getExpenses() async {
-    final response = await _dioClient.get('/finance/expenses');
+    // per_page=200 agar semua data pengeluaran terambil sekaligus (max 200)
+    final response = await _dioClient.get('/finance/expenses', queryParams: {'per_page': 200});
     final List<dynamic> data = response.data['data'] ?? [];
     return data.map((json) => ExpenseModel.fromJson(json)).toList();
   }

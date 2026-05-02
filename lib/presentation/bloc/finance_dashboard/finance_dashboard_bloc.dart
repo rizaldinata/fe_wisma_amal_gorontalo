@@ -36,7 +36,7 @@ class FinanceDashboardBloc
       final results = await Future.wait([
         _getDueInvoicesUseCase.call(),
         _getPendingPaymentsUseCase.call(),
-        _getKpiSummaryUseCase.call(),
+        _getKpiSummaryUseCase.call(month: event.month, year: event.year),
         _getRevenueChartUseCase.call(),
       ]);
 
