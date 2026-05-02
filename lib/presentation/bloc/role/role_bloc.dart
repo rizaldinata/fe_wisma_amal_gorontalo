@@ -4,7 +4,6 @@ import 'package:frontend/domain/entity/permission_entity.dart';
 import 'package:frontend/domain/entity/role/role_entity.dart';
 import 'package:frontend/domain/usecase/role/role_usecases.dart';
 
-// Events
 abstract class RoleEvent extends Equatable {
   const RoleEvent();
   @override
