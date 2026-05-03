@@ -88,6 +88,16 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                           icon: Icons.people,
                           page: const ResidentRoute(),
                         ),
+                        SidebarItem(
+                          label: 'Kontrak Sewa',
+                          icon: Icons.description,
+                          page: const ContractResidentRoute(),
+                        ),
+                        SidebarItem(
+                          label: 'Daftar Tamu',
+                          icon: Icons.groups,
+                          page: const GuestListRoute(),
+                        ),
                       ],
                     ),
 

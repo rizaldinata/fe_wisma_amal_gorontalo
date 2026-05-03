@@ -60,6 +60,8 @@ import 'package:frontend/domain/usecase/user/get_all_users_usecase.dart';
 import 'package:frontend/domain/usecase/user/update_user_usecase.dart';
 import 'package:frontend/domain/usecase/user/delete_user_usecase.dart';
 import 'package:frontend/domain/usecase/user/create_user_usecase.dart';
+import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
+import 'package:frontend/presentation/bloc/resident/resident_bloc.dart';
 
 import 'package:frontend/domain/usecase/inventory/get_inventories_usecase.dart';
 import 'package:frontend/domain/usecase/inventory/inventory_action_usecases.dart';
@@ -242,7 +244,13 @@ Future<void> initializeBloc() async {
     ),
   );
 
-  serviceLocator.registerLazySingleton<ProfileBloc>(
+  serviceLocator.registerFactory<ResidentBloc>(
+    () => ResidentBloc(
+      getAdminResidentsUseCase: serviceLocator.get<GetAdminResidentsUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<ProfileBloc>(
     () => ProfileBloc(
       getProfileUseCase: serviceLocator.get<GetProfileUseCase>(),
       updateProfileUseCase: serviceLocator.get<UpdateProfileUseCase>(),

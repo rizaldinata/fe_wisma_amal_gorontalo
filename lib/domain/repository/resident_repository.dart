@@ -1,7 +1,9 @@
 import 'package:file_picker/file_picker.dart';
+import 'package:frontend/domain/entity/resident/resident_entity.dart';
 import 'package:frontend/domain/entity/resident/resident_profile_entity.dart';
 
 abstract class ResidentRepository {
+  Future<ResidentResponse> getAdminResidents();
   Future<ResidentProfileEntity> getProfile();
   Future<ResidentProfileEntity> completeProfile({
     required String idCardNumber,
