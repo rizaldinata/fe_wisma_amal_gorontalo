@@ -32,8 +32,7 @@ class _RoomSchedulePageState extends State<RoomSchedulePage> {
     final theme = Theme.of(context);
 
     return BlocProvider.value(
-      value:
-          serviceLocator.get<RoomScheduleBloc>()..add(FetchRoomSchedules()),
+      value: serviceLocator.get<RoomScheduleBloc>()..add(FetchRoomSchedules()),
 
       child: Scaffold(
         backgroundColor: theme.colorScheme.surface,
@@ -245,13 +244,13 @@ class _RoomSchedulePageState extends State<RoomSchedulePage> {
 
           switch (_selectedStatus) {
             case 'Menunggu':
-              return status == 'menunggu';
+              return status == 'pending';
 
             case 'Aktif':
-              return status == 'aktif';
+              return status == 'active';
 
             case 'Selesai':
-              return status == 'selesai';
+              return status == 'finished';
 
             default:
               return true;
@@ -298,7 +297,7 @@ class _RoomSchedulePageState extends State<RoomSchedulePage> {
                 status = RoomDayStatus.ongoing;
                 break;
 
-              case 'expired':
+              case 'finished':
                 status = RoomDayStatus.completed;
                 break;
 
@@ -329,7 +328,11 @@ class _RoomSchedulePageState extends State<RoomSchedulePage> {
     int total = 0;
 
     for (var room in rooms) {
-      total += room.schedules.length;
+      total += room.schedules.where((schedule) {
+        final status = schedule.status.toLowerCase();
+
+        return status == 'pending' || status == 'active';
+      }).length;
     }
 
     return total;
@@ -498,7 +501,7 @@ class _TotalBookingStat extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Total Booking',
+            'Total Sewa Aktif',
 
             style: theme.textTheme.labelMedium?.copyWith(
               color: theme.colorScheme.onSurfaceVariant,

@@ -7,6 +7,7 @@ class ReservationEntity extends Equatable {
   final String residentName;
   final String rentalType;
   final String status;
+  final String paymentStatus;
   final String startDate;
   final String endDate;
 
@@ -17,6 +18,7 @@ class ReservationEntity extends Equatable {
     required this.residentName,
     required this.rentalType,
     required this.status,
+    required this.paymentStatus,
     required this.startDate,
     required this.endDate,
   });
@@ -29,6 +31,7 @@ class ReservationEntity extends Equatable {
         residentName,
         rentalType,
         status,
+        paymentStatus,
         startDate,
         endDate,
       ];

@@ -111,74 +111,74 @@ class _ReservationViewState extends State<ReservationView> {
     }
   }
 
-  void _showEditStatusDialog(ReservationEntity reservation) {
-    String selectedStatus = reservation.status;
+  // void _showEditStatusDialog(ReservationEntity reservation) {
+  //   String selectedStatus = reservation.status;
 
-    showDialog(
-      context: context,
+  //   showDialog(
+  //     context: context,
 
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Update Status Reservasi'),
+  //     builder: (context) {
+  //       return AlertDialog(
+  //         title: const Text('Update Status Reservasi'),
 
-          content: StatefulBuilder(
-            builder: (context, setModalState) {
-              return DropdownButtonFormField<String>(
-                value: selectedStatus,
+  //         content: StatefulBuilder(
+  //           builder: (context, setModalState) {
+  //             return DropdownButtonFormField<String>(
+  //               value: selectedStatus,
 
-                decoration: const InputDecoration(labelText: 'Status'),
+  //               decoration: const InputDecoration(labelText: 'Status'),
 
-                items: const [
-                  DropdownMenuItem(value: 'pending', child: Text('Pending')),
+  //               items: const [
+  //                 DropdownMenuItem(value: 'pending', child: Text('Pending')),
 
-                  DropdownMenuItem(value: 'active', child: Text('Active')),
+  //                 DropdownMenuItem(value: 'active', child: Text('Active')),
 
-                  DropdownMenuItem(
-                    value: 'cancelled',
+  //                 DropdownMenuItem(
+  //                   value: 'cancelled',
 
-                    child: Text('Cancelled'),
-                  ),
-                ],
+  //                   child: Text('Cancelled'),
+  //                 ),
+  //               ],
 
-                onChanged: (value) {
-                  if (value != null) {
-                    setModalState(() {
-                      selectedStatus = value;
-                    });
-                  }
-                },
-              );
-            },
-          ),
+  //               onChanged: (value) {
+  //                 if (value != null) {
+  //                   setModalState(() {
+  //                     selectedStatus = value;
+  //                   });
+  //                 }
+  //               },
+  //             );
+  //           },
+  //         ),
 
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
+  //         actions: [
+  //           TextButton(
+  //             onPressed: () {
+  //               Navigator.pop(context);
+  //             },
 
-              child: const Text('Batal'),
-            ),
+  //             child: const Text('Batal'),
+  //           ),
 
-            ElevatedButton(
-              onPressed: () {
-                BlocProvider.of<ReservationBloc>(this.context).add(
-                  UpdateReservationStatusEvent(
-                    reservationId: reservation.id,
-                    status: selectedStatus,
-                  ),
-                );
+  //           ElevatedButton(
+  //             onPressed: () {
+  //               BlocProvider.of<ReservationBloc>(this.context).add(
+  //                 UpdateReservationStatusEvent(
+  //                   reservationId: reservation.id,
+  //                   status: selectedStatus,
+  //                 ),
+  //               );
 
-                Navigator.pop(context);
-              },
+  //               Navigator.pop(context);
+  //             },
 
-              child: const Text('Simpan'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+  //             child: const Text('Simpan'),
+  //           ),
+  //         ],
+  //       );
+  //     },
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -284,7 +284,7 @@ class _ReservationViewState extends State<ReservationView> {
                           columns: const [
                             TableColumn(label: 'ID', flex: 1),
 
-                            TableColumn(label: 'Nama Penghuni', flex: 3),
+                            TableColumn(label: 'Nama Penyewa', flex: 3),
 
                             TableColumn(label: 'Nomor Kamar', flex: 2),
 
@@ -294,7 +294,9 @@ class _ReservationViewState extends State<ReservationView> {
 
                             TableColumn(label: 'Status', flex: 2),
 
-                            TableColumn(label: 'Action', flex: 1),
+                            TableColumn(label: 'Pembayaran', flex: 2),
+
+                            // TableColumn(label: 'Action', flex: 1),
                           ],
 
                           rows: state.filteredReservations.map((reservation) {
@@ -317,7 +319,17 @@ class _ReservationViewState extends State<ReservationView> {
                                 ),
                               ),
 
-                              _buildEditButton(reservation),
+                              Align(
+                                alignment: Alignment.centerLeft,
+
+                                child: ReservationStatusBadge(
+                                  status: reservation.paymentStatus,
+
+                                  color: reservation.paymentStatus == 'paid'
+                                      ? Colors.green.shade700
+                                      : Colors.orange.shade700,
+                                ),
+                              ),
                             ];
                           }).toList(),
                         ),
@@ -397,6 +409,8 @@ class _ReservationViewState extends State<ReservationView> {
                     value: 'cancelled',
                     child: Text('Cancelled'),
                   ),
+
+                  DropdownMenuItem(value: 'finished', child: Text('Finished')),
                 ],
 
                 onChanged: (value) {
@@ -474,27 +488,28 @@ class _ReservationViewState extends State<ReservationView> {
     );
   }
 
-  Widget _buildEditButton(ReservationEntity reservation) {
-    return SizedBox(
-      height: 30,
+  //   Widget _buildEditButton(ReservationEntity reservation) {
+  //     return SizedBox(
+  //       height: 30,
 
-      child: ElevatedButton(
-        onPressed: () {
-          _showEditStatusDialog(reservation);
-        },
+  //       child: ElevatedButton(
+  //         onPressed: () {
+  //           _showEditStatusDialog(reservation);
+  //         },
 
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFFC107),
+  //         style: ElevatedButton.styleFrom(
+  //           backgroundColor: const Color(0xFFFFC107),
 
-          foregroundColor: Colors.white,
+  //           foregroundColor: Colors.white,
 
-          padding: EdgeInsets.zero,
+  //           padding: EdgeInsets.zero,
 
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-        ),
+  //           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+  //         ),
 
-        child: const Text('Edit', style: TextStyle(fontSize: 11)),
-      ),
-    );
-  }
+  //         child: const Text('Edit', style: TextStyle(fontSize: 11)),
+  //       ),
+  //     );
+  //   }
+  // }
 }

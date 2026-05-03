@@ -39,6 +39,9 @@ class ReservationState extends Equatable {
   List<ReservationEntity> get cancelledReservations =>
       reservations.where((r) => r.status == 'cancelled').toList();
 
+  List<ReservationEntity> get finishedReservations =>
+      reservations.where((r) => r.status == 'finished').toList();
+
   List<ReservationEntity> get filteredReservations {
     List<ReservationEntity> filtered = List.from(reservations);
 

@@ -17,12 +17,12 @@ import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 class ReservationBloc extends Bloc<ReservationEvent, ReservationState> {
   final GetReservationsUseCase getReservationsUseCase;
 
-  final UpdateReservationStatusUseCase updateReservationStatusUseCase;
+  // final UpdateReservationStatusUseCase updateReservationStatusUseCase;
 
   ReservationBloc({
     required this.getReservationsUseCase,
 
-    required this.updateReservationStatusUseCase,
+    // required this.updateReservationStatusUseCase,
   }) : super(const ReservationState()) {
     on<GetReservationsEvent>(_onGetReservations);
 
@@ -32,7 +32,7 @@ class ReservationBloc extends Bloc<ReservationEvent, ReservationState> {
 
     on<SortReservationEvent>(_onSortReservation);
 
-    on<UpdateReservationStatusEvent>(_onUpdateReservationStatus);
+    // on<UpdateReservationStatusEvent>(_onUpdateReservationStatus);
   }
 
   Future<void> _onGetReservations(
@@ -91,23 +91,23 @@ class ReservationBloc extends Bloc<ReservationEvent, ReservationState> {
     emit(state.copyWith(sortBy: event.sortBy));
   }
 
-  Future<void> _onUpdateReservationStatus(
-    UpdateReservationStatusEvent event,
+  // Future<void> _onUpdateReservationStatus(
+  //   UpdateReservationStatusEvent event,
 
-    Emitter<ReservationState> emit,
-  ) async {
-    try {
-      await updateReservationStatusUseCase(
-        reservationId: event.reservationId,
+  //   Emitter<ReservationState> emit,
+  // ) async {
+  //   try {
+  //     await updateReservationStatusUseCase(
+  //       reservationId: event.reservationId,
 
-        status: event.status,
-      );
+  //       status: event.status,
+  //     );
 
-      AppSnackbar.showSuccess('Status reservasi berhasil diperbarui');
+  //     AppSnackbar.showSuccess('Status reservasi berhasil diperbarui');
 
-      add(GetReservationsEvent());
-    } catch (e) {
-      AppSnackbar.showError('Gagal update status reservasi');
-    }
-  }
+  //     add(GetReservationsEvent());
+  //   } catch (e) {
+  //     AppSnackbar.showError('Gagal update status reservasi');
+  //   }
+  // }
 }

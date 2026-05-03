@@ -38,17 +38,17 @@ class SortReservationEvent extends ReservationEvent {
   List<Object?> get props => [sortBy];
 }
 
-class UpdateReservationStatusEvent extends ReservationEvent {
-  final int reservationId;
+// class UpdateReservationStatusEvent extends ReservationEvent {
+//   final int reservationId;
 
-  final String status;
+//   final String status;
 
-  const UpdateReservationStatusEvent({
-    required this.reservationId,
+//   const UpdateReservationStatusEvent({
+//     required this.reservationId,
 
-    required this.status,
-  });
+//     required this.status,
+//   });
 
-  @override
-  List<Object?> get props => [reservationId, status];
-}
+//   @override
+//   List<Object?> get props => [reservationId, status];
+// }

@@ -73,7 +73,7 @@ import 'package:frontend/presentation/bloc/schedule/schedule_action_bloc.dart';
 import 'package:frontend/presentation/bloc/schedule_detail/schedule_detail_bloc.dart';
 
 import 'package:frontend/domain/usecase/reservation/get_reservations_usecase.dart';
-import 'package:frontend/domain/usecase/reservation/update_reservation_status_usecase.dart';
+// import 'package:frontend/domain/usecase/reservation/update_reservation_status_usecase.dart';
 import 'package:frontend/presentation/bloc/reservation_list/reservation_bloc.dart';
 
 Future<void> initializeBloc() async {
@@ -255,8 +255,8 @@ Future<void> initializeBloc() async {
     () => ReservationBloc(
       getReservationsUseCase: serviceLocator<GetReservationsUseCase>(),
 
-      updateReservationStatusUseCase:
-          serviceLocator<UpdateReservationStatusUseCase>(),
+      // updateReservationStatusUseCase:
+      //     serviceLocator<UpdateReservationStatusUseCase>(),
     ),
   );
 
