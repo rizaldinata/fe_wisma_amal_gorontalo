@@ -1,25 +1,14 @@
 import 'package:auto_route/auto_route.dart';
-
 import 'package:flutter/material.dart';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
-
+import 'package:formz/formz.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
-
-import 'package:frontend/domain/entity/reservation_entity.dart';
-
 import 'package:frontend/domain/entity/table/tabel_colum.dart';
-
 import 'package:frontend/presentation/bloc/reservation_list/reservation_bloc.dart';
-
 import 'package:frontend/presentation/bloc/reservation_list/reservation_event.dart';
-
 import 'package:frontend/presentation/bloc/reservation_list/reservation_state.dart';
-
 import 'package:frontend/presentation/pages/reservation_list/widget/reservation_status_badge.dart';
-
 import 'package:frontend/presentation/widget/core/card/stat_card.dart';
-
 import 'package:frontend/presentation/widget/core/table/table.dart';
 
 @RoutePage()
@@ -30,7 +19,6 @@ class ReservationPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider.value(
       value: serviceLocator<ReservationBloc>()..add(GetReservationsEvent()),
-
       child: const ReservationView(),
     );
   }
@@ -47,7 +35,6 @@ class _ReservationViewState extends State<ReservationView> {
   final TextEditingController _searchController = TextEditingController();
 
   DateTime? selectedStartDate;
-
   DateTime? selectedEndDate;
 
   String selectedSort = 'all';
@@ -55,18 +42,23 @@ class _ReservationViewState extends State<ReservationView> {
   @override
   void dispose() {
     _searchController.dispose();
-
     super.dispose();
+  }
+
+  void _applyDateFilter() {
+    context.read<ReservationBloc>().add(
+      FilterReservationDateEvent(
+        startDate: selectedStartDate,
+        endDate: selectedEndDate,
+      ),
+    );
   }
 
   Future<void> _pickStartDate() async {
     final pickedDate = await showDatePicker(
       context: context,
-
       initialDate: DateTime.now(),
-
       firstDate: DateTime(2020),
-
       lastDate: DateTime(2100),
     );
 
@@ -75,24 +67,15 @@ class _ReservationViewState extends State<ReservationView> {
         selectedStartDate = pickedDate;
       });
 
-      BlocProvider.of<ReservationBloc>(this.context).add(
-        FilterReservationDateEvent(
-          startDate: selectedStartDate,
-
-          endDate: selectedEndDate,
-        ),
-      );
+      _applyDateFilter();
     }
   }
 
   Future<void> _pickEndDate() async {
     final pickedDate = await showDatePicker(
       context: context,
-
       initialDate: DateTime.now(),
-
       firstDate: DateTime(2020),
-
       lastDate: DateTime(2100),
     );
 
@@ -101,84 +84,9 @@ class _ReservationViewState extends State<ReservationView> {
         selectedEndDate = pickedDate;
       });
 
-      BlocProvider.of<ReservationBloc>(this.context).add(
-        FilterReservationDateEvent(
-          startDate: selectedStartDate,
-
-          endDate: selectedEndDate,
-        ),
-      );
+      _applyDateFilter();
     }
   }
-
-  // void _showEditStatusDialog(ReservationEntity reservation) {
-  //   String selectedStatus = reservation.status;
-
-  //   showDialog(
-  //     context: context,
-
-  //     builder: (context) {
-  //       return AlertDialog(
-  //         title: const Text('Update Status Reservasi'),
-
-  //         content: StatefulBuilder(
-  //           builder: (context, setModalState) {
-  //             return DropdownButtonFormField<String>(
-  //               value: selectedStatus,
-
-  //               decoration: const InputDecoration(labelText: 'Status'),
-
-  //               items: const [
-  //                 DropdownMenuItem(value: 'pending', child: Text('Pending')),
-
-  //                 DropdownMenuItem(value: 'active', child: Text('Active')),
-
-  //                 DropdownMenuItem(
-  //                   value: 'cancelled',
-
-  //                   child: Text('Cancelled'),
-  //                 ),
-  //               ],
-
-  //               onChanged: (value) {
-  //                 if (value != null) {
-  //                   setModalState(() {
-  //                     selectedStatus = value;
-  //                   });
-  //                 }
-  //               },
-  //             );
-  //           },
-  //         ),
-
-  //         actions: [
-  //           TextButton(
-  //             onPressed: () {
-  //               Navigator.pop(context);
-  //             },
-
-  //             child: const Text('Batal'),
-  //           ),
-
-  //           ElevatedButton(
-  //             onPressed: () {
-  //               BlocProvider.of<ReservationBloc>(this.context).add(
-  //                 UpdateReservationStatusEvent(
-  //                   reservationId: reservation.id,
-  //                   status: selectedStatus,
-  //                 ),
-  //               );
-
-  //               Navigator.pop(context);
-  //             },
-
-  //             child: const Text('Simpan'),
-  //           ),
-  //         ],
-  //       );
-  //     },
-  //   );
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -188,20 +96,16 @@ class _ReservationViewState extends State<ReservationView> {
       builder: (context, state) {
         return Scaffold(
           backgroundColor: theme.colorScheme.surface,
-
-          body: state.status.toString().contains('inProgress')
+          body: state.status == FormzSubmissionStatus.inProgress
               ? const Center(child: CircularProgressIndicator())
               : SingleChildScrollView(
                   child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-
+                    padding: const EdgeInsets.all(24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-
                       children: [
                         Text(
                           'Data Reservasi',
-
                           style: theme.textTheme.headlineLarge?.copyWith(
                             fontWeight: FontWeight.bold,
                           ),
@@ -211,7 +115,6 @@ class _ReservationViewState extends State<ReservationView> {
 
                         Text(
                           'Kelola Sistem Kost Anda dengan Mudah',
-
                           style: theme.textTheme.bodyMedium?.copyWith(
                             color: theme.colorScheme.onSurfaceVariant,
                           ),
@@ -235,18 +138,13 @@ class _ReservationViewState extends State<ReservationView> {
                             Expanded(
                               child: StatCard(
                                 title: 'Reservasi Pending',
-
                                 count: state.pendingReservations.length
                                     .toString(),
-
                                 icon: const Icon(
                                   Icons.insert_drive_file_outlined,
-
                                   size: 24,
-
                                   color: Color(0xFFFFA000),
                                 ),
-
                                 color: const Color(0xFFFFECB3),
                               ),
                             ),
@@ -256,18 +154,13 @@ class _ReservationViewState extends State<ReservationView> {
                             Expanded(
                               child: StatCard(
                                 title: 'Reservasi Aktif',
-
                                 count: state.activeReservations.length
                                     .toString(),
-
                                 icon: const Icon(
                                   Icons.assignment_turned_in_outlined,
-
                                   size: 24,
-
                                   color: Color(0xFF43A047),
                                 ),
-
                                 color: const Color(0xFFDCEDC8),
                               ),
                             ),
@@ -295,8 +188,6 @@ class _ReservationViewState extends State<ReservationView> {
                             TableColumn(label: 'Status', flex: 2),
 
                             TableColumn(label: 'Pembayaran', flex: 2),
-
-                            // TableColumn(label: 'Action', flex: 1),
                           ],
 
                           rows: state.filteredReservations.map((reservation) {
@@ -313,7 +204,6 @@ class _ReservationViewState extends State<ReservationView> {
 
                               Align(
                                 alignment: Alignment.centerLeft,
-
                                 child: ReservationStatusBadge(
                                   status: reservation.status,
                                 ),
@@ -321,10 +211,8 @@ class _ReservationViewState extends State<ReservationView> {
 
                               Align(
                                 alignment: Alignment.centerLeft,
-
                                 child: ReservationStatusBadge(
                                   status: reservation.paymentStatus,
-
                                   color: reservation.paymentStatus == 'paid'
                                       ? Colors.green.shade700
                                       : Colors.orange.shade700,
@@ -345,22 +233,22 @@ class _ReservationViewState extends State<ReservationView> {
   Widget _buildHeaderFilters() {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
+
       child: Row(
         mainAxisSize: MainAxisSize.min,
 
         children: [
           SizedBox(
             width: 250,
-
             height: 40,
 
             child: TextField(
               controller: _searchController,
 
               onChanged: (value) {
-                BlocProvider.of<ReservationBloc>(
-                  this.context,
-                ).add(SearchReservationEvent(value));
+                context.read<ReservationBloc>().add(
+                  SearchReservationEvent(value),
+                );
               },
 
               decoration: InputDecoration(
@@ -381,7 +269,6 @@ class _ReservationViewState extends State<ReservationView> {
 
           Container(
             width: 150,
-
             height: 40,
 
             padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -419,9 +306,9 @@ class _ReservationViewState extends State<ReservationView> {
                       selectedSort = value;
                     });
 
-                    BlocProvider.of<ReservationBloc>(
-                      this.context,
-                    ).add(SortReservationEvent(value));
+                    context.read<ReservationBloc>().add(
+                      SortReservationEvent(value),
+                    );
                   }
                 },
               ),
@@ -435,7 +322,6 @@ class _ReservationViewState extends State<ReservationView> {
 
             child: Container(
               width: 160,
-
               height: 40,
 
               alignment: Alignment.center,
@@ -465,7 +351,6 @@ class _ReservationViewState extends State<ReservationView> {
 
             child: Container(
               width: 160,
-
               height: 40,
 
               alignment: Alignment.center,
@@ -487,29 +372,4 @@ class _ReservationViewState extends State<ReservationView> {
       ),
     );
   }
-
-  //   Widget _buildEditButton(ReservationEntity reservation) {
-  //     return SizedBox(
-  //       height: 30,
-
-  //       child: ElevatedButton(
-  //         onPressed: () {
-  //           _showEditStatusDialog(reservation);
-  //         },
-
-  //         style: ElevatedButton.styleFrom(
-  //           backgroundColor: const Color(0xFFFFC107),
-
-  //           foregroundColor: Colors.white,
-
-  //           padding: EdgeInsets.zero,
-
-  //           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-  //         ),
-
-  //         child: const Text('Edit', style: TextStyle(fontSize: 11)),
-  //       ),
-  //     );
-  //   }
-  // }
 }

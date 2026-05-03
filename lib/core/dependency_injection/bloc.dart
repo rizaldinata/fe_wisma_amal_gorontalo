@@ -77,6 +77,9 @@ import 'package:frontend/presentation/bloc/schedule_detail/schedule_detail_bloc.
 import 'package:frontend/domain/usecase/reservation/get_reservations_usecase.dart';
 // import 'package:frontend/domain/usecase/reservation/update_reservation_status_usecase.dart';
 import 'package:frontend/presentation/bloc/reservation_list/reservation_bloc.dart';
+import 'package:frontend/domain/usecase/my_reservation/get_my_reservations_usecase.dart';
+import 'package:frontend/presentation/bloc/my_reservation/my_reservation_bloc.dart';
+import 'package:frontend/presentation/bloc/my_reservation/my_reservation_event.dart';
 
 Future<void> initializeBloc() async {
   serviceLocator.registerLazySingleton<AuthBloc>(
@@ -277,5 +280,12 @@ Future<void> initializeBloc() async {
       deleteRoleUseCase: serviceLocator.get<DeleteRoleUseCase>(),
       getAllRolesUseCase: serviceLocator.get<GetAllRolesUseCase>(),
     ),
+  );
+
+  // My Reservation Bloc
+  serviceLocator.registerFactory(
+    () => MyReservationBloc(
+      getMyReservationsUseCase: serviceLocator<GetMyReservationsUseCase>(),
+    )..add(GetMyReservationsEvent()),
   );
 }

@@ -26,6 +26,8 @@ class ReservationDetailFormBloc extends Bloc<
     on<StartDateChanged>(_onStartDateChanged);
     on<EndDateChanged>(_onEndDateChanged);
     on<DurationMonthsChanged>(_onDurationMonthsChanged);
+    on<PaymentMethodChanged>(_onPaymentMethodChanged);
+    on<SelectedBankChanged>(_onSelectedBankChanged);
     on<SubmitReservation>(_onSubmit);
   }
 
@@ -94,6 +96,23 @@ class ReservationDetailFormBloc extends Bloc<
   ) {
     emit(state.copyWith(durationMonths: event.months));
     _calculate(emit);
+  }
+
+  void _onPaymentMethodChanged(
+    PaymentMethodChanged event,
+    Emitter<ReservationDetailFormState> emit,
+  ) {
+    emit(state.copyWith(
+      paymentMethod: event.paymentMethod,
+      selectedBank: null, // Reset bank selection saat method berubah
+    ));
+  }
+
+  void _onSelectedBankChanged(
+    SelectedBankChanged event,
+    Emitter<ReservationDetailFormState> emit,
+  ) {
+    emit(state.copyWith(selectedBank: event.selectedBank));
   }
 
   Future<void> _onSubmit(

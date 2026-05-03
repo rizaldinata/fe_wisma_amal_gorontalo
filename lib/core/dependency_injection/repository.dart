@@ -40,6 +40,9 @@ import 'package:frontend/domain/repository/reservation_repository.dart';
 import 'package:frontend/data/datasource/role_datasource.dart';
 import 'package:frontend/data/repository/role_repository_impl.dart';
 import 'package:frontend/domain/repository/role_repository.dart';
+import 'package:frontend/data/datasource/my_reservation_remote_datasource.dart';
+import 'package:frontend/data/repository/my_reservation_repository_impl.dart';
+import 'package:frontend/domain/repository/my_reservation_repository.dart';
 
 Future<void> initializeRepository() async {
   serviceLocator.registerFactory<AuthRepository>(
@@ -104,5 +107,10 @@ Future<void> initializeRepository() async {
   );
   serviceLocator.registerFactory<RoleRepository>(
     () => RoleRepositoryImpl(serviceLocator<RoleDataSource>()),
+  );
+  serviceLocator.registerFactory<MyReservationRepository>(
+    () => MyReservationRepositoryImpl(
+      remoteDatasource: serviceLocator<MyReservationRemoteDatasource>(),
+    ),
   );
 }

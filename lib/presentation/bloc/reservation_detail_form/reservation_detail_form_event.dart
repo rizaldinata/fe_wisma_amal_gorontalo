@@ -55,3 +55,21 @@ class DurationMonthsChanged extends ReservationDetailFormEvent {
 class SubmitReservation extends ReservationDetailFormEvent {
   const SubmitReservation();
 }
+
+class PaymentMethodChanged extends ReservationDetailFormEvent {
+  final String paymentMethod; // 'online' atau 'tunai'
+
+  const PaymentMethodChanged(this.paymentMethod);
+
+  @override
+  List<Object?> get props => [paymentMethod];
+}
+
+class SelectedBankChanged extends ReservationDetailFormEvent {
+  final String? selectedBank; // 'mandiri', 'bca', 'bri', atau null
+
+  const SelectedBankChanged(this.selectedBank);
+
+  @override
+  List<Object?> get props => [selectedBank];
+}

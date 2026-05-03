@@ -13,6 +13,8 @@ class ReservationDetailFormState extends Equatable {
     this.isDailyRentalEnabled = true,
     this.status = FormzSubmissionStatus.initial,
     this.errorMessage,
+    this.paymentMethod = 'online',
+    this.selectedBank,
   });
 
   final String rentType;
@@ -26,6 +28,8 @@ class ReservationDetailFormState extends Equatable {
   final bool isDailyRentalEnabled;
   final FormzSubmissionStatus status;
   final String? errorMessage;
+  final String paymentMethod; // 'online' atau 'tunai'
+  final String? selectedBank; // 'mandiri', 'bca', 'bri'
 
   ReservationDetailFormState copyWith({
     String? rentType,
@@ -39,6 +43,8 @@ class ReservationDetailFormState extends Equatable {
     bool? isDailyRentalEnabled,
     FormzSubmissionStatus? status,
     String? errorMessage,
+    String? paymentMethod,
+    String? selectedBank,
   }) {
     return ReservationDetailFormState(
       rentType: rentType ?? this.rentType,
@@ -52,6 +58,8 @@ class ReservationDetailFormState extends Equatable {
       isDailyRentalEnabled: isDailyRentalEnabled ?? this.isDailyRentalEnabled,
       status: status ?? this.status,
       errorMessage: errorMessage ?? this.errorMessage,
+      paymentMethod: paymentMethod ?? this.paymentMethod,
+      selectedBank: selectedBank ?? this.selectedBank,
     );
   }
 
@@ -68,5 +76,7 @@ class ReservationDetailFormState extends Equatable {
         isDailyRentalEnabled,
         status,
         errorMessage,
+        paymentMethod,
+        selectedBank,
       ];
 }

@@ -87,15 +87,22 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
         }
 
         if (state.status == FormzSubmissionStatus.success) {
-          AppSnackbar.showSuccess('Pemesanan berhasil dibuat. Silakan selesaikan pembayaran.');
+          AppSnackbar.showSuccess(
+            'Pemesanan berhasil dibuat. Silakan selesaikan pembayaran.',
+          );
           context.router.replace(RoomRoute());
         } else if (state.status == FormzSubmissionStatus.failure) {
-          AppSnackbar.showError(state.errorMessage ?? 'Gagal membuat pemesanan');
+          AppSnackbar.showError(
+            state.errorMessage ?? 'Gagal membuat pemesanan',
+          );
         }
       },
       builder: (context, state) {
         final room = state.room;
-        if (room == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        if (room == null)
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
 
         return Scaffold(
           appBar: CustomAppbar(
@@ -142,11 +149,15 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                         ),
                                       ),
                                       const SizedBox(height: 4),
-                                      Text('No. ${room.number} • ${room.facilities.join(', ')}'),
+                                      Text(
+                                        'No. ${room.number} • ${room.facilities.join(', ')}',
+                                      ),
                                       const SizedBox(height: 8),
                                       Text(
                                         'Bulanan: ${room.priceFormatted}${room.priceDaily > 0 ? ' | Harian: ${room.priceDailyFormatted}' : ''}',
-                                        style: const TextStyle(color: Colors.blue),
+                                        style: const TextStyle(
+                                          color: Colors.blue,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -174,7 +185,8 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                     .read<ReservationDetailFormBloc>()
                                     .add(const RentTypeChanged('Bulanan')),
                               ),
-                              if (state.isDailyRentalEnabled && room.priceDaily > 0)
+                              if (state.isDailyRentalEnabled &&
+                                  room.priceDaily > 0)
                                 _rentCard(
                                   title: 'Sewa Harian',
                                   subtitle: 'Fleksibel jangka pendek',
@@ -199,10 +211,15 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                 children: [
                                   Expanded(
                                     child: GestureDetector(
-                                      onTap: () =>
-                                          _pickDate(context, _startDateController, (date) {
-                                            context.read<ReservationDetailFormBloc>().add(StartDateChanged(date));
-                                          }),
+                                      onTap: () => _pickDate(
+                                        context,
+                                        _startDateController,
+                                        (date) {
+                                          context
+                                              .read<ReservationDetailFormBloc>()
+                                              .add(StartDateChanged(date));
+                                        },
+                                      ),
                                       child: AbsorbPointer(
                                         child: CustomTextForm(
                                           title: 'Tanggal Mulai',
@@ -221,10 +238,17 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                   if (state.rentType == 'Harian')
                                     Expanded(
                                       child: GestureDetector(
-                                        onTap: () =>
-                                            _pickDate(context, _endDateController, (date) {
-                                              context.read<ReservationDetailFormBloc>().add(EndDateChanged(date));
-                                            }),
+                                        onTap: () => _pickDate(
+                                          context,
+                                          _endDateController,
+                                          (date) {
+                                            context
+                                                .read<
+                                                  ReservationDetailFormBloc
+                                                >()
+                                                .add(EndDateChanged(date));
+                                          },
+                                        ),
                                         child: AbsorbPointer(
                                           child: CustomTextForm(
                                             title: 'Tanggal Selesai',
@@ -245,10 +269,15 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                         title: 'Jumlah Bulan',
                                         hintText: 'Berapa bulan?',
                                         keyboardType: TextInputType.number,
-                                        initialValue: state.durationMonths.toString(),
+                                        initialValue: state.durationMonths
+                                            .toString(),
                                         onChanged: (val) {
                                           final months = int.tryParse(val) ?? 1;
-                                          context.read<ReservationDetailFormBloc>().add(DurationMonthsChanged(months));
+                                          context
+                                              .read<ReservationDetailFormBloc>()
+                                              .add(
+                                                DurationMonthsChanged(months),
+                                              );
                                         },
                                         isRequired: true,
                                       ),
@@ -263,6 +292,145 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                   controller: _endDateController,
                                   enabled: false,
                                   isRequired: false,
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        /// METODE PEMBAYARAN
+                        BasicCard(
+                          title: 'Metode Pembayaran',
+                          child: Column(
+                            children: [
+                              /// Payment Method Selection
+                              Wrap(
+                                spacing: 16,
+                                runSpacing: 16,
+                                children: [
+                                  paymentMethodCard(
+                                    title: 'Pembayaran Online',
+                                    subtitle: 'Transfer Virtual Account',
+                                    icon: Icons.account_balance_wallet,
+                                    selected: state.paymentMethod == 'online',
+                                    onTap: () => context
+                                        .read<ReservationDetailFormBloc>()
+                                        .add(
+                                          const PaymentMethodChanged('online'),
+                                        ),
+                                  ),
+                                  paymentMethodCard(
+                                    title: 'Pembayaran Tunai',
+                                    subtitle: 'Bayar langsung dengan bukti',
+                                    icon: Icons.payments,
+                                    selected: state.paymentMethod == 'tunai',
+                                    onTap: () => context
+                                        .read<ReservationDetailFormBloc>()
+                                        .add(
+                                          const PaymentMethodChanged('tunai'),
+                                        ),
+                                  ),
+                                ],
+                              ),
+
+                              if (state.paymentMethod == 'online') ...[
+                                const SizedBox(height: 24),
+                                const Text(
+                                  'Pilih Bank untuk Virtual Account',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  spacing: 12,
+                                  runSpacing: 12,
+                                  children: [
+                                    bankSelectionCard(
+                                      bankName: 'Mandiri',
+                                      bankCode: 'mandiri',
+                                      icon: '🏦',
+                                      selected: state.selectedBank == 'mandiri',
+                                      onTap: () => context
+                                          .read<ReservationDetailFormBloc>()
+                                          .add(
+                                            const SelectedBankChanged(
+                                              'mandiri',
+                                            ),
+                                          ),
+                                    ),
+                                    bankSelectionCard(
+                                      bankName: 'BCA',
+                                      bankCode: 'bca',
+                                      icon: '🏛️',
+                                      selected: state.selectedBank == 'bca',
+                                      onTap: () => context
+                                          .read<ReservationDetailFormBloc>()
+                                          .add(
+                                            const SelectedBankChanged('bca'),
+                                          ),
+                                    ),
+                                    bankSelectionCard(
+                                      bankName: 'BRI',
+                                      bankCode: 'bri',
+                                      icon: '🏪',
+                                      selected: state.selectedBank == 'bri',
+                                      onTap: () => context
+                                          .read<ReservationDetailFormBloc>()
+                                          .add(
+                                            const SelectedBankChanged('bri'),
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ] else if (state.paymentMethod == 'tunai') ...[
+                                const SizedBox(height: 24),
+                                Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.shade50,
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: Border.all(
+                                      color: Colors.orange.shade200,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.info_outline,
+                                        color: Colors.orange.shade700,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Pembayaran Tunai',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 13,
+                                                color: Colors.orange.shade700,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Anda akan diminta untuk mengunggah bukti pembayaran setelah pemesanan.',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: Colors.orange.shade600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ],
                             ],
@@ -289,7 +457,9 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(room.title),
-                                Text('${state.duration} ${state.rentType == 'Bulanan' ? 'Bulan' : 'Hari'}'),
+                                Text(
+                                  '${state.duration} ${state.rentType == 'Bulanan' ? 'Bulan' : 'Hari'}',
+                                ),
                               ],
                             ),
                             const SizedBox(height: 10),
@@ -297,8 +467,14 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Text('Harga / ${state.rentType == 'Bulanan' ? 'bulan' : 'hari'}'),
-                                Text(state.rentType == 'Bulanan' ? room.priceFormatted : room.priceDailyFormatted),
+                                Text(
+                                  'Harga / ${state.rentType == 'Bulanan' ? 'bulan' : 'hari'}',
+                                ),
+                                Text(
+                                  state.rentType == 'Bulanan'
+                                      ? room.priceFormatted
+                                      : room.priceDailyFormatted,
+                                ),
                               ],
                             ),
 
@@ -327,41 +503,60 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                         width: double.infinity,
                         child: BasicButton(
                           label: 'Pesan Kamar',
-                          isLoading: state.status == FormzSubmissionStatus.inProgress,
+                          isLoading:
+                              state.status == FormzSubmissionStatus.inProgress,
                           onPressed: () {
                             final authState = context.read<AuthBloc>().state;
                             if (!authState.isLoggedIn) {
-                              AppSnackbar.showError('Silakan login terlebih dahulu');
+                              AppSnackbar.showError(
+                                'Silakan login terlebih dahulu',
+                              );
                               context.router.push(LoginRoute());
                               return;
                             }
 
                             if (state.startDate == null) {
-                                AppSnackbar.showError('Pilih tanggal mulai terlebih dahulu');
-                                return;
+                              AppSnackbar.showError(
+                                'Pilih tanggal mulai terlebih dahulu',
+                              );
+                              return;
                             }
 
-                            if (state.rentType == 'Harian' && state.endDate == null) {
-                                AppSnackbar.showError('Pilih tanggal selesai terlebih dahulu');
-                                return;
+                            if (state.rentType == 'Harian' &&
+                                state.endDate == null) {
+                              AppSnackbar.showError(
+                                'Pilih tanggal selesai terlebih dahulu',
+                              );
+                              return;
                             }
 
-                            if (state.rentType == 'Harian' && state.duration <= 0) {
-                                AppSnackbar.showError('Tanggal selesai harus setelah tanggal mulai');
-                                return;
+                            if (state.rentType == 'Harian' &&
+                                state.duration <= 0) {
+                              AppSnackbar.showError(
+                                'Tanggal selesai harus setelah tanggal mulai',
+                              );
+                              return;
                             }
 
                             final roles = authState.userInfo?.roles ?? [];
                             final isMember = roles.contains('member');
                             final isResident = roles.contains('resident');
 
-                            if (context.can(PermissionKeys.completeResidentProfile) && !isMember && !isResident) {
-                              AppSnackbar.showError('Silakan lengkapi biodata Anda terlebih dahulu');
+                            if (context.can(
+                                  PermissionKeys.completeResidentProfile,
+                                ) &&
+                                !isMember &&
+                                !isResident) {
+                              AppSnackbar.showError(
+                                'Silakan lengkapi biodata Anda terlebih dahulu',
+                              );
                               context.router.push(CompleteProfileRoute());
                               return;
                             }
 
-                            context.read<ReservationDetailFormBloc>().add(const SubmitReservation());
+                            context.read<ReservationDetailFormBloc>().add(
+                              const SubmitReservation(),
+                            );
                           },
                         ),
                       ),
@@ -431,6 +626,121 @@ Widget _rentCard({
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: selected ? Colors.blue : Colors.green,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// PAYMENT METHOD CARD
+Widget paymentMethodCard({
+  required String title,
+  required String subtitle,
+  required IconData icon,
+  required bool selected,
+  required VoidCallback onTap,
+}) {
+  return HoverTapWrapper(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(12),
+    hoverColor: Colors.blue.withOpacity(0.05),
+
+    child: Container(
+      constraints: const BoxConstraints(minWidth: 260, maxWidth: 358),
+
+      padding: const EdgeInsets.all(16),
+
+      decoration: BoxDecoration(
+        color: selected ? Colors.blue.shade50 : Colors.white,
+
+        borderRadius: BorderRadius.circular(12),
+
+        border: Border.all(
+          color: selected ? Colors.blue : Colors.grey.shade300,
+        ),
+      ),
+
+      child: Row(
+        children: [
+          Icon(icon, color: selected ? Colors.blue : Colors.grey),
+
+          const SizedBox(width: 12),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+
+                const SizedBox(height: 4),
+
+                Text(
+                  subtitle,
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ),
+
+          Icon(
+            selected ? Icons.radio_button_checked : Icons.radio_button_off,
+
+            color: selected ? Colors.blue : Colors.grey,
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+/// BANK SELECTION CARD
+Widget bankSelectionCard({
+  required String bankName,
+  required String bankCode,
+  required String icon,
+  required bool selected,
+  required VoidCallback onTap,
+}) {
+  return HoverTapWrapper(
+    onTap: onTap,
+
+    borderRadius: BorderRadius.circular(12),
+
+    hoverColor: Colors.blue.withOpacity(0.05),
+
+    child: Container(
+      width: 140,
+
+      padding: const EdgeInsets.all(16),
+
+      decoration: BoxDecoration(
+        color: selected ? Colors.blue.shade50 : Colors.white,
+
+        borderRadius: BorderRadius.circular(12),
+
+        border: Border.all(
+          color: selected ? Colors.blue : Colors.grey.shade300,
+        ),
+      ),
+
+      child: Column(
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 28)),
+
+          const SizedBox(height: 10),
+
+          Text(
+            bankName,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+
+              color: selected ? Colors.blue : Colors.black,
             ),
           ),
         ],
