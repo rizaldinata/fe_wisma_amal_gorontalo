@@ -3,20 +3,42 @@ import 'package:file_picker/file_picker.dart';
 import 'package:frontend/core/constant/endpoint_constant.dart';
 import 'package:frontend/core/services/network/dio_client.dart';
 import 'package:frontend/data/model/base_response_model.dart';
+import 'package:frontend/data/model/resident/resident_detail_model.dart';
 import 'package:frontend/data/model/resident/resident_profile_model.dart';
 import 'package:frontend/domain/entity/resident/resident_entity.dart';
+import 'package:frontend/domain/entity/resident/resident_detail_entity.dart';
 
 class ResidentDatasource {
   final DioClient dioClient;
 
   ResidentDatasource({required this.dioClient});
 
-  Future<ResidentResponse> getAdminResidents() async {
+  Future<ResidentResponse> getAdminResidents({
+    int page = 1,
+    int perPage = 10,
+  }) async {
     try {
       final response = await dioClient.get(
         EndpointConstant.adminResidentsEndpoint,
+        queryParams: <String, dynamic>{
+          'page': page,
+          'per_page': perPage,
+        },
       );
       return ResidentResponse.fromJson(response.data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<ResidentDetailEntity> getAdminResidentDetail(String id) async {
+    try {
+      final response = await dioClient.get(
+        EndpointConstant.adminResidentDetailEndpoint(id),
+      );
+      final data = response.data['data'] as Map<String, dynamic>? ??
+          <String, dynamic>{};
+      return ResidentDetailModel.fromJson(data);
     } catch (e) {
       rethrow;
     }

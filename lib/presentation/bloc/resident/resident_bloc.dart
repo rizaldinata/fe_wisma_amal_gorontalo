@@ -4,7 +4,12 @@ import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dar
 
 // --- EVENTS ---
 abstract class ResidentEvent {}
-class FetchResidents extends ResidentEvent {}
+class FetchResidents extends ResidentEvent {
+  final int page;
+  final int perPage;
+
+  FetchResidents({this.page = 1, this.perPage = 10});
+}
 
 // --- STATES ---
 abstract class ResidentState {}
@@ -25,9 +30,14 @@ class ResidentBloc extends Bloc<ResidentEvent, ResidentState> {
 
   ResidentBloc({required this.getAdminResidentsUseCase}) : super(ResidentInitial()) {
     on<FetchResidents>((event, emit) async {
-      emit(ResidentLoading());
+      if (event.page == 1) {
+        emit(ResidentLoading());
+      }
       try {
-        final response = await getAdminResidentsUseCase();
+        final response = await getAdminResidentsUseCase(
+          page: event.page,
+          perPage: event.perPage,
+        );
         emit(ResidentLoaded(response));
       } catch (e) {
         emit(ResidentError(e.toString()));

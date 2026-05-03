@@ -61,7 +61,9 @@ import 'package:frontend/domain/usecase/user/update_user_usecase.dart';
 import 'package:frontend/domain/usecase/user/delete_user_usecase.dart';
 import 'package:frontend/domain/usecase/user/create_user_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
+import 'package:frontend/domain/usecase/resident/get_admin_resident_detail_usecase.dart';
 import 'package:frontend/presentation/bloc/resident/resident_bloc.dart';
+import 'package:frontend/presentation/bloc/resident_detail/resident_detail_bloc.dart';
 
 import 'package:frontend/domain/usecase/inventory/get_inventories_usecase.dart';
 import 'package:frontend/domain/usecase/inventory/inventory_action_usecases.dart';
@@ -250,6 +252,13 @@ Future<void> initializeBloc() async {
   serviceLocator.registerFactory<ResidentBloc>(
     () => ResidentBloc(
       getAdminResidentsUseCase: serviceLocator.get<GetAdminResidentsUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<ResidentDetailBloc>(
+    () => ResidentDetailBloc(
+      getAdminResidentDetailUseCase:
+          serviceLocator.get<GetAdminResidentDetailUseCase>(),
     ),
   );
 

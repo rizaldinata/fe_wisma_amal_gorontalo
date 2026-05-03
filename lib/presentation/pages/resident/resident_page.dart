@@ -2,8 +2,10 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/domain/entity/resident/resident_entity.dart';
 import 'package:frontend/presentation/bloc/resident/resident_bloc.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
+import 'form/resident_detail_form.dart';
 import 'widget/resident_table_action.dart';
 
 @RoutePage()
@@ -13,7 +15,7 @@ class ResidentPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => serviceLocator<ResidentBloc>()..add(FetchResidents()),
+      create: (context) => serviceLocator<ResidentBloc>(),
       child: const _ResidentView(),
     );
   }
@@ -28,13 +30,57 @@ class _ResidentView extends StatefulWidget {
 
 class _ResidentViewState extends State<_ResidentView> {
   final TextEditingController _searchController = TextEditingController();
+  final ScrollController _tableScrollController = ScrollController();
   String _selectedStatus = 'Semua';
   String _selectedPayment = 'Semua';
+  int _currentPage = 1;
+  int _perPage = 10;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  List<ResidentItem> _residentCache = <ResidentItem>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _tableScrollController.addListener(_onTableScroll);
+    _fetchResidents();
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _tableScrollController.dispose();
     super.dispose();
+  }
+
+  void _fetchResidents() {
+    context.read<ResidentBloc>().add(
+          FetchResidents(page: _currentPage, perPage: _perPage),
+        );
+  }
+
+  void _onTableScroll() {
+    if (!_hasMore || _isLoadingMore) return;
+    final position = _tableScrollController.position;
+    if (position.pixels >= position.maxScrollExtent - 120) {
+      setState(() {
+        _isLoadingMore = true;
+        _currentPage += 1;
+      });
+      _fetchResidents();
+    }
+  }
+
+  void _showResidentDetail(BuildContext context, ResidentItem resident) {
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: ResidentDetailForm(residentId: resident.id),
+        );
+      },
+    );
   }
 
   @override
@@ -42,7 +88,27 @@ class _ResidentViewState extends State<_ResidentView> {
     return Scaffold(
       backgroundColor: const Color(0xFFF3F4F6), 
       // 2. Gunakan BlocBuilder untuk merender UI berdasarkan State
-      body: BlocBuilder<ResidentBloc, ResidentState>(
+      body: BlocConsumer<ResidentBloc, ResidentState>(
+        listener: (context, state) {
+          if (state is ResidentLoaded) {
+            setState(() {
+              if (_currentPage == 1) {
+                _residentCache = List<ResidentItem>.from(state.data.residents);
+              } else {
+                _residentCache.addAll(state.data.residents);
+              }
+              _hasMore =
+                  state.data.pagination.currentPage < state.data.pagination.lastPage;
+              _isLoadingMore = false;
+            });
+          }
+
+          if (state is ResidentError) {
+            setState(() {
+              _isLoadingMore = false;
+            });
+          }
+        },
         builder: (context, state) {
           
           if (state is ResidentLoading) {
@@ -58,7 +124,7 @@ class _ResidentViewState extends State<_ResidentView> {
             final stats = data.stats;
             final query = _searchController.text.trim().toLowerCase();
 
-            final residentRows = data.residents.where((row) {
+            final residentRows = _residentCache.where((row) {
               final matchesSearch = query.isEmpty ||
                   row.nama.toLowerCase().contains(query) ||
                   row.kamar.toLowerCase().contains(query) ||
@@ -71,7 +137,7 @@ class _ResidentViewState extends State<_ResidentView> {
               return matchesSearch && matchesStatus && matchesPayment;
             }).toList();
 
-            return SingleChildScrollView(
+            return Padding(
               padding: const EdgeInsets.fromLTRB(28, 22, 28, 28),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,20 +145,19 @@ class _ResidentViewState extends State<_ResidentView> {
                   Text(
                     'Daftar Penghuni',
                     style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                      fontSize: 42,
-                      fontWeight: FontWeight.w700,
-                      height: 1,
-                      color: const Color(0xFF121212),
-                    ),
+                          fontSize: 42,
+                          fontWeight: FontWeight.w700,
+                          height: 1,
+                          color: const Color(0xFF121212),
+                        ),
                   ),
                   const SizedBox(height: 22),
-
                   Row(
                     children: [
                       Expanded(
                         child: _ResidentStatCard(
                           title: 'Penghuni Aktif',
-                          count: stats.penghuniAktif.toString(), // <-- Dinamis dari API
+                          count: stats.penghuniAktif.toString(),
                           icon: Icons.person_outline,
                           iconColor: const Color(0xFF5D6ACD),
                           iconBackgroundColor: const Color(0xFFD6DDFD),
@@ -102,7 +167,7 @@ class _ResidentViewState extends State<_ResidentView> {
                       Expanded(
                         child: _ResidentStatCard(
                           title: 'Kontrak Pending',
-                          count: stats.kontrakPending.toString(), // <-- Dinamis dari API
+                          count: stats.kontrakPending.toString(),
                           icon: Icons.note_add_outlined,
                           iconColor: const Color(0xFF8A6400),
                           iconBackgroundColor: const Color(0xFFF6DEB3),
@@ -111,18 +176,8 @@ class _ResidentViewState extends State<_ResidentView> {
                       const SizedBox(width: 16),
                       Expanded(
                         child: _ResidentStatCard(
-                          title: 'Kontrak Akan Berakhir',
-                          count: stats.kontrakBerakhir.toString(), // <-- Dinamis dari API
-                          icon: Icons.event_note_outlined,
-                          iconColor: const Color(0xFF248746),
-                          iconBackgroundColor: const Color(0xFFB9EEC8),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _ResidentStatCard(
                           title: 'Kamar Tersedia',
-                          count: stats.kamarTersedia.toString(), // <-- Dinamis dari API
+                          count: stats.kamarTersedia.toString(),
                           icon: Icons.bedroom_parent_outlined,
                           iconColor: const Color(0xFF248746),
                           iconBackgroundColor: const Color(0xFFB9EEC8),
@@ -131,133 +186,158 @@ class _ResidentViewState extends State<_ResidentView> {
                     ],
                   ),
                   const SizedBox(height: 24),
-
-                  BasicCard(
-                    color: Colors.white, 
-                    borderRadius: BorderRadius.circular(24),
-                    padding: const EdgeInsets.fromLTRB(34, 22, 34, 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                  Expanded(
+                    child: BasicCard(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      padding: const EdgeInsets.fromLTRB(34, 22, 34, 24),
+                      child: Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              width: 14,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFA794F2), 
-                                borderRadius: BorderRadius.circular(9),
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Text(
-                              'Penghuni',
-                              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontSize: 33,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF141414),
-                              ),
-                            ),
-                            const Spacer(),
-                            ResidentTableAction(
-                              searchController: _searchController,
-                              onSearchChanged: (_) => setState(() {}),
-                              selectedStatus: _selectedStatus,
-                              selectedPayment: _selectedPayment,
-                              onStatusChanged: (value) {
-                                setState(() {
-                                  _selectedStatus = value;
-                                });
-                              },
-                              onPaymentChanged: (value) {
-                                setState(() {
-                                  _selectedPayment = value;
-                                });
-                              },
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        Container(
-                          height: 34,
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF3F4F6),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Row(
-                            children: [
-                              _HeaderCell(label: 'ID', flex: 1, align: TextAlign.left),
-                              _HeaderCell(label: 'NAMA', flex: 4, align: TextAlign.left),
-                              _HeaderCell(label: 'KAMAR', flex: 2, align: TextAlign.left, showSort: true),
-                              _HeaderCell(label: 'KONTAK', flex: 3, align: TextAlign.left),
-                              _HeaderCell(label: 'DETIL BAYAR', flex: 2, align: TextAlign.center),
-                              _HeaderCell(label: 'STATUS', flex: 2, align: TextAlign.center),
-                              _HeaderCell(label: 'AKSI', flex: 2, align: TextAlign.center),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        
-                        // 3. Mapping data dinamis ke tabel
-                        ...residentRows.map((row) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 4),
-                            child: Row(
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
                               children: [
-                                _BodyCell(value: row.id, flex: 1),
-                                _BodyCell(value: row.nama, flex: 4),
-                                _BodyCell(value: row.kamar, flex: 2),
-                                _BodyCell(value: row.kontak, flex: 3),
-                                Expanded(
-                                  flex: 2,
-                                  child: Align(
-                                    alignment: Alignment.center,
-                                    child: _StatusChip(
-                                      label: row.detailBayar,
-                                      color: row.isBelumLunas
-                                          ? const Color(0xFFD20F0F)
-                                          : const Color(0xFF18BF10),
-                                    ),
+                                Container(
+                                  width: 14,
+                                  height: 38,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFA794F2),
+                                    borderRadius: BorderRadius.circular(9),
                                   ),
                                 ),
-                                Expanded(
-                                  flex: 2,
-                                  child: Align(
-                                    alignment: Alignment.center,
-                                    child: _StatusChip(
-                                      label: row.status,
-                                      color: row.isPending
-                                          ? const Color(0xFFE3A10E)
-                                          : const Color(0xFF18BF10),
-                                    ),
-                                  ),
+                                const SizedBox(width: 14),
+                                Text(
+                                  'Penghuni',
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                        fontSize: 33,
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(0xFF141414),
+                                      ),
                                 ),
-                                Expanded(
-                                  flex: 2,
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      _ActionSquareButton(
-                                        backgroundColor: const Color(0xFF2E80F7),
-                                        icon: Icons.edit,
-                                        onPressed: () {},
-                                      ),
-                                      const SizedBox(width: 8),
-                                      _ActionSquareButton(
-                                        backgroundColor: const Color(0xFFD61111),
-                                        icon: Icons.delete_outline,
-                                        onPressed: () {},
-                                      ),
-                                    ],
-                                  ),
+                                const Spacer(),
+                                ResidentTableAction(
+                                  searchController: _searchController,
+                                  onSearchChanged: (_) => setState(() {}),
+                                  selectedStatus: _selectedStatus,
+                                  selectedPayment: _selectedPayment,
+                                  onStatusChanged: (value) {
+                                    setState(() {
+                                      _selectedStatus = value;
+                                    });
+                                  },
+                                  onPaymentChanged: (value) {
+                                    setState(() {
+                                      _selectedPayment = value;
+                                    });
+                                  },
                                 ),
                               ],
                             ),
-                          );
-                        }),
-                      ],
+                            const SizedBox(height: 24),
+                            Container(
+                              height: 34,
+                              padding: const EdgeInsets.symmetric(horizontal: 10),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF3F4F6),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: const Row(
+                                children: [
+                                  _HeaderCell(label: 'ID', flex: 1, align: TextAlign.left),
+                                  _HeaderCell(label: 'NAMA', flex: 4, align: TextAlign.left),
+                                  _HeaderCell(label: 'KAMAR', flex: 2, align: TextAlign.left, showSort: true),
+                                  _HeaderCell(label: 'KONTAK', flex: 3, align: TextAlign.left),
+                                  _HeaderCell(label: 'DETIL BAYAR', flex: 2, align: TextAlign.center),
+                                  _HeaderCell(label: 'STATUS', flex: 2, align: TextAlign.center),
+                                  _HeaderCell(label: 'DETAIL', flex: 2, align: TextAlign.center),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Expanded(
+                              child: residentRows.isEmpty
+                                  ? Center(
+                                      child: Text(
+                                        'Tidak ada data penghuni',
+                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                              color: const Color(0xFF6B7280),
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                      ),
+                                    )
+                                  : Scrollbar(
+                                      child: ListView.separated(
+                                        controller: _tableScrollController,
+                                        itemCount: residentRows.length + (_isLoadingMore ? 1 : 0),
+                                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                                        itemBuilder: (context, index) {
+                                          if (index >= residentRows.length) {
+                                            return const Padding(
+                                              padding: EdgeInsets.symmetric(vertical: 12),
+                                              child: Center(
+                                                child: SizedBox(
+                                                  height: 22,
+                                                  width: 22,
+                                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                                ),
+                                              ),
+                                            );
+                                          }
+
+                                          final row = residentRows[index];
+                                          return Padding(
+                                            padding: const EdgeInsets.symmetric(vertical: 4),
+                                            child: Row(
+                                              children: [
+                                                _BodyCell(value: row.id, flex: 1),
+                                                _BodyCell(value: row.nama, flex: 4),
+                                                _BodyCell(value: row.kamar, flex: 2),
+                                                _BodyCell(value: row.kontak, flex: 3),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Align(
+                                                    alignment: Alignment.center,
+                                                    child: _StatusChip(
+                                                      label: row.detailBayar,
+                                                      color: row.isBelumLunas
+                                                          ? const Color(0xFFD20F0F)
+                                                          : const Color(0xFF18BF10),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Align(
+                                                    alignment: Alignment.center,
+                                                    child: _StatusChip(
+                                                      label: row.status,
+                                                      color: row.isPending
+                                                          ? const Color(0xFFE3A10E)
+                                                          : const Color(0xFF18BF10),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  flex: 2,
+                                                  child: Align(
+                                                    alignment: Alignment.center,
+                                                    child: _ActionTextButton(
+                                                      label: 'Show',
+                                                      onPressed: () => _showResidentDetail(context, row),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -428,31 +508,36 @@ class _StatusChip extends StatelessWidget {
   }
 }
 
-class _ActionSquareButton extends StatelessWidget {
-  const _ActionSquareButton({
-    required this.backgroundColor,
-    required this.icon,
+class _ActionTextButton extends StatelessWidget {
+  const _ActionTextButton({
+    required this.label,
     required this.onPressed,
   });
 
-  final Color backgroundColor;
-  final IconData icon;
+  final String label;
   final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 30,
       height: 30,
-      child: Material(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(8),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(8),
-          onTap: onPressed,
-          child: Icon(icon, size: 17, color: Colors.white),
+      child: OutlinedButton(
+        onPressed: onPressed,
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          side: const BorderSide(color: Color(0xFF2E80F7)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+        child: Text(
+          label,
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: const Color(0xFF2E80F7),
+                fontWeight: FontWeight.w700,
+              ),
         ),
       ),
     );
   }
 }
+
+

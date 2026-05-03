@@ -6,7 +6,10 @@ class GetAdminResidentsUseCase {
 
   GetAdminResidentsUseCase(this._repository);
 
-  Future<ResidentResponse> call() async {
-    return await _repository.getAdminResidents();
+  Future<ResidentResponse> call({
+    int page = 1,
+    int perPage = 10,
+  }) async {
+    return await _repository.getAdminResidents(page: page, perPage: perPage);
   }
 }

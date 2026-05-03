@@ -1,24 +1,58 @@
 class ResidentResponse {
   final ResidentStats stats;
   final List<ResidentItem> residents;
+  final ResidentPagination pagination;
 
-  ResidentResponse({required this.stats, required this.residents});
+  ResidentResponse({
+    required this.stats,
+    required this.residents,
+    required this.pagination,
+  });
 
   factory ResidentResponse.fromJson(Map<String, dynamic> json) {
     final data = json['data'] as Map<String, dynamic>? ?? <String, dynamic>{};
     final statsJson = data['stats'] as Map<String, dynamic>? ?? <String, dynamic>{};
 
     final dynamic residentsPayload = data['residents'];
-    final List<dynamic> residentsList =
+    final Map<String, dynamic> residentsMap =
         residentsPayload is Map<String, dynamic>
-            ? (residentsPayload['data'] as List<dynamic>? ?? <dynamic>[])
-            : (residentsPayload as List<dynamic>? ?? <dynamic>[]);
+            ? residentsPayload
+            : <String, dynamic>{};
+    final List<dynamic> residentsList = residentsMap.isNotEmpty
+        ? (residentsMap['data'] as List<dynamic>? ?? <dynamic>[])
+        : (residentsPayload as List<dynamic>? ?? <dynamic>[]);
+    final Map<String, dynamic> metaMap =
+        residentsMap['meta'] as Map<String, dynamic>? ?? <String, dynamic>{};
 
     return ResidentResponse(
       stats: ResidentStats.fromJson(statsJson),
       residents: residentsList
           .map((item) => ResidentItem.fromJson(item))
           .toList(),
+      pagination: ResidentPagination.fromJson(metaMap),
+    );
+  }
+}
+
+class ResidentPagination {
+  final int currentPage;
+  final int lastPage;
+  final int perPage;
+  final int total;
+
+  const ResidentPagination({
+    required this.currentPage,
+    required this.lastPage,
+    required this.perPage,
+    required this.total,
+  });
+
+  factory ResidentPagination.fromJson(Map<String, dynamic> json) {
+    return ResidentPagination(
+      currentPage: json['current_page'] ?? 1,
+      lastPage: json['last_page'] ?? 1,
+      perPage: json['per_page'] ?? 10,
+      total: json['total'] ?? 0,
     );
   }
 }

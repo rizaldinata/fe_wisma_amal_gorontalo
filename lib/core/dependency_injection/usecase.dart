@@ -63,6 +63,9 @@ import 'package:frontend/domain/repository/role_repository.dart';
 import 'package:frontend/domain/usecase/role/role_usecases.dart';
 import 'package:frontend/domain/repository/my_reservation_repository.dart';
 import 'package:frontend/domain/usecase/my_reservation/get_my_reservations_usecase.dart';
+import 'package:frontend/domain/repository/resident_repository.dart';
+import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
+import 'package:frontend/domain/usecase/resident/get_admin_resident_detail_usecase.dart';
 
 
 Future<void> initializeUseCase() async {
@@ -254,6 +257,14 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => CreateReservationUseCase(serviceLocator<ReservationRepository>()),
+  );
+
+  // Resident UseCases
+  serviceLocator.registerFactory(
+    () => GetAdminResidentsUseCase(serviceLocator<ResidentRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetAdminResidentDetailUseCase(serviceLocator<ResidentRepository>()),
   );
 
   // serviceLocator.registerFactory(
