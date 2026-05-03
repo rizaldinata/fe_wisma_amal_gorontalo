@@ -218,20 +218,31 @@ class RoomDetailView extends StatelessWidget {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '${state.room?.priceFormatted}/ bulan',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleMedium,
+                                    '${state.room?.priceFormatted} / bulan',
+                                    style: Theme.of(context).textTheme.titleMedium,
                                   ),
+                                  if (state.room?.priceDaily != null && state.room!.priceDaily > 0) ...[
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      '${state.room?.priceDailyFormatted} / hari',
+                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                        color: Colors.blue.shade700,
+                                      ),
+                                    ),
+                                  ],
                                   SizedBox(height: 20),
-                                  BasicButton(
-                                    onPressed: () {
-                                      context.router.push(
-                                        const IdentityFormRoute(),
-                                      );
-                                    },
-                                    label: 'Pesan Sekarang',
-                                  ),
+                                    BasicButton(
+                                      onPressed: () {
+                                        if (state.room != null) {
+                                          context.router.push(
+                                            ReservationDetailFormRoute(
+                                              room: state.room!,
+                                            ),
+                                          );
+                                        }
+                                      },
+                                      label: 'Pesan Sekarang',
+                                    ),
                                 ],
                               ),
                             ),

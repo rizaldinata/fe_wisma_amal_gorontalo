@@ -12,6 +12,7 @@
 import 'package:auto_route/auto_route.dart' as _i39;
 import 'package:flutter/material.dart' as _i40;
 import 'package:frontend/domain/entity/inventory_entity.dart' as _i41;
+import 'package:frontend/domain/entity/room_entity.dart' as _i43;
 import 'package:frontend/domain/entity/schedule_entity.dart' as _i42;
 import 'package:frontend/presentation/pages/auth/login_page.dart' as _i17;
 import 'package:frontend/presentation/pages/auth/register_page.dart' as _i29;
@@ -875,18 +876,50 @@ class RegisterRouteArgs {
 
 /// generated route for
 /// [_i30.ReservationDetailFormPage]
-class ReservationDetailFormRoute extends _i39.PageRouteInfo<void> {
-  const ReservationDetailFormRoute({List<_i39.PageRouteInfo>? children})
-    : super(ReservationDetailFormRoute.name, initialChildren: children);
+class ReservationDetailFormRoute
+    extends _i39.PageRouteInfo<ReservationDetailFormRouteArgs> {
+  ReservationDetailFormRoute({
+    _i40.Key? key,
+    required _i43.RoomEntity room,
+    List<_i39.PageRouteInfo>? children,
+  }) : super(
+         ReservationDetailFormRoute.name,
+         args: ReservationDetailFormRouteArgs(key: key, room: room),
+         initialChildren: children,
+       );
 
   static const String name = 'ReservationDetailFormRoute';
 
   static _i39.PageInfo page = _i39.PageInfo(
     name,
     builder: (data) {
-      return const _i30.ReservationDetailFormPage();
+      final args = data.argsAs<ReservationDetailFormRouteArgs>();
+      return _i30.ReservationDetailFormPage(key: args.key, room: args.room);
     },
   );
+}
+
+class ReservationDetailFormRouteArgs {
+  const ReservationDetailFormRouteArgs({this.key, required this.room});
+
+  final _i40.Key? key;
+
+  final _i43.RoomEntity room;
+
+  @override
+  String toString() {
+    return 'ReservationDetailFormRouteArgs{key: $key, room: $room}';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    if (other is! ReservationDetailFormRouteArgs) return false;
+    return key == other.key && room == other.room;
+  }
+
+  @override
+  int get hashCode => key.hashCode ^ room.hashCode;
 }
 
 /// generated route for

@@ -14,16 +14,18 @@ class ReservationRepositoryImpl implements ReservationRepository {
     return await remoteDatasource.getReservations();
   }
 
-  // @override
-  // Future<void> updateReservationStatus({
-  //   required int reservationId,
-
-  //   required String status,
-  // }) async {
-  //   await remoteDatasource.updateReservationStatus(
-  //     reservationId: reservationId,
-
-  //     status: status,
-  //   );
-  // }
+  @override
+  Future<ReservationEntity> createReservation({
+    required int roomId,
+    required String startDate,
+    required int duration,
+    required String rentalType,
+  }) async {
+    return await remoteDatasource.createReservation(
+      roomId: roomId,
+      startDate: startDate,
+      duration: duration,
+      rentalType: rentalType,
+    );
+  }
 }

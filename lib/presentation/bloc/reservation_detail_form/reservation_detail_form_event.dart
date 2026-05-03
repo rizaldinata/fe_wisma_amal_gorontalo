@@ -7,7 +7,14 @@ abstract class ReservationDetailFormEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class InitReservationEvent extends ReservationDetailFormEvent {}
+class InitReservationEvent extends ReservationDetailFormEvent {
+  final RoomEntity room;
+
+  const InitReservationEvent(this.room);
+
+  @override
+  List<Object?> get props => [room];
+}
 
 class RentTypeChanged extends ReservationDetailFormEvent {
   final String rentType;
@@ -34,4 +41,17 @@ class EndDateChanged extends ReservationDetailFormEvent {
 
   @override
   List<Object?> get props => [date];
+}
+
+class DurationMonthsChanged extends ReservationDetailFormEvent {
+  final int months;
+
+  const DurationMonthsChanged(this.months);
+
+  @override
+  List<Object?> get props => [months];
+}
+
+class SubmitReservation extends ReservationDetailFormEvent {
+  const SubmitReservation();
 }

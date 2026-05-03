@@ -1,6 +1,7 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:formz/formz.dart';
 
 import 'package:frontend/presentation/bloc/reservation_detail_form/reservation_detail_form_bloc.dart';
 import 'package:frontend/presentation/widget/core/appbar/custom_appbar.dart';
@@ -8,15 +9,27 @@ import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:frontend/presentation/widget/core/textform/textform.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/wrapper/hover_wrapper.dart';
+import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend/core/navigation/auto_route.gr.dart';
+import 'package:frontend/core/constant/permission_key.dart';
+import 'package:frontend/main.dart';
+import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
+
+import 'package:frontend/domain/entity/room_entity.dart';
+import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 
 @RoutePage()
 class ReservationDetailFormPage extends StatelessWidget {
-  const ReservationDetailFormPage({super.key});
+  final RoomEntity room;
+  const ReservationDetailFormPage({super.key, required this.room});
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ReservationDetailFormBloc()..add(InitReservationEvent()),
+      create: (_) => ReservationDetailFormBloc(
+        getSettingsUseCase: serviceLocator.get(),
+        createReservationUseCase: serviceLocator.get(),
+      )..add(InitReservationEvent(room)),
       child: const ReservationDetailFormView(),
     );
   }
@@ -44,6 +57,7 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
   Future<void> _pickDate(
     BuildContext context,
     TextEditingController controller,
+    Function(DateTime) onDateSelected,
   ) async {
     final date = await showDatePicker(
       context: context,
@@ -53,14 +67,36 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
     );
 
     if (date != null) {
-      controller.text = '${date.day}/${date.month}/${date.year}';
+      final formatted = '${date.day}/${date.month}/${date.year}';
+      controller.text = formatted;
+      onDateSelected(date);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ReservationDetailFormBloc, ReservationDetailFormState>(
+    return BlocConsumer<ReservationDetailFormBloc, ReservationDetailFormState>(
+      listener: (context, state) {
+        if (state.startDate != null) {
+          final date = state.startDate!;
+          _startDateController.text = '${date.day}/${date.month}/${date.year}';
+        }
+        if (state.endDate != null) {
+          final date = state.endDate!;
+          _endDateController.text = '${date.day}/${date.month}/${date.year}';
+        }
+
+        if (state.status == FormzSubmissionStatus.success) {
+          AppSnackbar.showSuccess('Pemesanan berhasil dibuat. Silakan selesaikan pembayaran.');
+          context.router.replace(RoomRoute());
+        } else if (state.status == FormzSubmissionStatus.failure) {
+          AppSnackbar.showError(state.errorMessage ?? 'Gagal membuat pemesanan');
+        }
+      },
       builder: (context, state) {
+        final room = state.room;
+        if (room == null) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+
         return Scaffold(
           appBar: CustomAppbar(
             icon: const Icon(Icons.arrow_back),
@@ -95,57 +131,22 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                       color: Colors.blue.shade200,
                                     ),
                                   ),
-                                  child: const Column(
+                                  child: Column(
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        'Kamar 105',
-                                        style: TextStyle(
+                                        room.title,
+                                        style: const TextStyle(
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
-                                      SizedBox(height: 4),
-                                      Text('Lantai 1 • AC'),
-                                      SizedBox(height: 8),
+                                      const SizedBox(height: 4),
+                                      Text('No. ${room.number} • ${room.facilities.join(', ')}'),
+                                      const SizedBox(height: 8),
                                       Text(
-                                        'Harian: Rp.150.000 | Bulanan: Rp.1.500.000',
-                                        style: TextStyle(color: Colors.blue),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                              const SizedBox(height: 12),
-
-                              /// INFO BOX (FULL WIDTH)
-                              SizedBox(
-                                width: double.infinity,
-                                child: Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red.shade50,
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: Colors.red.shade200,
-                                    ),
-                                  ),
-                                  child: const Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'Informasi Penting',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.red,
-                                        ),
-                                      ),
-                                      SizedBox(height: 6),
-                                      Text(
-                                        'Kamar ini sedang disewa hingga 15-02-2025. Pilih tanggal setelah itu.',
-                                        style: TextStyle(color: Colors.red),
+                                        'Bulanan: ${room.priceFormatted}${room.priceDaily > 0 ? ' | Harian: ${room.priceDailyFormatted}' : ''}',
+                                        style: const TextStyle(color: Colors.blue),
                                       ),
                                     ],
                                   ),
@@ -165,32 +166,24 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                             runSpacing: 16,
                             children: [
                               _rentCard(
-                                title: 'Sewa Harian',
-                                subtitle: 'Fleksibel jangka pendek',
-                                price: 'Rp. 150.000 / hari',
-                                selected: state.rentType == 'Harian',
-                                onTap: () => context
-                                    .read<ReservationDetailFormBloc>()
-                                    .add(RentTypeChanged('Harian')),
-                              ),
-                              _rentCard(
                                 title: 'Sewa Bulanan',
                                 subtitle: 'Hemat jangka panjang',
-                                price: 'Rp. 1.500.000 / bulan',
+                                price: '${room.priceFormatted} / bulan',
                                 selected: state.rentType == 'Bulanan',
                                 onTap: () => context
                                     .read<ReservationDetailFormBloc>()
-                                    .add(RentTypeChanged('Bulanan')),
+                                    .add(const RentTypeChanged('Bulanan')),
                               ),
-                              _rentCard(
-                                title: 'Sewa Tahunan',
-                                subtitle: 'Paling hemat',
-                                price: 'Rp. 18.000.000 / tahun',
-                                selected: state.rentType == 'Tahunan',
-                                onTap: () => context
-                                    .read<ReservationDetailFormBloc>()
-                                    .add(RentTypeChanged('Tahunan')),
-                              ),
+                              if (state.isDailyRentalEnabled && room.priceDaily > 0)
+                                _rentCard(
+                                  title: 'Sewa Harian',
+                                  subtitle: 'Fleksibel jangka pendek',
+                                  price: '${room.priceDailyFormatted} / hari',
+                                  selected: state.rentType == 'Harian',
+                                  onTap: () => context
+                                      .read<ReservationDetailFormBloc>()
+                                      .add(const RentTypeChanged('Harian')),
+                                ),
                             ],
                           ),
                         ),
@@ -200,45 +193,78 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                         /// DETAIL SEWA
                         BasicCard(
                           title: 'Detail Sewa',
-                          child: Row(
+                          child: Column(
                             children: [
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () =>
-                                      _pickDate(context, _startDateController),
-                                  child: AbsorbPointer(
-                                    child: CustomTextForm(
-                                      title: 'Tanggal Mulai',
-                                      hintText: 'Pilih tanggal',
-                                      controller: _startDateController,
-                                      isRequired: true,
-                                      suffixIcon: const Icon(
-                                        Icons.calendar_today,
-                                        size: 18,
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: GestureDetector(
+                                      onTap: () =>
+                                          _pickDate(context, _startDateController, (date) {
+                                            context.read<ReservationDetailFormBloc>().add(StartDateChanged(date));
+                                          }),
+                                      child: AbsorbPointer(
+                                        child: CustomTextForm(
+                                          title: 'Tanggal Mulai',
+                                          hintText: 'Pilih tanggal',
+                                          controller: _startDateController,
+                                          isRequired: true,
+                                          suffixIcon: const Icon(
+                                            Icons.calendar_today,
+                                            size: 18,
+                                          ),
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: () =>
-                                      _pickDate(context, _endDateController),
-                                  child: AbsorbPointer(
-                                    child: CustomTextForm(
-                                      title: 'Tanggal Selesai',
-                                      hintText: 'Pilih tanggal',
-                                      controller: _endDateController,
-                                      isRequired: true,
-                                      suffixIcon: const Icon(
-                                        Icons.calendar_today,
-                                        size: 18,
+                                  const SizedBox(width: 12),
+                                  if (state.rentType == 'Harian')
+                                    Expanded(
+                                      child: GestureDetector(
+                                        onTap: () =>
+                                            _pickDate(context, _endDateController, (date) {
+                                              context.read<ReservationDetailFormBloc>().add(EndDateChanged(date));
+                                            }),
+                                        child: AbsorbPointer(
+                                          child: CustomTextForm(
+                                            title: 'Tanggal Selesai',
+                                            hintText: 'Pilih tanggal',
+                                            controller: _endDateController,
+                                            isRequired: true,
+                                            suffixIcon: const Icon(
+                                              Icons.calendar_today,
+                                              size: 18,
+                                            ),
+                                          ),
+                                        ),
                                       ),
                                     ),
-                                  ),
-                                ),
+                                  if (state.rentType == 'Bulanan')
+                                    Expanded(
+                                      child: CustomTextForm(
+                                        title: 'Jumlah Bulan',
+                                        hintText: 'Berapa bulan?',
+                                        keyboardType: TextInputType.number,
+                                        initialValue: state.durationMonths.toString(),
+                                        onChanged: (val) {
+                                          final months = int.tryParse(val) ?? 1;
+                                          context.read<ReservationDetailFormBloc>().add(DurationMonthsChanged(months));
+                                        },
+                                        isRequired: true,
+                                      ),
+                                    ),
+                                ],
                               ),
+                              if (state.rentType == 'Bulanan') ...[
+                                const SizedBox(height: 16),
+                                CustomTextForm(
+                                  title: 'Estimasi Tanggal Selesai',
+                                  hintText: '-',
+                                  controller: _endDateController,
+                                  enabled: false,
+                                  isRequired: false,
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -262,17 +288,17 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Text('Kamar 105'),
-                                Text('${state.duration} Hari'),
+                                Text(room.title),
+                                Text('${state.duration} ${state.rentType == 'Bulanan' ? 'Bulan' : 'Hari'}'),
                               ],
                             ),
                             const SizedBox(height: 10),
 
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: const [
-                                Text('Harga per hari'),
-                                Text('Rp. 150.000'),
+                              children: [
+                                Text('Harga / ${state.rentType == 'Bulanan' ? 'bulan' : 'hari'}'),
+                                Text(state.rentType == 'Bulanan' ? room.priceFormatted : room.priceDailyFormatted),
                               ],
                             ),
 
@@ -301,14 +327,49 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                         width: double.infinity,
                         child: BasicButton(
                           label: 'Pesan Kamar',
-                          onPressed: () {},
+                          isLoading: state.status == FormzSubmissionStatus.inProgress,
+                          onPressed: () {
+                            final authState = context.read<AuthBloc>().state;
+                            if (!authState.isLoggedIn) {
+                              AppSnackbar.showError('Silakan login terlebih dahulu');
+                              context.router.push(LoginRoute());
+                              return;
+                            }
+
+                            if (state.startDate == null) {
+                                AppSnackbar.showError('Pilih tanggal mulai terlebih dahulu');
+                                return;
+                            }
+
+                            if (state.rentType == 'Harian' && state.endDate == null) {
+                                AppSnackbar.showError('Pilih tanggal selesai terlebih dahulu');
+                                return;
+                            }
+
+                            if (state.rentType == 'Harian' && state.duration <= 0) {
+                                AppSnackbar.showError('Tanggal selesai harus setelah tanggal mulai');
+                                return;
+                            }
+
+                            final roles = authState.userInfo?.roles ?? [];
+                            final isMember = roles.contains('member');
+                            final isResident = roles.contains('resident');
+
+                            if (context.can(PermissionKeys.completeResidentProfile) && !isMember && !isResident) {
+                              AppSnackbar.showError('Silakan lengkapi biodata Anda terlebih dahulu');
+                              context.router.push(CompleteProfileRoute());
+                              return;
+                            }
+
+                            context.read<ReservationDetailFormBloc>().add(const SubmitReservation());
+                          },
                         ),
                       ),
 
                       const SizedBox(height: 8),
 
                       const Text(
-                        'Setelah submit, Anda akan dihubungi untuk pembayaran',
+                        'Setelah submit, Anda akan diarahkan untuk melakukan pembayaran',
                         style: TextStyle(fontSize: 12, color: Colors.grey),
                         textAlign: TextAlign.center,
                       ),

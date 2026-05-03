@@ -89,6 +89,7 @@ class _FormRoomViewState extends State<FormRoomView> {
   final TextEditingController titleController = TextEditingController();
 
   final TextEditingController priceController = TextEditingController();
+  final TextEditingController priceDailyController = TextEditingController();
 
   final TextEditingController roomNumberController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -98,6 +99,9 @@ class _FormRoomViewState extends State<FormRoomView> {
     titleController.text = state.room.title;
     descriptionController.text = state.room.description;
     priceController.text = ThousandsFormatter.format(state.room.price.toInt());
+    priceDailyController.text = state.room.priceDaily > 0 
+        ? ThousandsFormatter.format(state.room.priceDaily.toInt()) 
+        : '';
     roomNumberController.text = state.room.number;
   }
 
@@ -107,6 +111,7 @@ class _FormRoomViewState extends State<FormRoomView> {
     descriptionController.dispose();
     titleController.dispose();
     priceController.dispose();
+    priceDailyController.dispose();
     super.dispose();
   }
 
@@ -314,6 +319,18 @@ class _FormRoomViewState extends State<FormRoomView> {
                                     },
                                   ),
                                   SizedBox(height: 30),
+                                  CustomTextForm(
+                                    title: 'Price Daily (Optional)',
+                                    hintText: 'Enter daily price',
+                                    keyboardType: TextInputType.number,
+                                    controller: priceDailyController,
+                                    isRequired: false,
+                                    inputFormatters: [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                      ThousandsFormatter(),
+                                    ],
+                                  ),
+                                  SizedBox(height: 30),
                                   Text(
                                     'Facilities',
                                     style: Theme.of(
@@ -448,6 +465,10 @@ class _FormRoomViewState extends State<FormRoomView> {
                                         priceController.text.trim(),
                                       );
 
+                                      final priceDaily = ThousandsFormatter.parse(
+                                        priceDailyController.text.trim(),
+                                      ) ?? 0;
+
                                       context.read<FormRoomBloc>().add(
                                         SubmitFormRoomEvent(
                                           formMode: widget.formMode,
@@ -457,6 +478,7 @@ class _FormRoomViewState extends State<FormRoomView> {
                                                 .text
                                                 .trim(),
                                             price: price.toDouble(),
+                                            priceDaily: priceDaily.toDouble(),
                                             facilities: state.facilities,
                                             number: roomNumberController.text
                                                 .trim(),

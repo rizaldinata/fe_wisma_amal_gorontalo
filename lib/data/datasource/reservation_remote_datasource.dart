@@ -38,17 +38,38 @@ class ReservationRemoteDatasource {
     }
   }
 
-  // Future<void> updateReservationStatus({
-  //   required int reservationId,
-  //   required String status,
-  // }) async {
-  //   try {
-  //     await dioClient.patch(
-  //       '/rentals/$reservationId/status',
-  //       data: {'status': status},
-  //     );
-  //   } catch (e) {
-  //     rethrow;
-  //   }
-  // }
+  Future<ReservationEntity> createReservation({
+    required int roomId,
+    required String startDate,
+    required int duration,
+    required String rentalType,
+  }) async {
+    try {
+      final response = await dioClient.post(
+        '/rentals',
+        data: {
+          'room_id': roomId,
+          'start_date': startDate,
+          'duration': duration,
+          'rental_type': rentalType,
+        },
+      );
+
+      final json = response.data['data'];
+
+      return ReservationEntity(
+        id: json['id'],
+        roomTitle: json['room']['title'] ?? '',
+        roomNumber: json['room']['number'] ?? '',
+        residentName: json['resident']['user']['name'] ?? '',
+        rentalType: json['rental_type'] ?? '',
+        status: json['status'] ?? '',
+        paymentStatus: json['payment_status'] ?? 'unpaid',
+        startDate: json['start_date'].toString().substring(0, 10),
+        endDate: json['end_date'].toString().substring(0, 10),
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

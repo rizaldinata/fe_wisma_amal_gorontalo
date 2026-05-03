@@ -14,6 +14,8 @@ import '../../../domain/entity/finance/invoice_entity.dart';
 import '../../../domain/entity/finance/payment_entity.dart';
 import '../../../domain/entity/finance/kpi_entity.dart';
 import '../../../domain/entity/finance/revenue_entity.dart';
+import '../../widget/core/table/table.dart';
+import '../../../domain/entity/table/tabel_colum.dart';
 
 // Mode filter dashboard
 enum FilterMode { thisMonth, monthYear, yearOnly }
@@ -106,19 +108,21 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Dashboard Keuangan',
-                        style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        'Periode: $_periodLabel',
-                        style: const TextStyle(fontSize: 14, color: Colors.grey),
-                      ),
-                    ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Dashboard Keuangan',
+                          style: Theme.of(context).textTheme.headlineLarge,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Periode: $_periodLabel',
+                          style: const TextStyle(fontSize: 14, color: Colors.grey),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -686,26 +690,35 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
         ),
       );
     }
-    return Column(
-      children: payments.map((payment) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12.0),
-          child: BasicCard(
-            child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-              leading: const CircleAvatar(
+    return TableCard(
+      title: 'Daftar Pembayaran',
+      columns: const [
+        TableColumn(label: 'Transaksi', flex: 3),
+        TableColumn(label: 'Metode', flex: 2),
+        TableColumn(label: 'Status', flex: 2, align: TextAlign.right),
+      ],
+      rows: payments.map((payment) {
+        return [
+          Row(
+            children: [
+              const CircleAvatar(
                 backgroundColor: Colors.blueAccent,
-                child: Icon(Icons.receipt_long, color: Colors.white),
+                radius: 16,
+                child: Icon(Icons.receipt_long, color: Colors.white, size: 16),
               ),
-              title: Text('Transaksi #${payment.transactionId ?? "Menunggu ID"}'),
-              subtitle: Text('Metode: ${payment.paymentMethod.toUpperCase()}'),
-              trailing: CustomChip(
-                label: payment.status == 'pending' ? 'Menunggu' : payment.status.toUpperCase(),
-                color: payment.status == 'pending' ? Colors.orange.shade100 : Colors.green.shade100,
-              ),
+              const SizedBox(width: 12),
+              Text('Transaksi #${payment.transactionId ?? "Menunggu ID"}', style: const TextStyle(fontWeight: FontWeight.w600)),
+            ],
+          ),
+          Text(payment.paymentMethod.toUpperCase()),
+          Align(
+            alignment: Alignment.centerRight,
+            child: CustomChip(
+              label: payment.status == 'pending' ? 'Menunggu' : payment.status.toUpperCase(),
+              color: payment.status == 'pending' ? Colors.orange.shade100 : Colors.green.shade100,
             ),
           ),
-        );
+        ];
       }).toList(),
     );
   }

@@ -9,6 +9,8 @@ import '../../bloc/expense/expense_bloc.dart';
 import '../../bloc/expense/expense_event.dart';
 import '../../bloc/expense/expense_state.dart';
 import '../../widget/core/card/basic_card.dart';
+import '../../widget/core/table/table.dart';
+import '../../../domain/entity/table/tabel_colum.dart';
 
 @RoutePage()
 class ExpenseListPage extends StatefulWidget {
@@ -227,11 +229,13 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               // ── Header ──────────────────────────────────────────────
               Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [
-                const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Manajemen Pengeluaran', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                  SizedBox(height: 6),
-                  Text('Kelola dan pantau seluruh pengeluaran operasional wisma.', style: TextStyle(fontSize: 14, color: Colors.grey)),
-                ]),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text('Manajemen Pengeluaran', style: Theme.of(context).textTheme.headlineLarge),
+                    const SizedBox(height: 6),
+                    const Text('Kelola dan pantau seluruh pengeluaran operasional wisma.', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                  ]),
+                ),
                 FilledButton.icon(
                   onPressed: () => _showDialog(),
                   icon: const Icon(Icons.add),
@@ -297,101 +301,64 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
                     const SizedBox(height: 16),
 
                     // ── Table ────────────────────────────────────────
-                    BasicCard(
-                      child: Column(children: [
-                        // Header
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                          child: Row(children: [
-                            Expanded(flex: 4, child: Text('Nama Pengeluaran', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.grey.shade600, letterSpacing: 0.5))),
-                            Expanded(flex: 2, child: Text('Tanggal', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.grey.shade600, letterSpacing: 0.5))),
-                            Expanded(flex: 2, child: Text('Nominal', textAlign: TextAlign.right, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.grey.shade600, letterSpacing: 0.5))),
-                            const SizedBox(width: 88),
-                          ]),
-                        ),
-                        const Divider(height: 1),
-
-                        // Rows
-                        if (paged.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.all(40),
-                            child: Center(child: Column(children: [
-                              Icon(Icons.inbox_outlined, size: 48, color: Colors.grey.shade400),
-                              const SizedBox(height: 12),
-                              Text(_searchQuery.isEmpty ? 'Belum ada data pengeluaran.' : 'Tidak ada hasil untuk "$_searchQuery".', style: TextStyle(color: Colors.grey.shade500)),
+                    TableCard(
+                      title: 'Daftar Pengeluaran',
+                      emptyMessage: _searchQuery.isEmpty ? 'Belum ada data pengeluaran.' : 'Tidak ada hasil untuk "$_searchQuery".',
+                      columns: const [
+                        TableColumn(label: 'Nama Pengeluaran', flex: 4),
+                        TableColumn(label: 'Tanggal', flex: 2),
+                        TableColumn(label: 'Nominal', flex: 2, align: TextAlign.right),
+                        TableColumn(label: 'Aksi', flex: 1, align: TextAlign.right),
+                      ],
+                      rows: paged.map((e) {
+                        final date = DateTime.tryParse(e.date);
+                        return [
+                          Row(children: [
+                            Container(
+                              width: 38, height: 38,
+                              decoration: BoxDecoration(color: _color(e.title).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                              child: Icon(_icon(e.title), color: _color(e.title), size: 20),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                              Text(e.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                              if (e.notes != null && e.notes!.isNotEmpty)
+                                Text(e.notes!, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
                             ])),
-                          )
-                        else
-                          ...paged.asMap().entries.map((entry) {
-                            final i = entry.key;
-                            final e = entry.value;
-                            final date = DateTime.tryParse(e.date);
-                            final isLast = i == paged.length - 1;
-                            return Column(children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                                child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-                                  // Nama
-                                  Expanded(flex: 4, child: Row(children: [
-                                    Container(
-                                      width: 38, height: 38,
-                                      decoration: BoxDecoration(color: _color(e.title).withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                                      child: Icon(_icon(e.title), color: _color(e.title), size: 20),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                      Text(e.title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                                      if (e.notes != null && e.notes!.isNotEmpty)
-                                        Text(e.notes!, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
-                                    ])),
-                                    if (e.isIntegrated)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                                        decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.blue.shade200)),
-                                        child: Text('Sistem', style: TextStyle(fontSize: 11, color: Colors.blue.shade700, fontWeight: FontWeight.w600)),
-                                      ),
-                                  ])),
-
-                                  // Tanggal
-                                  Expanded(flex: 2, child: Text(date != null ? DateFormat('dd MMM yyyy', 'id_ID').format(date) : '-', style: TextStyle(fontSize: 13, color: Colors.grey.shade700))),
-
-                                  // Nominal
-                                  Expanded(flex: 2, child: Text(formatRupiah(e.amount), textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.red.shade700))),
-
-                                  // Aksi
-                                  SizedBox(
-                                    width: 88,
-                                    child: Row(mainAxisAlignment: MainAxisAlignment.end, children: e.isIntegrated
-                                      ? [Tooltip(message: 'Dikelola otomatis oleh sistem', child: Icon(Icons.lock_outline, size: 16, color: Colors.grey.shade400))]
-                                      : [
-                                          IconButton(icon: Icon(Icons.edit_outlined, size: 18, color: Colors.blue.shade600), tooltip: 'Ubah', splashRadius: 20, onPressed: () => _showDialog(e)),
-                                          IconButton(icon: Icon(Icons.delete_outline, size: 18, color: Colors.red.shade600), tooltip: 'Hapus', splashRadius: 20, onPressed: () => _confirmDelete(e)),
-                                        ]),
-                                  ),
-                                ]),
+                            if (e.isIntegrated)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(color: Colors.blue.shade50, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.blue.shade200)),
+                                child: Text('Sistem', style: TextStyle(fontSize: 11, color: Colors.blue.shade700, fontWeight: FontWeight.w600)),
                               ),
-                              if (!isLast) const Divider(height: 1, indent: 70),
-                            ]);
-                          }),
-
-                        const Divider(height: 1),
-
-                        // ── Footer: total + pagination ───────────────
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                          child: Row(children: [
-                            Text(
-                              'Menampilkan ${paged.length} dari ${filtered.length} data',
-                              style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
-                            ),
-                            const Spacer(),
-                            // Pagination controls
-                            _PaginationBar(
-                              currentPage: page,
-                              totalPages: totalPages,
-                              onPageChanged: (p) => setState(() => _currentPage = p),
-                            ),
                           ]),
+                          Text(date != null ? DateFormat('dd MMM yyyy', 'id_ID').format(date) : '-', style: TextStyle(fontSize: 13, color: Colors.grey.shade700)),
+                          Text(formatRupiah(e.amount), textAlign: TextAlign.right, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.red.shade700)),
+                          Row(mainAxisAlignment: MainAxisAlignment.end, children: e.isIntegrated
+                            ? [Tooltip(message: 'Dikelola otomatis oleh sistem', child: Icon(Icons.lock_outline, size: 16, color: Colors.grey.shade400))]
+                            : [
+                                IconButton(icon: Icon(Icons.edit_outlined, size: 18, color: Colors.blue.shade600), tooltip: 'Ubah', splashRadius: 20, onPressed: () => _showDialog(e)),
+                                IconButton(icon: Icon(Icons.delete_outline, size: 18, color: Colors.red.shade600), tooltip: 'Hapus', splashRadius: 20, onPressed: () => _confirmDelete(e)),
+                              ]),
+                        ];
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Footer + pagination
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                      child: Row(children: [
+                        Text(
+                          'Menampilkan ${paged.length} dari ${filtered.length} data',
+                          style: TextStyle(fontSize: 13, color: Colors.grey.shade500),
+                        ),
+                        const Spacer(),
+                        // Pagination controls
+                        _PaginationBar(
+                          currentPage: page,
+                          totalPages: totalPages,
+                          onPageChanged: (p) => setState(() => _currentPage = p),
                         ),
                       ]),
                     ),

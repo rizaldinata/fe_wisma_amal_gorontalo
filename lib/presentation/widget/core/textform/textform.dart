@@ -16,7 +16,11 @@ class CustomTextForm extends StatelessWidget {
     this.validator,
     this.maxLines = 1,
     this.inputFormatters,
+    this.onChanged,
+    this.initialValue,
+    this.enabled = true,
   });
+
   final Color? fillColor;
   final String title;
   final String hintText;
@@ -28,6 +32,9 @@ class CustomTextForm extends StatelessWidget {
   final Widget? suffixIcon;
   final int maxLines;
   final List<TextInputFormatter>? inputFormatters;
+  final Function(String)? onChanged;
+  final String? initialValue;
+  final bool enabled;
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +45,6 @@ class CustomTextForm extends StatelessWidget {
           TextSpan(
             text: title,
             style: Theme.of(context).textTheme.titleMedium,
-
             children: isRequired
                 ? [
                     TextSpan(
@@ -52,7 +58,7 @@ class CustomTextForm extends StatelessWidget {
                 : [],
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         CustomTextField(
           inputFormatters: inputFormatters,
           controller: controller,
@@ -60,10 +66,12 @@ class CustomTextForm extends StatelessWidget {
           keyboardType: keyboardType,
           validator: validator,
           maxLines: maxLines,
-          fillColor:
-              fillColor ?? Theme.of(context).colorScheme.surfaceContainerLow,
+          fillColor: fillColor,
           hintText: hintText,
           suffixIcon: suffixIcon,
+          onChanged: onChanged,
+          initialValue: initialValue,
+          enabled: enabled,
         ),
       ],
     );

@@ -9,6 +9,8 @@ import '../../bloc/payment_verification/payment_verification_bloc.dart';
 import '../../bloc/payment_verification/payment_verification_event.dart';
 import '../../bloc/payment_verification/payment_verification_state.dart';
 import '../../widget/core/card/basic_card.dart';
+import '../../widget/core/table/table.dart';
+import '../../../domain/entity/table/tabel_colum.dart';
 
 // @RoutePage()
 // class PaymentVerificationPage extends StatelessWidget {
@@ -535,22 +537,21 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Verifikasi Pembayaran',
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.bold,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Verifikasi Pembayaran',
+                            style: Theme.of(context).textTheme.headlineLarge,
                           ),
-                        ),
-                        SizedBox(height: 6),
-                        Text(
-                          'Tinjau dan konfirmasi bukti transfer pembayaran dari penghuni.',
-                          style: TextStyle(fontSize: 14, color: Colors.grey),
-                        ),
-                      ],
+                          const SizedBox(height: 6),
+                          const Text(
+                            'Tinjau dan konfirmasi bukti transfer pembayaran dari penghuni.',
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
+                          ),
+                        ],
+                      ),
                     ),
                     OutlinedButton.icon(
                       onPressed: () => _bloc.add(FetchPendingPayments()),
@@ -691,312 +692,164 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                         ),
                         const SizedBox(height: 16),
 
-                        // ── Table ────────────────────────────────────────
-                        BasicCard(
-                          child: Column(
-                            children: [
-                              // Header
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 14,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      flex: 3,
-                                      child: _th('ID Transaksi'),
-                                    ),
-                                    Expanded(flex: 2, child: _th('Invoice')),
-                                    Expanded(flex: 2, child: _th('Nominal')),
-                                    Expanded(flex: 2, child: _th('Metode')),
-                                    Expanded(
-                                      flex: 2,
-                                      child: _th('Tanggal Upload'),
-                                    ),
-                                    const SizedBox(width: 100),
-                                  ],
-                                ),
-                              ),
-                              const Divider(height: 1),
+                        const SizedBox(height: 16),
 
-                              if (paged.isEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.all(48),
-                                  child: Center(
-                                    child: Column(
-                                      children: [
-                                        Icon(
-                                          Icons.task_alt,
-                                          size: 56,
-                                          color: Colors.green.shade300,
+                        // ── Table ────────────────────────────────────────
+                        TableCard(
+                          title: 'Daftar Pembayaran',
+                          emptyMessage: _searchQuery.isEmpty
+                              ? 'Tidak ada pembayaran yang menunggu verifikasi.\nSemua pembayaran sudah diproses!'
+                              : 'Tidak ada hasil untuk "$_searchQuery".',
+                          columns: const [
+                            TableColumn(label: 'ID Transaksi', flex: 3),
+                            TableColumn(label: 'Invoice', flex: 2),
+                            TableColumn(label: 'Nominal', flex: 2),
+                            TableColumn(label: 'Metode', flex: 2),
+                            TableColumn(label: 'Tanggal Upload', flex: 2),
+                            TableColumn(label: 'Aksi', flex: 2),
+                          ],
+                          rows: paged.map((payment) {
+                            final hasProof = payment.paymentProofUrl != null &&
+                                payment.paymentProofUrl!.isNotEmpty;
+                            return [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.shade50,
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Icon(
+                                      Icons.pending_actions,
+                                      color: Colors.orange.shade700,
+                                      size: 20,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        payment.transactionId ?? 'ID #${payment.id}',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 14,
                                         ),
-                                        const SizedBox(height: 12),
-                                        Text(
-                                          _searchQuery.isEmpty
-                                              ? 'Tidak ada pembayaran yang menunggu verifikasi.'
-                                              : 'Tidak ada hasil untuk "$_searchQuery".',
-                                          style: TextStyle(
-                                            color: Colors.grey.shade500,
-                                            fontSize: 15,
+                                      ),
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            hasProof
+                                                ? Icons.image
+                                                : Icons.image_not_supported_outlined,
+                                            size: 13,
+                                            color: hasProof
+                                                ? Colors.green.shade600
+                                                : Colors.grey.shade400,
                                           ),
-                                          textAlign: TextAlign.center,
-                                        ),
-                                        if (_searchQuery.isEmpty) ...[
-                                          const SizedBox(height: 4),
+                                          const SizedBox(width: 4),
                                           Text(
-                                            'Semua pembayaran sudah diproses!',
+                                            hasProof ? 'Ada bukti' : 'Tanpa bukti',
                                             style: TextStyle(
-                                              color: Colors.grey.shade400,
-                                              fontSize: 13,
+                                              fontSize: 11,
+                                              color: hasProof
+                                                  ? Colors.green.shade600
+                                                  : Colors.grey.shade400,
                                             ),
                                           ),
                                         ],
-                                      ],
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              Text(
+                                '#${payment.invoiceId}',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                              Text(
+                                formatRupiah(payment.amount),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              Row(
+                                children: [
+                                  Icon(
+                                    _methodIcon(payment.paymentMethod),
+                                    size: 16,
+                                    color: _methodColor(payment.paymentMethod),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Flexible(
+                                    child: Text(
+                                      _methodLabel(payment.paymentMethod),
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: _methodColor(payment.paymentMethod),
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
                                   ),
-                                )
-                              else
-                                ...paged.asMap().entries.map((entry) {
-                                  final i = entry.key;
-                                  final payment = entry.value;
-                                  final isLast = i == paged.length - 1;
-                                  final hasProof =
-                                      payment.paymentProofUrl != null &&
-                                      payment.paymentProofUrl!.isNotEmpty;
-
-                                  return Column(
-                                    children: [
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 20,
-                                          vertical: 14,
-                                        ),
-                                        child: Row(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.center,
-                                          children: [
-                                            // ID Transaksi
-                                            Expanded(
-                                              flex: 3,
-                                              child: Row(
-                                                children: [
-                                                  Container(
-                                                    width: 38,
-                                                    height: 38,
-                                                    decoration: BoxDecoration(
-                                                      color:
-                                                          Colors.orange.shade50,
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            10,
-                                                          ),
-                                                    ),
-                                                    child: Icon(
-                                                      Icons.pending_actions,
-                                                      color: Colors
-                                                          .orange
-                                                          .shade700,
-                                                      size: 20,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 12),
-                                                  Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      Text(
-                                                        payment.transactionId ??
-                                                            'ID #${payment.id}',
-                                                        style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
-                                                      Row(
-                                                        children: [
-                                                          Icon(
-                                                            hasProof
-                                                                ? Icons.image
-                                                                : Icons
-                                                                      .image_not_supported_outlined,
-                                                            size: 13,
-                                                            color: hasProof
-                                                                ? Colors
-                                                                      .green
-                                                                      .shade600
-                                                                : Colors
-                                                                      .grey
-                                                                      .shade400,
-                                                          ),
-                                                          const SizedBox(
-                                                            width: 4,
-                                                          ),
-                                                          Text(
-                                                            hasProof
-                                                                ? 'Ada bukti'
-                                                                : 'Tanpa bukti',
-                                                            style: TextStyle(
-                                                              fontSize: 11,
-                                                              color: hasProof
-                                                                  ? Colors
-                                                                        .green
-                                                                        .shade600
-                                                                  : Colors
-                                                                        .grey
-                                                                        .shade400,
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-
-                                            // Invoice
-                                            Expanded(
-                                              flex: 2,
-                                              child: Text(
-                                                '#${payment.invoiceId}',
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  color: Colors.grey.shade700,
-                                                ),
-                                              ),
-                                            ),
-
-                                            // Nominal
-                                            Expanded(
-                                              flex: 2,
-                                              child: Text(
-                                                formatRupiah(payment.amount),
-                                                style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 14,
-                                                ),
-                                              ),
-                                            ),
-
-                                            // Metode
-                                            Expanded(
-                                              flex: 2,
-                                              child: Row(
-                                                children: [
-                                                  Icon(
-                                                    _methodIcon(
-                                                      payment.paymentMethod,
-                                                    ),
-                                                    size: 16,
-                                                    color: _methodColor(
-                                                      payment.paymentMethod,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 6),
-                                                  Flexible(
-                                                    child: Text(
-                                                      _methodLabel(
-                                                        payment.paymentMethod,
-                                                      ),
-                                                      style: TextStyle(
-                                                        fontSize: 12,
-                                                        color: _methodColor(
-                                                          payment.paymentMethod,
-                                                        ),
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-
-                                            // Tanggal
-                                            Expanded(
-                                              flex: 2,
-                                              child: Text(
-                                                formatDate(payment.paymentDate),
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.grey.shade600,
-                                                ),
-                                              ),
-                                            ),
-
-                                            // Aksi
-                                            SizedBox(
-                                              width: 100,
-                                              child: FilledButton(
-                                                onPressed: () =>
-                                                    _showVerificationDialog(
-                                                      payment,
-                                                    ),
-                                                style: FilledButton.styleFrom(
-                                                  backgroundColor:
-                                                      Colors.orange.shade600,
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 8,
-                                                      ),
-                                                  shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          8,
-                                                        ),
-                                                  ),
-                                                  minimumSize: const Size(
-                                                    90,
-                                                    36,
-                                                  ),
-                                                ),
-                                                child: const Text(
-                                                  'Cek Bukti',
-                                                  style: TextStyle(
-                                                    fontSize: 12,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      if (!isLast)
-                                        const Divider(height: 1, indent: 70),
-                                    ],
-                                  );
-                                }),
-
-                              const Divider(height: 1),
-
-                              // Footer + pagination
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 14,
+                                ],
+                              ),
+                              Text(
+                                formatDate(payment.paymentDate),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade600,
                                 ),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      'Menampilkan ${paged.length} dari ${filtered.length} transaksi',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: Colors.grey.shade500,
-                                      ),
-                                    ),
-                                    const Spacer(),
-                                    _PaginationBar(
-                                      currentPage: page,
-                                      totalPages: totalPages,
-                                      onPageChanged: (p) =>
-                                          setState(() => _currentPage = p),
-                                    ),
-                                  ],
+                              ),
+                              FilledButton(
+                                onPressed: () => _showVerificationDialog(payment),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.orange.shade600,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  minimumSize: const Size(90, 36),
                                 ),
+                                child: const Text(
+                                  'Cek Bukti',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ];
+                          }).toList(),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Footer + pagination
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 8,
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                'Menampilkan ${paged.length} dari ${filtered.length} transaksi',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey.shade500,
+                                ),
+                              ),
+                              const Spacer(),
+                              _PaginationBar(
+                                currentPage: page,
+                                totalPages: totalPages,
+                                onPageChanged: (p) =>
+                                    setState(() => _currentPage = p),
                               ),
                             ],
                           ),
@@ -1012,16 +865,6 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
       ),
     );
   }
-
-  Widget _th(String label) => Text(
-    label,
-    style: TextStyle(
-      fontSize: 12,
-      fontWeight: FontWeight.w700,
-      color: Colors.grey.shade600,
-      letterSpacing: 0.5,
-    ),
-  );
 
   Widget _summaryCard(
     String title,

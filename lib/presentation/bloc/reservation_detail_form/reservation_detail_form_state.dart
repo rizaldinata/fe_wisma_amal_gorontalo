@@ -2,36 +2,56 @@ part of 'reservation_detail_form_bloc.dart';
 
 class ReservationDetailFormState extends Equatable {
   const ReservationDetailFormState({
-    this.rentType = 'Harian',
+    this.rentType = 'Bulanan',
     this.startDate,
     this.endDate,
     this.duration = 0,
-    this.pricePerDay = 150000,
+    this.durationMonths = 1,
+    this.price = 0,
     this.totalPrice = 0,
+    this.room,
+    this.isDailyRentalEnabled = true,
+    this.status = FormzSubmissionStatus.initial,
+    this.errorMessage,
   });
 
   final String rentType;
   final DateTime? startDate;
   final DateTime? endDate;
   final int duration;
-  final int pricePerDay;
+  final int durationMonths;
+  final int price;
   final int totalPrice;
+  final RoomEntity? room;
+  final bool isDailyRentalEnabled;
+  final FormzSubmissionStatus status;
+  final String? errorMessage;
 
   ReservationDetailFormState copyWith({
     String? rentType,
     DateTime? startDate,
     DateTime? endDate,
     int? duration,
-    int? pricePerDay,
+    int? durationMonths,
+    int? price,
     int? totalPrice,
+    RoomEntity? room,
+    bool? isDailyRentalEnabled,
+    FormzSubmissionStatus? status,
+    String? errorMessage,
   }) {
     return ReservationDetailFormState(
       rentType: rentType ?? this.rentType,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       duration: duration ?? this.duration,
-      pricePerDay: pricePerDay ?? this.pricePerDay,
+      durationMonths: durationMonths ?? this.durationMonths,
+      price: price ?? this.price,
       totalPrice: totalPrice ?? this.totalPrice,
+      room: room ?? this.room,
+      isDailyRentalEnabled: isDailyRentalEnabled ?? this.isDailyRentalEnabled,
+      status: status ?? this.status,
+      errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 
@@ -41,7 +61,12 @@ class ReservationDetailFormState extends Equatable {
         startDate,
         endDate,
         duration,
-        pricePerDay,
+        durationMonths,
+        price,
         totalPrice,
+        room,
+        isDailyRentalEnabled,
+        status,
+        errorMessage,
       ];
 }

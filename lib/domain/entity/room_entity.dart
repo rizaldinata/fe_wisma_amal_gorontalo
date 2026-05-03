@@ -65,6 +65,8 @@ class RoomEntity {
   final String number;
   final double price;
   final String priceFormatted;
+  final double priceDaily;
+  final String priceDailyFormatted;
   final RoomStatusEnum status;
   final String statusCode;
   final String description;
@@ -76,9 +78,11 @@ class RoomEntity {
     required this.title,
     required this.number,
     required this.price,
+    required this.priceDaily,
     required this.status,
     required this.description,
     required this.priceFormatted,
+    required this.priceDailyFormatted,
     required this.imageUrl,
     required this.facilities,
     required this.statusCode,
@@ -89,9 +93,11 @@ class RoomEntity {
     String? title,
     String? number,
     double? price,
+    double? priceDaily,
     RoomStatusEnum? status,
     String? description,
     String? priceFormatted,
+    String? priceDailyFormatted,
     List<RoomImageModel>? imageUrl,
     List<String>? facilities,
     String? statusCode,
@@ -101,9 +107,11 @@ class RoomEntity {
       title: title ?? this.title,
       number: number ?? this.number,
       price: price ?? this.price,
+      priceDaily: priceDaily ?? this.priceDaily,
       status: status ?? this.status,
       description: description ?? this.description,
       priceFormatted: priceFormatted ?? this.priceFormatted,
+      priceDailyFormatted: priceDailyFormatted ?? this.priceDailyFormatted,
       imageUrl: imageUrl ?? this.imageUrl,
       facilities: facilities ?? this.facilities,
       statusCode: statusCode ?? this.statusCode,
@@ -116,9 +124,11 @@ class RoomEntity {
         title: '',
         number: '',
         price: 0.0,
+        priceDaily: 0.0,
         status: RoomStatusEnum.unknown,
         description: '',
         priceFormatted: '',
+        priceDailyFormatted: '',
         imageUrl: const [],
         facilities: const [],
         statusCode: '',

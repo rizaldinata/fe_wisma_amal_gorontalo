@@ -10,6 +10,8 @@ import '../../bloc/invoice/invoice_bloc.dart';
 import '../../bloc/invoice/invoice_event.dart';
 import '../../bloc/invoice/invoice_state.dart';
 import '../../widget/core/card/basic_card.dart';
+import '../../widget/core/table/table.dart';
+import '../../../domain/entity/table/tabel_colum.dart';
 
 @RoutePage()
 class InvoiceListPage extends StatefulWidget {
@@ -134,11 +136,13 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
           child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             // ── Header ────────────────────────────────────────────────
             Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [
-              const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Text('Daftar Tagihan', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                SizedBox(height: 6),
-                Text('Rekap seluruh tagihan sewa penghuni wisma.', style: TextStyle(fontSize: 14, color: Colors.grey)),
-              ]),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text('Daftar Tagihan', style: Theme.of(context).textTheme.headlineLarge),
+                  const SizedBox(height: 6),
+                  const Text('Rekap seluruh tagihan sewa penghuni wisma.', style: TextStyle(fontSize: 14, color: Colors.grey)),
+                ]),
+              ),
               OutlinedButton.icon(
                 onPressed: () { _bloc.add(FetchInvoices()); },
                 icon: const Icon(Icons.refresh, size: 18),
@@ -228,104 +232,64 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
                   const SizedBox(height: 16),
 
                   // ── Table ─────────────────────────────────────────
-                  BasicCard(
-                    child: Column(children: [
-                      // Header row
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                        child: Row(children: [
-                          Expanded(flex: 3, child: _th('Nomor Tagihan')),
-                          Expanded(flex: 2, child: _th('Nominal')),
-                          Expanded(flex: 2, child: _th('Jatuh Tempo')),
-                          Expanded(flex: 2, child: _th('Status')),
-                          const SizedBox(width: 100),
-                        ]),
-                      ),
-                      const Divider(height: 1),
-
-                      // Data rows
-                      if (paged.isEmpty)
-                        Padding(
-                          padding: const EdgeInsets.all(40),
-                          child: Center(child: Column(children: [
-                            Icon(Icons.inbox_outlined, size: 48, color: Colors.grey.shade400),
-                            const SizedBox(height: 12),
-                            Text('Tidak ada tagihan ditemukan.', style: TextStyle(color: Colors.grey.shade500)),
-                          ])),
-                        )
-                      else
-                        ...paged.asMap().entries.map((entry) {
-                          final i = entry.key;
-                          final inv = entry.value;
-                          final isLast = i == paged.length - 1;
-                          final overdue = _isOverdue(inv);
-
-                          return Column(children: [
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                              child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
-                                // Nomor tagihan
-                                Expanded(flex: 3, child: Row(children: [
-                                  Container(
-                                    width: 38, height: 38,
-                                    decoration: BoxDecoration(
-                                      color: _statusBg(inv.status),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Icon(_statusIcon(inv.status), color: _statusColor(inv.status), size: 20),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                    Text(inv.invoiceNumber, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
-                                    if (overdue)
-                                      Text('Sudah Jatuh Tempo', style: TextStyle(fontSize: 11, color: Colors.red.shade600, fontWeight: FontWeight.w600)),
-                                  ]),
-                                ])),
-
-                                // Nominal
-                                Expanded(flex: 2, child: Text(formatRupiah(inv.amount), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14))),
-
-                                // Jatuh tempo
-                                Expanded(flex: 2, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                                  Text(formatDate(inv.dueDate), style: TextStyle(fontSize: 13, color: overdue ? Colors.red.shade700 : Colors.grey.shade700, fontWeight: overdue ? FontWeight.w600 : FontWeight.normal)),
-                                  if (overdue)
-                                    Text('${DateTime.now().difference(inv.dueDate).inDays} hari lalu', style: TextStyle(fontSize: 11, color: Colors.red.shade400)),
-                                ])),
-
-                                // Status badge
-                                Expanded(flex: 2, child: _StatusBadge(label: _statusLabel(inv.status), color: _statusColor(inv.status), bg: _statusBg(inv.status))),
-
-                                // Aksi
-                                SizedBox(
-                                  width: 100,
-                                  child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                                    Tooltip(
-                                      message: 'Cetak Nota PDF',
-                                      child: IconButton(
-                                        icon: Icon(Icons.print_outlined, size: 18, color: Colors.blue.shade600),
-                                        splashRadius: 20,
-                                        onPressed: () => _printPdf(inv.id),
-                                      ),
-                                    ),
-                                  ]),
-                                ),
-                              ]),
+                  TableCard(
+                    title: 'Data Tagihan',
+                    emptyMessage: 'Tidak ada tagihan ditemukan.',
+                    columns: const [
+                      TableColumn(label: 'Nomor Tagihan', flex: 3),
+                      TableColumn(label: 'Nominal', flex: 2),
+                      TableColumn(label: 'Jatuh Tempo', flex: 2),
+                      TableColumn(label: 'Status', flex: 2),
+                      TableColumn(label: 'Aksi', flex: 1, align: TextAlign.right),
+                    ],
+                    rows: paged.map((inv) {
+                      final overdue = _isOverdue(inv);
+                      return [
+                        Row(children: [
+                          Container(
+                            width: 38, height: 38,
+                            decoration: BoxDecoration(
+                              color: _statusBg(inv.status),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            if (!isLast) const Divider(height: 1, indent: 70),
-                          ]);
-                        }),
-
-                      const Divider(height: 1),
-
-                      // ── Footer: info + pagination ──────────────────
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                        child: Row(children: [
-                          Text('Menampilkan ${paged.length} dari ${filtered.length} tagihan', style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
-                          const Spacer(),
-                          _PaginationBar(currentPage: page, totalPages: totalPages, onPageChanged: (p) => setState(() => _currentPage = p)),
+                            child: Icon(_statusIcon(inv.status), color: _statusColor(inv.status), size: 20),
+                          ),
+                          const SizedBox(width: 12),
+                          Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            Text(inv.invoiceNumber, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                            if (overdue)
+                              Text('Sudah Jatuh Tempo', style: TextStyle(fontSize: 11, color: Colors.red.shade600, fontWeight: FontWeight.w600)),
+                          ]),
                         ]),
-                      ),
+                        Text(formatRupiah(inv.amount), style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
+                        Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                          Text(formatDate(inv.dueDate), style: TextStyle(fontSize: 13, color: overdue ? Colors.red.shade700 : Colors.grey.shade700, fontWeight: overdue ? FontWeight.w600 : FontWeight.normal)),
+                          if (overdue)
+                            Text('${DateTime.now().difference(inv.dueDate).inDays} hari lalu', style: TextStyle(fontSize: 11, color: Colors.red.shade400)),
+                        ]),
+                        _StatusBadge(label: _statusLabel(inv.status), color: _statusColor(inv.status), bg: _statusBg(inv.status)),
+                        Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                          Tooltip(
+                            message: 'Cetak Nota PDF',
+                            child: IconButton(
+                              icon: Icon(Icons.print_outlined, size: 18, color: Colors.blue.shade600),
+                              splashRadius: 20,
+                              onPressed: () => _printPdf(inv.id),
+                            ),
+                          ),
+                        ]),
+                      ];
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Footer: info + pagination
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    child: Row(children: [
+                      Text('Menampilkan ${paged.length} dari ${filtered.length} tagihan', style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
+                      const Spacer(),
+                      _PaginationBar(currentPage: page, totalPages: totalPages, onPageChanged: (p) => setState(() => _currentPage = p)),
                     ]),
                   ),
                 ]);
@@ -336,8 +300,6 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
       ),
     );
   }
-
-  Widget _th(String label) => Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Colors.grey.shade600, letterSpacing: 0.5));
 
   Widget _summaryCard(String title, String value, String sub, IconData icon, Color textColor, Color bgColor) {
     return Container(
