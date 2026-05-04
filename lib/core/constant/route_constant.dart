@@ -3,7 +3,8 @@ class RouteConstant {
   // Kalau nggak diawali / → berarti child/nested
 
   //splash page
-  static const String rootPath = '/';
+  static const String landingPath = '/';
+  static const String rootPath = '/app';
   static const String rootName = 'root';
 
   //auth page

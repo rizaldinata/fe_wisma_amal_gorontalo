@@ -10,6 +10,11 @@ class AppRouter extends RootStackRouter {
   @override
   List<AutoRoute> get routes => [
     AutoRoute(
+      path: RouteConstant.landingPath,
+      page: LandingRoute.page,
+      initial: true,
+    ),
+    AutoRoute(
       page: AppLayoutRoute.page,
       path: RouteConstant.rootPath,
       children: [
@@ -205,7 +210,6 @@ class AppRouter extends RootStackRouter {
         ),
       ],
     ),
-    // AutoRoute(page: LandingRoute.page, initial: true),
     AutoRoute(path: RouteConstant.loginName, page: LoginRoute.page),
     AutoRoute(path: RouteConstant.registerName, page: RegisterRoute.page),
   ];

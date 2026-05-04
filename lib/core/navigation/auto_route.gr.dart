@@ -33,7 +33,8 @@ import 'package:frontend/presentation/pages/inventory/inventory_form_page.dart'
     as _i12;
 import 'package:frontend/presentation/pages/inventory/inventory_page.dart'
     as _i13;
-import 'package:frontend/presentation/pages/landing/landing_page.dart' as _i15;
+import 'package:frontend/presentation/pages/landing_page/landing_page.dart'
+    as _i15;
 import 'package:frontend/presentation/pages/maintanance/maintanance_detail_page.dart'
     as _i17;
 import 'package:frontend/presentation/pages/maintanance/maintanance_form_page.dart'
