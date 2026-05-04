@@ -8,6 +8,7 @@ class PaymentEntity {
   final String? adminNotes;
   final double amount;
   final String paymentDate;
+  final String? snapToken;
 
   PaymentEntity({
     required this.id,
@@ -19,5 +20,6 @@ class PaymentEntity {
     this.adminNotes,
     required this.amount,
     required this.paymentDate,
+    this.snapToken,
   });
 }

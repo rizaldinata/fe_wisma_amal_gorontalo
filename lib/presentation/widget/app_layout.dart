@@ -129,6 +129,36 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                       label: 'Profil Saya',
                       icon: Icons.person_pin_outlined,
                       page: const ProfileRoute(),
+                      label: 'Area Penghuni',
+                      icon: Icons.home_work_outlined,
+                      hasAccess: true,
+                      children: [
+                        SidebarItem(
+                          label: 'Keuangan Saya',
+                          icon: Icons.account_balance_wallet_outlined,
+                          page: const MemberFinanceRoute(),
+                        ),
+                        SidebarItem(
+                          label: 'Profil Saya',
+                          icon: Icons.person_pin_outlined,
+                          page: const ProfileRoute(),
+                        ),
+                        SidebarItem(
+                          label: 'Lapor Kerusakan',
+                          icon: Icons.report_problem_outlined,
+                          page: const MaintenanceCreateReportRoute(),
+                        ),
+                        SidebarItem(
+                          label: 'Status Laporan',
+                          icon: Icons.track_changes_outlined,
+                          page: const MaintenanceReportListRoute(),
+                        ),
+                        SidebarItem(
+                          label: 'Jadwal Pemeliharaan',
+                          icon: Icons.calendar_today_outlined,
+                          page: const MaintananceRoute(),
+                        ),
+                      ],
                     ),
 
                     SidebarItem(

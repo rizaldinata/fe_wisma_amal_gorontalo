@@ -3,6 +3,7 @@ import 'package:frontend/domain/entity/finance/revenue_entity.dart';
 import '../../domain/entity/finance/invoice_entity.dart';
 import '../../domain/entity/finance/payment_entity.dart';
 import '../../domain/entity/finance/expense_entity.dart';
+import '../../domain/entity/finance/member_finance_summary_entity.dart';
 import '../../domain/repository/finance_repository.dart';
 import '../datasource/finance_datasource.dart';
 import '../model/finance/expense_model.dart';
@@ -106,5 +107,30 @@ class FinanceRepositoryImpl implements FinanceRepository {
     } catch (e) {
       rethrow;
     }
+  }
+
+  @override
+  Future<MemberFinanceSummaryEntity> getMemberFinanceSummary() async {
+    return await remoteDatasource.getMemberFinanceSummary();
+  }
+
+  @override
+  Future<List<InvoiceEntity>> getMemberInvoices() async {
+    return await remoteDatasource.getMemberInvoices();
+  }
+
+  @override
+  Future<List<PaymentEntity>> getMemberPayments() async {
+    return await remoteDatasource.getMemberPayments();
+  }
+
+  @override
+  Future<PaymentEntity> payInvoice(int invoiceId) async {
+    return await remoteDatasource.payInvoice(invoiceId);
+  }
+
+  @override
+  Future<void> extendLease(int leaseId, int durationMonths) async {
+    return await remoteDatasource.extendLease(leaseId, durationMonths);
   }
 }
