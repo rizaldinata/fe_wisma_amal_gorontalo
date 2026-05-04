@@ -9,25 +9,14 @@
 // coverage:ignore-file
 
 // ignore_for_file: no_leading_underscores_for_library_prefixes
-<<<<<<< HEAD
-import 'package:auto_route/auto_route.dart' as _i39;
-import 'package:flutter/material.dart' as _i40;
-import 'package:frontend/domain/entity/inventory_entity.dart' as _i41;
-import 'package:frontend/domain/entity/room_entity.dart' as _i43;
-import 'package:frontend/domain/entity/schedule_entity.dart' as _i42;
-import 'package:frontend/presentation/pages/auth/login_page.dart' as _i16;
-import 'package:frontend/presentation/pages/auth/register_page.dart' as _i29;
-import 'package:frontend/presentation/pages/dashboard/dashboard.dart' as _i5;
-=======
 import 'package:auto_route/auto_route.dart' as _i40;
 import 'package:flutter/material.dart' as _i41;
 import 'package:frontend/domain/entity/inventory_entity.dart' as _i42;
 import 'package:frontend/domain/entity/room_entity.dart' as _i44;
 import 'package:frontend/domain/entity/schedule_entity.dart' as _i43;
-import 'package:frontend/presentation/pages/auth/login_page.dart' as _i17;
+import 'package:frontend/presentation/pages/auth/login_page.dart' as _i16;
 import 'package:frontend/presentation/pages/auth/register_page.dart' as _i30;
-import 'package:frontend/presentation/pages/dashboard/dashboard.dart' as _i6;
->>>>>>> feat/add-page-member-finance
+import 'package:frontend/presentation/pages/dashboard/dashboard.dart' as _i5;
 import 'package:frontend/presentation/pages/detail_room/room_detail.dart'
     as _i35;
 import 'package:frontend/presentation/pages/finance/expense_list_page.dart'
@@ -56,13 +45,9 @@ import 'package:frontend/presentation/pages/maintenance_report/maintenance_creat
 import 'package:frontend/presentation/pages/maintenance_report/maintenance_report_detail_page.dart'
     as _i21;
 import 'package:frontend/presentation/pages/maintenance_report/maintenance_report_list_page.dart'
-<<<<<<< HEAD
     as _i22;
-=======
-    as _i23;
 import 'package:frontend/presentation/pages/member_finance/member_finance_page.dart'
-    as _i24;
->>>>>>> feat/add-page-member-finance
+    as _i23;
 import 'package:frontend/presentation/pages/permission/permission_detail_page.dart'
     as _i26;
 import 'package:frontend/presentation/pages/permission/permission_page.dart'
@@ -72,13 +57,8 @@ import 'package:frontend/presentation/pages/placeholder/placeholder_page.dart'
 import 'package:frontend/presentation/pages/profile/change_password_page.dart'
     as _i3;
 import 'package:frontend/presentation/pages/profile/edit_profile_page.dart'
-<<<<<<< HEAD
     as _i6;
-import 'package:frontend/presentation/pages/profile/profile_page.dart' as _i27;
-=======
-    as _i7;
 import 'package:frontend/presentation/pages/profile/profile_page.dart' as _i28;
->>>>>>> feat/add-page-member-finance
 import 'package:frontend/presentation/pages/reservation_detail_form/reservation_detail_form_page.dart'
     as _i31;
 import 'package:frontend/presentation/pages/reservation_list/reservation_page.dart'
@@ -90,14 +70,9 @@ import 'package:frontend/presentation/pages/resident/guest_list_page.dart'
 import 'package:frontend/presentation/pages/resident/profile_user_page.dart'
     as _i29;
 import 'package:frontend/presentation/pages/resident/resident_page.dart'
-<<<<<<< HEAD
-    as _i32;
-import 'package:frontend/presentation/pages/resident_portal/my_reservation/my_reservation_page.dart'
-    as _i23;
-import 'package:frontend/presentation/pages/role_management/role_management_page.dart'
-=======
->>>>>>> feat/add-page-member-finance
     as _i33;
+import 'package:frontend/presentation/pages/resident_portal/my_reservation/my_reservation_page.dart'
+    as _i24;
 import 'package:frontend/presentation/pages/role_management/role_management_page.dart'
     as _i34;
 import 'package:frontend/presentation/pages/room_form/form_room.dart' as _i1;
@@ -174,31 +149,9 @@ class CompleteProfileRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i5.DashboardPage]
-class DashboardRoute extends _i39.PageRouteInfo<void> {
-  const DashboardRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i5.ContractResidentPage]
-class ContractResidentRoute extends _i40.PageRouteInfo<void> {
-  const ContractResidentRoute({List<_i40.PageRouteInfo>? children})
-    : super(ContractResidentRoute.name, initialChildren: children);
-
-  static const String name = 'ContractResidentRoute';
-
-  static _i40.PageInfo page = _i40.PageInfo(
-    name,
-    builder: (data) {
-      return const _i5.ContractResidentPage();
-    },
-  );
-}
-
-/// generated route for
-/// [_i6.DashboardPage]
 class DashboardRoute extends _i40.PageRouteInfo<void> {
   const DashboardRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(DashboardRoute.name, initialChildren: children);
 
   static const String name = 'DashboardRoute';
@@ -212,15 +165,9 @@ class DashboardRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i6.EditProfilePage]
-class EditProfileRoute extends _i39.PageRouteInfo<void> {
-  const EditProfileRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i7.EditProfilePage]
 class EditProfileRoute extends _i40.PageRouteInfo<void> {
   const EditProfileRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(EditProfileRoute.name, initialChildren: children);
 
   static const String name = 'EditProfileRoute';
@@ -285,15 +232,9 @@ class EditRoomRouteArgs {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i7.ExpenseListPage]
-class ExpenseListRoute extends _i39.PageRouteInfo<void> {
-  const ExpenseListRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i8.ExpenseListPage]
 class ExpenseListRoute extends _i40.PageRouteInfo<void> {
   const ExpenseListRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(ExpenseListRoute.name, initialChildren: children);
 
   static const String name = 'ExpenseListRoute';
@@ -307,15 +248,9 @@ class ExpenseListRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i8.FinanceDashboardPage]
-class FinanceDashboardRoute extends _i39.PageRouteInfo<void> {
-  const FinanceDashboardRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i9.FinanceDashboardPage]
 class FinanceDashboardRoute extends _i40.PageRouteInfo<void> {
   const FinanceDashboardRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(FinanceDashboardRoute.name, initialChildren: children);
 
   static const String name = 'FinanceDashboardRoute';
@@ -329,15 +264,9 @@ class FinanceDashboardRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i9.FinancePlaceholderPage]
-class FinancePlaceholderRoute extends _i39.PageRouteInfo<void> {
-  const FinancePlaceholderRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i10.FinancePlaceholderPage]
 class FinancePlaceholderRoute extends _i40.PageRouteInfo<void> {
   const FinancePlaceholderRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(FinancePlaceholderRoute.name, initialChildren: children);
 
   static const String name = 'FinancePlaceholderRoute';
@@ -351,15 +280,9 @@ class FinancePlaceholderRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i10.GuestListPage]
-class GuestListRoute extends _i39.PageRouteInfo<void> {
-  const GuestListRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i11.GuestListPage]
 class GuestListRoute extends _i40.PageRouteInfo<void> {
   const GuestListRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(GuestListRoute.name, initialChildren: children);
 
   static const String name = 'GuestListRoute';
@@ -373,15 +296,9 @@ class GuestListRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i11.IdentityFormPage]
-class IdentityFormRoute extends _i39.PageRouteInfo<void> {
-  const IdentityFormRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i12.IdentityFormPage]
 class IdentityFormRoute extends _i40.PageRouteInfo<void> {
   const IdentityFormRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(IdentityFormRoute.name, initialChildren: children);
 
   static const String name = 'IdentityFormRoute';
@@ -395,13 +312,8 @@ class IdentityFormRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i9.InventoryAndMaintenancePlaceholderPage]
-class InventoryAndMaintenancePlaceholderRoute extends _i39.PageRouteInfo<void> {
-=======
-/// [_i10.InventoryAndMaintenancePlaceholderPage]
 class InventoryAndMaintenancePlaceholderRoute extends _i40.PageRouteInfo<void> {
->>>>>>> feat/add-page-member-finance
   const InventoryAndMaintenancePlaceholderRoute({
     List<_i40.PageRouteInfo>? children,
   }) : super(
@@ -420,13 +332,8 @@ class InventoryAndMaintenancePlaceholderRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i12.InventoryFormPage]
-class InventoryFormRoute extends _i39.PageRouteInfo<InventoryFormRouteArgs> {
-=======
-/// [_i13.InventoryFormPage]
 class InventoryFormRoute extends _i40.PageRouteInfo<InventoryFormRouteArgs> {
->>>>>>> feat/add-page-member-finance
   InventoryFormRoute({
     _i41.Key? key,
     _i42.InventoryEntity? inventoryData,
@@ -477,15 +384,9 @@ class InventoryFormRouteArgs {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i13.InventoryPage]
-class InventoryRoute extends _i39.PageRouteInfo<void> {
-  const InventoryRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i14.InventoryPage]
 class InventoryRoute extends _i40.PageRouteInfo<void> {
   const InventoryRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(InventoryRoute.name, initialChildren: children);
 
   static const String name = 'InventoryRoute';
@@ -499,15 +400,9 @@ class InventoryRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i14.InvoiceListPage]
-class InvoiceListRoute extends _i39.PageRouteInfo<void> {
-  const InvoiceListRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i15.InvoiceListPage]
 class InvoiceListRoute extends _i40.PageRouteInfo<void> {
   const InvoiceListRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(InvoiceListRoute.name, initialChildren: children);
 
   static const String name = 'InvoiceListRoute';
@@ -521,15 +416,9 @@ class InvoiceListRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i15.LandingPage]
-class LandingRoute extends _i39.PageRouteInfo<void> {
-  const LandingRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i16.LandingPage]
 class LandingRoute extends _i40.PageRouteInfo<void> {
   const LandingRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(LandingRoute.name, initialChildren: children);
 
   static const String name = 'LandingRoute';
@@ -543,13 +432,8 @@ class LandingRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i16.LoginPage]
-class LoginRoute extends _i39.PageRouteInfo<LoginRouteArgs> {
-=======
-/// [_i17.LoginPage]
 class LoginRoute extends _i40.PageRouteInfo<LoginRouteArgs> {
->>>>>>> feat/add-page-member-finance
   LoginRoute({
     _i41.Key? key,
     String? reason,
@@ -700,15 +584,9 @@ class MaintananceFormRouteArgs {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i19.MaintanancePage]
-class MaintananceRoute extends _i39.PageRouteInfo<void> {
-  const MaintananceRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i20.MaintanancePage]
 class MaintananceRoute extends _i40.PageRouteInfo<void> {
   const MaintananceRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(MaintananceRoute.name, initialChildren: children);
 
   static const String name = 'MaintananceRoute';
@@ -722,15 +600,9 @@ class MaintananceRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i20.MaintenanceCreateReportPage]
-class MaintenanceCreateReportRoute extends _i39.PageRouteInfo<void> {
-  const MaintenanceCreateReportRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i21.MaintenanceCreateReportPage]
 class MaintenanceCreateReportRoute extends _i40.PageRouteInfo<void> {
   const MaintenanceCreateReportRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(MaintenanceCreateReportRoute.name, initialChildren: children);
 
   static const String name = 'MaintenanceCreateReportRoute';
@@ -797,15 +669,9 @@ class MaintenanceReportDetailRouteArgs {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i22.MaintenanceReportListPage]
-class MaintenanceReportListRoute extends _i39.PageRouteInfo<void> {
-  const MaintenanceReportListRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i23.MaintenanceReportListPage]
 class MaintenanceReportListRoute extends _i40.PageRouteInfo<void> {
   const MaintenanceReportListRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(MaintenanceReportListRoute.name, initialChildren: children);
 
   static const String name = 'MaintenanceReportListRoute';
@@ -819,23 +685,7 @@ class MaintenanceReportListRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-/// [_i23.MyReservationPage]
-class MyReservationRoute extends _i39.PageRouteInfo<void> {
-  const MyReservationRoute({List<_i39.PageRouteInfo>? children})
-    : super(MyReservationRoute.name, initialChildren: children);
-
-  static const String name = 'MyReservationRoute';
-
-  static _i39.PageInfo page = _i39.PageInfo(
-    name,
-    builder: (data) {
-      return const _i23.MyReservationPage();
-    },
-  );
-}
-
-/// generated route for
-/// [_i24.MemberFinancePage]
+/// [_i23.MemberFinancePage]
 class MemberFinanceRoute extends _i40.PageRouteInfo<void> {
   const MemberFinanceRoute({List<_i40.PageRouteInfo>? children})
     : super(MemberFinanceRoute.name, initialChildren: children);
@@ -845,7 +695,23 @@ class MemberFinanceRoute extends _i40.PageRouteInfo<void> {
   static _i40.PageInfo page = _i40.PageInfo(
     name,
     builder: (data) {
-      return const _i24.MemberFinancePage();
+      return const _i23.MemberFinancePage();
+    },
+  );
+}
+
+/// generated route for
+/// [_i24.MyReservationPage]
+class MyReservationRoute extends _i40.PageRouteInfo<void> {
+  const MyReservationRoute({List<_i40.PageRouteInfo>? children})
+    : super(MyReservationRoute.name, initialChildren: children);
+
+  static const String name = 'MyReservationRoute';
+
+  static _i40.PageInfo page = _i40.PageInfo(
+    name,
+    builder: (data) {
+      return const _i24.MyReservationPage();
     },
   );
 }
@@ -935,15 +801,9 @@ class PermissionRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i9.PermissionPlaceholderPage]
-class PermissionPlaceholderRoute extends _i39.PageRouteInfo<void> {
-  const PermissionPlaceholderRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i10.PermissionPlaceholderPage]
 class PermissionPlaceholderRoute extends _i40.PageRouteInfo<void> {
   const PermissionPlaceholderRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(PermissionPlaceholderRoute.name, initialChildren: children);
 
   static const String name = 'PermissionPlaceholderRoute';
@@ -1113,15 +973,9 @@ class ResidentRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i9.ResidentPlaceholderPage]
-class ResidentPlaceholderRoute extends _i39.PageRouteInfo<void> {
-  const ResidentPlaceholderRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i10.ResidentPlaceholderPage]
 class ResidentPlaceholderRoute extends _i40.PageRouteInfo<void> {
   const ResidentPlaceholderRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(ResidentPlaceholderRoute.name, initialChildren: children);
 
   static const String name = 'ResidentPlaceholderRoute';
@@ -1151,15 +1005,9 @@ class RoleManagementRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i9.RolePlaceholderPage]
-class RolePlaceholderRoute extends _i39.PageRouteInfo<void> {
-  const RolePlaceholderRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i10.RolePlaceholderPage]
 class RolePlaceholderRoute extends _i40.PageRouteInfo<void> {
   const RolePlaceholderRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(RolePlaceholderRoute.name, initialChildren: children);
 
   static const String name = 'RolePlaceholderRoute';
@@ -1173,15 +1021,9 @@ class RolePlaceholderRoute extends _i40.PageRouteInfo<void> {
 }
 
 /// generated route for
-<<<<<<< HEAD
 /// [_i9.RoomAndReservationPlaceholderPage]
-class RoomAndReservationPlaceholderRoute extends _i39.PageRouteInfo<void> {
-  const RoomAndReservationPlaceholderRoute({List<_i39.PageRouteInfo>? children})
-=======
-/// [_i10.RoomAndReservationPlaceholderPage]
 class RoomAndReservationPlaceholderRoute extends _i40.PageRouteInfo<void> {
   const RoomAndReservationPlaceholderRoute({List<_i40.PageRouteInfo>? children})
->>>>>>> feat/add-page-member-finance
     : super(RoomAndReservationPlaceholderRoute.name, initialChildren: children);
 
   static const String name = 'RoomAndReservationPlaceholderRoute';
