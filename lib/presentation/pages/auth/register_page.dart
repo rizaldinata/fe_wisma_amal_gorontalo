@@ -59,7 +59,7 @@ class RegisterPage extends StatelessWidget {
           ),
           Center(
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: 900, maxHeight: 1000),
+              constraints: BoxConstraints(maxWidth: 900),
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 30, horizontal: 40),
                 decoration: BoxDecoration(
@@ -92,174 +92,189 @@ class RegisterPage extends StatelessWidget {
                     }
                   },
                   builder: (context, state) {
-                    return Form(
-                      key: _formKey,
-                      autovalidateMode: AutovalidateMode.onUnfocus,
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Register Page',
-                            style: StyleConstant.customTextStyle.copyWith(
-                              fontSize: 30,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          SizedBox(height: 10),
-                          Text(
-                            'Daftar akun baru untuk melanjutkan',
-                            style: StyleConstant.customTextStyle.copyWith(
-                              fontSize: 16,
-                            ),
-                          ),
-                          SizedBox(height: 30),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: CustomTextForm(
-                                  controller: usernameController,
-                                  title: 'Username',
-                                  hintText: 'John Doe',
-                                  isRequired: true,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Username tidak boleh kosong';
-                                    }
-
-                                    return null;
-                                  },
-                                ),
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Form(
+                        key: _formKey,
+                        autovalidateMode: AutovalidateMode.onUnfocus,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Register Page',
+                              style: StyleConstant.customTextStyle.copyWith(
+                                fontSize: 30,
+                                fontWeight: FontWeight.w900,
                               ),
-                              SizedBox(width: 20),
-                              Expanded(
-                                child: CustomTextForm(
-                                  controller: emailController,
-                                  title: 'Email',
-                                  hintText: 'johnDoe@mail.com',
-                                  isRequired: true,
-                                  keyboardType: TextInputType.emailAddress,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'Email tidak boleh kosong';
-                                    }
-                                    if (!RegExp(
-                                      r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$',
-                                    ).hasMatch(value)) {
-                                      return 'Format email tidak valid';
-                                    }
-                                    return null;
-                                  },
-                                ),
+                            ),
+                            SizedBox(height: 10),
+                            Text(
+                              'Daftar akun baru untuk melanjutkan',
+                              style: StyleConstant.customTextStyle.copyWith(
+                                fontSize: 16,
                               ),
-                            ],
-                          ),
+                            ),
+                            SizedBox(height: 30),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: CustomTextForm(
+                                    controller: usernameController,
+                                    title: 'Username',
+                                    hintText: 'John Doe',
+                                    isRequired: true,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Username tidak boleh kosong';
+                                      }
 
-                          SizedBox(height: 20),
-                          CustomTextForm(
-                            controller: phoneNumberController,
-                            title: 'Nomor Telepon',
-                            hintText: '08123456789',
-                            isRequired: true,
-                            keyboardType: TextInputType.phone,
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Nomor telepon tidak boleh kosong';
-                              }
-                              return null;
-                            },
-                          ),
-                          SizedBox(height: 20),
-                          CustomTextForm(
-                            controller: passwordController,
-                            title: 'Password',
-                            hintText: '***********',
-                            isRequired: true,
-                            obscureText: state.obscureText,
-                            suffixIcon: IconButton(
-                              onPressed: () {
-                                context.read<AuthBloc>().add(
-                                  const ToggleObscureTextEvent(),
-                                );
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                                SizedBox(width: 20),
+                                Expanded(
+                                  child: CustomTextForm(
+                                    controller: emailController,
+                                    title: 'Email',
+                                    hintText: 'johnDoe@mail.com',
+                                    isRequired: true,
+                                    keyboardType: TextInputType.emailAddress,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Email tidak boleh kosong';
+                                      }
+                                      if (!RegExp(
+                                        r'^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$',
+                                      ).hasMatch(value)) {
+                                        return 'Format email tidak valid';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                ),
+                              ],
+                            ),
+
+                            SizedBox(height: 20),
+                            CustomTextForm(
+                              controller: phoneNumberController,
+                              title: 'Nomor Telepon',
+                              hintText: '08123456789',
+                              isRequired: true,
+                              keyboardType: TextInputType.phone,
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Nomor telepon tidak boleh kosong';
+                                }
+                                return null;
                               },
-                              icon: Icon(
-                                !state.obscureText
-                                    ? Icons.visibility_off
-                                    : Icons.visibility,
-                              ),
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Password tidak boleh kosong';
-                              }
-                              if (value.length < 6) {
-                                return 'Password minimal 6 karakter';
-                              }
-                              return null;
-                            },
-                          ),
-                          SizedBox(height: 20),
-                          CustomTextForm(
-                            controller: passwordConfirmController,
-                            title: 'Konfirmasi Password',
-                            hintText: '***********',
-                            isRequired: true,
-                            obscureText: state.obscureText,
-                            validator: (value) {
-                              if (value != passwordController.text) {
-                                return 'Password tidak cocok';
-                              }
-                              return null;
-                            },
-                          ),
-                          SizedBox(height: 30),
-                          BasicButton(
-                            onPressed: state.status.isInProgress
-                                ? null
-                                : () async {
-                                    // Jalankan validator
-                                    if (_formKey.currentState?.validate() ??
-                                        false) {
-                                      // Kalau valid, kirim event register
-                                      context.read<AuthBloc>().add(
-                                        RegisterEvent(
-                                          username: usernameController.text,
-                                          email: emailController.text,
-                                          password: passwordController.text,
-                                          passwordConfirm:
-                                              passwordConfirmController.text,
-                                          phoneNumber:
-                                              phoneNumberController.text,
-                                        ),
-                                      );
-                                    } else {
-                                      // Kalau tidak valid, tampilkan snackbar error
-                                      AppSnackbar.showError(
-                                        'Periksa kembali data yang kamu masukkan',
-                                      );
-                                    }
-                                  },
-                            label: state.status.isInProgress
-                                ? 'Loading...'
-                                : 'Register',
-                          ),
-                          SizedBox(height: 30),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Sudah punya akun?',
-                                style: StyleConstant.customTextStyle,
-                              ),
-                              TextButton(
+                            SizedBox(height: 20),
+                            CustomTextForm(
+                              controller: passwordController,
+                              title: 'Password',
+                              hintText: '***********',
+                              isRequired: true,
+                              obscureText: state.obscureText,
+                              suffixIcon: IconButton(
                                 onPressed: () {
-                                  context.router.navigate(LoginRoute());
+                                  context.read<AuthBloc>().add(
+                                    const ToggleObscureTextEvent(),
+                                  );
                                 },
-                                child: Text('Login disini'),
+                                icon: Icon(
+                                  !state.obscureText
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
                               ),
-                            ],
-                          ),
-                        ],
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Password tidak boleh kosong';
+                                }
+                                if (value.length < 6) {
+                                  return 'Password minimal 6 karakter';
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: 20),
+                            CustomTextForm(
+                              controller: passwordConfirmController,
+                              title: 'Konfirmasi Password',
+                              hintText: '***********',
+                              isRequired: true,
+                              obscureText: state.obscureText,
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  context.read<AuthBloc>().add(
+                                    const ToggleObscureTextEvent(),
+                                  );
+                                },
+                                icon: Icon(
+                                  !state.obscureText
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value != passwordController.text) {
+                                  return 'Password tidak cocok';
+                                }
+                                return null;
+                              },
+                            ),
+                            SizedBox(height: 30),
+                            BasicButton(
+                              onPressed: state.status.isInProgress
+                                  ? null
+                                  : () async {
+                                      // Jalankan validator
+                                      if (_formKey.currentState?.validate() ??
+                                          false) {
+                                        // Kalau valid, kirim event register
+                                        context.read<AuthBloc>().add(
+                                          RegisterEvent(
+                                            username: usernameController.text,
+                                            email: emailController.text,
+                                            password: passwordController.text,
+                                            passwordConfirm:
+                                                passwordConfirmController.text,
+                                            phoneNumber:
+                                                phoneNumberController.text,
+                                          ),
+                                        );
+                                      } else {
+                                        // Kalau tidak valid, tampilkan snackbar error
+                                        AppSnackbar.showError(
+                                          'Periksa kembali data yang kamu masukkan',
+                                        );
+                                      }
+                                    },
+                              label: state.status.isInProgress
+                                  ? 'Loading...'
+                                  : 'Register',
+                            ),
+                            SizedBox(height: 30),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'Sudah punya akun?',
+                                  style: StyleConstant.customTextStyle,
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    context.router.navigate(LoginRoute());
+                                  },
+                                  child: Text('Login disini'),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },
