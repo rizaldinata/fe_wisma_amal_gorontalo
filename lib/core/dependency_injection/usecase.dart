@@ -48,6 +48,11 @@ import 'package:frontend/domain/usecase/maintenance/add_update_usecase.dart';
 import 'package:frontend/domain/repository/maintenance_repository.dart';
 import 'package:frontend/domain/usecase/finance/verify_payment_usecase.dart';
 import 'package:frontend/domain/usecase/finance/refund_payment_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_member_finance_summary_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_member_invoices_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_member_payments_usecase.dart';
+import 'package:frontend/domain/usecase/finance/pay_invoice_usecase.dart';
+import 'package:frontend/domain/usecase/finance/extend_lease_usecase.dart';
 
 import 'package:frontend/domain/repository/inventory_repository.dart';
 import 'package:frontend/domain/usecase/inventory/get_inventories_usecase.dart';
@@ -162,6 +167,21 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => RefundPaymentUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetMemberFinanceSummaryUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetMemberInvoicesUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetMemberPaymentsUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => PayInvoiceUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => ExtendLeaseUseCase(serviceLocator.get<FinanceRepository>()),
   );
 
   // Setting UseCases

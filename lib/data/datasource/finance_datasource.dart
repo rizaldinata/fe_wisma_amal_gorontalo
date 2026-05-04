@@ -4,6 +4,7 @@ import '../model/finance/payment_model.dart';
 import '../model/finance/kpi_model.dart';
 import '../model/finance/revenue_model.dart';
 import '../model/finance/expense_model.dart';
+import '../model/finance/member_finance_summary_model.dart';
 import '../model/base_response_model.dart';
 
 abstract class FinanceRemoteDatasource {
@@ -19,6 +20,13 @@ abstract class FinanceRemoteDatasource {
   Future<void> deleteExpense(int id);
   Future<void> verifyPayment(int paymentId, bool isApproved, String? adminNotes);
   Future<void> refundPayment(int paymentId, String reason);
+  
+  // Member Finance
+  Future<MemberFinanceSummaryModel> getMemberFinanceSummary();
+  Future<List<InvoiceModel>> getMemberInvoices();
+  Future<List<PaymentModel>> getMemberPayments();
+  Future<PaymentModel> payInvoice(int invoiceId);
+  Future<void> extendLease(int leaseId, int durationMonths);
 }
 
 class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
@@ -181,5 +189,39 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
     } catch (e) {
       rethrow;
     }
+  }
+
+  @override
+  Future<MemberFinanceSummaryModel> getMemberFinanceSummary() async {
+    final response = await _dioClient.get('/finance/me/summary');
+    return MemberFinanceSummaryModel.fromJson(response.data['data']);
+  }
+
+  @override
+  Future<List<InvoiceModel>> getMemberInvoices() async {
+    final response = await _dioClient.get('/finance/me/invoices');
+    final List<dynamic> data = response.data['data'] ?? [];
+    return data.map((json) => InvoiceModel.fromJson(json)).toList();
+  }
+
+  @override
+  Future<List<PaymentModel>> getMemberPayments() async {
+    final response = await _dioClient.get('/finance/me/payments');
+    final List<dynamic> data = response.data['data'] ?? [];
+    return data.map((json) => PaymentModel.fromJson(json)).toList();
+  }
+
+  @override
+  Future<PaymentModel> payInvoice(int invoiceId) async {
+    final response = await _dioClient.post('/finance/invoices/$invoiceId/pay');
+    return PaymentModel.fromJson(response.data['data']);
+  }
+
+  @override
+  Future<void> extendLease(int leaseId, int durationMonths) async {
+    await _dioClient.post(
+      '/rentals/$leaseId/extend',
+      data: {'duration': durationMonths},
+    );
   }
 }

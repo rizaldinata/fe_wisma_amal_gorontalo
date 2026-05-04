@@ -63,7 +63,12 @@ import 'package:frontend/domain/usecase/user/create_user_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_resident_detail_usecase.dart';
 import 'package:frontend/presentation/bloc/resident/resident_bloc.dart';
-import 'package:frontend/presentation/bloc/resident_detail/resident_detail_bloc.dart';
+import 'package:frontend/presentation/bloc/member_finance/member_finance_bloc.dart';
+import 'package:frontend/domain/usecase/finance/get_member_finance_summary_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_member_invoices_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_member_payments_usecase.dart';
+import 'package:frontend/domain/usecase/finance/pay_invoice_usecase.dart';
+import 'package:frontend/domain/usecase/finance/extend_lease_usecase.dart';
 
 import 'package:frontend/domain/usecase/inventory/get_inventories_usecase.dart';
 import 'package:frontend/domain/usecase/inventory/inventory_action_usecases.dart';
@@ -82,6 +87,7 @@ import 'package:frontend/presentation/bloc/reservation_list/reservation_bloc.dar
 import 'package:frontend/domain/usecase/my_reservation/get_my_reservations_usecase.dart';
 import 'package:frontend/presentation/bloc/my_reservation/my_reservation_bloc.dart';
 import 'package:frontend/presentation/bloc/my_reservation/my_reservation_event.dart';
+import 'package:frontend/presentation/bloc/resident_detail/resident_detail_bloc.dart';
 
 Future<void> initializeBloc() async {
   serviceLocator.registerLazySingleton<AuthBloc>(
@@ -257,8 +263,8 @@ Future<void> initializeBloc() async {
 
   serviceLocator.registerFactory<ResidentDetailBloc>(
     () => ResidentDetailBloc(
-      getAdminResidentDetailUseCase:
-          serviceLocator.get<GetAdminResidentDetailUseCase>(),
+      getAdminResidentDetailUseCase: serviceLocator
+          .get<GetAdminResidentDetailUseCase>(),
     ),
   );
 
@@ -291,10 +297,13 @@ Future<void> initializeBloc() async {
     ),
   );
 
-  // My Reservation Bloc
-  serviceLocator.registerFactory(
-    () => MyReservationBloc(
-      getMyReservationsUseCase: serviceLocator<GetMyReservationsUseCase>(),
-    )..add(GetMyReservationsEvent()),
+  serviceLocator.registerLazySingleton<MemberFinanceBloc>(
+    () => MemberFinanceBloc(
+      getSummary: serviceLocator.get<GetMemberFinanceSummaryUseCase>(),
+      getInvoices: serviceLocator.get<GetMemberInvoicesUseCase>(),
+      getPayments: serviceLocator.get<GetMemberPaymentsUseCase>(),
+      payInvoice: serviceLocator.get<PayInvoiceUseCase>(),
+      extendLease: serviceLocator.get<ExtendLeaseUseCase>(),
+    ),
   );
 }

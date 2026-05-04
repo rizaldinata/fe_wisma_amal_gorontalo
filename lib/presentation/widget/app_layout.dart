@@ -125,35 +125,48 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                   // ─── Area Penghuni (Resident / Member) ────────────
                   // ─── Resident / Member Menu ────────────────────────
                   if (isResident || isMember) ...[
-                    SidebarItem(
-                      label: 'Profil Saya',
-                      icon: Icons.person_pin_outlined,
-                      page: const ProfileRoute(),
-                    ),
+                    if (isResident || isMember) ...[
+                      // Profil Saya
+                      SidebarItem(
+                        label: 'Profil Saya',
+                        icon: Icons.person_pin_outlined,
+                        page: const ProfileRoute(),
+                      ),
 
-                    SidebarItem(
-                      label: 'Reservasi Saya',
-                      icon: Icons.book_online_outlined,
-                      page: const MyReservationRoute(),
-                    ),
-
-                    SidebarItem(
-                      label: 'Lapor Kerusakan',
-                      icon: Icons.report_problem_outlined,
-                      page: const MaintenanceCreateReportRoute(),
-                    ),
-
-                    SidebarItem(
-                      label: 'Status Laporan',
-                      icon: Icons.track_changes_outlined,
-                      page: const MaintenanceReportListRoute(),
-                    ),
-
-                    SidebarItem(
-                      label: 'Jadwal Pemeliharaan',
-                      icon: Icons.calendar_today_outlined,
-                      page: const MaintananceRoute(),
-                    ),
+                      // Area Penghuni
+                      SidebarItem(
+                        label: 'Area Penghuni',
+                        icon: Icons.home_work_outlined,
+                        hasAccess: true,
+                        children: [
+                          SidebarItem(
+                            label: 'Keuangan Saya',
+                            icon: Icons.account_balance_wallet_outlined,
+                            page: const MemberFinanceRoute(),
+                          ),
+                          SidebarItem(
+                            label: 'Profil Saya',
+                            icon: Icons.person_pin_outlined,
+                            page: const ProfileRoute(),
+                          ),
+                          SidebarItem(
+                            label: 'Lapor Kerusakan',
+                            icon: Icons.report_problem_outlined,
+                            page: const MaintenanceCreateReportRoute(),
+                          ),
+                          SidebarItem(
+                            label: 'Status Laporan',
+                            icon: Icons.track_changes_outlined,
+                            page: const MaintenanceReportListRoute(),
+                          ),
+                          SidebarItem(
+                            label: 'Jadwal Pemeliharaan',
+                            icon: Icons.calendar_today_outlined,
+                            page: const MaintananceRoute(),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
                   // ─── Guest Menu ────────────────────────────────────
                   if (isGuest) ...[

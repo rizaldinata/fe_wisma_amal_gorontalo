@@ -181,6 +181,11 @@ class AppRouter extends RootStackRouter {
           path: '${RouteConstant.maintenanceReport}/:id',
           page: MaintenanceReportDetailRoute.page,
         ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.memberFinanceName,
+          page: MemberFinanceRoute.page,
+        ),
 
         // pengaturan
         AutoRoute(
