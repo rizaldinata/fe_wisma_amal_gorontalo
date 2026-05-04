@@ -168,21 +168,20 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                       ),
                     ],
                   ],
-                  // ─── Guest Menu ────────────────────────────────────
-                  if (isGuest) ...[
+                  // ─── Kamar (Guest + Member + Resident) ─────────────
+                  if (isGuest || isMember || isResident) ...[
                     SidebarItem(
                       label: 'Kamar',
-
                       icon: Icons.meeting_room,
-
                       page: RoomRoute(),
                     ),
+                  ],
 
+                  // ─── Reservasi (Guest ONLY) ────────────────────────
+                  if (isGuest) ...[
                     SidebarItem(
                       label: 'Reservasi',
-
                       icon: Icons.book_online,
-
                       page: const ReservationRoute(),
                     ),
                   ],
