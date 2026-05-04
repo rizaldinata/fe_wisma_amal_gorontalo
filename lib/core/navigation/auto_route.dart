@@ -42,11 +42,6 @@ class AppRouter extends RootStackRouter {
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
         ),
         AutoRoute(
-          path: '${RouteConstant.residentName}/contracts',
-          page: ContractResidentRoute.page,
-          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
-        ),
-        AutoRoute(
           path: '${RouteConstant.residentName}/guest',
           page: GuestListRoute.page,
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],

@@ -10,6 +10,7 @@ class BasicCard extends StatelessWidget {
     this.color,
     this.title,
     this.borderRadius,
+    this.wrapWithColumn = true,
   });
   final Widget? child;
   final EdgeInsetsGeometry? padding;
@@ -18,6 +19,7 @@ class BasicCard extends StatelessWidget {
   final Color? color;
   final String? title;
   final BorderRadius? borderRadius;
+  final bool wrapWithColumn;
 
   @override
   Widget build(BuildContext context) {
@@ -31,21 +33,23 @@ class BasicCard extends StatelessWidget {
         color: color ?? Theme.of(context).colorScheme.surfaceContainerLow,
         borderRadius: borderRadius ?? BorderRadius.circular(15.0),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (title != null) ...[
-            Text(
-              title!,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            Divider(),
-            const SizedBox(height: 30),
-          ],
-          child ?? const SizedBox.shrink(),
-        ],
-      ),
+      child: wrapWithColumn
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (title != null) ...[
+                  Text(
+                    title!,
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 10),
+                  Divider(),
+                  const SizedBox(height: 30),
+                ],
+                child ?? const SizedBox.shrink(),
+              ],
+            )
+          : (child ?? const SizedBox.shrink()),
     );
   }
 }

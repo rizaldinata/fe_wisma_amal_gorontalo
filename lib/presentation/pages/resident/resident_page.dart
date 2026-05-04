@@ -124,6 +124,13 @@ class _ResidentViewState extends State<_ResidentView> {
             final stats = data.stats;
             final query = _searchController.text.trim().toLowerCase();
 
+            final activeCount = _residentCache
+              .where((row) => row.status.toLowerCase() == 'active')
+              .length;
+            final pendingCount = _residentCache
+              .where((row) => row.status.toLowerCase() == 'pending')
+              .length;
+
             final residentRows = _residentCache.where((row) {
               final matchesSearch = query.isEmpty ||
                   row.nama.toLowerCase().contains(query) ||
@@ -157,7 +164,7 @@ class _ResidentViewState extends State<_ResidentView> {
                       Expanded(
                         child: _ResidentStatCard(
                           title: 'Penghuni Aktif',
-                          count: stats.penghuniAktif.toString(),
+                          count: activeCount.toString(),
                           icon: Icons.person_outline,
                           iconColor: const Color(0xFF5D6ACD),
                           iconBackgroundColor: const Color(0xFFD6DDFD),
@@ -167,7 +174,7 @@ class _ResidentViewState extends State<_ResidentView> {
                       Expanded(
                         child: _ResidentStatCard(
                           title: 'Kontrak Pending',
-                          count: stats.kontrakPending.toString(),
+                          count: pendingCount.toString(),
                           icon: Icons.note_add_outlined,
                           iconColor: const Color(0xFF8A6400),
                           iconBackgroundColor: const Color(0xFFF6DEB3),
@@ -244,7 +251,7 @@ class _ResidentViewState extends State<_ResidentView> {
                               ),
                               child: const Row(
                                 children: [
-                                  _HeaderCell(label: 'ID', flex: 1, align: TextAlign.left),
+                                  _HeaderCell(label: 'NO', flex: 1, align: TextAlign.left),
                                   _HeaderCell(label: 'NAMA', flex: 4, align: TextAlign.left),
                                   _HeaderCell(label: 'KAMAR', flex: 2, align: TextAlign.left, showSort: true),
                                   _HeaderCell(label: 'KONTAK', flex: 3, align: TextAlign.left),
@@ -267,6 +274,8 @@ class _ResidentViewState extends State<_ResidentView> {
                                       ),
                                     )
                                   : Scrollbar(
+                                      controller: _tableScrollController,
+                                      thumbVisibility: true,
                                       child: ListView.separated(
                                         controller: _tableScrollController,
                                         itemCount: residentRows.length + (_isLoadingMore ? 1 : 0),
@@ -290,7 +299,7 @@ class _ResidentViewState extends State<_ResidentView> {
                                             padding: const EdgeInsets.symmetric(vertical: 4),
                                             child: Row(
                                               children: [
-                                                _BodyCell(value: row.id, flex: 1),
+                                                _BodyCell(value: (index + 1).toString(), flex: 1),
                                                 _BodyCell(value: row.nama, flex: 4),
                                                 _BodyCell(value: row.kamar, flex: 2),
                                                 _BodyCell(value: row.kontak, flex: 3),

@@ -112,15 +112,6 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
 
                           page: const ResidentRoute(),
                         ),
-
-                        SidebarItem(
-                          label: 'Kontrak Sewa',
-
-                          icon: Icons.description,
-
-                          page: const ContractResidentRoute(),
-                        ),
-
                         SidebarItem(
                           label: 'Daftar Tamu',
 
