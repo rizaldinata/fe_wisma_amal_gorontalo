@@ -62,6 +62,12 @@ import 'package:frontend/domain/usecase/user/delete_user_usecase.dart';
 import 'package:frontend/domain/usecase/user/create_user_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
 import 'package:frontend/presentation/bloc/resident/resident_bloc.dart';
+import 'package:frontend/presentation/bloc/member_finance/member_finance_bloc.dart';
+import 'package:frontend/domain/usecase/finance/get_member_finance_summary_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_member_invoices_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_member_payments_usecase.dart';
+import 'package:frontend/domain/usecase/finance/pay_invoice_usecase.dart';
+import 'package:frontend/domain/usecase/finance/extend_lease_usecase.dart';
 
 import 'package:frontend/domain/usecase/inventory/get_inventories_usecase.dart';
 import 'package:frontend/domain/usecase/inventory/inventory_action_usecases.dart';
@@ -276,6 +282,16 @@ Future<void> initializeBloc() async {
       updateRoleUseCase: serviceLocator.get<UpdateRoleUseCase>(),
       deleteRoleUseCase: serviceLocator.get<DeleteRoleUseCase>(),
       getAllRolesUseCase: serviceLocator.get<GetAllRolesUseCase>(),
+    ),
+  );
+  
+  serviceLocator.registerLazySingleton<MemberFinanceBloc>(
+    () => MemberFinanceBloc(
+      getSummary: serviceLocator.get<GetMemberFinanceSummaryUseCase>(),
+      getInvoices: serviceLocator.get<GetMemberInvoicesUseCase>(),
+      getPayments: serviceLocator.get<GetMemberPaymentsUseCase>(),
+      payInvoice: serviceLocator.get<PayInvoiceUseCase>(),
+      extendLease: serviceLocator.get<ExtendLeaseUseCase>(),
     ),
   );
 }

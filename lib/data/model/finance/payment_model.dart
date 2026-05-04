@@ -11,6 +11,7 @@ class PaymentModel extends PaymentEntity {
     super.adminNotes,
     required super.amount,
     required super.paymentDate,
+    super.snapToken,
   });
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) {
@@ -24,6 +25,7 @@ class PaymentModel extends PaymentEntity {
       adminNotes: json['admin_notes'],
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
       paymentDate: json['payment_date'] ?? json['created_at'] ?? '', 
+      snapToken: json['snap_token'],
     );
   }
 }

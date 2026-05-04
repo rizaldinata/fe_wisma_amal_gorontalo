@@ -109,6 +109,11 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                       hasAccess: true,
                       children: [
                         SidebarItem(
+                          label: 'Keuangan Saya',
+                          icon: Icons.account_balance_wallet_outlined,
+                          page: const MemberFinanceRoute(),
+                        ),
+                        SidebarItem(
                           label: 'Profil Saya',
                           icon: Icons.person_pin_outlined,
                           page: const ProfileRoute(),

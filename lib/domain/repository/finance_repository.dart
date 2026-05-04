@@ -3,6 +3,7 @@ import 'package:frontend/domain/entity/finance/revenue_entity.dart';
 import '../entity/finance/invoice_entity.dart';
 import '../entity/finance/payment_entity.dart';
 import '../entity/finance/expense_entity.dart';
+import '../entity/finance/member_finance_summary_entity.dart';
 
 abstract class FinanceRepository {
   Future<List<InvoiceEntity>> getDueInvoices();
@@ -22,4 +23,11 @@ abstract class FinanceRepository {
 
   //refund pembayaran
   Future<bool> refundPayment(int paymentId, String reason);
+
+  // Member Finance
+  Future<MemberFinanceSummaryEntity> getMemberFinanceSummary();
+  Future<List<InvoiceEntity>> getMemberInvoices();
+  Future<List<PaymentEntity>> getMemberPayments();
+  Future<PaymentEntity> payInvoice(int invoiceId);
+  Future<void> extendLease(int leaseId, int durationMonths);
 }
