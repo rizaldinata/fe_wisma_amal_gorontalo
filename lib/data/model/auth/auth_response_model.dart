@@ -26,7 +26,10 @@ class AuthResponseModel {
       id: user.id,
       name: user.name,
       email: user.email,
-      roles: user.roles.map((role) => role.name).toList(),
+      // roles: user.roles.map((role) => role.name).toList(),
+      roles: user.roles != null
+          ? user.roles.map((role) => role.name).toList()
+          : [role], // fallback dari response
       // permissions: Permissions(),
     );
   }

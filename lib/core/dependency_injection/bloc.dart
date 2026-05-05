@@ -63,7 +63,10 @@ import 'package:frontend/domain/usecase/user/create_user_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_resident_detail_usecase.dart';
 import 'package:frontend/presentation/bloc/resident/resident_bloc.dart';
+<<<<<<< HEAD
 import 'package:frontend/presentation/bloc/resident_detail/resident_detail_bloc.dart';
+=======
+>>>>>>> develop
 import 'package:frontend/presentation/bloc/member_finance/member_finance_bloc.dart';
 import 'package:frontend/domain/usecase/finance/get_member_finance_summary_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_member_invoices_usecase.dart';
@@ -88,6 +91,7 @@ import 'package:frontend/presentation/bloc/reservation_list/reservation_bloc.dar
 import 'package:frontend/domain/usecase/my_reservation/get_my_reservations_usecase.dart';
 import 'package:frontend/presentation/bloc/my_reservation/my_reservation_bloc.dart';
 import 'package:frontend/presentation/bloc/my_reservation/my_reservation_event.dart';
+import 'package:frontend/presentation/bloc/resident_detail/resident_detail_bloc.dart';
 
 Future<void> initializeBloc() async {
   serviceLocator.registerLazySingleton<AuthBloc>(
@@ -263,8 +267,8 @@ Future<void> initializeBloc() async {
 
   serviceLocator.registerFactory<ResidentDetailBloc>(
     () => ResidentDetailBloc(
-      getAdminResidentDetailUseCase:
-          serviceLocator.get<GetAdminResidentDetailUseCase>(),
+      getAdminResidentDetailUseCase: serviceLocator
+          .get<GetAdminResidentDetailUseCase>(),
     ),
   );
 
@@ -295,12 +299,6 @@ Future<void> initializeBloc() async {
       deleteRoleUseCase: serviceLocator.get<DeleteRoleUseCase>(),
       getAllRolesUseCase: serviceLocator.get<GetAllRolesUseCase>(),
     ),
-  );
-  // My Reservation Bloc
-  serviceLocator.registerFactory(
-    () => MyReservationBloc(
-      getMyReservationsUseCase: serviceLocator<GetMyReservationsUseCase>(),
-    )..add(GetMyReservationsEvent()),
   );
 
   serviceLocator.registerLazySingleton<MemberFinanceBloc>(
