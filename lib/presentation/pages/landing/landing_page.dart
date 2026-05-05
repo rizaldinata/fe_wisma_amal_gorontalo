@@ -7,9 +7,8 @@ import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart'; // Pastikan import BasicButton
 
-@RoutePage()
-class LandingPage extends StatelessWidget {
-  const LandingPage({super.key});
+class LegacyLandingPage extends StatelessWidget {
+  const LegacyLandingPage({super.key});
 
   @override
   Widget build(BuildContext context) {

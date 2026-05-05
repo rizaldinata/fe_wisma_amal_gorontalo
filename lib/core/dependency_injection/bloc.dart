@@ -88,6 +88,7 @@ import 'package:frontend/presentation/bloc/reservation_list/reservation_bloc.dar
 import 'package:frontend/domain/usecase/my_reservation/get_my_reservations_usecase.dart';
 import 'package:frontend/presentation/bloc/my_reservation/my_reservation_bloc.dart';
 import 'package:frontend/presentation/bloc/my_reservation/my_reservation_event.dart';
+import 'package:frontend/presentation/bloc/resident_detail/resident_detail_bloc.dart';
 
 Future<void> initializeBloc() async {
   serviceLocator.registerLazySingleton<AuthBloc>(
@@ -263,8 +264,8 @@ Future<void> initializeBloc() async {
 
   serviceLocator.registerFactory<ResidentDetailBloc>(
     () => ResidentDetailBloc(
-      getAdminResidentDetailUseCase:
-          serviceLocator.get<GetAdminResidentDetailUseCase>(),
+      getAdminResidentDetailUseCase: serviceLocator
+          .get<GetAdminResidentDetailUseCase>(),
     ),
   );
 
