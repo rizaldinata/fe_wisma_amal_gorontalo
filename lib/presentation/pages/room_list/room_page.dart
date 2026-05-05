@@ -5,8 +5,8 @@ import 'package:formz/formz.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
-import 'package:frontend/main.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend/presentation/bloc/room_list/room_bloc.dart';
 import 'package:frontend/presentation/bloc/room_list/room_event.dart';
 import 'package:frontend/presentation/bloc/room_list/room_state.dart';
@@ -55,161 +55,167 @@ class _RoomViewState extends State<RoomView>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    final roles = context.read<AuthBloc>().state.userInfo?.roles ?? [];
-    final isAdmin = roles.contains('admin') || roles.contains('super-admin');
-
-    return BlocBuilder<RoomBloc, RoomState>(
-      builder: (context, state) {
-        return Scaffold(
-          backgroundColor: theme.colorScheme.surface,
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  /// TITLE
-                  Text(
-                    isAdmin ? 'Kelola Kamar' : 'Daftar Kamar Tersedia',
-                    style: theme.textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-
-                  Text(
-                    'Kelola Sistem Kost Anda dengan Mudah',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  if (isAdmin) ...[
-                    Row(
-                      children: [
-                        Expanded(
-                          child: StatCard(
-                            title: 'Total Kamar',
-                            count: state.rooms.length.toString(),
-                            color: Colors.green.shade200,
-                            icon: const Icon(Icons.bed_outlined),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-
-                        Expanded(
-                          child: StatCard(
-                            title: 'Tersedia',
-                            count: state.availableRooms.length.toString(),
-                            color: Colors.deepPurple.shade300,
-                            icon: const Icon(Icons.check_circle_outline),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-
-                        Expanded(
-                          child: StatCard(
-                            title: 'Terisi',
-                            count: state.occupiedRooms.length.toString(),
-                            color: Colors.red.shade400,
-                            icon: const Icon(Icons.person_outline),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-
-                        Expanded(
-                          child: StatCard(
-                            title: 'Perbaikan',
-                            count: state.maintenanceRooms.length.toString(),
-                            color: Colors.deepPurple.shade500,
-                            icon: const Icon(Icons.build_circle_outlined),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 30),
-                  ],
-
-                  /// TAB + BUTTON
-                  Row(
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        final roles = authState.userInfo?.roles ?? [];
+        final isAdmin =
+            roles.contains('admin') || roles.contains('super-admin');
+        return BlocBuilder<RoomBloc, RoomState>(
+          builder: (context, state) {
+            return Scaffold(
+              backgroundColor: theme.colorScheme.surface,
+              body: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: TabBar(
-                            controller: _controller,
-                            indicator: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withAlpha(50),
-                            ),
-                            dividerColor: Colors.transparent,
-                            indicatorSize: TabBarIndicatorSize.tab,
-                            tabs: const [
-                              Tab(text: 'Semua'),
-                              Tab(text: 'Tersedia'),
-                              Tab(text: 'Terisi'),
-                              Tab(text: 'Perbaikan'),
-                            ],
-                          ),
+                      /// TITLE
+                      Text(
+                        isAdmin ? 'Kelola Kamar' : 'Daftar Kamar Tersedia',
+                        style: theme.textTheme.headlineLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+
+                      Text(
+                        'Kelola Sistem Kost Anda dengan Mudah',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
                         ),
                       ),
 
-                      if (isAdmin) ...[
-                        const SizedBox(width: 20),
-                        BasicButton(
-                          onPressed: () async {
-                            await context.router.navigate(const AddRoomRoute());
+                      const SizedBox(height: 32),
 
-                            if (mounted) {
-                              context.read<RoomBloc>().add(GetRoomsEvent());
-                            }
-                          },
-                          label: 'Tambah Kamar',
-                          leadIcon: const Icon(Icons.add),
+                      if (isAdmin) ...[
+                        Row(
+                          children: [
+                            Expanded(
+                              child: StatCard(
+                                title: 'Total Kamar',
+                                count: state.rooms.length.toString(),
+                                color: Colors.green.shade200,
+                                icon: const Icon(Icons.bed_outlined),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+
+                            Expanded(
+                              child: StatCard(
+                                title: 'Tersedia',
+                                count: state.availableRooms.length.toString(),
+                                color: Colors.deepPurple.shade300,
+                                icon: const Icon(Icons.check_circle_outline),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+
+                            Expanded(
+                              child: StatCard(
+                                title: 'Terisi',
+                                count: state.occupiedRooms.length.toString(),
+                                color: Colors.red.shade400,
+                                icon: const Icon(Icons.person_outline),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+
+                            Expanded(
+                              child: StatCard(
+                                title: 'Perbaikan',
+                                count: state.maintenanceRooms.length.toString(),
+                                color: Colors.deepPurple.shade500,
+                                icon: const Icon(Icons.build_circle_outlined),
+                              ),
+                            ),
+                          ],
                         ),
+                        const SizedBox(height: 30),
                       ],
+
+                      /// TAB + BUTTON
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.surfaceContainerLow,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: TabBar(
+                                controller: _controller,
+                                indicator: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withAlpha(50),
+                                ),
+                                dividerColor: Colors.transparent,
+                                indicatorSize: TabBarIndicatorSize.tab,
+                                tabs: const [
+                                  Tab(text: 'Semua'),
+                                  Tab(text: 'Tersedia'),
+                                  Tab(text: 'Terisi'),
+                                  Tab(text: 'Perbaikan'),
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          if (isAdmin) ...[
+                            const SizedBox(width: 20),
+                            BasicButton(
+                              onPressed: () async {
+                                await context.router.navigate(
+                                  const AddRoomRoute(),
+                                );
+
+                                if (mounted) {
+                                  context.read<RoomBloc>().add(GetRoomsEvent());
+                                }
+                              },
+                              label: 'Tambah Kamar',
+                              leadIcon: const Icon(Icons.add),
+                            ),
+                          ],
+                        ],
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      /// GRID
+                      AnimatedBuilder(
+                        animation: _controller,
+                        builder: (context, child) {
+                          final List<RoomEntity> currentRooms;
+
+                          switch (_controller.index) {
+                            case 0:
+                              currentRooms = state.rooms;
+                              break;
+                            case 1:
+                              currentRooms = state.availableRooms;
+                              break;
+                            case 2:
+                              currentRooms = state.occupiedRooms;
+                              break;
+                            case 3:
+                              currentRooms = state.maintenanceRooms;
+                              break;
+                            default:
+                              currentRooms = state.rooms;
+                          }
+
+                          return _buildRoomGrid(currentRooms, state);
+                        },
+                      ),
                     ],
                   ),
-
-                  const SizedBox(height: 16),
-
-                  /// GRID
-                  AnimatedBuilder(
-                    animation: _controller,
-                    builder: (context, child) {
-                      final List<RoomEntity> currentRooms;
-
-                      switch (_controller.index) {
-                        case 0:
-                          currentRooms = state.rooms;
-                          break;
-                        case 1:
-                          currentRooms = state.availableRooms;
-                          break;
-                        case 2:
-                          currentRooms = state.occupiedRooms;
-                          break;
-                        case 3:
-                          currentRooms = state.maintenanceRooms;
-                          break;
-                        default:
-                          currentRooms = state.rooms;
-                      }
-
-                      return _buildRoomGrid(currentRooms, state);
-                    },
-                  ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
