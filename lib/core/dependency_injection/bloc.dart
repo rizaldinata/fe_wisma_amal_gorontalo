@@ -63,10 +63,7 @@ import 'package:frontend/domain/usecase/user/create_user_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_resident_detail_usecase.dart';
 import 'package:frontend/presentation/bloc/resident/resident_bloc.dart';
-<<<<<<< HEAD
 import 'package:frontend/presentation/bloc/resident_detail/resident_detail_bloc.dart';
-=======
->>>>>>> develop
 import 'package:frontend/presentation/bloc/member_finance/member_finance_bloc.dart';
 import 'package:frontend/domain/usecase/finance/get_member_finance_summary_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_member_invoices_usecase.dart';
@@ -299,6 +296,12 @@ Future<void> initializeBloc() async {
       deleteRoleUseCase: serviceLocator.get<DeleteRoleUseCase>(),
       getAllRolesUseCase: serviceLocator.get<GetAllRolesUseCase>(),
     ),
+  );
+  // My Reservation Bloc
+  serviceLocator.registerFactory(
+    () => MyReservationBloc(
+      getMyReservationsUseCase: serviceLocator<GetMyReservationsUseCase>(),
+    )..add(GetMyReservationsEvent()),
   );
 
   serviceLocator.registerLazySingleton<MemberFinanceBloc>(
