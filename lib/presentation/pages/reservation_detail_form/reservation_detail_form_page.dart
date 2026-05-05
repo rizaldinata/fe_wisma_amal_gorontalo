@@ -90,7 +90,7 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
           AppSnackbar.showSuccess(
             'Pemesanan berhasil dibuat. Silakan selesaikan pembayaran.',
           );
-          context.router.replace(RoomRoute());
+          context.router.replace(const MemberFinanceRoute());
         } else if (state.status == FormzSubmissionStatus.failure) {
           AppSnackbar.showError(
             state.errorMessage ?? 'Gagal membuat pemesanan',

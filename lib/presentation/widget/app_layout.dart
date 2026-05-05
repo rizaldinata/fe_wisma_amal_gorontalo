@@ -126,9 +126,6 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                   // ─── Resident / Member Menu ────────────────────────
                   if (isResident || isMember) ...[
                     SidebarItem(
-                      label: 'Profil Saya',
-                      icon: Icons.person_pin_outlined,
-                      page: const ProfileRoute(),
                       label: 'Area Penghuni',
                       icon: Icons.home_work_outlined,
                       hasAccess: true,
@@ -165,24 +162,6 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                       label: 'Reservasi Saya',
                       icon: Icons.book_online_outlined,
                       page: const MyReservationRoute(),
-                    ),
-
-                    SidebarItem(
-                      label: 'Lapor Kerusakan',
-                      icon: Icons.report_problem_outlined,
-                      page: const MaintenanceCreateReportRoute(),
-                    ),
-
-                    SidebarItem(
-                      label: 'Status Laporan',
-                      icon: Icons.track_changes_outlined,
-                      page: const MaintenanceReportListRoute(),
-                    ),
-
-                    SidebarItem(
-                      label: 'Jadwal Pemeliharaan',
-                      icon: Icons.calendar_today_outlined,
-                      page: const MaintananceRoute(),
                     ),
                   ],
                   // ─── Guest Menu ────────────────────────────────────
