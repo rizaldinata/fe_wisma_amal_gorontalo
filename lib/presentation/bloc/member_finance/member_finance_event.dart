@@ -15,10 +15,12 @@ class FetchMemberPayments extends MemberFinanceEvent {}
 
 class PayInvoiceEvent extends MemberFinanceEvent {
   final int invoiceId;
-  const PayInvoiceEvent(this.invoiceId);
+  final String paymentMethod;
+  final String? paymentProofPath;
+  const PayInvoiceEvent(this.invoiceId, this.paymentMethod, {this.paymentProofPath});
 
   @override
-  List<Object?> get props => [invoiceId];
+  List<Object?> get props => [invoiceId, paymentMethod, paymentProofPath];
 }
 
 class ExtendLeaseEvent extends MemberFinanceEvent {

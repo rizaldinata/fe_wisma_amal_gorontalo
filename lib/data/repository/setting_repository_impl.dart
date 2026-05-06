@@ -18,6 +18,16 @@ class SettingRepositoryImpl implements SettingRepository {
   }
 
   @override
+  Future<SettingEntity> getPublicSettings() async {
+    try {
+      final model = await remoteDatasource.getPublicSettings();
+      return model;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
   Future<SettingEntity> updateBulkSettings(Map<String, dynamic> settingsData) async {
     try {
       final model = await remoteDatasource.updateBulkSettings(settingsData);

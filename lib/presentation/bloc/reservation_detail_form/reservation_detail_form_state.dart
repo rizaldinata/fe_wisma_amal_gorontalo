@@ -11,10 +11,13 @@ class ReservationDetailFormState extends Equatable {
     this.totalPrice = 0,
     this.room,
     this.isDailyRentalEnabled = true,
+    this.isMidtransEnabled = true,
     this.status = FormzSubmissionStatus.initial,
     this.errorMessage,
     this.paymentMethod = 'online',
     this.selectedBank,
+    this.createdReservation,
+    this.isProfileComplete = true, // Default to true to avoid flickering
   });
 
   final String rentType;
@@ -26,10 +29,13 @@ class ReservationDetailFormState extends Equatable {
   final int totalPrice;
   final RoomEntity? room;
   final bool isDailyRentalEnabled;
+  final bool isMidtransEnabled;
   final FormzSubmissionStatus status;
   final String? errorMessage;
   final String paymentMethod; // 'online' atau 'tunai'
   final String? selectedBank; // 'mandiri', 'bca', 'bri'
+  final ReservationEntity? createdReservation;
+  final bool isProfileComplete;
 
   ReservationDetailFormState copyWith({
     String? rentType,
@@ -41,10 +47,13 @@ class ReservationDetailFormState extends Equatable {
     int? totalPrice,
     RoomEntity? room,
     bool? isDailyRentalEnabled,
+    bool? isMidtransEnabled,
     FormzSubmissionStatus? status,
     String? errorMessage,
     String? paymentMethod,
     String? selectedBank,
+    ReservationEntity? createdReservation,
+    bool? isProfileComplete,
   }) {
     return ReservationDetailFormState(
       rentType: rentType ?? this.rentType,
@@ -56,10 +65,13 @@ class ReservationDetailFormState extends Equatable {
       totalPrice: totalPrice ?? this.totalPrice,
       room: room ?? this.room,
       isDailyRentalEnabled: isDailyRentalEnabled ?? this.isDailyRentalEnabled,
+      isMidtransEnabled: isMidtransEnabled ?? this.isMidtransEnabled,
       status: status ?? this.status,
       errorMessage: errorMessage ?? this.errorMessage,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       selectedBank: selectedBank ?? this.selectedBank,
+      createdReservation: createdReservation ?? this.createdReservation,
+      isProfileComplete: isProfileComplete ?? this.isProfileComplete,
     );
   }
 
@@ -74,9 +86,12 @@ class ReservationDetailFormState extends Equatable {
         totalPrice,
         room,
         isDailyRentalEnabled,
+        isMidtransEnabled,
         status,
         errorMessage,
         paymentMethod,
         selectedBank,
+        createdReservation,
+        isProfileComplete,
       ];
 }

@@ -259,19 +259,13 @@ class RoomDetailView extends StatelessWidget {
                                     const SizedBox(height: 20),
                                     BasicButton(
                                       onPressed: () {
-                                        if (!isLoggedIn) {
-                                          context.router.push(LoginRoute());
-                                        } else {
-                                          context.router.push(
-                                            ReservationDetailFormRoute(
-                                              room: state.room!,
-                                            ),
-                                          );
-                                        }
+                                        context.router.push(
+                                          ReservationDetailFormRoute(
+                                            room: state.room!,
+                                          ),
+                                        );
                                       },
-                                      label: isLoggedIn
-                                          ? 'Pesan Sekarang'
-                                          : 'Login untuk Pesan',
+                                      label: 'Pesan Sekarang',
                                     ),
                                   ],
                                 ],

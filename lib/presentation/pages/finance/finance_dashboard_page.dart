@@ -48,7 +48,6 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
 
   @override
   void dispose() {
-    _financeBloc.close();
     super.dispose();
   }
 

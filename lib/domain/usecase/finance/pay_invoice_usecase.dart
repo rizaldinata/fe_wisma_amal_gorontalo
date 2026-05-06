@@ -6,7 +6,7 @@ class PayInvoiceUseCase {
 
   PayInvoiceUseCase(this.repository);
 
-  Future<PaymentEntity> execute(int invoiceId) async {
-    return await repository.payInvoice(invoiceId);
+  Future<PaymentEntity> execute(int invoiceId, String paymentMethod, {String? paymentProofPath}) async {
+    return await repository.payInvoice(invoiceId, paymentMethod, paymentProofPath);
   }
 }

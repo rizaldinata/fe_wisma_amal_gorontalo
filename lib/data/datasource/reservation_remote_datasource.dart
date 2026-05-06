@@ -15,22 +15,21 @@ class ReservationRemoteDatasource {
       return data.map((json) {
         return ReservationEntity(
           id: json['id'],
-
-          roomTitle: json['room']['title'] ?? '',
-
-          roomNumber: json['room']['number'] ?? '',
-
-          residentName: json['resident']['user']['name'] ?? 'unpaid',
-
+          roomTitle: json['room'] != null ? json['room']['title'] ?? '' : '',
+          roomNumber: json['room'] != null ? json['room']['number'] ?? '' : '',
+          residentName: (json['resident'] != null &&
+                  json['resident']['user'] != null)
+              ? json['resident']['user']['name'] ?? ''
+              : (json['resident_id']?.toString() ?? 'Unknown'),
           rentalType: json['rental_type'] ?? '',
-
           status: json['status'] ?? '',
-
           paymentStatus: json['payment_status'] ?? 'unpaid',
-
-          startDate: json['start_date'].toString().substring(0, 10),
-
-          endDate: json['end_date'].toString().substring(0, 10),
+          startDate: json['start_date'] != null
+              ? json['start_date'].toString().substring(0, 10)
+              : '',
+          endDate: json['end_date'] != null
+              ? json['end_date'].toString().substring(0, 10)
+              : '',
         );
       }).toList();
     } catch (e) {
@@ -59,14 +58,20 @@ class ReservationRemoteDatasource {
 
       return ReservationEntity(
         id: json['id'],
-        roomTitle: json['room']['title'] ?? '',
-        roomNumber: json['room']['number'] ?? '',
-        residentName: json['resident']['user']['name'] ?? '',
+        roomTitle: json['room'] != null ? json['room']['title'] ?? '' : '',
+        roomNumber: json['room'] != null ? json['room']['number'] ?? '' : '',
+        residentName: (json['resident'] != null && json['resident']['user'] != null)
+            ? json['resident']['user']['name'] ?? ''
+            : '',
         rentalType: json['rental_type'] ?? '',
         status: json['status'] ?? '',
         paymentStatus: json['payment_status'] ?? 'unpaid',
-        startDate: json['start_date'].toString().substring(0, 10),
-        endDate: json['end_date'].toString().substring(0, 10),
+        startDate: json['start_date'] != null
+            ? json['start_date'].toString().substring(0, 10)
+            : '',
+        endDate: json['end_date'] != null
+            ? json['end_date'].toString().substring(0, 10)
+            : '',
       );
     } catch (e) {
       rethrow;

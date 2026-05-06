@@ -38,7 +38,6 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
 
   @override
   void dispose() {
-    _expenseBloc.close();
     _searchController.dispose();
     super.dispose();
   }

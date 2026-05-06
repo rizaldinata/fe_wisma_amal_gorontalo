@@ -104,7 +104,6 @@ class AppRouter extends RootStackRouter {
           page: RoomAndReservationPlaceholderRoute.page,
         ),
         AutoRoute(
-          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: RouteConstant.reservationName,
           page: ReservationRoute.page,
         ),
@@ -185,6 +184,11 @@ class AppRouter extends RootStackRouter {
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: RouteConstant.memberFinanceName,
           page: MemberFinanceRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: 'payment-upload',
+          page: PaymentUploadRoute.page,
         ),
 
         // pengaturan

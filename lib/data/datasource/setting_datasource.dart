@@ -3,6 +3,7 @@ import '../model/setting/setting_model.dart';
 
 abstract class SettingDatasource {
   Future<SettingModel> getSettings();
+  Future<SettingModel> getPublicSettings();
   Future<SettingModel> updateBulkSettings(Map<String, dynamic> settingsData);
 }
 
@@ -15,7 +16,17 @@ class SettingDatasourceImpl implements SettingDatasource {
   Future<SettingModel> getSettings() async {
     try {
       final response = await _dioClient.get('/v1/settings');
-      // pastikan response.data['data'] adalah objek JSON yang direkam secara mapping key:value
+      final data = response.data['data'] as Map<String, dynamic>;
+      return SettingModel.fromJson(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<SettingModel> getPublicSettings() async {
+    try {
+      final response = await _dioClient.get('/v1/settings/public');
       final data = response.data['data'] as Map<String, dynamic>;
       return SettingModel.fromJson(data);
     } catch (e) {
