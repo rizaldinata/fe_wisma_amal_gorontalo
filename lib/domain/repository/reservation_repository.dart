@@ -10,8 +10,5 @@ abstract class ReservationRepository {
     required String rentalType,
   });
 
-  // Future<void> updateReservationStatus({
-  //   required int reservationId,
-  //   required String status,
-  // });
+  Future<void> cancelReservation(int leaseId);
 }

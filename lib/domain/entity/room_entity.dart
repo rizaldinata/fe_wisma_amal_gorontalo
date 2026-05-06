@@ -3,6 +3,7 @@ import 'package:frontend/data/model/room/room_image_model.dart';
 
 enum RoomStatusEnum {
   available,
+  reserved,
   occupied,
   maintenance,
   unknown;
@@ -12,8 +13,8 @@ enum RoomStatusEnum {
       case RoomStatusEnum.available:
       case RoomStatusEnum.occupied:
         return true;
+      case RoomStatusEnum.reserved:
       case RoomStatusEnum.maintenance:
-        return false;
       case RoomStatusEnum.unknown:
         return false;
     }
@@ -23,6 +24,8 @@ enum RoomStatusEnum {
     switch (this) {
       case RoomStatusEnum.available:
         return Colors.green;
+      case RoomStatusEnum.reserved:
+        return Colors.blue;
       case RoomStatusEnum.occupied:
         return Colors.red;
       case RoomStatusEnum.maintenance:
@@ -36,6 +39,8 @@ enum RoomStatusEnum {
     switch (this) {
       case RoomStatusEnum.available:
         return 'Tersedia';
+      case RoomStatusEnum.reserved:
+        return 'Dipesan';
       case RoomStatusEnum.occupied:
         return 'Terisi';
       case RoomStatusEnum.maintenance:
@@ -49,12 +54,14 @@ enum RoomStatusEnum {
     switch (status.toLowerCase()) {
       case 'available':
         return RoomStatusEnum.available;
+      case 'reserved':
+        return RoomStatusEnum.reserved;
       case 'occupied':
         return RoomStatusEnum.occupied;
       case 'maintenance':
         return RoomStatusEnum.maintenance;
       default:
-        throw ArgumentError('Invalid room status: $status');
+        return RoomStatusEnum.unknown;
     }
   }
 }

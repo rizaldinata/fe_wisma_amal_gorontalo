@@ -561,12 +561,18 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
     }
 
     // 3. Pengecekan Biodata/Profil
-    // Gunakan status isProfileComplete dari state (hasil pengecekan ke server)
     if (!state.isProfileComplete) {
       AppSnackbar.showInfo(
         'Demi keamanan dan kenyamanan, silakan lengkapi biodata KTP Anda terlebih dahulu sebelum melanjutkan pemesanan.',
       );
-      context.router.push(const CompleteProfileRoute());
+      // Setelah user kembali dari halaman biodata, re-check status profil
+      context.router.push(const CompleteProfileRoute()).then((_) {
+        if (context.mounted) {
+          context.read<ReservationDetailFormBloc>().add(
+            const RefreshProfileStatusEvent(),
+          );
+        }
+      });
       return;
     }
 

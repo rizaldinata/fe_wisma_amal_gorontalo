@@ -64,6 +64,7 @@ import 'package:frontend/domain/usecase/schedule/add_schedule_update_usecase.dar
 import 'package:frontend/domain/repository/reservation_repository.dart';
 import 'package:frontend/domain/usecase/reservation/get_reservations_usecase.dart';
 import 'package:frontend/domain/usecase/reservation/create_reservation_usecase.dart';
+import 'package:frontend/domain/usecase/reservation/cancel_reservation_usecase.dart';
 // import 'package:frontend/domain/usecase/reservation/update_reservation_status_usecase.dart';
 import 'package:frontend/domain/repository/role_repository.dart';
 import 'package:frontend/domain/usecase/role/role_usecases.dart';
@@ -281,6 +282,9 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => CreateReservationUseCase(serviceLocator<ReservationRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CancelReservationUseCase(repository: serviceLocator<ReservationRepository>()),
   );
 
   // Resident UseCases

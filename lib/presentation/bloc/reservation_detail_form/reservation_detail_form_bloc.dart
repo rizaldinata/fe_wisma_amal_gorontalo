@@ -34,6 +34,7 @@ class ReservationDetailFormBloc extends Bloc<
     on<PaymentMethodChanged>(_onPaymentMethodChanged);
     on<SelectedBankChanged>(_onSelectedBankChanged);
     on<SubmitReservation>(_onSubmit);
+    on<RefreshProfileStatusEvent>(_onRefreshProfileStatus);
   }
 
   Future<void> _onInit(
@@ -172,6 +173,21 @@ class ReservationDetailFormBloc extends Bloc<
         status: FormzSubmissionStatus.failure,
         errorMessage: message,
       ));
+    }
+  }
+
+  Future<void> _onRefreshProfileStatus(
+    RefreshProfileStatusEvent event,
+    Emitter<ReservationDetailFormState> emit,
+  ) async {
+    try {
+      await residentRepository.getProfile();
+      emit(state.copyWith(isProfileComplete: true));
+    } catch (e) {
+      if (e is AppException && e.code == 404) {
+        emit(state.copyWith(isProfileComplete: false));
+      }
+      // Error lain (network) → tidak ubah state agar tidak mengganggu flow
     }
   }
 

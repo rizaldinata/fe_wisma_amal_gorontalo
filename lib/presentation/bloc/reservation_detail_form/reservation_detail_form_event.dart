@@ -73,3 +73,7 @@ class SelectedBankChanged extends ReservationDetailFormEvent {
   @override
   List<Object?> get props => [selectedBank];
 }
+
+class RefreshProfileStatusEvent extends ReservationDetailFormEvent {
+  const RefreshProfileStatusEvent();
+}
