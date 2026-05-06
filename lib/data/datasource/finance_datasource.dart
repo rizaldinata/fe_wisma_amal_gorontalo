@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../../core/services/network/dio_client.dart';
 import '../model/finance/invoice_model.dart';
@@ -26,7 +27,12 @@ abstract class FinanceRemoteDatasource {
   Future<MemberFinanceSummaryModel> getMemberFinanceSummary();
   Future<List<InvoiceModel>> getMemberInvoices();
   Future<List<PaymentModel>> getMemberPayments();
-  Future<PaymentModel> payInvoice(int invoiceId, String paymentMethod, String? paymentProofPath);
+  Future<PaymentModel> payInvoice(
+    int invoiceId,
+    String paymentMethod, {
+    Uint8List? paymentProofBytes,
+    String? paymentProofName,
+  });
   Future<void> extendLease(int leaseId, int durationMonths);
 }
 
@@ -213,16 +219,21 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
   }
 
   @override
-  Future<PaymentModel> payInvoice(int invoiceId, String paymentMethod, String? paymentProofPath) async {
+  Future<PaymentModel> payInvoice(
+    int invoiceId,
+    String paymentMethod, {
+    Uint8List? paymentProofBytes,
+    String? paymentProofName,
+  }) async {
     try {
       dynamic data;
-      
-      if (paymentMethod == 'manual' && paymentProofPath != null) {
+
+      if (paymentMethod == 'manual' && paymentProofBytes != null) {
         data = FormData.fromMap({
           'payment_method': paymentMethod,
-          'payment_proof': await MultipartFile.fromFile(
-            paymentProofPath,
-            filename: paymentProofPath.split('/').last,
+          'payment_proof': MultipartFile.fromBytes(
+            paymentProofBytes,
+            filename: paymentProofName ?? 'payment_proof.jpg',
           ),
         });
       } else {

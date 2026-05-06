@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import '../../entity/finance/payment_entity.dart';
 import '../../repository/finance_repository.dart';
 
@@ -6,7 +7,17 @@ class PayInvoiceUseCase {
 
   PayInvoiceUseCase(this.repository);
 
-  Future<PaymentEntity> execute(int invoiceId, String paymentMethod, {String? paymentProofPath}) async {
-    return await repository.payInvoice(invoiceId, paymentMethod, paymentProofPath);
+  Future<PaymentEntity> execute(
+    int invoiceId,
+    String paymentMethod, {
+    Uint8List? paymentProofBytes,
+    String? paymentProofName,
+  }) async {
+    return await repository.payInvoice(
+      invoiceId,
+      paymentMethod,
+      paymentProofBytes: paymentProofBytes,
+      paymentProofName: paymentProofName,
+    );
   }
 }

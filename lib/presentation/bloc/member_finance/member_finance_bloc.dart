@@ -107,7 +107,8 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
       final payment = await _payInvoice.execute(
         event.invoiceId,
         event.paymentMethod,
-        paymentProofPath: event.paymentProofPath,
+        paymentProofBytes: event.paymentProofBytes,
+        paymentProofName: event.paymentProofName,
       );
       emit(state.copyWith(
         status: MemberFinanceStatus.paymentSuccess,

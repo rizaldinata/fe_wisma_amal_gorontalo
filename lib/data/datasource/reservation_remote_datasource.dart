@@ -30,6 +30,11 @@ class ReservationRemoteDatasource {
           endDate: json['end_date'] != null
               ? json['end_date'].toString().substring(0, 10)
               : '',
+          invoiceId: json['invoice_id'],
+          invoiceAmount: json['invoice_amount'] != null
+              ? double.tryParse(json['invoice_amount'].toString())
+              : null,
+          paymentExpiresAt: json['payment_expires_at'],
         );
       }).toList();
     } catch (e) {
@@ -72,7 +77,18 @@ class ReservationRemoteDatasource {
         endDate: json['end_date'] != null
             ? json['end_date'].toString().substring(0, 10)
             : '',
+        invoiceId: json['invoice_id'],
+        invoiceAmount: (json['invoice_amount'] as num?)?.toDouble(),
+        paymentExpiresAt: json['payment_expires_at'],
       );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> cancelReservation(int leaseId) async {
+    try {
+      await dioClient.post('/rentals/$leaseId/cancel');
     } catch (e) {
       rethrow;
     }

@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:frontend/domain/entity/finance/kpi_entity.dart';
 import 'package:frontend/domain/entity/finance/revenue_entity.dart';
 import '../../domain/entity/finance/invoice_entity.dart';
@@ -125,8 +126,18 @@ class FinanceRepositoryImpl implements FinanceRepository {
   }
 
   @override
-  Future<PaymentEntity> payInvoice(int invoiceId, String paymentMethod, String? paymentProofPath) async {
-    return await remoteDatasource.payInvoice(invoiceId, paymentMethod, paymentProofPath);
+  Future<PaymentEntity> payInvoice(
+    int invoiceId,
+    String paymentMethod, {
+    Uint8List? paymentProofBytes,
+    String? paymentProofName,
+  }) async {
+    return await remoteDatasource.payInvoice(
+      invoiceId,
+      paymentMethod,
+      paymentProofBytes: paymentProofBytes,
+      paymentProofName: paymentProofName,
+    );
   }
 
   @override
