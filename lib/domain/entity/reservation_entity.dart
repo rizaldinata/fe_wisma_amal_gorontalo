@@ -10,6 +10,9 @@ class ReservationEntity extends Equatable {
   final String paymentStatus;
   final String startDate;
   final String endDate;
+  final int? invoiceId;
+  final double? invoiceAmount;
+  final String? paymentExpiresAt;
 
   const ReservationEntity({
     required this.id,
@@ -21,6 +24,9 @@ class ReservationEntity extends Equatable {
     required this.paymentStatus,
     required this.startDate,
     required this.endDate,
+    this.invoiceId,
+    this.invoiceAmount,
+    this.paymentExpiresAt,
   });
 
   @override
@@ -34,5 +40,8 @@ class ReservationEntity extends Equatable {
         paymentStatus,
         startDate,
         endDate,
+        invoiceId,
+        invoiceAmount,
+        paymentExpiresAt,
       ];
 }

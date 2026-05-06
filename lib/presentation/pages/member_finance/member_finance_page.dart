@@ -481,6 +481,7 @@ class _MemberFinancePageState extends State<MemberFinancePage>
                 onPressed: () async {
                   final result = await FilePicker.platform.pickFiles(
                     type: FileType.image,
+                    withData: true,
                   );
                   if (result != null) {
                     setState(() => selectedFile = result.files.first);
@@ -506,7 +507,8 @@ class _MemberFinancePageState extends State<MemberFinancePage>
                         PayInvoiceEvent(
                           invoiceId,
                           'manual',
-                          paymentProofPath: selectedFile!.path,
+                          paymentProofBytes: selectedFile!.bytes,
+                          paymentProofName: selectedFile!.name,
                         ),
                       );
                       Navigator.pop(ctx);

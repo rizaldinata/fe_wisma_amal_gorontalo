@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:frontend/domain/entity/finance/kpi_entity.dart';
 import 'package:frontend/domain/entity/finance/revenue_entity.dart';
 import '../entity/finance/invoice_entity.dart';
@@ -28,6 +29,11 @@ abstract class FinanceRepository {
   Future<MemberFinanceSummaryEntity> getMemberFinanceSummary();
   Future<List<InvoiceEntity>> getMemberInvoices();
   Future<List<PaymentEntity>> getMemberPayments();
-  Future<PaymentEntity> payInvoice(int invoiceId, String paymentMethod, String? paymentProofPath);
+  Future<PaymentEntity> payInvoice(
+    int invoiceId,
+    String paymentMethod, {
+    Uint8List? paymentProofBytes,
+    String? paymentProofName,
+  });
   Future<void> extendLease(int leaseId, int durationMonths);
 }

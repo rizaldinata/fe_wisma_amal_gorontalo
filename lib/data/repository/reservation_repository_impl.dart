@@ -1,7 +1,5 @@
 import 'package:frontend/data/datasource/reservation_remote_datasource.dart';
-
 import 'package:frontend/domain/entity/reservation_entity.dart';
-
 import 'package:frontend/domain/repository/reservation_repository.dart';
 
 class ReservationRepositoryImpl implements ReservationRepository {
@@ -27,5 +25,10 @@ class ReservationRepositoryImpl implements ReservationRepository {
       duration: duration,
       rentalType: rentalType,
     );
+  }
+
+  @override
+  Future<void> cancelReservation(int leaseId) async {
+    return await remoteDatasource.cancelReservation(leaseId);
   }
 }
