@@ -286,6 +286,12 @@ Future<void> initializeBloc() async {
     ),
   );
 
+  serviceLocator.registerLazySingleton<MyReservationBloc>(
+    () => MyReservationBloc(
+      getMyReservationsUseCase: serviceLocator<GetMyReservationsUseCase>(),
+    ),
+  );
+
   // Role Blocs
   serviceLocator.registerLazySingleton<RoleBloc>(
     () => RoleBloc(

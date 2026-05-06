@@ -4,10 +4,39 @@ import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 
 @RoutePage()
-class LandingPage extends StatelessWidget {
+class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
 
   @override
+  State<LandingPage> createState() => _LandingPageState();
+}
+
+class _LandingPageState extends State<LandingPage> {
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _facilityKey = GlobalKey();
+  final GlobalKey _roomKey = GlobalKey();
+  final GlobalKey _testimonialKey = GlobalKey();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _scrollTo(GlobalKey key) async {
+    final context = key.currentContext;
+    if (context == null) {
+      return;
+    }
+
+    await Scrollable.ensureVisible(
+      context,
+      duration: const Duration(milliseconds: 450),
+      curve: Curves.easeInOutCubic,
+      alignment: 0.08,
+    );
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: LandingPalette.surface,
@@ -16,14 +45,20 @@ class LandingPage extends StatelessWidget {
           final isWide = constraints.maxWidth >= 1000;
 
           return SingleChildScrollView(
+            controller: _scrollController,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                _HeroSection(isWide: isWide),
+                _HeroSection(
+                  isWide: isWide,
+                  onFacilityTap: () => _scrollTo(_facilityKey),
+                  onRoomTap: () => _scrollTo(_roomKey),
+                  onTestimonialTap: () => _scrollTo(_testimonialKey),
+                ),
                 const _ValueSection(),
-                const _RoomSection(),
-                _FeatureSection(isWide: isWide),
-                const _TestimonialSection(),
+                _RoomSection(key: _roomKey),
+                _FeatureSection(key: _facilityKey, isWide: isWide),
+                _TestimonialSection(key: _testimonialKey),
                 const _FooterSection(),
               ],
             ),
@@ -32,6 +67,14 @@ class LandingPage extends StatelessWidget {
       ),
     );
   }
+}
+
+void _goToReservation(BuildContext context) {
+  context.router.navigate(
+    const AppLayoutRoute(
+      children: [RoomRoute()],
+    ),
+  );
 }
 
 class LandingPalette {
@@ -48,9 +91,17 @@ class LandingPalette {
 }
 
 class _HeroSection extends StatelessWidget {
-  const _HeroSection({required this.isWide});
+  const _HeroSection({
+    required this.isWide,
+    required this.onFacilityTap,
+    required this.onRoomTap,
+    required this.onTestimonialTap,
+  });
 
   final bool isWide;
+  final VoidCallback onFacilityTap;
+  final VoidCallback onRoomTap;
+  final VoidCallback onTestimonialTap;
 
   @override
   Widget build(BuildContext context) {
@@ -106,17 +157,17 @@ class _HeroSection extends StatelessWidget {
                       Row(
                         children: [
                           TextButton(
-                            onPressed: () {},
+                            onPressed: onFacilityTap,
                             child: const Text('Fasilitas'),
                           ),
                           const SizedBox(width: 16),
                           TextButton(
-                            onPressed: () {},
+                            onPressed: onRoomTap,
                             child: const Text('Tipe Kamar'),
                           ),
                           const SizedBox(width: 16),
                           TextButton(
-                            onPressed: () {},
+                            onPressed: onTestimonialTap,
                             child: const Text('Testimoni'),
                           ),
                           const SizedBox(width: 16),
@@ -124,11 +175,7 @@ class _HeroSection extends StatelessWidget {
                             height: 44,
                             child: BasicButton(
                               onPressed: () {
-                                context.router.navigate(
-                                  const AppLayoutRoute(
-                                    children: [ReservationRoute()],
-                                  ),
-                                );
+                                _goToReservation(context);
                               },
                               label: 'Reservasi Sekarang',
                               leadIcon: const Icon(
@@ -198,11 +245,7 @@ class _HeroSection extends StatelessWidget {
                                 height: 48,
                                 child: BasicButton(
                                   onPressed: () {
-                                    context.router.navigate(
-                                      const AppLayoutRoute(
-                                        children: [ReservationRoute()],
-                                      ),
-                                    );
+                                    onRoomTap();
                                   },
                                   label: 'Cek Ketersediaan',
                                   leadIcon: const Icon(
@@ -216,7 +259,7 @@ class _HeroSection extends StatelessWidget {
                                 height: 48,
                                 child: BasicButton(
                                   type: ButtonType.secondary,
-                                  onPressed: () {},
+                                  onPressed: onFacilityTap,
                                   label: 'Lihat Fasilitas',
                                   leadIcon: const Icon(
                                     Icons.star_border,
@@ -516,7 +559,7 @@ class _ValueCard extends StatelessWidget {
 }
 
 class _RoomSection extends StatelessWidget {
-  const _RoomSection();
+  const _RoomSection({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -647,7 +690,9 @@ class _RoomCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () {},
+              onPressed: () {
+                _goToReservation(context);
+              },
               child: const Text('Lihat Detail'),
             ),
           ),
@@ -658,7 +703,7 @@ class _RoomCard extends StatelessWidget {
 }
 
 class _FeatureSection extends StatelessWidget {
-  const _FeatureSection({required this.isWide});
+  const _FeatureSection({super.key, required this.isWide});
 
   final bool isWide;
 
@@ -811,7 +856,7 @@ class _FeatureCard extends StatelessWidget {
 }
 
 class _TestimonialSection extends StatelessWidget {
-  const _TestimonialSection();
+  const _TestimonialSection({super.key});
 
   @override
   Widget build(BuildContext context) {
