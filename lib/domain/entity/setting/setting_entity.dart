@@ -5,7 +5,12 @@ class SettingEntity {
 
   String? getString(String key) => settings[key]?.toString();
   
-  bool getBool(String key) => settings[key]?.toString() == 'true';
+  bool getBool(String key) {
+    final value = settings[key];
+    if (value == null) return false;
+    if (value is bool) return value;
+    return value.toString().toLowerCase() == 'true';
+  }
   
   List<String> getList(String key) {
     if (settings[key] == null) return [];

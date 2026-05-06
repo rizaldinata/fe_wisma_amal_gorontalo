@@ -3,10 +3,13 @@ import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
 import 'package:formz/formz.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
+import 'package:frontend/domain/entity/reservation_entity.dart';
 import 'package:frontend/domain/usecase/reservation/create_reservation_usecase.dart';
-import 'package:frontend/domain/usecase/setting/get_settings_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_public_settings_usecase.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/domain/repository/resident_repository.dart';
+import 'package:frontend/core/services/network/exception.dart';
 
 part 'reservation_detail_form_event.dart';
 part 'reservation_detail_form_state.dart';
@@ -14,12 +17,14 @@ part 'reservation_detail_form_state.dart';
 class ReservationDetailFormBloc extends Bloc<
     ReservationDetailFormEvent,
     ReservationDetailFormState> {
-  final GetSettingsUseCase getSettingsUseCase;
+  final GetPublicSettingsUseCase getSettingsUseCase;
   final CreateReservationUseCase createReservationUseCase;
+  final ResidentRepository residentRepository;
 
   ReservationDetailFormBloc({
     required this.getSettingsUseCase,
     required this.createReservationUseCase,
+    required this.residentRepository,
   }) : super(const ReservationDetailFormState()) {
     on<InitReservationEvent>(_onInit);
     on<RentTypeChanged>(_onRentTypeChanged);
@@ -36,19 +41,37 @@ class ReservationDetailFormBloc extends Bloc<
     Emitter<ReservationDetailFormState> emit,
   ) async {
     bool isDailyEnabled = true;
+    bool isMidtransEnabled = true;
+    bool isProfileComplete = true;
+
     try {
-      final authBloc = serviceLocator.get<AuthBloc>();
-      if (authBloc.state.isLoggedIn) {
-        final settingEntity = await getSettingsUseCase.execute();
-        isDailyEnabled = settingEntity.getBool('feature_daily_rental');
-      }
+      final settingEntity = await getSettingsUseCase.execute();
+      isDailyEnabled = settingEntity.getBool('feature_daily_rental');
+      isMidtransEnabled = settingEntity.getBool('feature_payment_midtrans');
     } catch (_) {
       // Keep default if error
+    }
+
+    try {
+      // Cek apakah user sudah melengkapi biodata
+      await residentRepository.getProfile();
+      isProfileComplete = true;
+    } catch (e) {
+      // DioClient melempar AppException, cek status code-nya
+      if (e is AppException && e.code == 404) {
+        isProfileComplete = false;
+      } else {
+        // Jika error lain (misal network), anggap true saja agar tidak mengganggu flow
+        isProfileComplete = true;
+      }
     }
 
     emit(state.copyWith(
       room: event.room,
       isDailyRentalEnabled: isDailyEnabled,
+      isMidtransEnabled: isMidtransEnabled,
+      isProfileComplete: isProfileComplete,
+      paymentMethod: isMidtransEnabled ? 'online' : 'tunai',
       rentType: 'Bulanan', // Default to Bulanan as requested
       price: event.room.price.toInt(),
     ));
@@ -129,14 +152,17 @@ class ReservationDetailFormBloc extends Bloc<
       
       final rentalType = state.rentType == 'Bulanan' ? 'monthly' : 'daily';
 
-      await createReservationUseCase.execute(
+      final reservation = await createReservationUseCase.execute(
         roomId: state.room!.id,
         startDate: startDateStr,
         duration: state.duration,
         rentalType: rentalType,
       );
-
-      emit(state.copyWith(status: FormzSubmissionStatus.success));
+      
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.success,
+        createdReservation: reservation,
+      ));
     } catch (e) {
       String message = 'Gagal membuat reservasi';
       if (e is DioException) {

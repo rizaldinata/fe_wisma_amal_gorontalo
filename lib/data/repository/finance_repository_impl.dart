@@ -125,8 +125,8 @@ class FinanceRepositoryImpl implements FinanceRepository {
   }
 
   @override
-  Future<PaymentEntity> payInvoice(int invoiceId) async {
-    return await remoteDatasource.payInvoice(invoiceId);
+  Future<PaymentEntity> payInvoice(int invoiceId, String paymentMethod, String? paymentProofPath) async {
+    return await remoteDatasource.payInvoice(invoiceId, paymentMethod, paymentProofPath);
   }
 
   @override

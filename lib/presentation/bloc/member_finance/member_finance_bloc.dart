@@ -4,6 +4,7 @@ import '../../../domain/usecase/finance/get_member_invoices_usecase.dart';
 import '../../../domain/usecase/finance/get_member_payments_usecase.dart';
 import '../../../domain/usecase/finance/pay_invoice_usecase.dart';
 import '../../../domain/usecase/finance/extend_lease_usecase.dart';
+import '../../../domain/usecase/setting/get_public_settings_usecase.dart';
 import 'member_finance_event.dart';
 import 'member_finance_state.dart';
 
@@ -13,6 +14,7 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
   final GetMemberPaymentsUseCase _getPayments;
   final PayInvoiceUseCase _payInvoice;
   final ExtendLeaseUseCase _extendLease;
+  final GetPublicSettingsUseCase _getSettings;
 
   MemberFinanceBloc({
     required GetMemberFinanceSummaryUseCase getSummary,
@@ -20,11 +22,13 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
     required GetMemberPaymentsUseCase getPayments,
     required PayInvoiceUseCase payInvoice,
     required ExtendLeaseUseCase extendLease,
+    required GetPublicSettingsUseCase getSettings,
   })  : _getSummary = getSummary,
         _getInvoices = getInvoices,
         _getPayments = getPayments,
         _payInvoice = payInvoice,
         _extendLease = extendLease,
+        _getSettings = getSettings,
         super(const MemberFinanceState()) {
     on<FetchMemberFinanceSummary>(_onFetchSummary);
     on<FetchMemberInvoices>(_onFetchInvoices);
@@ -40,9 +44,13 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
     emit(state.copyWith(status: MemberFinanceStatus.loading));
     try {
       final summary = await _getSummary.execute();
+      final settings = await _getSettings.execute();
+      final isMidtrans = settings.getBool('feature_payment_midtrans');
+
       emit(state.copyWith(
         status: MemberFinanceStatus.success,
         summary: summary,
+        isMidtransEnabled: isMidtrans,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -95,12 +103,21 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
     Emitter<MemberFinanceState> emit,
   ) async {
     emit(state.copyWith(status: MemberFinanceStatus.loading));
-    try {
-      final payment = await _payInvoice.execute(event.invoiceId);
+     try {
+      final payment = await _payInvoice.execute(
+        event.invoiceId,
+        event.paymentMethod,
+        paymentProofPath: event.paymentProofPath,
+      );
       emit(state.copyWith(
         status: MemberFinanceStatus.paymentSuccess,
         snapToken: payment.snapToken,
       ));
+      // Refresh invoices and summary if manual (to show pending status)
+      if (event.paymentMethod == 'manual') {
+        add(FetchMemberInvoices());
+        add(FetchMemberPayments());
+      }
     } catch (e) {
       emit(state.copyWith(
         status: MemberFinanceStatus.failure,

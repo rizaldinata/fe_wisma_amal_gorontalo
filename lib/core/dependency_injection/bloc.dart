@@ -37,6 +37,7 @@ import 'package:frontend/presentation/bloc/role/role_bloc.dart';
 import 'package:frontend/presentation/bloc/setting/setting_bloc.dart';
 import 'package:frontend/domain/usecase/setting/get_settings_usecase.dart';
 import 'package:frontend/domain/usecase/setting/update_settings_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_public_settings_usecase.dart';
 import 'package:frontend/presentation/bloc/expense/expense_bloc.dart';
 import 'package:frontend/presentation/bloc/permission/permission_bloc.dart';
 import 'package:frontend/presentation/bloc/room_list/room_bloc.dart';
@@ -63,6 +64,7 @@ import 'package:frontend/domain/usecase/user/create_user_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_resident_detail_usecase.dart';
 import 'package:frontend/presentation/bloc/resident/resident_bloc.dart';
+import 'package:frontend/presentation/bloc/resident_detail/resident_detail_bloc.dart';
 import 'package:frontend/presentation/bloc/member_finance/member_finance_bloc.dart';
 import 'package:frontend/domain/usecase/finance/get_member_finance_summary_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_member_invoices_usecase.dart';
@@ -242,7 +244,7 @@ Future<void> initializeBloc() async {
     ),
   );
 
-  serviceLocator.registerLazySingleton<CompleteProfileBloc>(
+  serviceLocator.registerFactory<CompleteProfileBloc>(
     () => CompleteProfileBloc(repository: serviceLocator()),
   );
 
@@ -302,6 +304,12 @@ Future<void> initializeBloc() async {
       getAllRolesUseCase: serviceLocator.get<GetAllRolesUseCase>(),
     ),
   );
+  // My Reservation Bloc
+  serviceLocator.registerFactory(
+    () => MyReservationBloc(
+      getMyReservationsUseCase: serviceLocator<GetMyReservationsUseCase>(),
+    )..add(GetMyReservationsEvent()),
+  );
 
   serviceLocator.registerLazySingleton<MemberFinanceBloc>(
     () => MemberFinanceBloc(
@@ -310,6 +318,7 @@ Future<void> initializeBloc() async {
       getPayments: serviceLocator.get<GetMemberPaymentsUseCase>(),
       payInvoice: serviceLocator.get<PayInvoiceUseCase>(),
       extendLease: serviceLocator.get<ExtendLeaseUseCase>(),
+      getSettings: serviceLocator.get<GetPublicSettingsUseCase>(),
     ),
   );
 }

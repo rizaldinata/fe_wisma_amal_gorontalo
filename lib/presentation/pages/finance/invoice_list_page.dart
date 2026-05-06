@@ -43,7 +43,6 @@ class _InvoiceListPageState extends State<InvoiceListPage> {
 
   @override
   void dispose() {
-    _bloc.close();
     _searchController.dispose();
     super.dispose();
   }

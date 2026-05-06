@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
+import 'package:intl/intl.dart';
 
 import 'package:frontend/presentation/bloc/reservation_detail_form/reservation_detail_form_bloc.dart';
 import 'package:frontend/presentation/widget/core/appbar/custom_appbar.dart';
@@ -16,6 +17,7 @@ import 'package:frontend/main.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 import 'package:frontend/domain/entity/room_entity.dart';
+import 'package:frontend/domain/usecase/setting/get_public_settings_usecase.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 
 @RoutePage()
@@ -27,8 +29,9 @@ class ReservationDetailFormPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => ReservationDetailFormBloc(
-        getSettingsUseCase: serviceLocator.get(),
+        getSettingsUseCase: serviceLocator.get<GetPublicSettingsUseCase>(),
         createReservationUseCase: serviceLocator.get(),
+        residentRepository: serviceLocator.get(),
       )..add(InitReservationEvent(room)),
       child: const ReservationDetailFormView(),
     );
@@ -90,11 +93,22 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
           AppSnackbar.showSuccess(
             'Pemesanan berhasil dibuat. Silakan selesaikan pembayaran.',
           );
-          context.router.replace(RoomRoute());
+          if (state.paymentMethod == 'tunai') {
+            context.router.replace(
+              PaymentUploadRoute(reservation: state.createdReservation!),
+            );
+          } else {
+            context.router.replace(const MemberFinanceRoute());
+          }
         } else if (state.status == FormzSubmissionStatus.failure) {
-          AppSnackbar.showError(
-            state.errorMessage ?? 'Gagal membuat pemesanan',
-          );
+          final error = state.errorMessage ?? 'Gagal membuat pemesanan';
+          AppSnackbar.showError(error);
+
+          // Jika error dari server menyatakan biodata belum lengkap, arahkan ke form biodata
+          if (error.toLowerCase().contains('biodata') || 
+              error.toLowerCase().contains('ktp')) {
+            context.router.push(const CompleteProfileRoute());
+          }
         }
       },
       builder: (context, state) {
@@ -310,20 +324,21 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                 spacing: 16,
                                 runSpacing: 16,
                                 children: [
+                                  if (state.isMidtransEnabled)
+                                    paymentMethodCard(
+                                      title: 'Pembayaran Online',
+                                      subtitle: 'Transfer Virtual Account',
+                                      icon: Icons.account_balance_wallet,
+                                      selected: state.paymentMethod == 'online',
+                                      onTap: () => context
+                                          .read<ReservationDetailFormBloc>()
+                                          .add(
+                                            const PaymentMethodChanged('online'),
+                                          ),
+                                    ),
                                   paymentMethodCard(
-                                    title: 'Pembayaran Online',
-                                    subtitle: 'Transfer Virtual Account',
-                                    icon: Icons.account_balance_wallet,
-                                    selected: state.paymentMethod == 'online',
-                                    onTap: () => context
-                                        .read<ReservationDetailFormBloc>()
-                                        .add(
-                                          const PaymentMethodChanged('online'),
-                                        ),
-                                  ),
-                                  paymentMethodCard(
-                                    title: 'Pembayaran Tunai',
-                                    subtitle: 'Bayar langsung dengan bukti',
+                                    title: 'Pembayaran Manual',
+                                    subtitle: 'Transfer atau Cash dengan Bukti',
                                     icon: Icons.payments,
                                     selected: state.paymentMethod == 'tunai',
                                     onTap: () => context
@@ -411,7 +426,7 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              'Pembayaran Tunai',
+                                              'Pembayaran Manual',
                                               style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 13,
@@ -420,7 +435,7 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              'Anda akan diminta untuk mengunggah bukti pembayaran setelah pemesanan.',
+                                              'Silakan melakukan transfer atau bayar cash. Anda wajib mengunggah bukti pembayaran di langkah berikutnya.',
                                               style: TextStyle(
                                                 fontSize: 12,
                                                 color: Colors.orange.shade600,
@@ -506,57 +521,7 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                           isLoading:
                               state.status == FormzSubmissionStatus.inProgress,
                           onPressed: () {
-                            final authState = context.read<AuthBloc>().state;
-                            if (!authState.isLoggedIn) {
-                              AppSnackbar.showError(
-                                'Silakan login terlebih dahulu',
-                              );
-                              context.router.push(LoginRoute());
-                              return;
-                            }
-
-                            if (state.startDate == null) {
-                              AppSnackbar.showError(
-                                'Pilih tanggal mulai terlebih dahulu',
-                              );
-                              return;
-                            }
-
-                            if (state.rentType == 'Harian' &&
-                                state.endDate == null) {
-                              AppSnackbar.showError(
-                                'Pilih tanggal selesai terlebih dahulu',
-                              );
-                              return;
-                            }
-
-                            if (state.rentType == 'Harian' &&
-                                state.duration <= 0) {
-                              AppSnackbar.showError(
-                                'Tanggal selesai harus setelah tanggal mulai',
-                              );
-                              return;
-                            }
-
-                            final roles = authState.userInfo?.roles ?? [];
-                            final isMember = roles.contains('member');
-                            final isResident = roles.contains('resident');
-
-                            if (context.can(
-                                  PermissionKeys.completeResidentProfile,
-                                ) &&
-                                !isMember &&
-                                !isResident) {
-                              AppSnackbar.showError(
-                                'Silakan lengkapi biodata Anda terlebih dahulu',
-                              );
-                              context.router.push(CompleteProfileRoute());
-                              return;
-                            }
-
-                            context.read<ReservationDetailFormBloc>().add(
-                              const SubmitReservation(),
-                            );
+                            _showConfirmReservationDialog(context);
                           },
                         ),
                       ),
@@ -576,6 +541,89 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
           ),
         );
       },
+    );
+  }
+  void _showConfirmReservationDialog(BuildContext context) {
+    final state = context.read<ReservationDetailFormBloc>().state;
+    final authState = context.read<AuthBloc>().state;
+
+    // 1. Pengecekan Login
+    if (!authState.isLoggedIn) {
+      AppSnackbar.showError('Silakan login terlebih dahulu');
+      context.router.push(LoginRoute());
+      return;
+    }
+
+    // 2. Pengecekan Tanggal Mulai
+    if (state.startDate == null) {
+      AppSnackbar.showError('Pilih tanggal mulai terlebih dahulu');
+      return;
+    }
+
+    // 3. Pengecekan Biodata/Profil
+    // Gunakan status isProfileComplete dari state (hasil pengecekan ke server)
+    if (!state.isProfileComplete) {
+      AppSnackbar.showInfo(
+        'Demi keamanan dan kenyamanan, silakan lengkapi biodata KTP Anda terlebih dahulu sebelum melanjutkan pemesanan.',
+      );
+      context.router.push(const CompleteProfileRoute());
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Konfirmasi Pesanan'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Apakah Anda yakin ingin melakukan pemesanan kamar ini?'),
+            const SizedBox(height: 16),
+            _infoRow('Kamar', state.room?.title ?? '-'),
+            _infoRow('Mulai', DateFormat('dd/MM/yyyy').format(state.startDate!)),
+            _infoRow('Total', 'Rp ${state.totalPrice}'),
+            _infoRow(
+              'Metode',
+              state.paymentMethod == 'online' ? 'Online' : 'Manual',
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.read<ReservationDetailFormBloc>().add(
+                const SubmitReservation(),
+              );
+            },
+            child: const Text('Ya, Pesan Sekarang'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            '$label:',
+            style: const TextStyle(fontSize: 13, color: Colors.grey),
+          ),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
     );
   }
 }

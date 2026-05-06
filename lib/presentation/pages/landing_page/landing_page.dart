@@ -107,6 +107,92 @@ class _HeroSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
+    final heroContent = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 8,
+          ),
+          decoration: BoxDecoration(
+            color: LandingPalette.card,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: LandingPalette.border),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.check_circle, size: 16),
+              SizedBox(width: 8),
+              Text('Reservasi online tanpa ribet'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        Text(
+          'Temukan Kenyamanan Tinggal di Wisma Amal Gorontalo',
+          style: textTheme.displayLarge?.copyWith(
+            color: LandingPalette.ink,
+            fontSize: isWide ? 40 : 30,
+            height: 1.15,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Satu portal untuk calon penghuni mengecek ketersediaan kamar, melihat fasilitas, dan melakukan reservasi secara cepat.',
+          style: textTheme.bodyLarge?.copyWith(
+            color: LandingPalette.muted,
+            fontSize: 16,
+            height: 1.6,
+          ),
+        ),
+        const SizedBox(height: 28),
+        Wrap(
+          spacing: 12,
+          runSpacing: 12,
+          children: [
+            SizedBox(
+              height: 48,
+              child: BasicButton(
+                onPressed: onRoomTap,
+                label: 'Cek Ketersediaan',
+                leadIcon: const Icon(
+                  Icons.search,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 48,
+              child: BasicButton(
+                type: ButtonType.secondary,
+                onPressed: onFacilityTap,
+                label: 'Lihat Fasilitas',
+                leadIcon: const Icon(
+                  Icons.star_border,
+                  size: 18,
+                  color: LandingPalette.primary,
+                ),
+                foregroundColor: LandingPalette.primary,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 32),
+        Wrap(
+          spacing: 24,
+          runSpacing: 12,
+          children: const [
+            _HeroStat(label: '30+ Kamar', value: 'Tersedia'),
+            _HeroStat(label: '4.8/5', value: 'Rating'),
+            _HeroStat(label: '24/7', value: 'Layanan'),
+          ],
+        ),
+      ],
+    );
+
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -174,9 +260,7 @@ class _HeroSection extends StatelessWidget {
                           SizedBox(
                             height: 44,
                             child: BasicButton(
-                              onPressed: () {
-                                _goToReservation(context);
-                              },
+                              onPressed: () => _goToReservation(context),
                               label: 'Reservasi Sekarang',
                               leadIcon: const Icon(
                                 Icons.calendar_month,
@@ -190,107 +274,29 @@ class _HeroSection extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 48),
-                Flex(
-                  direction: isWide ? Axis.horizontal : Axis.vertical,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: isWide ? 6 : 0,
-                      child: Column(
+                isWide
+                    ? Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: LandingPalette.card,
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: LandingPalette.border),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: const [
-                                Icon(Icons.check_circle, size: 16),
-                                SizedBox(width: 8),
-                                Text('Reservasi online tanpa ribet'),
-                              ],
-                            ),
+                          Expanded(
+                            flex: 6,
+                            child: heroContent,
                           ),
-                          const SizedBox(height: 24),
-                          Text(
-                            'Temukan Kenyamanan Tinggal di Wisma Amal Gorontalo',
-                            style: textTheme.displayLarge?.copyWith(
-                              color: LandingPalette.ink,
-                              fontSize: isWide ? 40 : 30,
-                              height: 1.15,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Satu portal untuk calon penghuni mengecek ketersediaan kamar, melihat fasilitas, dan melakukan reservasi secara cepat.',
-                            style: textTheme.bodyLarge?.copyWith(
-                              color: LandingPalette.muted,
-                              fontSize: 16,
-                              height: 1.6,
-                            ),
-                          ),
-                          const SizedBox(height: 28),
-                          Wrap(
-                            spacing: 12,
-                            runSpacing: 12,
-                            children: [
-                              SizedBox(
-                                height: 48,
-                                child: BasicButton(
-                                  onPressed: () {
-                                    onRoomTap();
-                                  },
-                                  label: 'Cek Ketersediaan',
-                                  leadIcon: const Icon(
-                                    Icons.search,
-                                    color: Colors.white,
-                                    size: 18,
-                                  ),
-                                ),
-                              ),
-                              SizedBox(
-                                height: 48,
-                                child: BasicButton(
-                                  type: ButtonType.secondary,
-                                  onPressed: onFacilityTap,
-                                  label: 'Lihat Fasilitas',
-                                  leadIcon: const Icon(
-                                    Icons.star_border,
-                                    size: 18,
-                                    color: LandingPalette.primary,
-                                  ),
-                                  foregroundColor: LandingPalette.primary,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 32),
-                          Wrap(
-                            spacing: 24,
-                            runSpacing: 12,
-                            children: const [
-                              _HeroStat(label: '30+ Kamar', value: 'Tersedia'),
-                              _HeroStat(label: '4.8/5', value: 'Rating'),
-                              _HeroStat(label: '24/7', value: 'Layanan'),
-                            ],
+                          const SizedBox(width: 32),
+                          Expanded(
+                            flex: 5,
+                            child: _HeroImage(isWide: isWide),
                           ),
                         ],
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          heroContent,
+                          const SizedBox(height: 32),
+                          _HeroImage(isWide: isWide),
+                        ],
                       ),
-                    ),
-                    const SizedBox(width: 32, height: 32),
-                    Expanded(
-                      flex: isWide ? 5 : 0,
-                      child: _HeroImage(isWide: isWide),
-                    ),
-                  ],
-                ),
               ],
             ),
           ),
@@ -690,9 +696,7 @@ class _RoomCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton(
-              onPressed: () {
-                _goToReservation(context);
-              },
+              onPressed: () => _goToReservation(context),
               child: const Text('Lihat Detail'),
             ),
           ),
@@ -709,6 +713,65 @@ class _FeatureSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final featuresList = Column(
+      children: const [
+        _FeatureCard(
+          icon: Icons.calendar_today,
+          title: 'Reservasi online',
+          description: 'Pilih kamar, tanggal, dan bayar langsung dari aplikasi.',
+        ),
+        SizedBox(height: 16),
+        _FeatureCard(
+          icon: Icons.receipt_long,
+          title: 'Manajemen tagihan',
+          description:
+              'Cek tagihan bulanan, riwayat pembayaran, dan bukti transaksi.',
+        ),
+        SizedBox(height: 16),
+        _FeatureCard(
+          icon: Icons.report_problem,
+          title: 'Laporan keluhan',
+          description:
+              'Laporkan kerusakan kamar dan pantau status perbaikannya.',
+        ),
+      ],
+    );
+
+    final featuresImage = Container(
+      height: 360,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: LandingPalette.card,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: LandingPalette.border),
+      ),
+      child: Column(
+        children: [
+          Container(
+            height: 220,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: LandingPalette.heroGlow,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Icon(
+              Icons.phone_iphone,
+              size: 120,
+              color: LandingPalette.primaryDark,
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            'Akses informasi kamar, tagihan, dan bantuan dalam satu aplikasi.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: LandingPalette.muted,
+                ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+
     return _SectionContainer(
       background: LandingPalette.surface,
       child: Column(
@@ -721,74 +784,23 @@ class _FeatureSection extends StatelessWidget {
                 'Mulai reservasi sampai pelaporan masalah, semuanya tercatat rapi melalui aplikasi penghuni.',
           ),
           const SizedBox(height: 28),
-          Flex(
-            direction: isWide ? Axis.horizontal : Axis.vertical,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  children: const [
-                    _FeatureCard(
-                      icon: Icons.calendar_today,
-                      title: 'Reservasi online',
-                      description: 'Pilih kamar, tanggal, dan bayar langsung dari aplikasi.',
-                    ),
-                    SizedBox(height: 16),
-                    _FeatureCard(
-                      icon: Icons.receipt_long,
-                      title: 'Manajemen tagihan',
-                      description:
-                          'Cek tagihan bulanan, riwayat pembayaran, dan bukti transaksi.',
-                    ),
-                    SizedBox(height: 16),
-                    _FeatureCard(
-                      icon: Icons.report_problem,
-                      title: 'Laporan keluhan',
-                      description:
-                          'Laporkan kerusakan kamar dan pantau status perbaikannya.',
-                    ),
+          isWide
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: featuresList),
+                    const SizedBox(width: 24),
+                    Expanded(child: featuresImage),
+                  ],
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    featuresList,
+                    const SizedBox(height: 24),
+                    featuresImage,
                   ],
                 ),
-              ),
-              const SizedBox(width: 24, height: 24),
-              Expanded(
-                child: Container(
-                  height: 360,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: LandingPalette.card,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: LandingPalette.border),
-                  ),
-                  child: Column(
-                    children: [
-                      Container(
-                        height: 220,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                          color: LandingPalette.heroGlow,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Icon(
-                          Icons.phone_iphone,
-                          size: 120,
-                          color: LandingPalette.primaryDark,
-                        ),
-                      ),
-                      const SizedBox(height: 18),
-                      Text(
-                        'Akses informasi kamar, tagihan, dan bantuan dalam satu aplikasi.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: LandingPalette.muted,
-                            ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );

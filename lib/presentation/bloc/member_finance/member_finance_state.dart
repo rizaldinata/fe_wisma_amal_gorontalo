@@ -12,6 +12,7 @@ class MemberFinanceState extends Equatable {
   final List<PaymentEntity> payments;
   final String? errorMessage;
   final String? snapToken;
+  final bool isMidtransEnabled;
 
   const MemberFinanceState({
     this.status = MemberFinanceStatus.initial,
@@ -19,7 +20,8 @@ class MemberFinanceState extends Equatable {
     this.invoices = const [],
     this.payments = const [],
     this.errorMessage,
-    this.snapToken,
+     this.snapToken,
+    this.isMidtransEnabled = true,
   });
 
   MemberFinanceState copyWith({
@@ -28,7 +30,8 @@ class MemberFinanceState extends Equatable {
     List<InvoiceEntity>? invoices,
     List<PaymentEntity>? payments,
     String? errorMessage,
-    String? snapToken,
+     String? snapToken,
+    bool? isMidtransEnabled,
   }) {
     return MemberFinanceState(
       status: status ?? this.status,
@@ -36,10 +39,11 @@ class MemberFinanceState extends Equatable {
       invoices: invoices ?? this.invoices,
       payments: payments ?? this.payments,
       errorMessage: errorMessage ?? this.errorMessage,
-      snapToken: snapToken ?? this.snapToken,
+       snapToken: snapToken ?? this.snapToken,
+      isMidtransEnabled: isMidtransEnabled ?? this.isMidtransEnabled,
     );
   }
 
   @override
-  List<Object?> get props => [status, summary, invoices, payments, errorMessage, snapToken];
+  List<Object?> get props => [status, summary, invoices, payments, errorMessage, snapToken, isMidtransEnabled];
 }

@@ -19,6 +19,7 @@ import 'package:frontend/domain/usecase/auth/logout_usecase.dart';
 import 'package:frontend/domain/usecase/auth/register_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_invoices_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_settings_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_public_settings_usecase.dart';
 import 'package:frontend/domain/usecase/setting/update_settings_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_due_invoices_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_kpi_summary_usecase.dart';
@@ -187,6 +188,9 @@ Future<void> initializeUseCase() async {
   // Setting UseCases
   serviceLocator.registerFactory(
     () => GetSettingsUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetPublicSettingsUseCase(serviceLocator.get<SettingRepository>()),
   );
   serviceLocator.registerFactory(
     () => UpdateBulkSettingsUseCase(serviceLocator.get<SettingRepository>()),

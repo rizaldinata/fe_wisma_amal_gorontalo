@@ -11,6 +11,8 @@ import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:frontend/presentation/widget/core/textform/textform.dart';
 import 'package:frontend/presentation/widget/core/textform/dropdown_field.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
+import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 
 @RoutePage()
 class CompleteProfilePage extends StatefulWidget {
@@ -73,6 +75,8 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                 ),
               ),
             );
+            // Refresh Auth state to update permissions/roles
+            context.read<AuthBloc>().add(const InitLoginStatusEvent());
             context.router.pop();
           } else if (state is CompleteProfileFailure) {
             ScaffoldMessenger.of(context).showSnackBar(

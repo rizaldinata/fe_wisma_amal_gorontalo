@@ -23,6 +23,7 @@ class _SettingPageState extends State<SettingPage> {
   bool _featureDailyRental = false;
   bool _featureWhatsappReceipt = false;
   bool _featureWhatsappPdfLink = false;
+  bool _featurePaymentMidtrans = true;
   bool _hasChanges = false;
 
   @override
@@ -35,7 +36,6 @@ class _SettingPageState extends State<SettingPage> {
   @override
   void dispose() {
     _wismaNameController.dispose();
-    _bloc.close();
     super.dispose();
   }
 
@@ -44,6 +44,7 @@ class _SettingPageState extends State<SettingPage> {
     _featureDailyRental      = settings['feature_daily_rental'] == true || settings['feature_daily_rental']?.toString() == 'true';
     _featureWhatsappReceipt  = settings['feature_whatsapp_receipt'] == true || settings['feature_whatsapp_receipt']?.toString() == 'true';
     _featureWhatsappPdfLink  = settings['feature_whatsapp_pdf_link'] == true || settings['feature_whatsapp_pdf_link']?.toString() == 'true';
+    _featurePaymentMidtrans  = settings['feature_payment_midtrans'] == true || settings['feature_payment_midtrans']?.toString() == 'true';
     _hasChanges = false;
   }
 
@@ -55,6 +56,7 @@ class _SettingPageState extends State<SettingPage> {
       'feature_daily_rental': _featureDailyRental,
       'feature_whatsapp_receipt': _featureWhatsappReceipt,
       'feature_whatsapp_pdf_link': _featureWhatsappPdfLink,
+      'feature_payment_midtrans': _featurePaymentMidtrans,
     };
     _bloc.add(UpdateSettingsEvent(payload));
   }
@@ -188,6 +190,18 @@ class _SettingPageState extends State<SettingPage> {
                       onChanged: _featureWhatsappReceipt
                           ? (val) { setState(() => _featureWhatsappPdfLink = val); _markChanged(); }
                           : null,
+                    ),
+                    const SizedBox(height: 12),
+                    _FeatureToggle(
+                      icon: Icons.account_balance_wallet_outlined,
+                      iconColor: Colors.indigo.shade600,
+                      title: 'Pembayaran Midtrans (Online)',
+                      description: 'Aktifkan integrasi Midtrans untuk pembayaran melalui Virtual Account, QRIS, dan metode online lainnya.',
+                      value: _featurePaymentMidtrans,
+                      onChanged: (val) {
+                        setState(() => _featurePaymentMidtrans = val);
+                        _markChanged();
+                      },
                     ),
                     if (!_featureWhatsappReceipt) ...[
                       const SizedBox(height: 8),

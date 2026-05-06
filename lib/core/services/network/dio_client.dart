@@ -34,7 +34,7 @@ class DioClient {
         requestHeader: false,
         responseHeader: false,
         requestBody: false,
-        responseBody: false,
+        responseBody: true,
       ),
     );
     _dio.interceptors.add(PrettyDioLogger());

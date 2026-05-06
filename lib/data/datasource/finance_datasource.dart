@@ -1,3 +1,4 @@
+import 'package:dio/dio.dart';
 import '../../core/services/network/dio_client.dart';
 import '../model/finance/invoice_model.dart';
 import '../model/finance/payment_model.dart';
@@ -25,7 +26,7 @@ abstract class FinanceRemoteDatasource {
   Future<MemberFinanceSummaryModel> getMemberFinanceSummary();
   Future<List<InvoiceModel>> getMemberInvoices();
   Future<List<PaymentModel>> getMemberPayments();
-  Future<PaymentModel> payInvoice(int invoiceId);
+  Future<PaymentModel> payInvoice(int invoiceId, String paymentMethod, String? paymentProofPath);
   Future<void> extendLease(int leaseId, int durationMonths);
 }
 
@@ -212,9 +213,32 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
   }
 
   @override
-  Future<PaymentModel> payInvoice(int invoiceId) async {
-    final response = await _dioClient.post('/finance/invoices/$invoiceId/pay');
-    return PaymentModel.fromJson(response.data['data']);
+  Future<PaymentModel> payInvoice(int invoiceId, String paymentMethod, String? paymentProofPath) async {
+    try {
+      dynamic data;
+      
+      if (paymentMethod == 'manual' && paymentProofPath != null) {
+        data = FormData.fromMap({
+          'payment_method': paymentMethod,
+          'payment_proof': await MultipartFile.fromFile(
+            paymentProofPath,
+            filename: paymentProofPath.split('/').last,
+          ),
+        });
+      } else {
+        data = {
+          'payment_method': paymentMethod,
+        };
+      }
+
+      final response = await _dioClient.post(
+        '/finance/invoices/$invoiceId/pay',
+        data: data,
+      );
+      return PaymentModel.fromJson(response.data['data']);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   @override

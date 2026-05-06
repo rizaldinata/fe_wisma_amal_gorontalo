@@ -59,7 +59,6 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
 
   @override
   void dispose() {
-    _bloc.close();
     _searchController.dispose();
     super.dispose();
   }
