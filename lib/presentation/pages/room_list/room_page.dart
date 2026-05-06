@@ -296,7 +296,7 @@ class _RoomViewState extends State<RoomView>
                   }
                 },
                 title: room.title,
-                imageUrl: room.imageUrl.firstOrNull?.url,
+                imageUrl: room.imageUrl.firstOrNull?.thumbnail,
                 availability: room.status,
                 description: room.description,
                 roomNumber: room.number,
