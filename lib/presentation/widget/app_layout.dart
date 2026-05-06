@@ -127,11 +127,11 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                   if (isResident || isMember) ...[
                     if (isResident || isMember) ...[
                       // Profil Saya
-                      SidebarItem(
-                        label: 'Profil Saya',
-                        icon: Icons.person_pin_outlined,
-                        page: const ProfileRoute(),
-                      ),
+                      // SidebarItem(
+                      //   label: 'Profil Saya',
+                      //   icon: Icons.person_pin_outlined,
+                      //   page: const ProfileRoute(),
+                      // ),
 
                       // Area Penghuni
                       SidebarItem(
