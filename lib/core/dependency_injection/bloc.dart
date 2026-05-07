@@ -318,7 +318,7 @@ Future<void> initializeBloc() async {
     )..add(GetMyReservationsEvent()),
   );
 
-  serviceLocator.registerLazySingleton<MemberFinanceBloc>(
+  serviceLocator.registerFactory<MemberFinanceBloc>(
     () => MemberFinanceBloc(
       getSummary: serviceLocator.get<GetMemberFinanceSummaryUseCase>(),
       getInvoices: serviceLocator.get<GetMemberInvoicesUseCase>(),

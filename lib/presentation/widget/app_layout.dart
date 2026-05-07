@@ -263,12 +263,12 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                     ),
 
                   // ─── Reservasi (Pengunjung belum login) ────────────
-                  if (isGuest)
-                    SidebarItem(
-                      label: 'Reservasi',
-                      icon: Icons.book_online,
-                      page: const ReservationRoute(),
-                    ),
+                  // if (isGuest)
+                  //   SidebarItem(
+                  //     label: 'Reservasi',
+                  //     icon: Icons.book_online,
+                  //     page: const ReservationRoute(),
+                  //   ),
 
                   // ─── Area Member (pengguna terdaftar, belum punya kamar) ──
                   if (isMember) ...[
