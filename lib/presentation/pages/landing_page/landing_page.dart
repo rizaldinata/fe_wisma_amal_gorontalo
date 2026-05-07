@@ -2,6 +2,7 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 @RoutePage()
 class LandingPage extends StatefulWidget {
@@ -576,7 +577,7 @@ class _RoomSection extends StatelessWidget {
         children: [
           const _SectionHeader(
             eyebrow: 'Tipe kamar',
-            title: 'Pilih kamar sesuai gaya hidupmu',
+            title: 'Pilih kamar sesuai kebutuhan anda',
             description:
                 'Status ketersediaan diperbarui secara real-time untuk memudahkan reservasi.',
           ),
@@ -988,6 +989,9 @@ class _TestimonialCard extends StatelessWidget {
 class _FooterSection extends StatelessWidget {
   const _FooterSection();
 
+  static final Uri _gorontaloCenterMap =
+      Uri.parse('https://www.google.com/maps?q=0.543,123.059');
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -1021,16 +1025,30 @@ class _FooterSection extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          Container(
-            height: 140,
-            decoration: BoxDecoration(
-              color: Colors.white10,
-              borderRadius: BorderRadius.circular(16),
+          InkWell(
+            onTap: () => launchUrl(
+              _gorontaloCenterMap,
+              mode: LaunchMode.externalApplication,
             ),
-            child: const Center(
-              child: Text(
-                'Placeholder peta lokasi',
-                style: TextStyle(color: Colors.white70),
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              height: 140,
+              decoration: BoxDecoration(
+                color: Colors.white10,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: const [
+                    Icon(Icons.map_outlined, color: Colors.white70, size: 28),
+                    SizedBox(height: 8),
+                    Text(
+                      'Buka peta pusat Kota Gorontalo',
+                      style: TextStyle(color: Colors.white70),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -21,12 +22,14 @@ Future<void> main(List<String> args) async {
   await initializeDependencies();
   usePathUrlStrategy();
 
-  const storage = FlutterSecureStorage();
+  if (!kIsWeb) {
+    const storage = FlutterSecureStorage();
 
-  await storage.write(key: 'ping', value: 'pong');
-  final v = await storage.read(key: 'ping');
+    await storage.write(key: 'ping', value: 'pong');
+    final v = await storage.read(key: 'ping');
 
-  print('STORAGE TEST: $v');
+    print('STORAGE TEST: $v');
+  }
 
   runApp(
     MultiBlocProvider(
