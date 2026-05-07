@@ -107,15 +107,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (!isValid) {
         add(const LogoutEvent());
         AppSnackbar.showError('Sesi telah berakhir. Silakan login kembali.');
+      } else {
+        // Refresh permissions setiap kali session dicek (setiap 5 menit)
+        add(const GetPermissionsEvent());
       }
     } on AppException catch (e) {
       print('Error checking session: ${e.message}');
-      AppSnackbar.showError('Gagal memeriksa sesi: ${e.message}');
     } catch (e) {
       print('Unexpected error checking session: $e');
-      AppSnackbar.showError(
-        'Terjadi kesalahan tak terduga saat memeriksa sesi.',
-      );
     }
   }
 
