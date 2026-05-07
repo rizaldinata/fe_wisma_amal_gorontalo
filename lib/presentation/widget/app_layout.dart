@@ -7,6 +7,7 @@ import 'package:frontend/core/constant/style_constant.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend/presentation/widget/core/sidebar/sidebar.dart';
 
@@ -18,7 +19,28 @@ class AppLayoutPage extends StatefulWidget {
   State<AppLayoutPage> createState() => _AppLayoutPageState();
 }
 
-class _AppLayoutPageState extends State<AppLayoutPage> {
+class _AppLayoutPageState extends State<AppLayoutPage>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Refresh permissions otomatis saat app dibuka kembali dari background
+    if (state == AppLifecycleState.resumed && mounted) {
+      context.read<AuthBloc>().add(const GetPermissionsEvent());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -122,51 +144,49 @@ class _AppLayoutPageState extends State<AppLayoutPage> {
                       ],
                     ),
 
-                  // ─── Area Penghuni (Resident / Member) ────────────
-                  // ─── Resident / Member Menu ────────────────────────
-                  if (isResident || isMember) ...[
-                    if (isResident || isMember) ...[
-                      // Profil Saya
-                      // SidebarItem(
-                      //   label: 'Profil Saya',
-                      //   icon: Icons.person_pin_outlined,
-                      //   page: const ProfileRoute(),
-                      // ),
+                  // ─── Profil Saya (member & resident) ──────────────
+                  if (isMember || isResident)
+                    SidebarItem(
+                      label: 'Profil Saya',
+                      icon: Icons.person_pin_outlined,
+                      page: const ProfileRoute(),
+                    ),
 
-                      // Area Penghuni
-                      SidebarItem(
-                        label: 'Area Penghuni',
-                        icon: Icons.home_work_outlined,
-                        hasAccess: true,
-                        children: [
+                  // ─── Area Penghuni (hanya resident aktif) ──────────
+                  if (isResident) ...[
+                    SidebarItem(
+                      label: 'Area Penghuni',
+                      icon: Icons.home_work_outlined,
+                      hasAccess: true,
+                      children: [
+                        SidebarItem(
+                          label: 'Keuangan Saya',
+                          icon: Icons.account_balance_wallet_outlined,
+                          page: const MemberFinanceRoute(),
+                        ),
+                        if (context.can(PermissionKeys.viewMyGuest))
                           SidebarItem(
-                            label: 'Keuangan Saya',
-                            icon: Icons.account_balance_wallet_outlined,
-                            page: const MemberFinanceRoute(),
+                            label: 'Tamu Saya',
+                            icon: Icons.people_alt_outlined,
+                            page: const MyGuestRoute(),
                           ),
-                          SidebarItem(
-                            label: 'Profil Saya',
-                            icon: Icons.person_pin_outlined,
-                            page: const ProfileRoute(),
-                          ),
-                          SidebarItem(
-                            label: 'Lapor Kerusakan',
-                            icon: Icons.report_problem_outlined,
-                            page: const MaintenanceCreateReportRoute(),
-                          ),
-                          SidebarItem(
-                            label: 'Status Laporan',
-                            icon: Icons.track_changes_outlined,
-                            page: const MaintenanceReportListRoute(),
-                          ),
-                          SidebarItem(
-                            label: 'Jadwal Pemeliharaan',
-                            icon: Icons.calendar_today_outlined,
-                            page: const MaintananceRoute(),
-                          ),
-                        ],
-                      ),
-                    ],
+                        SidebarItem(
+                          label: 'Lapor Kerusakan',
+                          icon: Icons.report_problem_outlined,
+                          page: const MaintenanceCreateReportRoute(),
+                        ),
+                        SidebarItem(
+                          label: 'Status Laporan',
+                          icon: Icons.track_changes_outlined,
+                          page: const MaintenanceReportListRoute(),
+                        ),
+                        SidebarItem(
+                          label: 'Jadwal Pemeliharaan',
+                          icon: Icons.calendar_today_outlined,
+                          page: const MaintananceRoute(),
+                        ),
+                      ],
+                    ),
                   ],
                   // ─── Kamar (Guest + Member + Resident) ─────────────
                   if (isGuest || isMember || isResident) ...[

@@ -32,7 +32,10 @@ class ReservationDetailFormPage extends StatelessWidget {
         getSettingsUseCase: serviceLocator.get<GetPublicSettingsUseCase>(),
         createReservationUseCase: serviceLocator.get(),
         residentRepository: serviceLocator.get(),
-      )..add(InitReservationEvent(room)),
+      )..add(InitReservationEvent(
+          room,
+          isLoggedIn: context.read<AuthBloc>().state.isLoggedIn,
+        )),
       child: const ReservationDetailFormView(),
     );
   }
@@ -549,8 +552,30 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
 
     // 1. Pengecekan Login
     if (!authState.isLoggedIn) {
-      AppSnackbar.showError('Silakan login terlebih dahulu');
-      context.router.push(LoginRoute());
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Login Diperlukan'),
+          content: const Text(
+            'Untuk memesan kamar, Anda perlu login atau membuat akun terlebih dahulu.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Nanti Saja'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                context.router.push(
+                  LoginRoute(pendingRoom: state.room),
+                );
+              },
+              child: const Text('Login Sekarang'),
+            ),
+          ],
+        ),
+      );
       return;
     }
 

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:frontend/core/constant/style_constant.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
+import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
@@ -14,7 +15,9 @@ import 'package:frontend/presentation/widget/core/textform/textform.dart';
 
 @RoutePage()
 class RegisterPage extends StatelessWidget {
-  RegisterPage({super.key});
+  RegisterPage({super.key, this.pendingRoom});
+
+  final RoomEntity? pendingRoom;
 
   final _formKey = GlobalKey<FormState>();
 
@@ -76,19 +79,19 @@ class RegisterPage extends StatelessWidget {
                 // height: 700,
                 // width: 600,
                 child: BlocConsumer<AuthBloc, AuthState>(
-                  listener: (context, state) {
+                  listener: (context, state) async {
                     if (state.status.isFailure) {
                       AppSnackbar.showError(
                         state.errorMessage ?? 'Register failed',
                       );
                     }
-                    // Navigate to dashboard ketika register berhasil
                     if (state.isLoggedIn && state.errorMessage == null) {
-                      print('Login successful, navigating to dashboard...');
-                      context.router.navigate(
-                        AppLayoutRoute(),
-                        // predicate: (_) => false,
-                      );
+                      await context.router.replaceAll([const AppLayoutRoute()]);
+                      if (context.mounted && pendingRoom != null) {
+                        context.router.push(
+                          ReservationDetailFormRoute(room: pendingRoom!),
+                        );
+                      }
                     }
                   },
                   builder: (context, state) {
@@ -267,7 +270,9 @@ class RegisterPage extends StatelessWidget {
                                 ),
                                 TextButton(
                                   onPressed: () {
-                                    context.router.navigate(LoginRoute());
+                                    context.router.navigate(
+                                      LoginRoute(pendingRoom: pendingRoom),
+                                    );
                                   },
                                   child: Text('Login disini'),
                                 ),

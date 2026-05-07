@@ -72,6 +72,16 @@ abstract class PermissionKeys {
   // ─── Profile & Resident Flow ────────────────────────────────────────
   static const completeResidentProfile = 'complete-resident-profile';
 
+  // ─── Guest (Tamu) ────────────────────────────────────────────────────
+  /// Admin melihat semua tamu
+  static const viewGuest = 'view-guest';
+  /// Penghuni melihat daftar tamu milik sendiri
+  static const viewMyGuest = 'view-my-guest';
+  /// Penghuni mendaftarkan tamu baru
+  static const createGuest = 'create-guest';
+  /// Penghuni menghapus tamu milik sendiri
+  static const deleteGuest = 'delete-guest';
+
   // ─── Setting ─────────────────────────────────────────────────────────
   static const settingView = 'setting-view';
   static const settingUpdate = 'setting-update';

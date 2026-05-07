@@ -9,11 +9,12 @@ abstract class ReservationDetailFormEvent extends Equatable {
 
 class InitReservationEvent extends ReservationDetailFormEvent {
   final RoomEntity room;
+  final bool isLoggedIn;
 
-  const InitReservationEvent(this.room);
+  const InitReservationEvent(this.room, {this.isLoggedIn = false});
 
   @override
-  List<Object?> get props => [room];
+  List<Object?> get props => [room, isLoggedIn];
 }
 
 class RentTypeChanged extends ReservationDetailFormEvent {
