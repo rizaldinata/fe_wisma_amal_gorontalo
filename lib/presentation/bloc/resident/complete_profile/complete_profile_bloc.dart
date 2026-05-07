@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend/core/services/network/exception.dart';
 import 'package:frontend/domain/repository/resident_repository.dart';
 import 'complete_profile_event.dart';
 import 'complete_profile_state.dart';
@@ -13,7 +14,12 @@ class CompleteProfileBloc extends Bloc<CompleteProfileEvent, CompleteProfileStat
         final profile = await repository.getProfile();
         emit(CompleteProfileLoaded(profile));
       } catch (e) {
-        emit(CompleteProfileFailure(e.toString()));
+        // 404 = belum ada biodata, bukan error — biarkan state tetap initial
+        if (e is AppException && e.code == 404) {
+          emit(CompleteProfileInitial());
+        } else {
+          emit(CompleteProfileFailure(e.toString()));
+        }
       }
     });
 

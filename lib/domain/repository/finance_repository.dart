@@ -10,6 +10,7 @@ abstract class FinanceRepository {
   Future<List<InvoiceEntity>> getDueInvoices();
   Future<List<InvoiceEntity>> getInvoices();
   Future<List<PaymentEntity>> getPendingPayments();
+  Future<List<PaymentEntity>> getAllPayments();
   Future<KpiEntity> getKpiSummary({int? month, int? year});
   Future<List<RevenueEntity>> getRevenueChart();
 
@@ -36,4 +37,5 @@ abstract class FinanceRepository {
     String? paymentProofName,
   });
   Future<void> extendLease(int leaseId, int durationMonths);
+  Future<String> getInvoicePrintLink(int invoiceId);
 }

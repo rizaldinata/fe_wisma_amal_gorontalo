@@ -6,6 +6,7 @@ abstract class PaymentVerificationEvent extends Equatable {
 }
 
 class FetchPendingPayments extends PaymentVerificationEvent {}
+class FetchAllPayments extends PaymentVerificationEvent {}
 
 class VerifyPaymentEvent extends PaymentVerificationEvent {
   final int paymentId;

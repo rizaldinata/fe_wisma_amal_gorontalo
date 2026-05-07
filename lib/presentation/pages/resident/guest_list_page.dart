@@ -1,333 +1,372 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
-
-// --- Core Widget Imports ---
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/domain/entity/guest/guest_entity.dart';
+import 'package:frontend/presentation/bloc/guest/guest_bloc.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 
-// --- Local Widget Imports ---
-import 'widget/resident_table_action.dart';
-
 @RoutePage()
-class GuestListPage extends StatefulWidget {
+class GuestListPage extends StatelessWidget {
   const GuestListPage({super.key});
 
   @override
-  State<GuestListPage> createState() => _GuestListPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) => serviceLocator<GuestBloc>(),
+      child: const _GuestListView(),
+    );
+  }
 }
 
-class _GuestListPageState extends State<GuestListPage> {
+class _GuestListView extends StatefulWidget {
+  const _GuestListView();
+
+  @override
+  State<_GuestListView> createState() => _GuestListViewState();
+}
+
+class _GuestListViewState extends State<_GuestListView> {
   final TextEditingController _searchController = TextEditingController();
-  String _selectedStatus = 'Semua';
-  String _selectedPayment = 'Semua';
+  final ScrollController _scrollController = ScrollController();
+
+  int _currentPage = 1;
+  static const int _perPage = 10;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
+  List<GuestItem> _guestCache = <GuestItem>[];
+  Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScroll);
+    _fetch();
+  }
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _fetch() {
+    context.read<GuestBloc>().add(FetchAdminGuests(
+          page: _currentPage,
+          perPage: _perPage,
+          search: _searchController.text.trim().isEmpty
+              ? null
+              : _searchController.text.trim(),
+        ));
+  }
+
+  void _onSearch(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        _currentPage = 1;
+        _guestCache = <GuestItem>[];
+        _hasMore = true;
+      });
+      _fetch();
+    });
+  }
+
+  void _onScroll() {
+    if (!_hasMore || _isLoadingMore) return;
+    final pos = _scrollController.position;
+    if (pos.pixels >= pos.maxScrollExtent - 120) {
+      setState(() {
+        _isLoadingMore = true;
+        _currentPage += 1;
+      });
+      _fetch();
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // Generate dummy data sesuai mockup "Daftar Tamu"
-    final guestRows = List<_GuestRowData>.generate(9, (index) {
-      return const _GuestRowData(
-        no: '1',
-        namaPenghuni: 'Dwi Rahmawati',
-        kamar: 'AC203',
-        namaTamu: 'Syifa Lestari',
-        hubungan: 'Orang Tua',
-        tanggalDatang: '22 September 2025',
-      );
-    });
-
     return Scaffold(
       backgroundColor: const Color(0xFFF3F4F6),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(28, 22, 28, 28),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Judul Halaman
-            Text(
-              'Daftar Tamu',
-              style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    fontSize: 42,
-                    fontWeight: FontWeight.w700,
-                    height: 1,
-                    color: const Color(0xFF121212),
-                  ),
-            ),
-            const SizedBox(height: 32),
+      body: BlocConsumer<GuestBloc, GuestState>(
+        listener: (context, state) {
+          if (state is GuestLoaded) {
+            setState(() {
+              if (_currentPage == 1) {
+                _guestCache = List<GuestItem>.from(state.data.guests);
+              } else {
+                _guestCache.addAll(state.data.guests);
+              }
+              _hasMore = state.data.pagination.currentPage <
+                  state.data.pagination.lastPage;
+              _isLoadingMore = false;
+            });
+          }
+          if (state is GuestError) {
+            setState(() => _isLoadingMore = false);
+          }
+        },
+        builder: (context, state) {
+          if (state is GuestLoading) {
+            return const Center(
+              child: CircularProgressIndicator(color: Color(0xFFA794F2)),
+            );
+          }
 
-            // Kartu Utama
-            BasicCard(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(24),
-              padding: const EdgeInsets.fromLTRB(34, 22, 34, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Bagian Header (Judul & Toolbar)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Container(
-                        width: 14,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFA794F2), // Garis ungu pastel
-                          borderRadius: BorderRadius.circular(9),
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Text(
-                        'Penghuni', // Sesuai teks di dalam card mockup
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontSize: 33,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFF141414),
-                            ),
-                      ),
-                      const Spacer(),
-                      
-                      // Search & Filter
-                      ResidentTableAction(
-                        searchController: _searchController,
-                        onSearchChanged: (_) => setState(() {}),
-                        selectedStatus: _selectedStatus,
-                        selectedPayment: _selectedPayment,
-                        onStatusChanged: (value) {
-                          setState(() {
-                            _selectedStatus = value;
-                          });
-                        },
-                        onPaymentChanged: (value) {
-                          setState(() {
-                            _selectedPayment = value;
-                          });
-                        },
-                      ),
-                      const SizedBox(width: 12),
-                      
-                      // Tombol Tambah Tamu (Biru)
-                      SizedBox(
-                        height: 32,
-                        child: ElevatedButton.icon(
-                          onPressed: () {
-                            // TODO: Aksi tambah tamu
-                          },
-                          icon: const Icon(Icons.add, size: 16, color: Colors.white),
-                          label: const Text(
-                            'Tambah',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white,
-                            ),
-                          ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF2E80F7), // Biru Primary
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
+          if (state is GuestError) {
+            return Center(
+              child: Text(state.message,
+                  style: const TextStyle(color: Colors.red)),
+            );
+          }
 
-                  // Header Kolom Tabel
-                  Container(
-                    height: 34,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF3F4F6),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Row(
-                      children: [
-                        _HeaderCell(label: '#', flex: 1, align: TextAlign.left),
-                        _HeaderCell(label: 'NAMA PENGHUNI', flex: 3, align: TextAlign.left),
-                        _HeaderCell(label: 'KAMAR', flex: 2, align: TextAlign.center, showSort: true),
-                        _HeaderCell(label: 'NAMA TAMU', flex: 3, align: TextAlign.center),
-                        _HeaderCell(label: 'HUBUNGAN', flex: 2, align: TextAlign.center),
-                        _HeaderCell(label: 'DATANG', flex: 3, align: TextAlign.center, showSort: true),
-                        _HeaderCell(label: 'AKSI', flex: 2, align: TextAlign.center),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Isi Data Tabel
-                  ...guestRows.map((row) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 4),
-                      child: Row(
+          return Padding(
+            padding: const EdgeInsets.fromLTRB(28, 22, 28, 28),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Daftar Tamu',
+                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        fontSize: 42,
+                        fontWeight: FontWeight.w700,
+                        height: 1,
+                        color: const Color(0xFF121212),
+                      ),
+                ),
+                const SizedBox(height: 32),
+                Expanded(
+                  child: BasicCard(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    padding: const EdgeInsets.fromLTRB(34, 22, 34, 24),
+                    child: Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _BodyCell(value: row.no, flex: 1, align: TextAlign.left),
-                          _BodyCell(value: row.namaPenghuni, flex: 3, align: TextAlign.left),
-                          _BodyCell(value: row.kamar, flex: 2, align: TextAlign.center),
-                          _BodyCell(value: row.namaTamu, flex: 3, align: TextAlign.center),
-                          _BodyCell(value: row.hubungan, flex: 2, align: TextAlign.center),
-                          _BodyCell(value: row.tanggalDatang, flex: 3, align: TextAlign.center),
+                          // Header card
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 14,
+                                height: 38,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFA794F2),
+                                  borderRadius: BorderRadius.circular(9),
+                                ),
+                              ),
+                              const SizedBox(width: 14),
+                              Text(
+                                'Tamu',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(
+                                      fontSize: 33,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF141414),
+                                    ),
+                              ),
+                              const Spacer(),
+                              // Search field
+                              SizedBox(
+                                width: 220,
+                                height: 36,
+                                child: TextField(
+                                  controller: _searchController,
+                                  onChanged: _onSearch,
+                                  decoration: InputDecoration(
+                                    hintText: 'Cari tamu, penghuni, kamar...',
+                                    hintStyle: const TextStyle(
+                                        fontSize: 13,
+                                        color: Color(0xFF9CA3AF)),
+                                    prefixIcon: const Icon(Icons.search,
+                                        size: 18, color: Color(0xFF9CA3AF)),
+                                    contentPadding: const EdgeInsets.symmetric(
+                                        vertical: 0, horizontal: 12),
+                                    filled: true,
+                                    fillColor: const Color(0xFFF3F4F6),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 24),
 
-                          // Kolom Aksi (Edit & Delete Buttons)
-                          Expanded(
-                            flex: 2,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
+                          // Header tabel
+                          Container(
+                            height: 34,
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F4F6),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Row(
                               children: [
-                                _ActionSquareButton(
-                                  backgroundColor: const Color(0xFF2E80F7),
-                                  icon: Icons.edit,
-                                  onPressed: () {},
-                                ),
-                                const SizedBox(width: 8),
-                                _ActionSquareButton(
-                                  backgroundColor: const Color(0xFFD61111),
-                                  icon: Icons.delete_outline,
-                                  onPressed: () {},
-                                ),
+                                _HeaderCell(label: 'NO', flex: 1),
+                                _HeaderCell(label: 'NAMA PENGHUNI', flex: 3),
+                                _HeaderCell(label: 'KAMAR', flex: 2),
+                                _HeaderCell(label: 'NAMA TAMU', flex: 3),
+                                _HeaderCell(label: 'HUBUNGAN', flex: 2),
+                                _HeaderCell(label: 'MASUK', flex: 3),
+                                _HeaderCell(label: 'KELUAR', flex: 3),
                               ],
                             ),
                           ),
+                          const SizedBox(height: 8),
+
+                          // Isi tabel
+                          Expanded(
+                            child: _guestCache.isEmpty && state is! GuestLoading
+                                ? Center(
+                                    child: Text(
+                                      'Tidak ada data tamu',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(
+                                            color: const Color(0xFF6B7280),
+                                            fontWeight: FontWeight.w600,
+                                          ),
+                                    ),
+                                  )
+                                : Scrollbar(
+                                    controller: _scrollController,
+                                    thumbVisibility: true,
+                                    child: ListView.separated(
+                                      controller: _scrollController,
+                                      itemCount: _guestCache.length +
+                                          (_isLoadingMore ? 1 : 0),
+                                      separatorBuilder: (_, __) =>
+                                          const SizedBox(height: 8),
+                                      itemBuilder: (context, index) {
+                                        if (index >= _guestCache.length) {
+                                          return const Padding(
+                                            padding: EdgeInsets.symmetric(
+                                                vertical: 12),
+                                            child: Center(
+                                              child: SizedBox(
+                                                height: 22,
+                                                width: 22,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                        strokeWidth: 2),
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                        final row = _guestCache[index];
+                                        return _GuestRow(
+                                          no: index + 1,
+                                          item: row,
+                                        );
+                                      },
+                                    ),
+                                  ),
+                          ),
                         ],
                       ),
-                    );
-                  }),
-                ],
-              ),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 }
 
-// -----------------------------------------------------------------------------
-// PRIVATE WIDGETS (Helper khusus untuk merender baris & kolom halaman ini)
-// -----------------------------------------------------------------------------
+class _GuestRow extends StatelessWidget {
+  const _GuestRow({required this.no, required this.item});
+
+  final int no;
+  final GuestItem item;
+
+  String _formatDateTime(String raw) {
+    try {
+      final dt = DateTime.parse(raw);
+      final day = dt.day.toString().padLeft(2, '0');
+      final month = dt.month.toString().padLeft(2, '0');
+      final year = dt.year;
+      final hour = dt.hour.toString().padLeft(2, '0');
+      final minute = dt.minute.toString().padLeft(2, '0');
+      return '$day/$month/$year $hour:$minute';
+    } catch (_) {
+      return raw;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _BodyCell(value: no.toString(), flex: 1),
+        _BodyCell(value: item.penghuni, flex: 3),
+        _BodyCell(value: item.kamar, flex: 2),
+        _BodyCell(value: item.name, flex: 3),
+        _BodyCell(value: item.relationshipLabel, flex: 2),
+        _BodyCell(value: _formatDateTime(item.checkInAt), flex: 3),
+        _BodyCell(value: _formatDateTime(item.checkOutAt), flex: 3),
+      ],
+    );
+  }
+}
+
+// ─── Private Widgets ───────────────────────────────────────────────────────
 
 class _HeaderCell extends StatelessWidget {
-  const _HeaderCell({
-    required this.label,
-    required this.flex,
-    required this.align,
-    this.showSort = false,
-  });
+  const _HeaderCell({required this.label, required this.flex});
 
   final String label;
   final int flex;
-  final TextAlign align;
-  final bool showSort;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       flex: flex,
-      child: Row(
-        mainAxisAlignment: align == TextAlign.center
-            ? MainAxisAlignment.center
-            : MainAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            textAlign: align,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF2F2F2F),
-                ),
-          ),
-          if (showSort) ...[
-            const SizedBox(width: 4),
-            const Icon(Icons.unfold_more, size: 14, color: Color(0xFF2F2F2F)),
-          ],
-        ],
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: const Color(0xFF6B7280),
+              fontWeight: FontWeight.w700,
+            ),
       ),
     );
   }
 }
 
 class _BodyCell extends StatelessWidget {
-  const _BodyCell({
-    required this.value,
-    required this.flex,
-    required this.align,
-  });
+  const _BodyCell({required this.value, required this.flex});
 
   final String value;
   final int flex;
-  final TextAlign align;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       flex: flex,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Text(
-          value,
-          textAlign: align,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontSize: 13,
-                color: const Color(0xFF262626),
-                fontWeight: FontWeight.w500,
-              ),
-        ),
+      child: Text(
+        value,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF111827),
+              fontWeight: FontWeight.w500,
+            ),
       ),
     );
   }
-}
-
-class _ActionSquareButton extends StatelessWidget {
-  const _ActionSquareButton({
-    required this.backgroundColor,
-    required this.icon,
-    required this.onPressed,
-  });
-
-  final Color backgroundColor;
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 24,
-      height: 24,
-      child: Material(
-        color: backgroundColor,
-        borderRadius: BorderRadius.circular(3),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(3),
-          onTap: onPressed,
-          child: Icon(icon, size: 14, color: Colors.white),
-        ),
-      ),
-    );
-  }
-}
-
-// Data Model Dummy
-class _GuestRowData {
-  const _GuestRowData({
-    required this.no,
-    required this.namaPenghuni,
-    required this.kamar,
-    required this.namaTamu,
-    required this.hubungan,
-    required this.tanggalDatang,
-  });
-
-  final String no;
-  final String namaPenghuni;
-  final String kamar;
-  final String namaTamu;
-  final String hubungan;
-  final String tanggalDatang;
 }

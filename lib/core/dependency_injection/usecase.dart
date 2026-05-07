@@ -24,6 +24,7 @@ import 'package:frontend/domain/usecase/setting/update_settings_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_due_invoices_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_kpi_summary_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_pending_payments_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_all_payments_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_revenue_chart_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_expenses_usecase.dart';
 import 'package:frontend/domain/usecase/finance/create_expense_usecase.dart';
@@ -73,6 +74,14 @@ import 'package:frontend/domain/usecase/my_reservation/get_my_reservations_useca
 import 'package:frontend/domain/repository/resident_repository.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_resident_detail_usecase.dart';
+import 'package:frontend/domain/repository/guest_repository.dart';
+import 'package:frontend/domain/usecase/guest/get_admin_guests_usecase.dart';
+import 'package:frontend/domain/usecase/guest/get_my_guests_usecase.dart';
+import 'package:frontend/domain/usecase/guest/create_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/delete_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/pay_guest_bill_usecase.dart';
+import 'package:frontend/domain/usecase/guest/get_admin_guest_bills_usecase.dart';
+import 'package:frontend/domain/usecase/guest/verify_guest_bill_usecase.dart';
 
 
 Future<void> initializeUseCase() async {
@@ -145,6 +154,9 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => GetPendingPaymentsUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetAllPaymentsUseCase(serviceLocator.get<FinanceRepository>()),
   );
   serviceLocator.registerFactory(
     () => GetKpiSummaryUseCase(serviceLocator.get<FinanceRepository>()),
@@ -323,4 +335,27 @@ Future<void> initializeUseCase() async {
     serviceLocator<MyReservationRepository>(),
   ),
 );
+
+  // Guest UseCases
+  serviceLocator.registerFactory(
+    () => GetAdminGuestsUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetMyGuestsUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateGuestUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => DeleteGuestUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => PayGuestBillUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetAdminGuestBillsUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => VerifyGuestBillUseCase(serviceLocator<GuestRepository>()),
+  );
 }

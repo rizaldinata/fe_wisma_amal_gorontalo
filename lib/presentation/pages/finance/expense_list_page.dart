@@ -24,6 +24,8 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
   late ExpenseBloc _expenseBloc;
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
+  int? _filterYear;
+  int? _filterMonth;
 
   // Pagination
   int _currentPage = 1;
@@ -46,11 +48,26 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
       NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(amount);
 
   List<ExpenseEntity> _filtered(List<ExpenseEntity> all) {
-    if (_searchQuery.isEmpty) return all;
-    final q = _searchQuery.toLowerCase();
-    return all.where((e) =>
-        e.title.toLowerCase().contains(q) ||
-        (e.notes?.toLowerCase().contains(q) ?? false)).toList();
+    var list = all;
+    if (_filterYear != null) {
+      list = list.where((e) {
+        final d = DateTime.tryParse(e.date);
+        return d != null && d.year == _filterYear;
+      }).toList();
+    }
+    if (_filterYear != null && _filterMonth != null) {
+      list = list.where((e) {
+        final d = DateTime.tryParse(e.date);
+        return d != null && d.month == _filterMonth;
+      }).toList();
+    }
+    if (_searchQuery.isNotEmpty) {
+      final q = _searchQuery.toLowerCase();
+      list = list.where((e) =>
+          e.title.toLowerCase().contains(q) ||
+          (e.notes?.toLowerCase().contains(q) ?? false)).toList();
+    }
+    return list;
   }
 
   List<ExpenseEntity> _paged(List<ExpenseEntity> filtered) {
@@ -258,51 +275,131 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
                   final page = _currentPage.clamp(1, totalPages);
                   final paged = _paged(filtered);
 
-                  final totalAll = all.fold(0.0, (s, e) => s + e.amount);
-                  final totalThisMonth = all.where((e) {
+                  // Unique years from data for dropdown
+                  final years = all
+                      .map((e) => DateTime.tryParse(e.date)?.year)
+                      .whereType<int>()
+                      .toSet()
+                      .toList()
+                    ..sort((a, b) => b.compareTo(a));
+
+                  // Summary card computations
+                  final now = DateTime.now();
+                  final yearFiltered = _filterYear == null
+                      ? all
+                      : all.where((e) {
+                          final d = DateTime.tryParse(e.date);
+                          return d != null && d.year == _filterYear;
+                        }).toList();
+                  final periodList = (_filterYear != null && _filterMonth != null)
+                      ? yearFiltered.where((e) {
+                          final d = DateTime.tryParse(e.date);
+                          return d != null && d.month == _filterMonth;
+                        }).toList()
+                      : yearFiltered;
+
+                  final totalAll = periodList.fold(0.0, (s, e) => s + e.amount);
+                  final String card1Title = _filterYear != null && _filterMonth != null
+                      ? 'Total ${DateFormat('MMM yyyy', 'id_ID').format(DateTime(_filterYear!, _filterMonth!))}'
+                      : _filterYear != null
+                          ? 'Total Tahun $_filterYear'
+                          : 'Total Pengeluaran';
+
+                  final int refYear = _filterYear ?? now.year;
+                  final totalThisMonth = yearFiltered.where((e) {
                     final d = DateTime.tryParse(e.date);
-                    if (d == null) return false;
-                    final now = DateTime.now();
-                    return d.month == now.month && d.year == now.year;
+                    return d != null && d.month == now.month && d.year == refYear;
                   }).fold(0.0, (s, e) => s + e.amount);
+                  final String card2Title = _filterYear != null ? 'Bulan Ini ($_filterYear)' : 'Bulan Ini';
+                  final String card2Sub = '${DateFormat('MMMM', 'id_ID').format(DateTime(refYear, now.month))} $refYear';
 
                   return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     // ── Summary cards ────────────────────────────────
                     Row(children: [
-                      Expanded(child: _summaryCard('Total Pengeluaran', formatRupiah(totalAll), '${all.length} transaksi', Icons.account_balance_wallet_outlined, Colors.red.shade700, Colors.red.shade50)),
+                      Expanded(child: _summaryCard(card1Title, formatRupiah(totalAll), '${periodList.length} transaksi', Icons.account_balance_wallet_outlined, Colors.red.shade700, Colors.red.shade50)),
                       const SizedBox(width: 16),
-                      Expanded(child: _summaryCard('Bulan Ini', formatRupiah(totalThisMonth), DateFormat('MMMM yyyy', 'id_ID').format(DateTime.now()), Icons.calendar_month_outlined, Colors.orange.shade700, Colors.orange.shade50)),
+                      Expanded(child: _summaryCard(card2Title, formatRupiah(totalThisMonth), card2Sub, Icons.calendar_month_outlined, Colors.orange.shade700, Colors.orange.shade50)),
                       const SizedBox(width: 16),
                       Expanded(child: _summaryCard('Entri Manual', '${all.where((e) => !e.isIntegrated).length} Transaksi', 'Dicatat oleh admin', Icons.edit_note, Colors.blue.shade700, Colors.blue.shade50)),
                       const SizedBox(width: 16),
                       Expanded(child: _summaryCard('Dari Sistem', '${all.where((e) => e.isIntegrated).length} Transaksi', 'Otomatis (inventaris)', Icons.auto_awesome, Colors.purple.shade700, Colors.purple.shade50)),
                     ]),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
-                    // ── Search bar ───────────────────────────────────
+                    // ── Filter + Search ──────────────────────────────
                     BasicCard(
                       child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        child: TextField(
-                          controller: _searchController,
-                          onChanged: (v) => setState(() { _searchQuery = v; _currentPage = 1; }),
-                          decoration: InputDecoration(
-                            hintText: 'Cari berdasarkan nama atau keterangan...',
-                            prefixIcon: const Icon(Icons.search, size: 20),
-                            suffixIcon: _searchQuery.isNotEmpty
-                                ? IconButton(icon: const Icon(Icons.clear, size: 18), onPressed: () { _searchController.clear(); setState(() { _searchQuery = ''; _currentPage = 1; }); })
-                                : null,
-                            border: InputBorder.none, enabledBorder: InputBorder.none, focusedBorder: InputBorder.none,
+                        padding: const EdgeInsets.all(14),
+                        child: Row(children: [
+                          Expanded(
+                            child: TextField(
+                              controller: _searchController,
+                              onChanged: (v) => setState(() { _searchQuery = v; _currentPage = 1; }),
+                              decoration: InputDecoration(
+                                hintText: 'Cari berdasarkan nama atau keterangan...',
+                                prefixIcon: const Icon(Icons.search, size: 20),
+                                suffixIcon: _searchQuery.isNotEmpty
+                                    ? IconButton(icon: const Icon(Icons.clear, size: 18), onPressed: () { _searchController.clear(); setState(() { _searchQuery = ''; _currentPage = 1; }); })
+                                    : null,
+                                contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
+                                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 12),
+                          _FilterDropdown<int?>(
+                            value: _filterYear,
+                            hint: 'Semua Tahun',
+                            items: [
+                              const DropdownMenuItem<int?>(value: null, child: Text('Semua Tahun')),
+                              ...years.map((y) => DropdownMenuItem<int?>(value: y, child: Text('$y'))),
+                            ],
+                            onChanged: (val) => setState(() {
+                              _filterYear = val;
+                              _filterMonth = null;
+                              _currentPage = 1;
+                            }),
+                          ),
+                          const SizedBox(width: 8),
+                          _FilterDropdown<int?>(
+                            value: _filterMonth,
+                            hint: 'Semua Bulan',
+                            items: [
+                              const DropdownMenuItem<int?>(value: null, child: Text('Semua Bulan')),
+                              ...List.generate(12, (i) => DropdownMenuItem<int?>(
+                                value: i + 1,
+                                child: Text(DateFormat('MMMM', 'id_ID').format(DateTime(0, i + 1))),
+                              )),
+                            ],
+                            onChanged: (val) => setState(() { _filterMonth = val; _currentPage = 1; }),
+                          ),
+                          if (_filterYear != null || _filterMonth != null) ...[
+                            const SizedBox(width: 8),
+                            TextButton.icon(
+                              onPressed: () => setState(() { _filterYear = null; _filterMonth = null; _currentPage = 1; }),
+                              icon: const Icon(Icons.close, size: 14),
+                              label: const Text('Reset', style: TextStyle(fontSize: 12)),
+                              style: TextButton.styleFrom(foregroundColor: Colors.grey.shade600),
+                            ),
+                          ],
+                        ]),
                       ),
                     ),
                     const SizedBox(height: 16),
 
                     // ── Table ────────────────────────────────────────
                     TableCard(
-                      title: 'Daftar Pengeluaran',
-                      emptyMessage: _searchQuery.isEmpty ? 'Belum ada data pengeluaran.' : 'Tidak ada hasil untuk "$_searchQuery".',
+                      title: _filterYear != null && _filterMonth != null
+                          ? 'Pengeluaran — ${DateFormat('MMMM yyyy', 'id_ID').format(DateTime(_filterYear!, _filterMonth!))}'
+                          : _filterYear != null
+                              ? 'Pengeluaran — Tahun $_filterYear'
+                              : 'Daftar Pengeluaran',
+                      emptyMessage: filtered.isEmpty
+                          ? (_filterYear != null
+                              ? 'Tidak ada pengeluaran pada periode yang dipilih.'
+                              : 'Belum ada data pengeluaran.')
+                          : 'Tidak ada hasil untuk "$_searchQuery".',
                       columns: const [
                         TableColumn(label: 'Nama Pengeluaran', flex: 4),
                         TableColumn(label: 'Tanggal', flex: 2),
@@ -477,6 +574,45 @@ class _NavBtn extends StatelessWidget {
         decoration: BoxDecoration(color: Colors.transparent, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade300)),
         alignment: Alignment.center,
         child: Icon(icon, size: 18, color: enabled ? Colors.grey.shade700 : Colors.grey.shade300),
+      ),
+    );
+  }
+}
+
+class _FilterDropdown<T> extends StatelessWidget {
+  final T value;
+  final String hint;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?>? onChanged;
+  final bool enabled;
+
+  const _FilterDropdown({
+    required this.value,
+    required this.hint,
+    required this.items,
+    required this.onChanged,
+    this.enabled = true,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      decoration: BoxDecoration(
+        border: Border.all(color: enabled ? Colors.grey.shade300 : Colors.grey.shade200),
+        borderRadius: BorderRadius.circular(10),
+        color: enabled ? Colors.white : Colors.grey.shade50,
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<T>(
+          value: value,
+          hint: Text(hint, style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
+          items: items,
+          onChanged: enabled ? onChanged : null,
+          isDense: true,
+          style: TextStyle(fontSize: 13, color: enabled ? Colors.grey.shade800 : Colors.grey.shade400),
+          icon: Icon(Icons.keyboard_arrow_down, size: 18, color: enabled ? Colors.grey.shade600 : Colors.grey.shade300),
+        ),
       ),
     );
   }

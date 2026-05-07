@@ -9,6 +9,7 @@ import 'package:frontend/domain/usecase/auth/register_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_due_invoices_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_kpi_summary_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_pending_payments_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_all_payments_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_revenue_chart_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_expenses_usecase.dart';
 import 'package:frontend/domain/usecase/finance/create_expense_usecase.dart';
@@ -89,7 +90,16 @@ import 'package:frontend/presentation/bloc/reservation_list/reservation_bloc.dar
 import 'package:frontend/domain/usecase/my_reservation/get_my_reservations_usecase.dart';
 import 'package:frontend/presentation/bloc/my_reservation/my_reservation_bloc.dart';
 import 'package:frontend/presentation/bloc/my_reservation/my_reservation_event.dart';
-import 'package:frontend/presentation/bloc/resident_detail/resident_detail_bloc.dart';
+import 'package:frontend/presentation/bloc/guest/guest_bloc.dart';
+import 'package:frontend/presentation/bloc/guest/my_guest_bloc.dart';
+import 'package:frontend/presentation/bloc/guest/guest_bill_bloc.dart';
+import 'package:frontend/domain/usecase/guest/get_admin_guests_usecase.dart';
+import 'package:frontend/domain/usecase/guest/get_my_guests_usecase.dart';
+import 'package:frontend/domain/usecase/guest/create_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/delete_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/pay_guest_bill_usecase.dart';
+import 'package:frontend/domain/usecase/guest/get_admin_guest_bills_usecase.dart';
+import 'package:frontend/domain/usecase/guest/verify_guest_bill_usecase.dart';
 
 Future<void> initializeBloc() async {
   serviceLocator.registerLazySingleton<AuthBloc>(
@@ -179,8 +189,8 @@ Future<void> initializeBloc() async {
 
   serviceLocator.registerLazySingleton<PaymentVerificationBloc>(
     () => PaymentVerificationBloc(
-      getPendingPaymentsUseCase: serviceLocator
-          .get<GetPendingPaymentsUseCase>(),
+      getPendingPaymentsUseCase: serviceLocator.get<GetPendingPaymentsUseCase>(),
+      getAllPaymentsUseCase: serviceLocator.get<GetAllPaymentsUseCase>(),
       verifyPaymentUseCase: serviceLocator.get<VerifyPaymentUseCase>(),
       refundPaymentUseCase: serviceLocator.get<RefundPaymentUseCase>(),
     ),
@@ -313,6 +323,28 @@ Future<void> initializeBloc() async {
       payInvoice: serviceLocator.get<PayInvoiceUseCase>(),
       extendLease: serviceLocator.get<ExtendLeaseUseCase>(),
       getSettings: serviceLocator.get<GetPublicSettingsUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<GuestBloc>(
+    () => GuestBloc(
+      getAdminGuestsUseCase: serviceLocator.get<GetAdminGuestsUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<MyGuestBloc>(
+    () => MyGuestBloc(
+      getMyGuestsUseCase: serviceLocator.get<GetMyGuestsUseCase>(),
+      createGuestUseCase: serviceLocator.get<CreateGuestUseCase>(),
+      deleteGuestUseCase: serviceLocator.get<DeleteGuestUseCase>(),
+      payGuestBillUseCase: serviceLocator.get<PayGuestBillUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<GuestBillBloc>(
+    () => GuestBillBloc(
+      getAdminGuestBillsUseCase: serviceLocator.get<GetAdminGuestBillsUseCase>(),
+      verifyGuestBillUseCase: serviceLocator.get<VerifyGuestBillUseCase>(),
     ),
   );
 }

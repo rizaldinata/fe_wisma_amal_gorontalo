@@ -53,17 +53,16 @@ class ReservationDetailFormBloc extends Bloc<
       // Keep default if error
     }
 
-    try {
-      // Cek apakah user sudah melengkapi biodata
-      await residentRepository.getProfile();
-      isProfileComplete = true;
-    } catch (e) {
-      // DioClient melempar AppException, cek status code-nya
-      if (e is AppException && e.code == 404) {
-        isProfileComplete = false;
-      } else {
-        // Jika error lain (misal network), anggap true saja agar tidak mengganggu flow
+    if (event.isLoggedIn) {
+      try {
+        await residentRepository.getProfile();
         isProfileComplete = true;
+      } catch (e) {
+        if (e is AppException && e.code == 404) {
+          isProfileComplete = false;
+        } else {
+          isProfileComplete = true;
+        }
       }
     }
 

@@ -134,6 +134,11 @@ class AppRouter extends RootStackRouter {
           path: RouteConstant.paymentVerificationName,
           page: PaymentVerificationRoute.page,
         ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.paymentHistoryName,
+          page: PaymentHistoryRoute.page,
+        ),
 
         // manajemen inventaris
         AutoRoute(
@@ -184,6 +189,21 @@ class AppRouter extends RootStackRouter {
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: RouteConstant.memberFinanceName,
           page: MemberFinanceRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.myGuestName,
+          page: MyGuestRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.adminGuestBillName,
+          page: AdminGuestBillRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: 'me/guests/bill-payment',
+          page: GuestBillPaymentRoute.page,
         ),
         AutoRoute(
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],

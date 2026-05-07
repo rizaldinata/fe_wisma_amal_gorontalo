@@ -34,6 +34,7 @@ abstract class PermissionKeys {
 
   // ─── Finance ─────────────────────────────────────────────────────────
   static const financeDashboardView = 'finance-dashboard-view';
+  static const financePaymentView = 'finance-payment-view';
   static const financePaymentVerify = 'finance-payment-verify';
   static const financeInvoiceView = 'finance-invoice-view';
   static const financeInvoiceCreate = 'finance-invoice-create';
@@ -41,6 +42,10 @@ abstract class PermissionKeys {
   static const financeExpenseCreate = 'finance-expense-create';
   static const financeExpenseUpdate = 'finance-expense-update';
   static const financeExpenseDelete = 'finance-expense-delete';
+  /// Ringkasan keuangan pribadi (member & resident)
+  static const financeMeSummaryView = 'finance-me-summary-view';
+  static const financeMeInvoiceView = 'finance-me-invoice-view';
+  static const financeMePaymentView = 'finance-me-payment-view';
 
   // ─── Inventory ───────────────────────────────────────────────────────
   static const viewInventory = 'view-inventory';
@@ -71,6 +76,22 @@ abstract class PermissionKeys {
   
   // ─── Profile & Resident Flow ────────────────────────────────────────
   static const completeResidentProfile = 'complete-resident-profile';
+
+  // ─── Guest (Tamu) ────────────────────────────────────────────────────
+  /// Admin melihat semua tamu
+  static const viewGuest = 'view-guest';
+  /// Penghuni melihat daftar tamu milik sendiri
+  static const viewMyGuest = 'view-my-guest';
+  /// Penghuni mendaftarkan tamu baru
+  static const createGuest = 'create-guest';
+  /// Penghuni menghapus tamu milik sendiri
+  static const deleteGuest = 'delete-guest';
+  /// Penghuni membayar tagihan tamu
+  static const payGuestBill = 'pay-guest-bill';
+  /// Admin memverifikasi pembayaran tagihan tamu
+  static const verifyGuestBill = 'verify-guest-bill';
+  /// Admin melihat semua tagihan tamu
+  static const viewGuestBill = 'view-guest-bill';
 
   // ─── Setting ─────────────────────────────────────────────────────────
   static const settingView = 'setting-view';

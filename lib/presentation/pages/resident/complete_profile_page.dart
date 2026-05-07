@@ -70,9 +70,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
           if (state is CompleteProfileSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text(
-                  'Profil berhasil dilengkapi! Anda sekarang menjadi penghuni.',
-                ),
+                content: Text('Biodata berhasil disimpan.'),
               ),
             );
             // Refresh Auth state to update permissions/roles
@@ -109,7 +107,7 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Silakan lengkapi data diri Anda untuk melanjutkan sebagai penghuni Wisma Amal.',
+                    'Silakan lengkapi data diri Anda untuk melanjutkan proses pemesanan kamar.',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
