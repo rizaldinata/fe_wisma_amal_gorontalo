@@ -2,10 +2,13 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/domain/entity/guest/guest_entity.dart';
 import 'package:frontend/presentation/bloc/guest/my_guest_bloc.dart';
 import 'package:frontend/presentation/widget/core/dialog/app_dialog.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
+import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 @RoutePage()
 class MyGuestPage extends StatelessWidget {
@@ -23,6 +26,12 @@ class MyGuestPage extends StatelessWidget {
 class _MyGuestView extends StatelessWidget {
   const _MyGuestView();
 
+  static final _currency = NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp ',
+    decimalDigits: 0,
+  );
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<MyGuestBloc, MyGuestState>(
@@ -31,6 +40,11 @@ class _MyGuestView extends StatelessWidget {
           AppSnackbar.showSuccess(state.message);
         } else if (state is MyGuestActionError) {
           AppSnackbar.showError(state.message);
+        } else if (state is MyGuestMidtransInitiated) {
+          AppSnackbar.showSuccess(state.message);
+          final url = Uri.parse(
+              'https://app.sandbox.midtrans.com/snap/v2/vtweb/${state.snapToken}');
+          launchUrl(url, mode: LaunchMode.externalApplication);
         }
       },
       child: Scaffold(
@@ -98,7 +112,10 @@ class _MyGuestView extends StatelessWidget {
                           itemBuilder: (context, index) {
                             return _GuestCard(
                               item: state.guests[index],
+                              currency: _currency,
                               onDelete: () => _confirmDelete(
+                                  context, state.guests[index]),
+                              onPay: () => _showPaymentDialog(
                                   context, state.guests[index]),
                             );
                           },
@@ -137,6 +154,197 @@ class _MyGuestView extends StatelessWidget {
       builder: (dialogContext) => BlocProvider.value(
         value: context.read<MyGuestBloc>(),
         child: const _AddGuestDialog(),
+      ),
+    );
+  }
+
+  Future<void> _showPaymentDialog(BuildContext context, MyGuestItem item) async {
+    final method = await showDialog<String>(
+      context: context,
+      builder: (ctx) => _PaymentMethodDialog(item: item),
+    );
+    if (method == null || !context.mounted) return;
+
+    if (method == 'midtrans') {
+      context.read<MyGuestBloc>().add(PayGuestBillMidtrans(item.id));
+    } else {
+      final amount = item.bill?.amount ?? item.chargeAmount;
+      final result = await context.router.push<bool>(
+        GuestBillPaymentRoute(
+          guestId: item.id,
+          guestName: item.name,
+          amount: amount,
+          billNumber: item.bill?.billNumber,
+        ),
+      );
+      if (result == true && context.mounted) {
+        context.read<MyGuestBloc>().add(FetchMyGuests());
+      }
+    }
+  }
+}
+
+// ─── Payment Method Dialog ────────────────────────────────────────────────────
+
+class _PaymentMethodDialog extends StatefulWidget {
+  const _PaymentMethodDialog({required this.item});
+  final MyGuestItem item;
+
+  @override
+  State<_PaymentMethodDialog> createState() => _PaymentMethodDialogState();
+}
+
+class _PaymentMethodDialogState extends State<_PaymentMethodDialog> {
+  String _method = 'manual';
+
+  static final _currency = NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp ',
+    decimalDigits: 0,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final bill = widget.item.bill;
+    final amount = bill?.amount ?? widget.item.chargeAmount;
+
+    return Dialog(
+      backgroundColor: theme.colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        constraints: const BoxConstraints(maxWidth: 400),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Bayar Tagihan Tamu',
+              style: theme.textTheme.titleLarge
+                  ?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text('Tamu: ${widget.item.name}',
+                style: theme.textTheme.bodyMedium),
+            const SizedBox(height: 2),
+            Text(
+              'Jumlah: ${_currency.format(amount)}',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text('Pilih Metode Pembayaran',
+                style: theme.textTheme.labelLarge
+                    ?.copyWith(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: _MethodOption(
+                    label: 'Manual',
+                    subtitle: 'Upload bukti transfer',
+                    icon: Icons.account_balance_outlined,
+                    selected: _method == 'manual',
+                    onTap: () => setState(() => _method = 'manual'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: _MethodOption(
+                    label: 'Midtrans',
+                    subtitle: 'Bayar via gateway',
+                    icon: Icons.payment_outlined,
+                    selected: _method == 'midtrans',
+                    onTap: () => setState(() => _method = 'midtrans'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(null),
+                    child: const Text('Batal'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(_method),
+                    child: Text(_method == 'midtrans'
+                        ? 'Lanjut ke Midtrans'
+                        : 'Lanjut ke Pembayaran'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MethodOption extends StatelessWidget {
+  const _MethodOption({
+    required this.label,
+    required this.subtitle,
+    required this.icon,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final String subtitle;
+  final IconData icon;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: selected
+                ? theme.colorScheme.primary
+                : theme.colorScheme.outline,
+            width: selected ? 2 : 1,
+          ),
+          borderRadius: BorderRadius.circular(10),
+          color: selected
+              ? theme.colorScheme.primaryContainer.withAlpha(80)
+              : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon,
+                size: 20,
+                color: selected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurfaceVariant),
+            const SizedBox(height: 4),
+            Text(label,
+                style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: selected
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface)),
+            Text(subtitle,
+                style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant, fontSize: 10)),
+          ],
+        ),
       ),
     );
   }
@@ -390,10 +598,17 @@ class _DateTimeTile extends StatelessWidget {
 // ─── Guest Card ───────────────────────────────────────────────────────────────
 
 class _GuestCard extends StatelessWidget {
-  const _GuestCard({required this.item, required this.onDelete});
+  const _GuestCard({
+    required this.item,
+    required this.currency,
+    required this.onDelete,
+    required this.onPay,
+  });
 
   final MyGuestItem item;
+  final NumberFormat currency;
   final VoidCallback onDelete;
+  final VoidCallback onPay;
 
   String _formatDateTime(String raw) {
     try {
@@ -409,9 +624,29 @@ class _GuestCard extends StatelessWidget {
     }
   }
 
+  Color _billStatusColor(String status) {
+    switch (status) {
+      case 'unpaid':
+        return Colors.grey;
+      case 'pending':
+        return Colors.orange;
+      case 'verified':
+      case 'paid':
+        return Colors.green;
+      case 'rejected':
+      case 'failed':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final bill = item.bill;
+    final hasBill = bill != null;
+    final canPay = hasBill && bill.canPay;
 
     return Card(
       elevation: 0,
@@ -494,6 +729,80 @@ class _GuestCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (item.totalDays > 0) ...[
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(Icons.nights_stay_outlined,
+                            size: 14,
+                            color: theme.colorScheme.onSurfaceVariant),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${item.totalDays} hari menginap'
+                          '${item.billableDays > 0 ? ' · ${item.billableDays} hari dikenakan biaya' : ''}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (item.chargeAmount > 0) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(Icons.receipt_outlined,
+                            size: 14,
+                            color: theme.colorScheme.error),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Biaya Tamu: ${currency.format(item.chargeAmount)}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.error,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (hasBill) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: _billStatusColor(bill.status).withAlpha(30),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            bill.statusLabel,
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                              color: _billStatusColor(bill.status),
+                            ),
+                          ),
+                        ),
+                        if (canPay) ...[
+                          const SizedBox(width: 8),
+                          TextButton.icon(
+                            onPressed: onPay,
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 4),
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            icon: const Icon(Icons.payment_outlined, size: 14),
+                            label: const Text('Bayar',
+                                style: TextStyle(fontSize: 12)),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ],
                 ],
               ),
             ),

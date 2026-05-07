@@ -45,6 +45,16 @@ class FinanceRepositoryImpl implements FinanceRepository {
   }
 
   @override
+  Future<List<PaymentEntity>> getAllPayments() async {
+    try {
+      final models = await remoteDatasource.getAllPayments();
+      return models;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
   Future<KpiEntity> getKpiSummary({int? month, int? year}) async {
     return await remoteDatasource.getKpiSummary(month: month, year: year);
   }
@@ -143,5 +153,10 @@ class FinanceRepositoryImpl implements FinanceRepository {
   @override
   Future<void> extendLease(int leaseId, int durationMonths) async {
     return await remoteDatasource.extendLease(leaseId, durationMonths);
+  }
+
+  @override
+  Future<String> getInvoicePrintLink(int invoiceId) async {
+    return await remoteDatasource.getInvoicePrintLink(invoiceId);
   }
 }

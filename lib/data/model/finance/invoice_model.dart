@@ -8,12 +8,16 @@ class InvoiceModel extends InvoiceEntity {
     required super.amount,
     required super.status,
     required super.dueDate,
+    super.residentName,
+    super.roomNumber,
+    super.createdAt,
   });
 
   factory InvoiceModel.fromJson(Map<String, dynamic> json) {
+    final lease = json['lease'] as Map<String, dynamic>?;
     return InvoiceModel(
       id: json['id'] ?? 0,
-      leaseId: json['lease_id'] ?? 0,
+      leaseId: lease?['id'] ?? json['lease_id'] ?? 0,
       invoiceNumber: json['invoice_number'] ?? '',
       amount: json['amount'] != null
           ? double.parse(json['amount'].toString())
@@ -22,6 +26,11 @@ class InvoiceModel extends InvoiceEntity {
       dueDate: DateTime.parse(
         json['due_date'] ?? DateTime.now().toIso8601String(),
       ),
+      residentName: lease?['resident_name'] as String?,
+      roomNumber: lease?['room_number'] as String?,
+      createdAt: json['created_at'] != null
+          ? DateTime.tryParse(json['created_at'].toString())
+          : null,
     );
   }
 }
