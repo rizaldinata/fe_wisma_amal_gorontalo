@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/domain/entity/guest/guest_entity.dart';
+import 'package:frontend/domain/usecase/finance/get_member_finance_summary_usecase.dart';
 import 'package:frontend/presentation/bloc/guest/my_guest_bloc.dart';
 import 'package:frontend/presentation/widget/core/dialog/app_dialog.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
@@ -361,11 +362,16 @@ class _AddGuestDialog extends StatefulWidget {
 
 class _AddGuestDialogState extends State<_AddGuestDialog> {
   final _formKey = GlobalKey<FormState>();
+  final _residentController = TextEditingController();
+  final _roomController = TextEditingController();
   final _nameController = TextEditingController();
   String _relationship = 'friend';
   DateTime? _checkIn;
   DateTime? _checkOut;
   bool _isSubmitting = false;
+  bool _isLoadingResident = false;
+  String? _residentError;
+  bool _hasActiveLease = true;
 
   static const _relationships = [
     ('parent', 'Orang Tua'),
@@ -377,9 +383,48 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _loadResidentInfo();
+  }
+
+  @override
   void dispose() {
+    _residentController.dispose();
+    _roomController.dispose();
     _nameController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadResidentInfo() async {
+    setState(() {
+      _isLoadingResident = true;
+      _residentError = null;
+    });
+
+    try {
+      final summary = await serviceLocator
+          .get<GetMemberFinanceSummaryUseCase>()
+          .execute();
+      _residentController.text =
+          summary.residentName.isNotEmpty ? summary.residentName : '-';
+      if (summary.activeLease != null) {
+        _roomController.text = summary.activeLease!.roomNumber;
+        _hasActiveLease = true;
+      } else {
+        _roomController.text = '-';
+        _hasActiveLease = false;
+      }
+    } catch (e) {
+      _residentError = e.toString();
+      _residentController.text = '-';
+      _roomController.text = '-';
+      _hasActiveLease = false;
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingResident = false);
+      }
+    }
   }
 
   Future<void> _pickDateTime({required bool isCheckIn}) async {
@@ -426,6 +471,10 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
 
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
+    if (!_hasActiveLease) {
+      AppSnackbar.showError('Anda tidak memiliki sewa aktif untuk mendaftarkan tamu.');
+      return;
+    }
     if (_checkIn == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Pilih tanggal & jam masuk terlebih dahulu')),
@@ -479,6 +528,47 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
                     ?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
+
+              if (_isLoadingResident)
+                const LinearProgressIndicator(minHeight: 2),
+              if (_residentError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8, bottom: 12),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          _residentError!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: _loadResidentInfo,
+                        child: const Text('Coba lagi'),
+                      ),
+                    ],
+                  ),
+                ),
+
+              TextFormField(
+                controller: _residentController,
+                readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: 'Nama Penghuni',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              TextFormField(
+                controller: _roomController,
+                readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: 'Nomor Kamar',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 16),
 
               // Nama
               TextFormField(
@@ -536,7 +626,9 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _isSubmitting ? null : _submit,
+                      onPressed: (_isSubmitting || _isLoadingResident || !_hasActiveLease)
+                          ? null
+                          : _submit,
                       child: const Text('Simpan'),
                     ),
                   ),

@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/domain/entity/guest/guest_entity.dart';
+import 'package:frontend/domain/usecase/guest/create_admin_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/get_admin_guests_usecase.dart';
 
 // --- EVENTS ---
@@ -11,6 +12,22 @@ class FetchAdminGuests extends GuestEvent {
   final String? search;
 
   FetchAdminGuests({this.page = 1, this.perPage = 10, this.search});
+}
+
+class CreateAdminGuest extends GuestEvent {
+  final int leaseId;
+  final String name;
+  final String checkInAt;
+  final String checkOutAt;
+  final String relationship;
+
+  CreateAdminGuest({
+    required this.leaseId,
+    required this.name,
+    required this.checkInAt,
+    required this.checkOutAt,
+    required this.relationship,
+  });
 }
 
 // --- STATES ---
@@ -30,11 +47,25 @@ class GuestError extends GuestState {
   GuestError(this.message);
 }
 
+class GuestActionSuccess extends GuestState {
+  final String message;
+  GuestActionSuccess(this.message);
+}
+
+class GuestActionError extends GuestState {
+  final String message;
+  GuestActionError(this.message);
+}
+
 // --- BLOC ---
 class GuestBloc extends Bloc<GuestEvent, GuestState> {
   final GetAdminGuestsUseCase getAdminGuestsUseCase;
+  final CreateAdminGuestUseCase createAdminGuestUseCase;
 
-  GuestBloc({required this.getAdminGuestsUseCase}) : super(GuestInitial()) {
+  GuestBloc({
+    required this.getAdminGuestsUseCase,
+    required this.createAdminGuestUseCase,
+  }) : super(GuestInitial()) {
     on<FetchAdminGuests>((event, emit) async {
       if (event.page == 1) {
         emit(GuestLoading());
@@ -48,6 +79,21 @@ class GuestBloc extends Bloc<GuestEvent, GuestState> {
         emit(GuestLoaded(response));
       } catch (e) {
         emit(GuestError(e.toString()));
+      }
+    });
+
+    on<CreateAdminGuest>((event, emit) async {
+      try {
+        await createAdminGuestUseCase(
+          leaseId: event.leaseId,
+          name: event.name,
+          checkInAt: event.checkInAt,
+          checkOutAt: event.checkOutAt,
+          relationship: event.relationship,
+        );
+        emit(GuestActionSuccess('Data tamu berhasil ditambahkan.'));
+      } catch (e) {
+        emit(GuestActionError(e.toString()));
       }
     });
   }

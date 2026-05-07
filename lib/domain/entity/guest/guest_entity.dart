@@ -114,12 +114,35 @@ class GuestResponse {
   });
 
   factory GuestResponse.fromJson(Map<String, dynamic> json) {
-    final outer = json['data'] as Map<String, dynamic>? ?? <String, dynamic>{};
-    final items = outer['data'] as List<dynamic>? ?? <dynamic>[];
-    final meta = outer['meta'] as Map<String, dynamic>? ?? <String, dynamic>{};
+    final data = json['data'];
+    List<dynamic> items = <dynamic>[];
+    Map<String, dynamic> meta = <String, dynamic>{};
+
+    if (data is List<dynamic>) {
+      items = data;
+    } else if (data is Map<String, dynamic>) {
+      if (data['data'] is List<dynamic>) {
+        items = data['data'] as List<dynamic>;
+      } else if (data['guests'] is List<dynamic>) {
+        items = data['guests'] as List<dynamic>;
+      } else if (data['items'] is List<dynamic>) {
+        items = data['items'] as List<dynamic>;
+      }
+
+      if (data['meta'] is Map<String, dynamic>) {
+        meta = Map<String, dynamic>.from(data['meta'] as Map);
+      } else if (data['pagination'] is Map<String, dynamic>) {
+        meta = Map<String, dynamic>.from(data['pagination'] as Map);
+      } else if (data.containsKey('current_page')) {
+        meta = data;
+      }
+    }
 
     return GuestResponse(
-      guests: items.map((e) => GuestItem.fromJson(e as Map<String, dynamic>)).toList(),
+      guests: items
+          .map((e) => GuestItem.fromJson(
+              e is Map<String, dynamic> ? e : <String, dynamic>{}))
+          .toList(),
       pagination: GuestPagination.fromJson(meta),
     );
   }

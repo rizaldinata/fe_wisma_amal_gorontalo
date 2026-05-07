@@ -78,10 +78,13 @@ import 'package:frontend/domain/repository/guest_repository.dart';
 import 'package:frontend/domain/usecase/guest/get_admin_guests_usecase.dart';
 import 'package:frontend/domain/usecase/guest/get_my_guests_usecase.dart';
 import 'package:frontend/domain/usecase/guest/create_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/create_admin_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/delete_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/pay_guest_bill_usecase.dart';
 import 'package:frontend/domain/usecase/guest/get_admin_guest_bills_usecase.dart';
 import 'package:frontend/domain/usecase/guest/verify_guest_bill_usecase.dart';
+import 'package:frontend/domain/repository/notification_repository.dart';
+import 'package:frontend/domain/usecase/notification/get_notification_logs_usecase.dart';
 
 
 Future<void> initializeUseCase() async {
@@ -347,6 +350,9 @@ Future<void> initializeUseCase() async {
     () => CreateGuestUseCase(serviceLocator<GuestRepository>()),
   );
   serviceLocator.registerFactory(
+    () => CreateAdminGuestUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
     () => DeleteGuestUseCase(serviceLocator<GuestRepository>()),
   );
   serviceLocator.registerFactory(
@@ -357,5 +363,11 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => VerifyGuestBillUseCase(serviceLocator<GuestRepository>()),
+  );
+
+  serviceLocator.registerFactory(
+    () => GetNotificationLogsUseCase(
+      serviceLocator<NotificationRepository>(),
+    ),
   );
 }

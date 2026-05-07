@@ -51,6 +51,27 @@ class GuestRepositoryImpl implements GuestRepository {
   }
 
   @override
+  Future<GuestItem> createAdminGuest({
+    required int leaseId,
+    required String name,
+    required String checkInAt,
+    required String checkOutAt,
+    required String relationship,
+  }) async {
+    try {
+      return await datasource.createAdminGuest(
+        leaseId: leaseId,
+        name: name,
+        checkInAt: checkInAt,
+        checkOutAt: checkOutAt,
+        relationship: relationship,
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
   Future<void> deleteGuest(int id) async {
     try {
       await datasource.deleteGuest(id);

@@ -30,4 +30,7 @@ class EndpointConstant {
   static String payGuestBillEndpoint(int guestId) => '/guests/$guestId/bill/pay';
   static const String adminGuestBillsEndpoint = '/admin/guest-bills';
   static String verifyGuestBillEndpoint(int billId) => '/admin/guest-bills/$billId/verify';
+
+  static const String notificationLogsEndpoint = '/notification/logs';
+  static String resendNotificationLogEndpoint(int id) => '/notification/logs/$id/resend';
 }

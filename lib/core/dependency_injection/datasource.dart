@@ -15,6 +15,7 @@ import 'package:frontend/data/datasource/reservation_remote_datasource.dart';
 import 'package:frontend/data/datasource/role_datasource.dart';
 import 'package:frontend/data/datasource/my_reservation_remote_datasource.dart';
 import 'package:frontend/data/datasource/guest_datasource.dart';
+import 'package:frontend/data/datasource/notification_datasource.dart';
 
 Future<void> initializeDatasource() async {
   serviceLocator.registerFactory<AuthDatasource>(
@@ -68,5 +69,9 @@ Future<void> initializeDatasource() async {
   );
   serviceLocator.registerFactory<GuestDatasource>(
     () => GuestDatasource(dioClient: serviceLocator<DioClient>()),
+  );
+
+  serviceLocator.registerFactory<NotificationDatasource>(
+    () => NotificationDatasource(dioClient: serviceLocator<DioClient>()),
   );
 }

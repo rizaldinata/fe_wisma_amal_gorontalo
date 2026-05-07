@@ -285,6 +285,11 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                         icon: Icons.account_balance_wallet_outlined,
                         page: const MemberFinanceRoute(),
                       ),
+                    SidebarItem(
+                      label: 'Tamu Saya',
+                      icon: Icons.people_alt_outlined,
+                      page: const MyGuestRoute(),
+                    ),
                   ],
 
                   // ─── Area Penghuni (resident aktif) ────────────────
@@ -307,7 +312,9 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                             icon: Icons.book_online_outlined,
                             page: const MyReservationRoute(),
                           ),
-                        if (context.can(PermissionKeys.viewMyGuest))
+                        if (context.can(PermissionKeys.viewMyGuest) ||
+                            context.can(PermissionKeys.createGuest) ||
+                            context.can(PermissionKeys.payGuestBill))
                           SidebarItem(
                             label: 'Tamu Saya',
                             icon: Icons.people_alt_outlined,

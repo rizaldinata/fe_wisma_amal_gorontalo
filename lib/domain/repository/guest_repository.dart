@@ -18,6 +18,14 @@ abstract class GuestRepository {
     required String relationship,
   });
 
+  Future<GuestItem> createAdminGuest({
+    required int leaseId,
+    required String name,
+    required String checkInAt,
+    required String checkOutAt,
+    required String relationship,
+  });
+
   Future<void> deleteGuest(int id);
 
   // ─── Billing ─────────────────────────────────────────────────────────────

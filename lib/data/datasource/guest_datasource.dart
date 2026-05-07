@@ -69,6 +69,32 @@ class GuestDatasource {
     }
   }
 
+  Future<GuestItem> createAdminGuest({
+    required int leaseId,
+    required String name,
+    required String checkInAt,
+    required String checkOutAt,
+    required String relationship,
+  }) async {
+    try {
+      final response = await dioClient.post(
+        EndpointConstant.adminGuestsEndpoint,
+        data: {
+          'lease_id': leaseId,
+          'name': name,
+          'check_in_at': checkInAt,
+          'check_out_at': checkOutAt,
+          'relationship': relationship,
+        },
+      );
+      final payload = response.data['data'];
+      return GuestItem.fromJson(
+          payload is Map<String, dynamic> ? payload : <String, dynamic>{});
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<void> deleteGuest(int id) async {
     try {
       await dioClient.delete(EndpointConstant.deleteGuestEndpoint(id));

@@ -46,6 +46,9 @@ import 'package:frontend/domain/repository/my_reservation_repository.dart';
 import 'package:frontend/data/datasource/guest_datasource.dart';
 import 'package:frontend/data/repository/guest_repository_impl.dart';
 import 'package:frontend/domain/repository/guest_repository.dart';
+import 'package:frontend/data/datasource/notification_datasource.dart';
+import 'package:frontend/data/repository/notification_repository_impl.dart';
+import 'package:frontend/domain/repository/notification_repository.dart';
 
 Future<void> initializeRepository() async {
   serviceLocator.registerFactory<AuthRepository>(
@@ -118,5 +121,11 @@ Future<void> initializeRepository() async {
   );
   serviceLocator.registerFactory<GuestRepository>(
     () => GuestRepositoryImpl(datasource: serviceLocator<GuestDatasource>()),
+  );
+
+  serviceLocator.registerFactory<NotificationRepository>(
+    () => NotificationRepositoryImpl(
+      datasource: serviceLocator<NotificationDatasource>(),
+    ),
   );
 }
