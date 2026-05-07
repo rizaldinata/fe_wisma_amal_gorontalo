@@ -13,6 +13,7 @@ abstract class FinanceRemoteDatasource {
   Future<List<InvoiceModel>> getDueInvoices();
   Future<List<InvoiceModel>> getInvoices();
   Future<List<PaymentModel>> getPendingPayments();
+  Future<List<PaymentModel>> getAllPayments();
   Future<KpiModel> getKpiSummary({int? month, int? year});
   Future<List<RevenueModel>> getRevenueChart();
 
@@ -34,6 +35,7 @@ abstract class FinanceRemoteDatasource {
     String? paymentProofName,
   });
   Future<void> extendLease(int leaseId, int durationMonths);
+  Future<String> getInvoicePrintLink(int invoiceId);
 }
 
 class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
@@ -69,6 +71,20 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
     try {
       final response = await _dioClient.get(
         '/finance/dashboard/pending-payments',
+      );
+      final List<dynamic> data = response.data['data'] ?? [];
+      return data.map((json) => PaymentModel.fromJson(json)).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<PaymentModel>> getAllPayments() async {
+    try {
+      final response = await _dioClient.get(
+        '/finance/payments',
+        queryParams: {'per_page': 200},
       );
       final List<dynamic> data = response.data['data'] ?? [];
       return data.map((json) => PaymentModel.fromJson(json)).toList();
@@ -258,5 +274,12 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
       '/rentals/$leaseId/extend',
       data: {'duration': durationMonths},
     );
+  }
+
+  @override
+  Future<String> getInvoicePrintLink(int invoiceId) async {
+    final response = await _dioClient.get('/finance/invoices/$invoiceId/print-link');
+    final data = response.data['data'] as Map<String, dynamic>?;
+    return data?['url'] as String? ?? '';
   }
 }

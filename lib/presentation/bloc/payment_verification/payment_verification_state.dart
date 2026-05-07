@@ -10,12 +10,12 @@ class PaymentVerificationInitial extends PaymentVerificationState {}
 class PaymentVerificationLoading extends PaymentVerificationState {}
 
 class PaymentVerificationLoaded extends PaymentVerificationState {
-  final List<PaymentEntity> pendingPayments;
-  
-  PaymentVerificationLoaded(this.pendingPayments);
-  
+  final List<PaymentEntity> payments;
+
+  PaymentVerificationLoaded(this.payments);
+
   @override
-  List<Object?> get props => [pendingPayments];
+  List<Object?> get props => [payments];
 }
 
 class PaymentVerificationActionSuccess extends PaymentVerificationState {

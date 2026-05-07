@@ -1,3 +1,5 @@
+import 'package:frontend/domain/entity/guest/guest_bill_entity.dart';
+
 class GuestItem {
   final int id;
   final String name;
@@ -65,6 +67,10 @@ class MyGuestItem {
   final String checkOutAt;
   final String relationship;
   final String relationshipLabel;
+  final int totalDays;
+  final int billableDays;
+  final double chargeAmount;
+  final GuestBillItem? bill;
 
   const MyGuestItem({
     required this.id,
@@ -73,9 +79,14 @@ class MyGuestItem {
     required this.checkOutAt,
     required this.relationship,
     required this.relationshipLabel,
+    this.totalDays = 0,
+    this.billableDays = 0,
+    this.chargeAmount = 0.0,
+    this.bill,
   });
 
   factory MyGuestItem.fromJson(Map<String, dynamic> json) {
+    final billJson = json['bill'] as Map<String, dynamic>?;
     return MyGuestItem(
       id: json['id'] as int? ?? 0,
       name: json['name'] as String? ?? '-',
@@ -83,6 +94,10 @@ class MyGuestItem {
       checkOutAt: json['check_out_at'] as String? ?? '-',
       relationship: json['relationship'] as String? ?? '-',
       relationshipLabel: json['relationship_label'] as String? ?? '-',
+      totalDays: json['total_days'] as int? ?? 0,
+      billableDays: json['billable_days'] as int? ?? 0,
+      chargeAmount: (json['charge_amount'] as num?)?.toDouble() ?? 0.0,
+      bill: billJson != null ? GuestBillItem.fromJson(billJson) : null,
     );
   }
 }

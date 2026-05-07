@@ -5,6 +5,9 @@ class InvoiceEntity {
   final double amount;
   final String status;
   final DateTime dueDate;
+  final String? residentName;
+  final String? roomNumber;
+  final DateTime? createdAt;
 
   InvoiceEntity({
     required this.id,
@@ -13,5 +16,8 @@ class InvoiceEntity {
     required this.amount,
     required this.status,
     required this.dueDate,
+    this.residentName,
+    this.roomNumber,
+    this.createdAt,
   });
 }
