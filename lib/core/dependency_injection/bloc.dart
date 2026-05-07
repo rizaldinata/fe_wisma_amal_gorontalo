@@ -89,7 +89,12 @@ import 'package:frontend/presentation/bloc/reservation_list/reservation_bloc.dar
 import 'package:frontend/domain/usecase/my_reservation/get_my_reservations_usecase.dart';
 import 'package:frontend/presentation/bloc/my_reservation/my_reservation_bloc.dart';
 import 'package:frontend/presentation/bloc/my_reservation/my_reservation_event.dart';
-import 'package:frontend/presentation/bloc/resident_detail/resident_detail_bloc.dart';
+import 'package:frontend/presentation/bloc/guest/guest_bloc.dart';
+import 'package:frontend/presentation/bloc/guest/my_guest_bloc.dart';
+import 'package:frontend/domain/usecase/guest/get_admin_guests_usecase.dart';
+import 'package:frontend/domain/usecase/guest/get_my_guests_usecase.dart';
+import 'package:frontend/domain/usecase/guest/create_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/delete_guest_usecase.dart';
 
 Future<void> initializeBloc() async {
   serviceLocator.registerLazySingleton<AuthBloc>(
@@ -313,6 +318,20 @@ Future<void> initializeBloc() async {
       payInvoice: serviceLocator.get<PayInvoiceUseCase>(),
       extendLease: serviceLocator.get<ExtendLeaseUseCase>(),
       getSettings: serviceLocator.get<GetPublicSettingsUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<GuestBloc>(
+    () => GuestBloc(
+      getAdminGuestsUseCase: serviceLocator.get<GetAdminGuestsUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<MyGuestBloc>(
+    () => MyGuestBloc(
+      getMyGuestsUseCase: serviceLocator.get<GetMyGuestsUseCase>(),
+      createGuestUseCase: serviceLocator.get<CreateGuestUseCase>(),
+      deleteGuestUseCase: serviceLocator.get<DeleteGuestUseCase>(),
     ),
   );
 }

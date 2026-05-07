@@ -73,6 +73,11 @@ import 'package:frontend/domain/usecase/my_reservation/get_my_reservations_useca
 import 'package:frontend/domain/repository/resident_repository.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_resident_detail_usecase.dart';
+import 'package:frontend/domain/repository/guest_repository.dart';
+import 'package:frontend/domain/usecase/guest/get_admin_guests_usecase.dart';
+import 'package:frontend/domain/usecase/guest/get_my_guests_usecase.dart';
+import 'package:frontend/domain/usecase/guest/create_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/delete_guest_usecase.dart';
 
 
 Future<void> initializeUseCase() async {
@@ -323,4 +328,18 @@ Future<void> initializeUseCase() async {
     serviceLocator<MyReservationRepository>(),
   ),
 );
+
+  // Guest UseCases
+  serviceLocator.registerFactory(
+    () => GetAdminGuestsUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetMyGuestsUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateGuestUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => DeleteGuestUseCase(serviceLocator<GuestRepository>()),
+  );
 }

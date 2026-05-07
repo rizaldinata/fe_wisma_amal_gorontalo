@@ -187,6 +187,11 @@ class AppRouter extends RootStackRouter {
         ),
         AutoRoute(
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.myGuestName,
+          page: MyGuestRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: 'payment-upload',
           page: PaymentUploadRoute.page,
         ),

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
 import 'package:frontend/core/constant/style_constant.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
+import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
@@ -15,9 +16,14 @@ import 'package:auto_route/auto_route.dart';
 
 @RoutePage()
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key, @QueryParam('reason') this.reason});
+  const LoginPage({
+    super.key,
+    @QueryParam('reason') this.reason,
+    this.pendingRoom,
+  });
 
   final String? reason;
+  final RoomEntity? pendingRoom;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -92,17 +98,20 @@ class _LoginPageState extends State<LoginPage> {
                 // height: 700,
                 width: 600,
                 child: BlocConsumer<AuthBloc, AuthState>(
-                  listener: (context, state) {
+                  listener: (context, state) async {
                     if (state.status.isFailure) {
                       AppSnackbar.showError(
                         state.errorMessage ?? 'Login failed',
                       );
                     }
 
-                    // Jika login berhasil, kembalikan user ke tampilan utama
-                    // dan reset semua route agar menu mengikuti permission baru.
                     if (state.status.isSuccess && state.isLoggedIn) {
-                      context.router.replaceAll([const AppLayoutRoute()]);
+                      await context.router.replaceAll([const AppLayoutRoute()]);
+                      if (context.mounted && widget.pendingRoom != null) {
+                        context.router.push(
+                          ReservationDetailFormRoute(room: widget.pendingRoom!),
+                        );
+                      }
                     }
                   },
                   builder: (context, state) {
@@ -198,7 +207,9 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             TextButton(
                               onPressed: () {
-                                context.router.replace(RegisterRoute());
+                                context.router.replace(
+                                  RegisterRoute(pendingRoom: widget.pendingRoom),
+                                );
                               },
                               child: Text('Daftar disini'),
                             ),

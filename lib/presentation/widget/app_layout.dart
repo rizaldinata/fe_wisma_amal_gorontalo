@@ -164,6 +164,12 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                           icon: Icons.account_balance_wallet_outlined,
                           page: const MemberFinanceRoute(),
                         ),
+                        if (context.can(PermissionKeys.viewMyGuest))
+                          SidebarItem(
+                            label: 'Tamu Saya',
+                            icon: Icons.people_alt_outlined,
+                            page: const MyGuestRoute(),
+                          ),
                         SidebarItem(
                           label: 'Lapor Kerusakan',
                           icon: Icons.report_problem_outlined,
