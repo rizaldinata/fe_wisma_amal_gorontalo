@@ -32,7 +32,7 @@ class ReservationDetailFormBloc extends Bloc<
     on<EndDateChanged>(_onEndDateChanged);
     on<DurationMonthsChanged>(_onDurationMonthsChanged);
     on<PaymentMethodChanged>(_onPaymentMethodChanged);
-    on<SelectedBankChanged>(_onSelectedBankChanged);
+    on<SelectedMidtransMethodChanged>(_onSelectedMidtransMethodChanged);
     on<SubmitReservation>(_onSubmit);
     on<RefreshProfileStatusEvent>(_onRefreshProfileStatus);
   }
@@ -44,11 +44,14 @@ class ReservationDetailFormBloc extends Bloc<
     bool isDailyEnabled = true;
     bool isMidtransEnabled = true;
     bool isProfileComplete = true;
+    List<String> midtransPaymentMethods = ['qris', 'gopay', 'shopeepay'];
 
     try {
       final settingEntity = await getSettingsUseCase.execute();
       isDailyEnabled = settingEntity.getBool('feature_daily_rental');
       isMidtransEnabled = settingEntity.getBool('feature_payment_midtrans');
+      final methods = settingEntity.getList('midtrans_enabled_payments');
+      if (methods.isNotEmpty) midtransPaymentMethods = methods;
     } catch (_) {
       // Keep default if error
     }
@@ -70,9 +73,10 @@ class ReservationDetailFormBloc extends Bloc<
       room: event.room,
       isDailyRentalEnabled: isDailyEnabled,
       isMidtransEnabled: isMidtransEnabled,
+      midtransPaymentMethods: midtransPaymentMethods,
       isProfileComplete: isProfileComplete,
       paymentMethod: isMidtransEnabled ? 'online' : 'tunai',
-      rentType: 'Bulanan', // Default to Bulanan as requested
+      rentType: 'Bulanan',
       price: event.room.price.toInt(),
     ));
 
@@ -127,15 +131,15 @@ class ReservationDetailFormBloc extends Bloc<
   ) {
     emit(state.copyWith(
       paymentMethod: event.paymentMethod,
-      selectedBank: null, // Reset bank selection saat method berubah
+      selectedMidtransMethod: null, // Reset pilihan metode saat method berubah
     ));
   }
 
-  void _onSelectedBankChanged(
-    SelectedBankChanged event,
+  void _onSelectedMidtransMethodChanged(
+    SelectedMidtransMethodChanged event,
     Emitter<ReservationDetailFormState> emit,
   ) {
-    emit(state.copyWith(selectedBank: event.selectedBank));
+    emit(state.copyWith(selectedMidtransMethod: event.method));
   }
 
   Future<void> _onSubmit(

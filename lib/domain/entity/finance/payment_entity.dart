@@ -10,6 +10,7 @@ class PaymentEntity {
   final double amount;
   final String paymentDate;
   final String? snapToken;
+  final Map<String, dynamic>? paymentData;
   final String? residentName;
   final String? roomNumber;
   final String? updatedAt;
@@ -26,6 +27,7 @@ class PaymentEntity {
     required this.amount,
     required this.paymentDate,
     this.snapToken,
+    this.paymentData,
     this.residentName,
     this.roomNumber,
     this.updatedAt,

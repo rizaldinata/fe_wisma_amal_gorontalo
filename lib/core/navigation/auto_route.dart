@@ -210,6 +210,11 @@ class AppRouter extends RootStackRouter {
           path: 'payment-upload',
           page: PaymentUploadRoute.page,
         ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: 'payment-midtrans',
+          page: MidtransPaymentRoute.page,
+        ),
 
         // pengaturan
         AutoRoute(

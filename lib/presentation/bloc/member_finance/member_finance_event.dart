@@ -19,16 +19,19 @@ class PayInvoiceEvent extends MemberFinanceEvent {
   final String paymentMethod;
   final Uint8List? paymentProofBytes;
   final String? paymentProofName;
+  // Kode metode Midtrans spesifik (qris, gopay, bca_va, dll) — null = Snap fallback
+  final String? preferredPaymentType;
 
   const PayInvoiceEvent(
     this.invoiceId,
     this.paymentMethod, {
     this.paymentProofBytes,
     this.paymentProofName,
+    this.preferredPaymentType,
   });
 
   @override
-  List<Object?> get props => [invoiceId, paymentMethod, paymentProofBytes, paymentProofName];
+  List<Object?> get props => [invoiceId, paymentMethod, paymentProofBytes, paymentProofName, preferredPaymentType];
 }
 
 class ExtendLeaseEvent extends MemberFinanceEvent {

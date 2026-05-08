@@ -13,6 +13,7 @@ class ReservationEntity extends Equatable {
   final int? invoiceId;
   final double? invoiceAmount;
   final String? paymentExpiresAt;
+  final String? selectedPaymentMethod;
 
   const ReservationEntity({
     required this.id,
@@ -27,7 +28,26 @@ class ReservationEntity extends Equatable {
     this.invoiceId,
     this.invoiceAmount,
     this.paymentExpiresAt,
+    this.selectedPaymentMethod,
   });
+
+  ReservationEntity copyWith({String? selectedPaymentMethod}) {
+    return ReservationEntity(
+      id: id,
+      roomTitle: roomTitle,
+      roomNumber: roomNumber,
+      residentName: residentName,
+      rentalType: rentalType,
+      status: status,
+      paymentStatus: paymentStatus,
+      startDate: startDate,
+      endDate: endDate,
+      invoiceId: invoiceId,
+      invoiceAmount: invoiceAmount,
+      paymentExpiresAt: paymentExpiresAt,
+      selectedPaymentMethod: selectedPaymentMethod,
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -43,5 +63,6 @@ class ReservationEntity extends Equatable {
         invoiceId,
         invoiceAmount,
         paymentExpiresAt,
+        selectedPaymentMethod,
       ];
 }

@@ -55,6 +55,7 @@ import 'package:frontend/domain/usecase/finance/get_member_invoices_usecase.dart
 import 'package:frontend/domain/usecase/finance/get_member_payments_usecase.dart';
 import 'package:frontend/domain/usecase/finance/pay_invoice_usecase.dart';
 import 'package:frontend/domain/usecase/finance/extend_lease_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_member_invoice_by_id_usecase.dart';
 
 import 'package:frontend/domain/repository/inventory_repository.dart';
 import 'package:frontend/domain/usecase/inventory/get_inventories_usecase.dart';
@@ -199,6 +200,9 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => ExtendLeaseUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetMemberInvoiceByIdUseCase(serviceLocator.get<FinanceRepository>()),
   );
 
   // Setting UseCases

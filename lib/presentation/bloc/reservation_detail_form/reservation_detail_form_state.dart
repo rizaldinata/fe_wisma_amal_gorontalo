@@ -15,9 +15,10 @@ class ReservationDetailFormState extends Equatable {
     this.status = FormzSubmissionStatus.initial,
     this.errorMessage,
     this.paymentMethod = 'online',
-    this.selectedBank,
+    this.selectedMidtransMethod,
+    this.midtransPaymentMethods = const [],
     this.createdReservation,
-    this.isProfileComplete = true, // Default to true to avoid flickering
+    this.isProfileComplete = true,
   });
 
   final String rentType;
@@ -33,7 +34,8 @@ class ReservationDetailFormState extends Equatable {
   final FormzSubmissionStatus status;
   final String? errorMessage;
   final String paymentMethod; // 'online' atau 'tunai'
-  final String? selectedBank; // 'mandiri', 'bca', 'bri'
+  final String? selectedMidtransMethod; // kode metode yang dipilih user, e.g. 'qris', 'gopay'
+  final List<String> midtransPaymentMethods; // metode yang tersedia dari konfigurasi backend
   final ReservationEntity? createdReservation;
   final bool isProfileComplete;
 
@@ -51,7 +53,8 @@ class ReservationDetailFormState extends Equatable {
     FormzSubmissionStatus? status,
     String? errorMessage,
     String? paymentMethod,
-    String? selectedBank,
+    String? selectedMidtransMethod,
+    List<String>? midtransPaymentMethods,
     ReservationEntity? createdReservation,
     bool? isProfileComplete,
   }) {
@@ -69,7 +72,8 @@ class ReservationDetailFormState extends Equatable {
       status: status ?? this.status,
       errorMessage: errorMessage ?? this.errorMessage,
       paymentMethod: paymentMethod ?? this.paymentMethod,
-      selectedBank: selectedBank ?? this.selectedBank,
+      selectedMidtransMethod: selectedMidtransMethod ?? this.selectedMidtransMethod,
+      midtransPaymentMethods: midtransPaymentMethods ?? this.midtransPaymentMethods,
       createdReservation: createdReservation ?? this.createdReservation,
       isProfileComplete: isProfileComplete ?? this.isProfileComplete,
     );
@@ -90,7 +94,8 @@ class ReservationDetailFormState extends Equatable {
         status,
         errorMessage,
         paymentMethod,
-        selectedBank,
+        selectedMidtransMethod,
+        midtransPaymentMethods,
         createdReservation,
         isProfileComplete,
       ];

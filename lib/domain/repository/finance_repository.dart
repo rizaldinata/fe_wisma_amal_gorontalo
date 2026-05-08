@@ -29,12 +29,14 @@ abstract class FinanceRepository {
   // Member Finance
   Future<MemberFinanceSummaryEntity> getMemberFinanceSummary();
   Future<List<InvoiceEntity>> getMemberInvoices();
+  Future<InvoiceEntity> getMemberInvoiceById(int id);
   Future<List<PaymentEntity>> getMemberPayments();
   Future<PaymentEntity> payInvoice(
     int invoiceId,
     String paymentMethod, {
     Uint8List? paymentProofBytes,
     String? paymentProofName,
+    String? preferredPaymentType,
   });
   Future<void> extendLease(int leaseId, int durationMonths);
   Future<String> getInvoicePrintLink(int invoiceId);
