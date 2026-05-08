@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../../domain/entity/finance/payment_entity.dart';
 
 class PaymentModel extends PaymentEntity {
@@ -13,10 +15,20 @@ class PaymentModel extends PaymentEntity {
     required super.amount,
     required super.paymentDate,
     super.snapToken,
+    super.paymentData,
     super.residentName,
     super.roomNumber,
     super.updatedAt,
   });
+
+  static Map<String, dynamic>? _parsePaymentData(dynamic raw) {
+    if (raw == null) return null;
+    if (raw is Map<String, dynamic>) return raw;
+    if (raw is String) {
+      try { return jsonDecode(raw) as Map<String, dynamic>?; } catch (_) { return null; }
+    }
+    return null;
+  }
 
   factory PaymentModel.fromJson(Map<String, dynamic> json) {
     return PaymentModel(
@@ -31,6 +43,7 @@ class PaymentModel extends PaymentEntity {
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
       paymentDate: json['payment_date'] ?? json['created_at'] ?? '',
       snapToken: json['snap_token'],
+      paymentData: _parsePaymentData(json['payment_data']),
       residentName: json['resident_name'] as String?,
       roomNumber: json['room_number'] as String?,
       updatedAt: json['updated_at'] as String?,

@@ -101,7 +101,13 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
               PaymentUploadRoute(reservation: state.createdReservation!),
             );
           } else {
-            context.router.replace(const MemberFinanceRoute());
+            context.router.replace(
+              MidtransPaymentRoute(
+                reservation: state.createdReservation!.copyWith(
+                  selectedPaymentMethod: state.selectedMidtransMethod,
+                ),
+              ),
+            );
           }
         } else if (state.status == FormzSubmissionStatus.failure) {
           final error = state.errorMessage ?? 'Gagal membuat pemesanan';
@@ -322,7 +328,6 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                           title: 'Metode Pembayaran',
                           child: Column(
                             children: [
-                              /// Payment Method Selection
                               Wrap(
                                 spacing: 16,
                                 runSpacing: 16,
@@ -330,98 +335,97 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                   if (state.isMidtransEnabled)
                                     paymentMethodCard(
                                       title: 'Pembayaran Online',
-                                      subtitle: 'Transfer Virtual Account',
+                                      subtitle: _midtransSubtitle(
+                                          state.midtransPaymentMethods),
                                       icon: Icons.account_balance_wallet,
-                                      selected: state.paymentMethod == 'online',
+                                      selected:
+                                          state.paymentMethod == 'online',
                                       onTap: () => context
                                           .read<ReservationDetailFormBloc>()
-                                          .add(
-                                            const PaymentMethodChanged('online'),
-                                          ),
+                                          .add(const PaymentMethodChanged(
+                                              'online')),
                                     ),
                                   paymentMethodCard(
                                     title: 'Pembayaran Manual',
-                                    subtitle: 'Transfer atau Cash dengan Bukti',
+                                    subtitle:
+                                        'Transfer atau Cash dengan Bukti',
                                     icon: Icons.payments,
                                     selected: state.paymentMethod == 'tunai',
                                     onTap: () => context
                                         .read<ReservationDetailFormBloc>()
-                                        .add(
-                                          const PaymentMethodChanged('tunai'),
-                                        ),
+                                        .add(const PaymentMethodChanged(
+                                            'tunai')),
                                   ),
                                 ],
                               ),
 
                               if (state.paymentMethod == 'online') ...[
                                 const SizedBox(height: 24),
-                                const Text(
-                                  'Pilih Bank untuk Virtual Account',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 14,
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'Pilih Metode Pembayaran',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: Colors.grey.shade800,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    'Metode yang Anda pilih akan dibuka di halaman pembayaran Midtrans.',
+                                    style: TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey.shade500),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-                                Wrap(
-                                  spacing: 12,
-                                  runSpacing: 12,
-                                  children: [
-                                    bankSelectionCard(
-                                      bankName: 'Mandiri',
-                                      bankCode: 'mandiri',
-                                      icon: '🏦',
-                                      selected: state.selectedBank == 'mandiri',
+                                GridView.builder(
+                                  shrinkWrap: true,
+                                  physics:
+                                      const NeverScrollableScrollPhysics(),
+                                  gridDelegate:
+                                      const SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: 2,
+                                    mainAxisSpacing: 8,
+                                    crossAxisSpacing: 8,
+                                    mainAxisExtent: 72,
+                                  ),
+                                  itemCount:
+                                      state.midtransPaymentMethods.length,
+                                  itemBuilder: (context, index) {
+                                    final code =
+                                        state.midtransPaymentMethods[index];
+                                    final isSelected =
+                                        state.selectedMidtransMethod == code;
+                                    return _midtransMethodCard(
+                                      code: code,
+                                      selected: isSelected,
                                       onTap: () => context
                                           .read<ReservationDetailFormBloc>()
-                                          .add(
-                                            const SelectedBankChanged(
-                                              'mandiri',
-                                            ),
-                                          ),
-                                    ),
-                                    bankSelectionCard(
-                                      bankName: 'BCA',
-                                      bankCode: 'bca',
-                                      icon: '🏛️',
-                                      selected: state.selectedBank == 'bca',
-                                      onTap: () => context
-                                          .read<ReservationDetailFormBloc>()
-                                          .add(
-                                            const SelectedBankChanged('bca'),
-                                          ),
-                                    ),
-                                    bankSelectionCard(
-                                      bankName: 'BRI',
-                                      bankCode: 'bri',
-                                      icon: '🏪',
-                                      selected: state.selectedBank == 'bri',
-                                      onTap: () => context
-                                          .read<ReservationDetailFormBloc>()
-                                          .add(
-                                            const SelectedBankChanged('bri'),
-                                          ),
-                                    ),
-                                  ],
+                                          .add(SelectedMidtransMethodChanged(
+                                              isSelected ? null : code)),
+                                    );
+                                  },
                                 ),
                               ] else if (state.paymentMethod == 'tunai') ...[
-                                const SizedBox(height: 24),
+                                const SizedBox(height: 16),
                                 Container(
                                   padding: const EdgeInsets.all(14),
                                   decoration: BoxDecoration(
                                     color: Colors.orange.shade50,
                                     borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
-                                      color: Colors.orange.shade200,
-                                    ),
+                                        color: Colors.orange.shade200),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(
-                                        Icons.info_outline,
-                                        color: Colors.orange.shade700,
-                                        size: 20,
-                                      ),
+                                      Icon(Icons.info_outline,
+                                          color: Colors.orange.shade700,
+                                          size: 20),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Column(
@@ -438,11 +442,11 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              'Silakan melakukan transfer atau bayar cash. Anda wajib mengunggah bukti pembayaran di langkah berikutnya.',
+                                              'Lakukan transfer bank atau bayar cash, lalu unggah bukti pembayaran di langkah berikutnya.',
                                               style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.orange.shade600,
-                                              ),
+                                                  fontSize: 12,
+                                                  color:
+                                                      Colors.orange.shade600),
                                             ),
                                           ],
                                         ),
@@ -616,7 +620,11 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
             _infoRow('Total', 'Rp ${state.totalPrice}'),
             _infoRow(
               'Metode',
-              state.paymentMethod == 'online' ? 'Online' : 'Manual',
+              state.paymentMethod == 'online'
+                  ? (state.selectedMidtransMethod != null
+                      ? 'Online · ${_kMidtransMethodMap[state.selectedMidtransMethod]?.name ?? state.selectedMidtransMethod!.toUpperCase()}'
+                      : 'Online (Midtrans)')
+                  : 'Manual',
             ),
           ],
         ),
@@ -778,51 +786,140 @@ Widget paymentMethodCard({
   );
 }
 
-/// BANK SELECTION CARD
-Widget bankSelectionCard({
-  required String bankName,
-  required String bankCode,
-  required String icon,
+// ── Midtrans payment method metadata ─────────────────────────────────────────
+
+class _MidtransMethodInfo {
+  const _MidtransMethodInfo(this.name, this.desc, this.icon);
+  final String name;
+  final String desc;
+  final IconData icon;
+}
+
+const Map<String, _MidtransMethodInfo> _kMidtransMethodMap = {
+  'qris':        _MidtransMethodInfo('QRIS',                  'Scan QR dari semua e-wallet & bank',  Icons.qr_code),
+  'gopay':       _MidtransMethodInfo('GoPay',                 'Bayar dengan saldo GoPay',            Icons.account_balance_wallet),
+  'shopeepay':   _MidtransMethodInfo('ShopeePay',             'Bayar dengan saldo ShopeePay',        Icons.shopping_bag),
+  'dana':        _MidtransMethodInfo('DANA',                  'Bayar dengan saldo DANA',             Icons.account_balance_wallet),
+  'linkaja':     _MidtransMethodInfo('LinkAja',               'Bayar dengan LinkAja',                Icons.account_balance_wallet),
+  'ovo':         _MidtransMethodInfo('OVO',                   'Bayar dengan saldo OVO',              Icons.account_balance_wallet),
+  'bca_va':      _MidtransMethodInfo('BCA Virtual Account',   'Transfer via ATM / m-BCA',           Icons.account_balance),
+  'bni_va':      _MidtransMethodInfo('BNI Virtual Account',   'Transfer via ATM / BNI Mobile',      Icons.account_balance),
+  'bri_va':      _MidtransMethodInfo('BRI Virtual Account',   'Transfer via ATM / BRImo',           Icons.account_balance),
+  'mandiri_va':  _MidtransMethodInfo('Mandiri Virtual Account','Transfer via Mandiri Livin\'',      Icons.account_balance),
+  'echannel':    _MidtransMethodInfo('Mandiri Bill',          'Bayar via Mandiri Livin\'',          Icons.account_balance),
+  'permata_va':  _MidtransMethodInfo('Permata Virtual Account','Transfer via ATM Permata',          Icons.account_balance),
+  'other_va':    _MidtransMethodInfo('Virtual Account',       'Transfer via bank lain',              Icons.account_balance),
+  'alfamart':    _MidtransMethodInfo('Alfamart',              'Bayar di kasir Alfamart',             Icons.store),
+  'indomaret':   _MidtransMethodInfo('Indomaret',             'Bayar di kasir Indomaret',            Icons.store),
+  'credit_card': _MidtransMethodInfo('Kartu Kredit/Debit',    'Visa, Mastercard, JCB',               Icons.credit_card),
+  'akulaku':     _MidtransMethodInfo('Akulaku',               'Cicilan 0% via Akulaku',              Icons.credit_card),
+  'kredivo':     _MidtransMethodInfo('Kredivo',               'Cicilan via Kredivo',                 Icons.credit_card),
+};
+
+/// Subtitle dinamis berdasarkan metode yang tersedia
+String _midtransSubtitle(List<String> methods) {
+  if (methods.isEmpty) return 'QRIS, GoPay, dan lainnya';
+  final names = methods
+      .map((c) => _kMidtransMethodMap[c]?.name ?? c.toUpperCase())
+      .take(3)
+      .join(', ');
+  return methods.length > 3 ? '$names, +${methods.length - 3} lainnya' : names;
+}
+
+/// Kartu metode pembayaran Midtrans — list-tile style, tinggi tetap 72px
+Widget _midtransMethodCard({
+  required String code,
   required bool selected,
   required VoidCallback onTap,
 }) {
+  final info = _kMidtransMethodMap[code] ??
+      _MidtransMethodInfo(code.toUpperCase(), 'Metode Midtrans', Icons.payment);
+
   return HoverTapWrapper(
     onTap: onTap,
-
-    borderRadius: BorderRadius.circular(12),
-
-    hoverColor: Colors.blue.withOpacity(0.05),
-
-    child: Container(
-      width: 140,
-
-      padding: const EdgeInsets.all(16),
-
+    borderRadius: BorderRadius.circular(10),
+    hoverColor: Colors.blue.withValues(alpha: 0.04),
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
       decoration: BoxDecoration(
         color: selected ? Colors.blue.shade50 : Colors.white,
-
-        borderRadius: BorderRadius.circular(12),
-
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(
           color: selected ? Colors.blue : Colors.grey.shade300,
+          width: selected ? 1.5 : 1.0,
         ),
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: Colors.blue.withValues(alpha: 0.12),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                )
+              ]
+            : null,
       ),
-
-      child: Column(
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 28)),
-
-          const SizedBox(height: 10),
-
-          Text(
-            bankName,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-
-              color: selected ? Colors.blue : Colors.black,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Ikon
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: selected
+                    ? Colors.blue.withValues(alpha: 0.12)
+                    : Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(
+                info.icon,
+                size: 20,
+                color: selected ? Colors.blue : Colors.grey.shade500,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 10),
+            // Nama + deskripsi
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    info.name,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12.5,
+                      height: 1.3,
+                      color: selected ? Colors.blue.shade800 : Colors.black87,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    info.desc,
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      height: 1.2,
+                      color: Colors.grey.shade500,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            // Indikator pilih
+            Icon(
+              selected ? Icons.check_circle : Icons.circle_outlined,
+              size: 18,
+              color: selected ? Colors.blue : Colors.grey.shade300,
+            ),
+          ],
+        ),
       ),
     ),
   );

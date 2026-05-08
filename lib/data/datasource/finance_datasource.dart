@@ -27,12 +27,14 @@ abstract class FinanceRemoteDatasource {
   // Member Finance
   Future<MemberFinanceSummaryModel> getMemberFinanceSummary();
   Future<List<InvoiceModel>> getMemberInvoices();
+  Future<InvoiceModel> getMemberInvoiceById(int id);
   Future<List<PaymentModel>> getMemberPayments();
   Future<PaymentModel> payInvoice(
     int invoiceId,
     String paymentMethod, {
     Uint8List? paymentProofBytes,
     String? paymentProofName,
+    String? preferredPaymentType,
   });
   Future<void> extendLease(int leaseId, int durationMonths);
   Future<String> getInvoicePrintLink(int invoiceId);
@@ -195,7 +197,6 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
         },
       );
     } catch (e) {
-    } catch (e) {
       rethrow;
     }
   }
@@ -228,6 +229,12 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
   }
 
   @override
+  Future<InvoiceModel> getMemberInvoiceById(int id) async {
+    final response = await _dioClient.get('/finance/me/invoices/$id');
+    return InvoiceModel.fromJson(response.data['data']);
+  }
+
+  @override
   Future<List<PaymentModel>> getMemberPayments() async {
     final response = await _dioClient.get('/finance/me/payments');
     final List<dynamic> data = response.data['data'] ?? [];
@@ -240,6 +247,7 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
     String paymentMethod, {
     Uint8List? paymentProofBytes,
     String? paymentProofName,
+    String? preferredPaymentType,
   }) async {
     try {
       dynamic data;
@@ -255,6 +263,7 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
       } else {
         data = {
           'payment_method': paymentMethod,
+          if (preferredPaymentType != null) 'payment_type': preferredPaymentType,
         };
       }
 

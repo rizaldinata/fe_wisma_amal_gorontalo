@@ -197,6 +197,10 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
     return BlocProvider(
       create: (context) => serviceLocator.get<MemberFinanceBloc>(),
       child: BlocListener<MemberFinanceBloc, MemberFinanceState>(
+        listenWhen: (prev, curr) =>
+            curr.status == MemberFinanceStatus.paymentSuccess ||
+            (curr.status == MemberFinanceStatus.failure &&
+                prev.status == MemberFinanceStatus.loading),
         listener: (context, state) {
           if (state.status == MemberFinanceStatus.paymentSuccess) {
             setState(() => _isSubmitting = false);
@@ -209,8 +213,6 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
                 backgroundColor: Colors.red,
               ),
             );
-          } else if (state.status == MemberFinanceStatus.loading) {
-            setState(() => _isSubmitting = true);
           }
         },
         child: WillPopScope(
@@ -691,11 +693,22 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
                       );
                       return;
                     }
+                    final bytes = _selectedFile!.bytes;
+                    if (bytes == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Gagal membaca file. Coba pilih ulang gambar.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                      return;
+                    }
+                    setState(() => _isSubmitting = true);
                     context.read<MemberFinanceBloc>().add(
                       PayInvoiceEvent(
                         invoiceId,
                         'manual',
-                        paymentProofBytes: _selectedFile!.bytes,
+                        paymentProofBytes: bytes,
                         paymentProofName: _selectedFile!.name,
                       ),
                     );

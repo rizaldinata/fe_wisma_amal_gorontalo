@@ -103,16 +103,18 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
     Emitter<MemberFinanceState> emit,
   ) async {
     emit(state.copyWith(status: MemberFinanceStatus.loading));
-     try {
+    try {
       final payment = await _payInvoice.execute(
         event.invoiceId,
         event.paymentMethod,
         paymentProofBytes: event.paymentProofBytes,
         paymentProofName: event.paymentProofName,
+        preferredPaymentType: event.preferredPaymentType,
       );
       emit(state.copyWith(
         status: MemberFinanceStatus.paymentSuccess,
         snapToken: payment.snapToken,
+        paymentData: payment.paymentData,
       ));
       // Refresh invoices and summary if manual (to show pending status)
       if (event.paymentMethod == 'manual') {

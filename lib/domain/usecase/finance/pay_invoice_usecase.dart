@@ -12,12 +12,14 @@ class PayInvoiceUseCase {
     String paymentMethod, {
     Uint8List? paymentProofBytes,
     String? paymentProofName,
+    String? preferredPaymentType,
   }) async {
     return await repository.payInvoice(
       invoiceId,
       paymentMethod,
       paymentProofBytes: paymentProofBytes,
       paymentProofName: paymentProofName,
+      preferredPaymentType: preferredPaymentType,
     );
   }
 }

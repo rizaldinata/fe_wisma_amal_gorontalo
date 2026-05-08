@@ -66,13 +66,13 @@ class PaymentMethodChanged extends ReservationDetailFormEvent {
   List<Object?> get props => [paymentMethod];
 }
 
-class SelectedBankChanged extends ReservationDetailFormEvent {
-  final String? selectedBank; // 'mandiri', 'bca', 'bri', atau null
+class SelectedMidtransMethodChanged extends ReservationDetailFormEvent {
+  final String? method; // kode metode Midtrans, e.g. 'qris', 'gopay', 'shopeepay'
 
-  const SelectedBankChanged(this.selectedBank);
+  const SelectedMidtransMethodChanged(this.method);
 
   @override
-  List<Object?> get props => [selectedBank];
+  List<Object?> get props => [method];
 }
 
 class RefreshProfileStatusEvent extends ReservationDetailFormEvent {

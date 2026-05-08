@@ -131,6 +131,11 @@ class FinanceRepositoryImpl implements FinanceRepository {
   }
 
   @override
+  Future<InvoiceEntity> getMemberInvoiceById(int id) async {
+    return await remoteDatasource.getMemberInvoiceById(id);
+  }
+
+  @override
   Future<List<PaymentEntity>> getMemberPayments() async {
     return await remoteDatasource.getMemberPayments();
   }
@@ -141,12 +146,14 @@ class FinanceRepositoryImpl implements FinanceRepository {
     String paymentMethod, {
     Uint8List? paymentProofBytes,
     String? paymentProofName,
+    String? preferredPaymentType,
   }) async {
     return await remoteDatasource.payInvoice(
       invoiceId,
       paymentMethod,
       paymentProofBytes: paymentProofBytes,
       paymentProofName: paymentProofName,
+      preferredPaymentType: preferredPaymentType,
     );
   }
 
