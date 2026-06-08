@@ -14,9 +14,8 @@ import 'package:frontend/core/services/network/exception.dart';
 part 'reservation_detail_form_event.dart';
 part 'reservation_detail_form_state.dart';
 
-class ReservationDetailFormBloc extends Bloc<
-    ReservationDetailFormEvent,
-    ReservationDetailFormState> {
+class ReservationDetailFormBloc
+    extends Bloc<ReservationDetailFormEvent, ReservationDetailFormState> {
   final GetPublicSettingsUseCase getSettingsUseCase;
   final CreateReservationUseCase createReservationUseCase;
   final ResidentRepository residentRepository;
@@ -69,16 +68,18 @@ class ReservationDetailFormBloc extends Bloc<
       }
     }
 
-    emit(state.copyWith(
-      room: event.room,
-      isDailyRentalEnabled: isDailyEnabled,
-      isMidtransEnabled: isMidtransEnabled,
-      midtransPaymentMethods: midtransPaymentMethods,
-      isProfileComplete: isProfileComplete,
-      paymentMethod: isMidtransEnabled ? 'online' : 'tunai',
-      rentType: 'Bulanan',
-      price: event.room.price.toInt(),
-    ));
+    emit(
+      state.copyWith(
+        room: event.room,
+        isDailyRentalEnabled: isDailyEnabled,
+        isMidtransEnabled: isMidtransEnabled,
+        midtransPaymentMethods: midtransPaymentMethods,
+        isProfileComplete: isProfileComplete,
+        paymentMethod: isMidtransEnabled ? 'online' : 'tunai',
+        rentType: 'Bulanan',
+        price: event.room.price.toInt(),
+      ),
+    );
 
     _calculate(emit);
   }
@@ -89,14 +90,17 @@ class ReservationDetailFormBloc extends Bloc<
   ) {
     if (state.room == null) return;
 
-    int price = event.rentType == 'Bulanan' 
-        ? state.room!.price.toInt() 
-        : state.room!.priceDaily.toInt();
+    int price;
 
-    emit(state.copyWith(
-      rentType: event.rentType,
-      price: price,
-    ));
+    if (event.rentType == 'Bulanan') {
+      price = state.room!.price.toInt();
+    } else if (event.rentType == 'Tahunan') {
+      price = (state.room!.price * 12).toInt();
+    } else {
+      price = state.room!.priceDaily.toInt();
+    }
+
+    emit(state.copyWith(rentType: event.rentType, price: price));
 
     _calculate(emit);
   }
@@ -129,10 +133,13 @@ class ReservationDetailFormBloc extends Bloc<
     PaymentMethodChanged event,
     Emitter<ReservationDetailFormState> emit,
   ) {
-    emit(state.copyWith(
-      paymentMethod: event.paymentMethod,
-      selectedMidtransMethod: null, // Reset pilihan metode saat method berubah
-    ));
+    emit(
+      state.copyWith(
+        paymentMethod: event.paymentMethod,
+        selectedMidtransMethod:
+            null, // Reset pilihan metode saat method berubah
+      ),
+    );
   }
 
   void _onSelectedMidtransMethodChanged(
@@ -152,9 +159,17 @@ class ReservationDetailFormBloc extends Bloc<
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
 
     try {
-      final startDateStr = "${state.startDate!.year}-${state.startDate!.month.toString().padLeft(2, '0')}-${state.startDate!.day.toString().padLeft(2, '0')}";
-      
-      final rentalType = state.rentType == 'Bulanan' ? 'monthly' : 'daily';
+      final startDateStr =
+          "${state.startDate!.year}-${state.startDate!.month.toString().padLeft(2, '0')}-${state.startDate!.day.toString().padLeft(2, '0')}";
+
+      String rentalType;
+      if (state.rentType == 'Bulanan') {
+        rentalType = 'monthly';
+      } else if (state.rentType == 'Tahunan') {
+        rentalType = 'yearly';
+      } else {
+        rentalType = 'daily';
+      }
 
       final reservation = await createReservationUseCase.execute(
         roomId: state.room!.id,
@@ -162,20 +177,24 @@ class ReservationDetailFormBloc extends Bloc<
         duration: state.duration,
         rentalType: rentalType,
       );
-      
-      emit(state.copyWith(
-        status: FormzSubmissionStatus.success,
-        createdReservation: reservation,
-      ));
+
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.success,
+          createdReservation: reservation,
+        ),
+      );
     } catch (e) {
       String message = 'Gagal membuat reservasi';
       if (e is DioException) {
         message = e.response?.data['message'] ?? message;
       }
-      emit(state.copyWith(
-        status: FormzSubmissionStatus.failure,
-        errorMessage: message,
-      ));
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: message,
+        ),
+      );
     }
   }
 
@@ -196,21 +215,27 @@ class ReservationDetailFormBloc extends Bloc<
 
   void _calculate(Emitter<ReservationDetailFormState> emit) {
     final start = state.startDate;
-    
+
     if (start == null) return;
 
     if (state.rentType == 'Bulanan') {
       final months = state.durationMonths;
+
       // Calculate end date: same day of month, plus N months
       final end = DateTime(start.year, start.month + months, start.day);
-      
+
       final total = months * state.price;
 
-      emit(state.copyWith(
-        endDate: end,
-        duration: months,
-        totalPrice: total,
-      ));
+      emit(state.copyWith(endDate: end, duration: months, totalPrice: total));
+    } else if (state.rentType == 'Tahunan') {
+      final years = state.durationMonths;
+
+      // Calculate end date: same day, plus N years
+      final end = DateTime(start.year + years, start.month, start.day);
+
+      final total = years * state.price;
+
+      emit(state.copyWith(endDate: end, duration: years, totalPrice: total));
     } else {
       // Daily logic
       final end = state.endDate;
@@ -218,15 +243,9 @@ class ReservationDetailFormBloc extends Bloc<
         final duration = end.difference(start).inDays;
         if (duration > 0) {
           final total = duration * state.price;
-          emit(state.copyWith(
-            duration: duration,
-            totalPrice: total,
-          ));
+          emit(state.copyWith(duration: duration, totalPrice: total));
         } else {
-          emit(state.copyWith(
-            duration: 0,
-            totalPrice: 0,
-          ));
+          emit(state.copyWith(duration: 0, totalPrice: 0));
         }
       }
     }
