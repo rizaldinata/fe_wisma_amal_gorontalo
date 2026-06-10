@@ -137,7 +137,7 @@ class _ReservationViewState extends State<ReservationView> {
 
                             Expanded(
                               child: StatCard(
-                                title: 'Reservasi Pending',
+                                title: 'Reservasi Menunggu',
                                 count: state.pendingReservations.length
                                     .toString(),
                                 icon: const Icon(
@@ -288,16 +288,16 @@ class _ReservationViewState extends State<ReservationView> {
                 items: const [
                   DropdownMenuItem(value: 'all', child: Text('Semua')),
 
-                  DropdownMenuItem(value: 'pending', child: Text('Pending')),
+                  DropdownMenuItem(value: 'pending', child: Text('Menunggu')),
 
-                  DropdownMenuItem(value: 'active', child: Text('Active')),
+                  DropdownMenuItem(value: 'active', child: Text('Aktif')),
 
                   DropdownMenuItem(
                     value: 'cancelled',
-                    child: Text('Cancelled'),
+                    child: Text('Dibatalkan'),
                   ),
 
-                  DropdownMenuItem(value: 'finished', child: Text('Finished')),
+                  DropdownMenuItem(value: 'finished', child: Text('Selesai')),
                 ],
 
                 onChanged: (value) {
@@ -334,7 +334,7 @@ class _ReservationViewState extends State<ReservationView> {
 
               child: Text(
                 selectedStartDate == null
-                    ? 'Start Date'
+                    ? 'Tanggal Mulai'
                     : '${selectedStartDate!.day}/${selectedStartDate!.month}/${selectedStartDate!.year}',
               ),
             ),
@@ -363,7 +363,7 @@ class _ReservationViewState extends State<ReservationView> {
 
               child: Text(
                 selectedEndDate == null
-                    ? 'End Date'
+                    ? 'Tanggal Selesai'
                     : '${selectedEndDate!.day}/${selectedEndDate!.month}/${selectedEndDate!.year}',
               ),
             ),
