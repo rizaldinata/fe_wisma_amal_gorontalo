@@ -32,11 +32,12 @@ class ReservationDetailFormPage extends StatelessWidget {
           ReservationDetailFormBloc(
             getSettingsUseCase: serviceLocator.get<GetPublicSettingsUseCase>(),
             createReservationUseCase: serviceLocator.get(),
-            residentRepository: serviceLocator.get(),
           )..add(
             InitReservationEvent(
               room,
               isLoggedIn: context.read<AuthBloc>().state.isLoggedIn,
+              userId: context.read<AuthBloc>().state.userInfo?.id,
+              userName: context.read<AuthBloc>().state.userInfo?.name,
             ),
           ),
       child: const ReservationDetailFormView(),

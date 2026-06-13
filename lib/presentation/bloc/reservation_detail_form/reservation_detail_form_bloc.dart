@@ -6,10 +6,6 @@ import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/domain/entity/reservation_entity.dart';
 import 'package:frontend/domain/usecase/reservation/create_reservation_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_public_settings_usecase.dart';
-import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
-import 'package:frontend/core/dependency_injection/dependency_injection.dart';
-import 'package:frontend/domain/repository/resident_repository.dart';
-import 'package:frontend/core/services/network/exception.dart';
 
 part 'reservation_detail_form_event.dart';
 part 'reservation_detail_form_state.dart';
@@ -18,12 +14,10 @@ class ReservationDetailFormBloc
     extends Bloc<ReservationDetailFormEvent, ReservationDetailFormState> {
   final GetPublicSettingsUseCase getSettingsUseCase;
   final CreateReservationUseCase createReservationUseCase;
-  final ResidentRepository residentRepository;
 
   ReservationDetailFormBloc({
     required this.getSettingsUseCase,
     required this.createReservationUseCase,
-    required this.residentRepository,
   }) : super(const ReservationDetailFormState()) {
     on<InitReservationEvent>(_onInit);
     on<RentTypeChanged>(_onRentTypeChanged);
@@ -55,18 +49,8 @@ class ReservationDetailFormBloc
       // Keep default if error
     }
 
-    if (event.isLoggedIn) {
-      try {
-        await residentRepository.getProfile();
-        isProfileComplete = true;
-      } catch (e) {
-        if (e is AppException && e.code == 404) {
-          isProfileComplete = false;
-        } else {
-          isProfileComplete = true;
-        }
-      }
-    }
+    // Profile completion is handled by admin during schedule creation; always allow reservation
+    isProfileComplete = true;
 
     emit(
       state.copyWith(
@@ -78,6 +62,8 @@ class ReservationDetailFormBloc
         paymentMethod: isMidtransEnabled ? 'online' : 'tunai',
         rentType: 'Bulanan',
         price: event.room.price.toInt(),
+        tenantUserId: event.userId,
+        tenantName: event.userName,
       ),
     );
 
@@ -159,23 +145,16 @@ class ReservationDetailFormBloc
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
 
     try {
-      final startDateStr =
-          "${state.startDate!.year}-${state.startDate!.month.toString().padLeft(2, '0')}-${state.startDate!.day.toString().padLeft(2, '0')}";
-
-      String rentalType;
-      if (state.rentType == 'Bulanan') {
-        rentalType = 'monthly';
-      } else if (state.rentType == 'Tahunan') {
-        rentalType = 'yearly';
-      } else {
-        rentalType = 'daily';
-      }
+      String _fmtDate(DateTime d) =>
+          "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
 
       final reservation = await createReservationUseCase.execute(
         roomId: state.room!.id,
-        startDate: startDateStr,
-        duration: state.duration,
-        rentalType: rentalType,
+        startDate: _fmtDate(state.startDate!),
+        endDate: _fmtDate(state.endDate!),
+        agreedPrice: state.totalPrice,
+        tenantUserId: state.tenantUserId,
+        tenantName: state.tenantName,
       );
 
       emit(
@@ -202,15 +181,7 @@ class ReservationDetailFormBloc
     RefreshProfileStatusEvent event,
     Emitter<ReservationDetailFormState> emit,
   ) async {
-    try {
-      await residentRepository.getProfile();
-      emit(state.copyWith(isProfileComplete: true));
-    } catch (e) {
-      if (e is AppException && e.code == 404) {
-        emit(state.copyWith(isProfileComplete: false));
-      }
-      // Error lain (network) → tidak ubah state agar tidak mengganggu flow
-    }
+    emit(state.copyWith(isProfileComplete: true));
   }
 
   void _calculate(Emitter<ReservationDetailFormState> emit) {

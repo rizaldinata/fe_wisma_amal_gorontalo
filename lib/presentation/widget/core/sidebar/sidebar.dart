@@ -37,13 +37,13 @@ class SidebarItem {
 class CustomSidebar extends StatefulWidget {
   final double width;
   final List<SidebarItem> items;
-  final String? activeRouteName;
+  final Set<String> activeRouteNames;
 
   const CustomSidebar({
     super.key,
     this.width = 250,
     required this.items,
-    this.activeRouteName,
+    required this.activeRouteNames,
   });
 
   @override
@@ -71,31 +71,15 @@ class _CustomSidebarState extends State<CustomSidebar> {
     return token != null;
   }
 
-  bool _isSelected(BuildContext context, SidebarItem item) {
-    final current = context.router.current;
-    final segments = context.router.currentSegments;
-
+  bool _isSelected(SidebarItem item) {
     if (item.page != null) {
-      final activeOverride = (widget.activeRouteName != null)
-          ? widget.activeRouteName
-          : null;
-      if (activeOverride != null && activeOverride == item.page!.routeName) {
+      if (widget.activeRouteNames.contains(item.page!.routeName)) {
         return true;
       }
-
-      if (current.name == item.page!.routeName) return true;
-
-      if (segments.any((s) => s.name == item.page!.routeName)) return true;
-      try {
-        final stack = context.router.stack;
-        for (final entry in stack) {
-          if (entry.name == item.page!.routeName) return true;
-        }
-      } catch (_) {}
     }
 
     if (item.hasChildren) {
-      return item.children!.any((c) => _isSelected(context, c));
+      return item.children!.any((c) => _isSelected(c));
     }
     return false;
   }
@@ -198,7 +182,7 @@ class _CustomSidebarState extends State<CustomSidebar> {
                               final id = item.label;
                               final isOpen =
                                   _expanded.contains(id) ||
-                                  _isSelected(context, item);
+                                  _isSelected(item);
                               return _buildAccordionSection(
                                 context,
                                 item,
@@ -410,7 +394,7 @@ class _CustomSidebarState extends State<CustomSidebar> {
   }
 
   Widget _buildMenuTile(BuildContext context, SidebarItem item) {
-    final selected = _isSelected(context, item);
+    final selected = _isSelected(item);
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Material(

@@ -10,25 +10,20 @@ class ResidentResponse {
   });
 
   factory ResidentResponse.fromJson(Map<String, dynamic> json) {
-    final data = json['data'] as Map<String, dynamic>? ?? <String, dynamic>{};
-    final statsJson = data['stats'] as Map<String, dynamic>? ?? <String, dynamic>{};
+    // Schedule API: {success: true, data: [...], meta: {...}, links: {...}}
+    final schedulesList = json['data'] as List<dynamic>? ?? <dynamic>[];
+    final metaMap = json['meta'] as Map<String, dynamic>? ?? <String, dynamic>{};
 
-    final dynamic residentsPayload = data['residents'];
-    final Map<String, dynamic> residentsMap =
-        residentsPayload is Map<String, dynamic>
-            ? residentsPayload
-            : <String, dynamic>{};
-    final List<dynamic> residentsList = residentsMap.isNotEmpty
-        ? (residentsMap['data'] as List<dynamic>? ?? <dynamic>[])
-        : (residentsPayload as List<dynamic>? ?? <dynamic>[]);
-    final Map<String, dynamic> metaMap =
-        residentsMap['meta'] as Map<String, dynamic>? ?? <String, dynamic>{};
+    final items = schedulesList.map((item) => ResidentItem.fromJson(item as Map<String, dynamic>)).toList();
 
     return ResidentResponse(
-      stats: ResidentStats.fromJson(statsJson),
-      residents: residentsList
-          .map((item) => ResidentItem.fromJson(item))
-          .toList(),
+      stats: ResidentStats(
+        penghuniAktif: items.where((i) => i.status == 'active').length,
+        kontrakPending: items.where((i) => i.isPending).length,
+        kontrakBerakhir: 0,
+        kamarTersedia: 0,
+      ),
+      residents: items,
       pagination: ResidentPagination.fromJson(metaMap),
     );
   }
@@ -97,15 +92,19 @@ class ResidentItem {
   });
 
   factory ResidentItem.fromJson(Map<String, dynamic> json) {
+    final tenantJson = json['tenant'] as Map<String, dynamic>? ?? <String, dynamic>{};
+    final roomJson = json['room'] as Map<String, dynamic>? ?? <String, dynamic>{};
+    final status = json['status']?.toString() ?? '-';
+
     return ResidentItem(
       id: json['id'].toString(),
-      nama: json['nama'] ?? '-',
-      kamar: json['kamar'] ?? '-',
-      kontak: json['kontak'] ?? '-',
-      detailBayar: json['detail_bayar'] ?? '-',
-      isBelumLunas: json['is_belum_lunas'] ?? false,
-      status: json['status'] ?? '-',
-      isPending: json['is_pending'] ?? false,
+      nama: tenantJson['name']?.toString() ?? '-',
+      kamar: roomJson['number']?.toString() ?? '-',
+      kontak: tenantJson['phone']?.toString() ?? '-',
+      detailBayar: '-',
+      isBelumLunas: false,
+      status: status,
+      isPending: status == 'pending',
     );
   }
 }

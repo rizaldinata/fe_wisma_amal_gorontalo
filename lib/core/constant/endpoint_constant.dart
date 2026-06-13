@@ -4,8 +4,8 @@ class EndpointConstant {
   static const String logoutEndpoint = '/logout';
   static const String checkSessionEndpoint = '/me';
   static const String residentProfileEndpoint = '/resident/profile';
-  static const String adminResidentsEndpoint = '/admin/residents';
-  static String adminResidentDetailEndpoint(String id) => '/admin/residents/$id';
+  static const String adminResidentsEndpoint = '/v1/room-schedules';
+  static String adminResidentDetailEndpoint(String id) => '/v1/room-schedules/$id';
   static const String roomSchedulesEndpoint = '/rooms-schedules';
 
   // crud permission

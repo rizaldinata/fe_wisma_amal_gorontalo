@@ -16,14 +16,18 @@ class ReservationRepositoryImpl implements ReservationRepository {
   Future<ReservationEntity> createReservation({
     required int roomId,
     required String startDate,
-    required int duration,
-    required String rentalType,
+    required String endDate,
+    required int agreedPrice,
+    int? tenantUserId,
+    String? tenantName,
   }) async {
     return await remoteDatasource.createReservation(
       roomId: roomId,
       startDate: startDate,
-      duration: duration,
-      rentalType: rentalType,
+      endDate: endDate,
+      agreedPrice: agreedPrice,
+      tenantUserId: tenantUserId,
+      tenantName: tenantName,
     );
   }
 

@@ -1,3 +1,4 @@
+import 'package:auto_route/auto_route.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,6 +13,8 @@ import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:frontend/presentation/bloc/app/app_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
+
+final AutoRouteObserver routeObserver = AutoRouteObserver();
 
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
@@ -63,7 +66,7 @@ class MyApp extends StatelessWidget {
       // },
       darkTheme: AppTheme.darkTheme,
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      routerConfig: router.config(),
+      routerConfig: router.config(navigatorObservers: () => [routeObserver]),
     );
   }
 }
