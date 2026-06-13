@@ -52,7 +52,7 @@ class RoleManagementView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Role Management',
+                        'Manajemen Role',
                         style: theme.textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: theme.colorScheme.onSurface,
@@ -60,7 +60,7 @@ class RoleManagementView extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Define and manage roles and their associated permissions',
+                        'Tentukan dan kelola peran serta izin yang terkait',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -70,7 +70,7 @@ class RoleManagementView extends StatelessWidget {
                   ElevatedButton.icon(
                     onPressed: () => _showRoleForm(context),
                     icon: const Icon(Icons.add_moderator_outlined, size: 18),
-                    label: const Text('Add New Role'),
+                    label: const Text('Tambah Role Baru'),
                   ),
                 ],
               ),
@@ -91,7 +91,7 @@ class RoleManagementView extends StatelessWidget {
                     children: [
                       Expanded(
                         child: StatCard(
-                          title: 'Total Roles',
+                          title: 'Total Role',
                           count: totalRoles.toString(),
                           color: theme.colorScheme.primaryContainer.withOpacity(
                             0.2,
@@ -101,7 +101,7 @@ class RoleManagementView extends StatelessWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         child: StatCard(
-                          title: 'Available Permissions',
+                          title: 'Permission Tersedia',
                           count: totalPermissions.toString(),
                           color: theme.colorScheme.secondaryContainer
                               .withOpacity(0.2),
@@ -117,15 +117,15 @@ class RoleManagementView extends StatelessWidget {
               BlocBuilder<RoleBloc, RoleState>(
                 builder: (context, state) {
                   final columns = [
-                    const TableColumn(label: 'ROLE NAME', flex: 3),
-                    const TableColumn(label: 'DESCRIPTION', flex: 5),
+                    const TableColumn(label: 'NAMA ROLE', flex: 3),
+                    const TableColumn(label: 'DESKRIPSI', flex: 5),
                     const TableColumn(
-                      label: 'PERMISSIONS COUNT',
+                      label: 'JUMLAH PERMISSION',
                       flex: 2,
                       align: TextAlign.center,
                     ),
                     const TableColumn(
-                      label: 'ACTIONS',
+                      label: 'AKSI',
                       flex: 2,
                       align: TextAlign.center,
                     ),
@@ -158,7 +158,7 @@ class RoleManagementView extends StatelessWidget {
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(
-                            '${role.permissions.length} Perms',
+                            '${role.permissions.length} Permission',
                             style: TextStyle(
                               color: theme.colorScheme.primary,
                               fontSize: 12,
@@ -192,12 +192,12 @@ class RoleManagementView extends StatelessWidget {
                   }
 
                   return TableCard(
-                    title: 'Role List',
+                    title: 'Daftar Role',
                     columns: columns,
                     rows: rows,
                     emptyMessage: state is RoleLoading
-                        ? 'Loading roles...'
-                        : 'No roles found',
+                        ? 'Memuat data role...'
+                        : 'Tidak ditemukan role',
                   );
                 },
               ),
@@ -212,14 +212,14 @@ class RoleManagementView extends StatelessWidget {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Role'),
+        title: const Text('Hapus Role'),
         content: Text(
-          'Are you sure you want to delete the role "${role.name}"?',
+          'Apakah Anda yakin ingin menghapus role "${role.name}"?',
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: const Text('Batal'),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -227,7 +227,7 @@ class RoleManagementView extends StatelessWidget {
               context.read<RoleBloc>().add(DeleteRole(role.id));
               Navigator.pop(dialogContext);
             },
-            child: const Text('Delete'),
+            child: const Text('Hapus'),
           ),
         ],
       ),
@@ -259,7 +259,7 @@ class RoleManagementView extends StatelessWidget {
         value: roleBloc,
         child: StatefulBuilder(
           builder: (context, setState) => AlertDialog(
-            title: Text(role == null ? 'Add New Role' : 'Edit Role'),
+            title: Text(role == null ? 'Tambah Role Baru' : 'Edit Role'),
             content: SizedBox(
               width: 600,
               child: SingleChildScrollView(
@@ -270,8 +270,8 @@ class RoleManagementView extends StatelessWidget {
                       TextField(
                         controller: nameController,
                         decoration: const InputDecoration(
-                          labelText: 'Role Name',
-                          hintText: 'e.g., manager',
+                          labelText: 'Nama Role',
+                          hintText: 'contoh: manager',
                         ),
                         readOnly: role?.name == 'super-admin',
                       ),
@@ -279,15 +279,15 @@ class RoleManagementView extends StatelessWidget {
                     TextField(
                       controller: descController,
                       decoration: const InputDecoration(
-                        labelText: 'Description',
-                        hintText: 'Role description...',
+                        labelText: 'Deskripsi',
+                        hintText: 'Deskripsi role...',
                       ),
                     ),
                     const SizedBox(height: 24),
                     const Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Permissions',
+                        'Permission',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -307,7 +307,7 @@ class RoleManagementView extends StatelessWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
-                child: const Text('Cancel'),
+                child: const Text('Batal'),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -331,7 +331,7 @@ class RoleManagementView extends StatelessWidget {
                   }
                   Navigator.pop(dialogContext);
                 },
-                child: Text(role == null ? 'Create' : 'Save'),
+                child: Text(role == null ? 'Buat' : 'Simpan'),
               ),
             ],
           ),

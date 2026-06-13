@@ -244,17 +244,16 @@ class RoomDetailView extends StatelessWidget {
                                   if (state.room?.priceDaily != null &&
                                       state.room!.priceDaily > 0) ...[
                                     const SizedBox(height: 8),
-                                    Text(
-                                      '${state.room?.priceDailyFormatted} / hari',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(
-                                            color: Colors.blue.shade700,
-                                          ),
-                                    ),
+                                    // Text(
+                                    //   '${state.room?.priceDailyFormatted} / hari',
+                                    //   style: Theme.of(context)
+                                    //       .textTheme
+                                    //       .titleMedium
+                                    //       ?.copyWith(
+                                    //         color: Colors.blue.shade700,
+                                    //       ),
+                                    // ),
                                   ],
-
                                   if (!isAdmin) ...[
                                     const SizedBox(height: 20),
                                     BasicButton(

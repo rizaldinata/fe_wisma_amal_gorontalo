@@ -54,7 +54,7 @@ class UserManagementView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'User Management',
+                        'Manajemen Pengguna',
                         style: theme.textTheme.displaySmall?.copyWith(
                           fontWeight: FontWeight.w700,
                           color: theme.colorScheme.onSurface,
@@ -62,7 +62,7 @@ class UserManagementView extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'Manage your team member and their account permissions here',
+                        'Kelola anggota tim Anda dan izin akun mereka di sini',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurfaceVariant,
                         ),
@@ -77,7 +77,7 @@ class UserManagementView extends StatelessWidget {
                           Icons.person_add_alt_outlined,
                           size: 18,
                         ),
-                        label: const Text('Invite User'),
+                        label: const Text('Undang Pengguna'),
                       ),
                     ],
                   ),
@@ -114,7 +114,7 @@ class UserManagementView extends StatelessWidget {
                     children: [
                       Expanded(
                         child: StatCard(
-                          title: 'Total Users',
+                          title: 'Total Pengguna',
                           count: total.toString(),
                           // icon: const Icon(Icons.people_alt_outlined),
                         ),
@@ -122,7 +122,7 @@ class UserManagementView extends StatelessWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         child: StatCard(
-                          title: 'Admins',
+                          title: 'Admin',
                           count: admins.toString(),
                           // icon: const Icon(Icons.security_outlined),
                         ),
@@ -130,7 +130,7 @@ class UserManagementView extends StatelessWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         child: StatCard(
-                          title: 'Residents',
+                          title: 'Penghuni',
                           count: residents.toString(),
                           // icon: const Icon(Icons.home_work_outlined),
                         ),
@@ -138,7 +138,7 @@ class UserManagementView extends StatelessWidget {
                       const SizedBox(width: 16),
                       Expanded(
                         child: StatCard(
-                          title: 'New Members',
+                          title: 'Anggota Baru',
                           count: members.toString(),
                           // icon: const Icon(Icons.person_add_outlined),
                         ),
@@ -153,12 +153,12 @@ class UserManagementView extends StatelessWidget {
               BlocBuilder<UserManagementBloc, UserManagementState>(
                 builder: (context, state) {
                   final columns = [
-                    const TableColumn(label: 'USER', flex: 4),
+                    const TableColumn(label: 'PENGGUNA', flex: 4),
                     const TableColumn(label: 'ROLE', flex: 3),
                     const TableColumn(label: 'STATUS', flex: 2),
-                    const TableColumn(label: 'CREATED AT', flex: 2),
+                    const TableColumn(label: 'DIBUAT PADA', flex: 2),
                     const TableColumn(
-                      label: 'ACTIONS',
+                      label: 'AKSI',
                       flex: 2,
                       align: TextAlign.center,
                     ),
@@ -229,7 +229,7 @@ class UserManagementView extends StatelessWidget {
                                 width: 250,
                                 child: TextField(
                                   decoration: InputDecoration(
-                                    hintText: 'Search users...',
+                                    hintText: 'Cari pengguna...',
                                     prefixIcon: const Icon(
                                       Icons.search,
                                       size: 20,
@@ -313,14 +313,14 @@ class UserManagementView extends StatelessWidget {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) => AlertDialog(
-          title: Text(user == null ? 'Invite User' : 'Edit User'),
+          title: Text(user == null ? 'Undang Pengguna' : 'Edit Pengguna'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 TextField(
                   controller: nameController,
-                  decoration: const InputDecoration(labelText: 'Name'),
+                  decoration: const InputDecoration(labelText: 'Nama'),
                 ),
                 const SizedBox(height: 12),
                 TextField(
@@ -357,7 +357,7 @@ class UserManagementView extends StatelessWidget {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Cancel'),
+              child: const Text('Batal'),
             ),
             ElevatedButton(
               onPressed: () {
@@ -382,7 +382,7 @@ class UserManagementView extends StatelessWidget {
                 }
                 Navigator.pop(dialogContext);
               },
-              child: Text(user == null ? 'Create' : 'Save'),
+              child: Text(user == null ? 'Buat' : 'Simpan'),
             ),
           ],
         ),
@@ -503,7 +503,7 @@ class _StatusChip extends StatelessWidget {
         ),
         const SizedBox(width: 8),
         const Text(
-          'Active',
+          'Aktif',
           style: TextStyle(
             color: Color(0xFF18BF10),
             fontSize: 12,

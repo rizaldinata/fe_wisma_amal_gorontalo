@@ -1,61 +1,55 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:formz/formz.dart';
-
 import 'package:frontend/domain/usecase/my_reservation/get_my_reservations_usecase.dart';
-
+import 'package:frontend/domain/usecase/reservation/cancel_reservation_usecase.dart';
 import 'my_reservation_event.dart';
-
 import 'my_reservation_state.dart';
 
-class MyReservationBloc
-    extends Bloc<
-        MyReservationEvent,
-        MyReservationState> {
-  final GetMyReservationsUseCase
-      getMyReservationsUseCase;
+class MyReservationBloc extends Bloc<MyReservationEvent, MyReservationState> {
+  final GetMyReservationsUseCase getMyReservationsUseCase;
+  final CancelReservationUseCase cancelReservationUseCase;
 
   MyReservationBloc({
     required this.getMyReservationsUseCase,
+    required this.cancelReservationUseCase,
   }) : super(const MyReservationState()) {
-    on<GetMyReservationsEvent>(
-      _onGetMyReservations,
-    );
+    on<GetMyReservationsEvent>(_onGetMyReservations);
+    on<CancelMyReservationEvent>(_onCancelReservation);
   }
 
   Future<void> _onGetMyReservations(
     GetMyReservationsEvent event,
-
     Emitter<MyReservationState> emit,
   ) async {
-    emit(
-      state.copyWith(
-        status:
-            FormzSubmissionStatus.inProgress,
-      ),
-    );
-
+    emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     try {
-      final reservations =
-          await getMyReservationsUseCase();
-
-      emit(
-        state.copyWith(
-          status:
-              FormzSubmissionStatus.success,
-
-          reservations: reservations,
-        ),
-      );
+      final reservations = await getMyReservationsUseCase();
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.success,
+        reservations: reservations,
+      ));
     } catch (e) {
-      emit(
-        state.copyWith(
-          status:
-              FormzSubmissionStatus.failure,
+      emit(state.copyWith(
+        status: FormzSubmissionStatus.failure,
+        errorMessage: e.toString(),
+      ));
+    }
+  }
 
-          errorMessage: e.toString(),
-        ),
-      );
+  Future<void> _onCancelReservation(
+    CancelMyReservationEvent event,
+    Emitter<MyReservationState> emit,
+  ) async {
+    emit(state.copyWith(cancelStatus: FormzSubmissionStatus.inProgress));
+    try {
+      await cancelReservationUseCase.execute(event.scheduleId);
+      emit(state.copyWith(cancelStatus: FormzSubmissionStatus.success));
+      add(GetMyReservationsEvent());
+    } catch (e) {
+      emit(state.copyWith(
+        cancelStatus: FormzSubmissionStatus.failure,
+        errorMessage: e.toString(),
+      ));
     }
   }
 }

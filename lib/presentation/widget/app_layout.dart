@@ -42,6 +42,29 @@ class _AppLayoutPageState extends State<AppLayoutPage>
 
   @override
   Widget build(BuildContext context) {
+    // Read router here (outer context) so _AppLayoutPageState subscribes to
+    // RouterScope — not BlocBuilder's inner element. This prevents a
+    // bottom-up rebuild of BlocBuilder during route transitions which
+    // conflicts with AutoRoute's element lifecycle management.
+    final activeRouteNames = <String>{};
+    try {
+      final current = context.router.current;
+      activeRouteNames.add(current.name);
+
+      final segments = context.router.currentSegments;
+      for (final s in segments) {
+        activeRouteNames.add(s.name);
+      }
+
+      final stack = context.router.stack;
+      for (final entry in stack) {
+        final name = entry.name;
+        if (name != null) {
+          activeRouteNames.add(name);
+        }
+      }
+    } catch (_) {}
+
     return Scaffold(
       backgroundColor: StyleConstant.backgroundColor,
 
@@ -58,7 +81,7 @@ class _AppLayoutPageState extends State<AppLayoutPage>
           return Row(
             children: [
               CustomSidebar(
-                activeRouteName: context.router.current.name,
+                activeRouteNames: activeRouteNames,
 
                 items: [
                   // ─── Dashboard ─────────────────────────────────────

@@ -50,7 +50,7 @@ class InventoryView extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Inventory',
+                        'Inventaris',
                         style: Theme.of(context).textTheme.headlineLarge,
                       ),
                       ElevatedButton.icon(
