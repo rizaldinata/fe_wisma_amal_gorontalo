@@ -14,8 +14,6 @@ import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:frontend/presentation/bloc/app/app_bloc.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-final AutoRouteObserver routeObserver = AutoRouteObserver();
-
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
     GlobalKey<ScaffoldMessengerState>();
 
@@ -66,7 +64,7 @@ class MyApp extends StatelessWidget {
       // },
       darkTheme: AppTheme.darkTheme,
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      routerConfig: router.config(navigatorObservers: () => [routeObserver]),
+      routerConfig: router.config(navigatorObservers: () => [AutoRouteObserver()]),
     );
   }
 }
