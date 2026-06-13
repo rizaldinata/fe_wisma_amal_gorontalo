@@ -37,7 +37,7 @@ class _MidtransPaymentPageState extends State<MidtransPaymentPage> {
   bool _snapOpened = false;
   bool _isPolling = false;
   bool _paymentConfirmed = false;
-  int _remainingSeconds = 300;
+  int _remainingSeconds = 900; // 15 menit default
   int _pollAttempts = 0;
   Timer? _countdownTimer;
   Timer? _pollTimer;
@@ -117,7 +117,7 @@ class _MidtransPaymentPageState extends State<MidtransPaymentPage> {
       builder: (ctx) => AlertDialog(
         title: const Text('Waktu Pembayaran Habis'),
         content: const Text(
-          'Batas waktu pembayaran (5 menit) telah habis. '
+          'Batas waktu pembayaran (15 menit) telah habis. '
           'Pemesanan dibatalkan secara otomatis dan kamar kembali tersedia.',
         ),
         actions: [

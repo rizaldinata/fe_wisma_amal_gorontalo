@@ -51,6 +51,9 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
         status: MemberFinanceStatus.success,
         summary: summary,
         isMidtransEnabled: isMidtrans,
+        bankName: settings.getString('bank_name') ?? '',
+        bankAccount: settings.getString('bank_account') ?? '',
+        bankHolder: settings.getString('bank_holder') ?? '',
       ));
     } catch (e) {
       emit(state.copyWith(

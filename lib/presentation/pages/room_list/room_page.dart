@@ -279,8 +279,11 @@ class _RoomViewState extends State<RoomView>
               final room = rooms[index];
 
               return RoomCard(
-                onTap: () {
-                  context.router.navigate(RoomDetailRoute(roomId: room.id));
+                onTap: () async {
+                  await context.router.navigate(RoomDetailRoute(roomId: room.id));
+                  if (context.mounted) {
+                    context.read<RoomBloc>().add(GetRoomsEvent());
+                  }
                 },
                 onDelete: () async {
                   final confirmed = await AppDialog.show(

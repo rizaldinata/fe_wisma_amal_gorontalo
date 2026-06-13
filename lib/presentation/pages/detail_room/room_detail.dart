@@ -13,6 +13,7 @@ import 'package:frontend/presentation/widget/core/appbar/custom_appbar.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:frontend/presentation/widget/core/chip/custom_chip.dart';
+import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/presentation/widget/core/image/image_carousel.dart';
 
 @RoutePage()
@@ -254,7 +255,9 @@ class RoomDetailView extends StatelessWidget {
                                     //       ),
                                     // ),
                                   ],
-                                  if (!isAdmin) ...[
+                                  if (!isAdmin &&
+                                      state.room?.status ==
+                                          RoomStatusEnum.available) ...[
                                     const SizedBox(height: 20),
                                     BasicButton(
                                       onPressed: () {

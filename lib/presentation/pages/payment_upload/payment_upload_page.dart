@@ -31,7 +31,7 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
   bool _isSubmitting = false;
   bool _isExpired = false;
   bool _isCancelling = false;
-  int _remainingSeconds = 300; // 5 menit default
+  int _remainingSeconds = 900; // 15 menit default
   Timer? _countdownTimer;
 
   final currencyFormat = NumberFormat.currency(
@@ -147,7 +147,7 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
       builder: (ctx) => AlertDialog(
         title: const Text('Waktu Pembayaran Habis'),
         content: const Text(
-          'Batas waktu upload bukti pembayaran (5 menit) telah habis. Pemesanan dibatalkan secara otomatis dan kamar kembali tersedia.',
+          'Batas waktu upload bukti pembayaran (15 menit) telah habis. Pemesanan dibatalkan secara otomatis dan kamar kembali tersedia.',
         ),
         actions: [
           ElevatedButton(
