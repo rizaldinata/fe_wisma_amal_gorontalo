@@ -48,15 +48,16 @@ class _AppLayoutPageState extends State<AppLayoutPage>
     // conflicts with AutoRoute's element lifecycle management.
     final activeRouteNames = <String>{};
     try {
-      final current = context.router.current;
+      final router = AutoRouter.of(context, watch: true);
+      final current = router.current;
       activeRouteNames.add(current.name);
 
-      final segments = context.router.currentSegments;
+      final segments = router.currentSegments;
       for (final s in segments) {
         activeRouteNames.add(s.name);
       }
 
-      final stack = context.router.stack;
+      final stack = router.stack;
       for (final entry in stack) {
         final name = entry.name;
         if (name != null) {

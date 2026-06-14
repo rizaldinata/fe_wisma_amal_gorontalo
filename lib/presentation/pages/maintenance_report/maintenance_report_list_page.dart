@@ -3,11 +3,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/core/theme/app_theme.dart';
+import 'package:frontend/domain/entity/maintenance_request_entity.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/maintenance_list/maintenance_list_bloc.dart';
 import 'package:frontend/presentation/bloc/maintenance_list/maintenance_list_event.dart';
 import 'package:frontend/presentation/bloc/maintenance_list/maintenance_list_state.dart';
 import 'package:frontend/presentation/pages/maintenance_report/widgets/maintenance_request_card.dart';
+import 'package:frontend/presentation/widget/core/appbar/app_topbar.dart';
+import 'package:frontend/presentation/widget/core/appbar/search_and_filter_bar.dart';
+import 'package:frontend/presentation/widget/core/card/summary_stat_card.dart';
+import 'package:frontend/presentation/widget/core/chip/status_badge.dart';
+import 'package:frontend/presentation/widget/core/table/app_data_table.dart';
+import 'package:frontend/presentation/widget/core/wrapper/empty_state_widget.dart';
+import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 
 @RoutePage()
 class MaintenanceReportListPage extends StatelessWidget {
@@ -33,6 +46,7 @@ class _MaintenanceReportListView extends StatefulWidget {
 class _MaintenanceReportListViewState
     extends State<_MaintenanceReportListView> {
   String _filterStatus = 'Semua';
+  String _searchQuery = '';
 
   final List<String> _statusFilters = [
     'Semua',
@@ -50,7 +64,8 @@ class _MaintenanceReportListViewState
 
   void _loadReports() {
     final authState = context.read<AuthBloc>().state;
-    final isAdmin = authState.isLoggedIn &&
+    final isAdmin =
+        authState.isLoggedIn &&
         (authState.userInfo?.roles.any(
               (r) => r == 'admin' || r == 'super-admin',
             ) ??
@@ -61,159 +76,6 @@ class _MaintenanceReportListViewState
     } else {
       context.read<MaintenanceListBloc>().add(FetchMyMaintenanceRequests());
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final authState = context.watch<AuthBloc>().state;
-    final isAdmin = authState.isLoggedIn &&
-        (authState.userInfo?.roles.any(
-              (r) => r == 'admin' || r == 'super-admin',
-            ) ??
-            false);
-
-    return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Header ──
-            Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Laporan Kerusakan',
-                        style: theme.textTheme.headlineLarge,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        isAdmin
-                            ? 'Semua laporan kerusakan dari penghuni'
-                            : 'Laporan kerusakan yang Anda buat',
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (!isAdmin)
-                  ElevatedButton.icon(
-                    onPressed: () async {
-                      await context.router.push(
-                        const MaintenanceCreateReportRoute(),
-                      );
-                      // Reload on return
-                      if (mounted) _loadReports();
-                    },
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('Buat Laporan'),
-                  ),
-                if (isAdmin)
-                  IconButton(
-                    tooltip: 'Muat Ulang',
-                    onPressed: _loadReports,
-                    icon: const Icon(Icons.refresh_rounded),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // ── Status Filter Chips ──
-            SizedBox(
-              height: 36,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                itemCount: _statusFilters.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
-                itemBuilder: (context, index) {
-                  final filter = _statusFilters[index];
-                  final isSelected = _filterStatus == filter;
-                  return FilterChip(
-                    label: Text(filter),
-                    selected: isSelected,
-                    onSelected: (_) =>
-                        setState(() => _filterStatus = filter),
-                    showCheckmark: false,
-                    labelStyle: TextStyle(
-                      fontSize: 13,
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.normal,
-                    ),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 16),
-
-            // ── Content ──
-            Expanded(
-              child: BlocBuilder<MaintenanceListBloc, MaintenanceListState>(
-                builder: (context, state) {
-                  if (state is MaintenanceListLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (state is MaintenanceListError) {
-                    return _ErrorView(
-                      message: state.message,
-                      onRetry: _loadReports,
-                    );
-                  }
-
-                  if (state is MaintenanceListLoaded) {
-                    var items = state.requests;
-
-                    // Apply filter
-                    if (_filterStatus != 'Semua') {
-                      items = items.where((r) {
-                        return _statusLabel(r.status) == _filterStatus;
-                      }).toList();
-                    }
-
-                    if (items.isEmpty) {
-                      return _EmptyView(
-                        isAdmin: isAdmin,
-                        hasFilter: _filterStatus != 'Semua',
-                      );
-                    }
-
-                    return RefreshIndicator(
-                      onRefresh: () async => _loadReports(),
-                      child: ListView.separated(
-                        itemCount: items.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 10),
-                        itemBuilder: (context, index) {
-                          final request = items[index];
-                          return MaintenanceRequestCard(
-                            request: request,
-                            onTap: () async {
-                              await context.router.push(
-                                MaintenanceReportDetailRoute(id: request.id),
-                              );
-                              if (mounted) _loadReports();
-                            },
-                          );
-                        },
-                      ),
-                    );
-                  }
-
-                  return const SizedBox.shrink();
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   String _statusLabel(dynamic status) {
@@ -230,90 +92,450 @@ class _MaintenanceReportListViewState
         return 'Semua';
     }
   }
-}
-
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message, required this.onRetry});
-  final String message;
-  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+    final isDark = AppTheme.isDark(context);
+    final authState = context.watch<AuthBloc>().state;
+    final isAdmin =
+        authState.isLoggedIn &&
+        (authState.userInfo?.roles.any(
+              (r) => r == 'admin' || r == 'super-admin',
+            ) ??
+            false);
+
+    return Scaffold(
+      backgroundColor: isDark ? AppColorsDark.background : AppColorsLight.background,
+      body: Column(
         children: [
-          Icon(
-            Icons.error_outline_rounded,
-            size: 56,
-            color: Theme.of(context).colorScheme.error,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Gagal memuat data',
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            message,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
+          AppTopBar(
+            title: 'Laporan Kerusakan',
+            breadcrumb: 'Operasional / Laporan Kerusakan',
+            action: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isAdmin)
+                  IconButton(
+                    tooltip: 'Muat Ulang',
+                    onPressed: _loadReports,
+                    icon: const Icon(Icons.refresh_rounded),
+                  ),
+                if (!isAdmin)
+                  ElevatedButton.icon(
+                    onPressed: () async {
+                      await context.router.push(
+                        const MaintenanceCreateReportRoute(),
+                      );
+                      if (mounted) _loadReports();
+                    },
+                    icon: const Icon(Icons.add_rounded, size: 18),
+                    label: const Text('Buat Laporan'),
+                  ),
+              ],
             ),
-            textAlign: TextAlign.center,
           ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Coba Lagi'),
+          Expanded(
+            child: BlocBuilder<MaintenanceListBloc, MaintenanceListState>(
+              builder: (context, state) {
+                if (state is MaintenanceListLoading) {
+                  return _buildSkeleton(isDark, isAdmin);
+                }
+
+                if (state is MaintenanceListError) {
+                  return EmptyStateWidget(
+                    icon: Icons.error_outline,
+                    title: 'Gagal Memuat Data',
+                    subtitle: state.message,
+                    action: ElevatedButton(
+                      onPressed: _loadReports,
+                      child: const Text('Coba Lagi'),
+                    ),
+                  );
+                }
+
+                if (state is MaintenanceListLoaded) {
+                  final allItems = state.requests;
+
+                  // Filtering
+                  var filteredItems = allItems.where((item) {
+                    final matchQuery =
+                        item.title.toLowerCase().contains(
+                          _searchQuery.toLowerCase(),
+                        ) ||
+                        item.residentName.toLowerCase().contains(
+                          _searchQuery.toLowerCase(),
+                        );
+                    final matchStatus =
+                        _filterStatus == 'Semua' ||
+                        _statusLabel(item.status) == _filterStatus;
+                    return matchQuery && matchStatus;
+                  }).toList();
+
+                  if (isAdmin) {
+                    return _buildAdminView(filteredItems, allItems, isDark);
+                  } else {
+                    return _buildResidentView(filteredItems, allItems, isDark);
+                  }
+                }
+
+                return const SizedBox();
+              },
+            ),
           ),
         ],
       ),
     );
   }
-}
 
-class _EmptyView extends StatelessWidget {
-  const _EmptyView({required this.isAdmin, required this.hasFilter});
-  final bool isAdmin;
-  final bool hasFilter;
+  Widget _buildAdminView(
+    List<MaintenanceRequestEntity> filteredItems,
+    List<MaintenanceRequestEntity> allItems,
+    bool isDark,
+  ) {
+    final totalLaporan = allItems.length;
+    final menunggu = allItems.where((r) => r.status.value == 'pending').length;
+    final proses = allItems
+        .where((r) => r.status.value == 'in_progress')
+        .length;
+    final selesai = allItems.where((r) => r.status.value == 'completed').length;
 
-  @override
-  Widget build(BuildContext context) {
-    return Center(
+    final dateFormat = DateFormat('dd MMM yyyy, HH:mm', 'id_ID');
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.xxxl),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Opacity(
-            opacity: 0.4,
-            child: Icon(
-              hasFilter
-                  ? Icons.filter_list_off_rounded
-                  : Icons.handyman_outlined,
-              size: 72,
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            hasFilter
-                ? 'Tidak ada laporan untuk filter ini'
-                : isAdmin
-                    ? 'Belum ada laporan kerusakan'
-                    : 'Anda belum membuat laporan',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
-          ),
-          if (!hasFilter && !isAdmin) ...[
-            const SizedBox(height: 8),
-            Text(
-              'Ketuk tombol "Buat Laporan" untuk melaporkan kerusakan',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+          // Summary Cards
+          Row(
+                children: [
+                  Expanded(
+                    child: SummaryStatCard(
+                      label: 'Total Laporan',
+                      value: totalLaporan.toString(),
+                      icon: Icons.report_problem_outlined,
+                      iconColor: isDark
+                          ? AppColorsDark.primary
+                          : AppColorsLight.primary,
+                      iconBg: isDark
+                          ? AppColorsDark.primaryLight
+                          : AppColorsLight.primaryLight,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(
+                    child: SummaryStatCard(
+                      label: 'Menunggu',
+                      value: menunggu.toString(),
+                      icon: Icons.hourglass_empty_rounded,
+                      iconColor: isDark
+                          ? AppColorsDark.statusWaiting
+                          : AppColorsLight.statusWaiting,
+                      iconBg: isDark
+                          ? AppColorsDark.statusWaitingBg
+                          : AppColorsLight.statusWaitingBg,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(
+                    child: SummaryStatCard(
+                      label: 'Dalam Proses',
+                      value: proses.toString(),
+                      icon: Icons.sync_rounded,
+                      iconColor: isDark
+                          ? AppColorsDark.statusProcess
+                          : AppColorsLight.statusProcess,
+                      iconBg: isDark
+                          ? AppColorsDark.statusProcessBg
+                          : AppColorsLight.statusProcessBg,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(
+                    child: SummaryStatCard(
+                      label: 'Selesai',
+                      value: selesai.toString(),
+                      icon: Icons.check_circle_outline,
+                      iconColor: isDark
+                          ? AppColorsDark.statusDone
+                          : AppColorsLight.statusDone,
+                      iconBg: isDark
+                          ? AppColorsDark.statusDoneBg
+                          : AppColorsLight.statusDoneBg,
+                    ),
+                  ),
+                ],
+              )
+              .animate()
+              .fadeIn(duration: 300.ms)
+              .slideY(begin: 0.1, end: 0, duration: 300.ms),
+
+          const SizedBox(height: AppSpacing.xxxl),
+
+          // Search & Segmented Filter
+          SearchAndFilterBar(
+            searchHint: 'Cari judul laporan atau nama...',
+            onSearchChanged: (val) => setState(() => _searchQuery = val),
+            dropdownFilter: _buildSegmentedFilter(isDark),
+            onSortPressed: () {},
+            sortLabel: 'Urutkan: Terbaru',
+          ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
+
+          const SizedBox(height: AppSpacing.lg),
+
+          // Table
+          if (filteredItems.isEmpty)
+            EmptyStateWidget(
+              icon: Icons.assignment_outlined,
+              title: 'Tidak ada laporan',
+              subtitle: 'Coba ubah filter atau kata kunci pencarian Anda.',
+            ).animate().fadeIn()
+          else
+            AppDataTable(
+              columns: const [
+                DataColumn(label: Text('ID')),
+                DataColumn(label: Text('JUDUL')),
+                DataColumn(label: Text('PELAPOR')),
+                DataColumn(label: Text('STATUS')),
+                DataColumn(label: Text('TANGGAL')),
+                DataColumn(label: Text('')),
+              ],
+              rows: filteredItems
+                  .map(
+                    (item) => DataRow(
+                      cells: [
+                        DataCell(
+                          Text(
+                            '#${item.id.toString().substring(0, 8).toUpperCase()}',
+                            style: TextStyle(
+                              color: isDark
+                                  ? AppColorsDark.textSecondary
+                                  : AppColorsLight.textSecondary,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            item.title,
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        DataCell(Text(item.residentName)),
+                        DataCell(
+                          StatusBadge(status: _statusLabel(item.status)),
+                        ),
+                        DataCell(
+                          Text(
+                            dateFormat.format(
+                              item.reportedAt ?? item.createdAt,
+                            ),
+                          ),
+                        ),
+                        DataCell(
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () async {
+                                await context.router.push(
+                                  MaintenanceReportDetailRoute(id: item.id),
+                                );
+                                if (mounted) _loadReports();
+                              },
+                              child: const Text('Detail'),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                  .toList(),
+            ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResidentView(
+    List<MaintenanceRequestEntity> filteredItems,
+    List<MaintenanceRequestEntity> allItems,
+    bool isDark,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xxxl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Segmented Filter
+          _buildSegmentedFilter(isDark),
+          const SizedBox(height: AppSpacing.xl),
+
+          if (filteredItems.isEmpty)
+            Expanded(
+              child: EmptyStateWidget(
+                icon: Icons.handyman_outlined,
+                title: 'Belum ada laporan',
+                subtitle:
+                    'Anda belum membuat laporan kerusakan dengan status ini.',
+                action: ElevatedButton.icon(
+                  onPressed: () async {
+                    await context.router.push(
+                      const MaintenanceCreateReportRoute(),
+                    );
+                    if (mounted) _loadReports();
+                  },
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Buat Laporan Baru'),
+                ),
+              ).animate().fadeIn(),
+            )
+          else
+            Expanded(
+              child: RefreshIndicator(
+                onRefresh: () async => _loadReports(),
+                child: ListView.separated(
+                  itemCount: filteredItems.length,
+                  separatorBuilder: (_, __) =>
+                      const SizedBox(height: AppSpacing.md),
+                  itemBuilder: (context, index) {
+                    final request = filteredItems[index];
+                    return MaintenanceRequestCard(
+                      request: request,
+                      onTap: () async {
+                        await context.router.push(
+                          MaintenanceReportDetailRoute(id: request.id),
+                        );
+                        if (mounted) _loadReports();
+                      },
+                    ).animate().fadeIn(
+                      delay: Duration(milliseconds: 50 * index),
+                    );
+                  },
+                ),
               ),
-              textAlign: TextAlign.center,
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSegmentedFilter(bool isDark) {
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark
+            ? AppColorsDark.surfaceVariant
+            : AppColorsLight.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: _statusFilters.map((filter) {
+          final isSelected = _filterStatus == filter;
+          return GestureDetector(
+            onTap: () => setState(() => _filterStatus = filter),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? (isDark ? AppColorsDark.surface : AppColorsLight.surface)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                boxShadow: isSelected
+                    ? [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : [],
+              ),
+              child: Text(
+                filter,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                  color: isSelected
+                      ? (isDark
+                            ? AppColorsDark.textPrimary
+                            : AppColorsLight.textPrimary)
+                      : (isDark
+                            ? AppColorsDark.textSecondary
+                            : AppColorsLight.textSecondary),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildSkeleton(bool isDark, bool isAdmin) {
+    final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
+    final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xxxl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (isAdmin) ...[
+            Row(
+              children: List.generate(
+                4,
+                (index) => Expanded(
+                  child: Padding(
+                    padding: EdgeInsets.only(
+                      right: index < 3 ? AppSpacing.lg : 0,
+                    ),
+                    child: Shimmer.fromColors(
+                      baseColor: baseColor,
+                      highlightColor: highlightColor,
+                      child: Container(
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusLg,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.xxxl),
           ],
+
+          Shimmer.fromColors(
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            child: Container(
+              height: 40,
+              width: 300,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
+
+          Expanded(
+            child: Shimmer.fromColors(
+              baseColor: baseColor,
+              highlightColor: highlightColor,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );

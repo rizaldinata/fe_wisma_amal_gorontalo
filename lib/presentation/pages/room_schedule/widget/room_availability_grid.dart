@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_theme.dart';
 
 enum RoomDayStatus { available, pending, ongoing, completed }
 
@@ -148,20 +150,37 @@ class _AvailabilityCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+    
     Color cellColor;
     switch (status) {
       case RoomDayStatus.pending:
-        cellColor = const Color(0xFFFFF9C4);
+        cellColor = isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg;
         break;
       case RoomDayStatus.ongoing:
-        cellColor = const Color(0xFFC8E6C9);
+        cellColor = isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg;
         break;
       case RoomDayStatus.completed:
-        cellColor = const Color(0xFFBBDEFB);
+        cellColor = isDark ? AppColorsDark.statusProcessBg : AppColorsLight.statusProcessBg;
         break;
       case RoomDayStatus.available:
         cellColor = Colors.transparent;
         break;
+    }
+
+    Color tagColor;
+    switch (status) {
+      case RoomDayStatus.pending:
+        tagColor = isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
+        break;
+      case RoomDayStatus.ongoing:
+        tagColor = isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone;
+        break;
+      case RoomDayStatus.completed:
+        tagColor = isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess;
+        break;
+      default:
+        tagColor = Colors.transparent;
     }
 
     return Container(
@@ -179,25 +198,12 @@ class _AvailabilityCell extends StatelessWidget {
                 width: 8,
                 height: 8,
                 decoration: BoxDecoration(
-                  color: _getStatusTagColor(status),
+                  color: tagColor,
                   shape: BoxShape.circle,
                 ),
               ),
             )
           : null,
     );
-  }
-
-  Color _getStatusTagColor(RoomDayStatus status) {
-    switch (status) {
-      case RoomDayStatus.pending:
-        return Colors.amber.shade700;
-      case RoomDayStatus.ongoing:
-        return Colors.green.shade700;
-      case RoomDayStatus.completed:
-        return Colors.blue.shade700;
-      default:
-        return Colors.transparent;
-    }
   }
 }
