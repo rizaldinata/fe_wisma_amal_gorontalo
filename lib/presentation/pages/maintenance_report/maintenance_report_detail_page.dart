@@ -127,7 +127,7 @@ class _DetailView extends StatelessWidget {
               Widget? action;
               if (state is MaintenanceDetailLoaded) {
                 title =
-                    'Laporan #${state.request.id.toString().substring(0, 8).toUpperCase()}';
+                    'Laporan #${state.request.id.toString().length > 8 ? state.request.id.toString().substring(0, 8).toUpperCase() : state.request.id.toString().toUpperCase()}';
                 action = StatusBadge(
                   status: _statusLabel(state.request.status),
                 );

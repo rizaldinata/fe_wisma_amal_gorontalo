@@ -306,7 +306,7 @@ class _MaintenanceReportListViewState
                       cells: [
                         DataCell(
                           Text(
-                            '#${item.id.toString().substring(0, 8).toUpperCase()}',
+                            '#${item.id.toString().length > 8 ? item.id.toString().substring(0, 8).toUpperCase() : item.id.toString().toUpperCase()}',
                             style: TextStyle(
                               color: isDark
                                   ? AppColorsDark.textSecondary
