@@ -17,6 +17,7 @@ import 'package:frontend/main.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 import 'package:frontend/domain/entity/room_entity.dart';
+import 'package:frontend/domain/usecase/resident/get_resident_profile_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_public_settings_usecase.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 
@@ -32,6 +33,7 @@ class ReservationDetailFormPage extends StatelessWidget {
           ReservationDetailFormBloc(
             getSettingsUseCase: serviceLocator.get<GetPublicSettingsUseCase>(),
             createReservationUseCase: serviceLocator.get(),
+            getProfileUseCase: serviceLocator.get<GetResidentProfileUseCase>(),
           )..add(
             InitReservationEvent(
               room,
@@ -96,6 +98,15 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
           _endDateController.text = '${date.day}/${date.month}/${date.year}';
         }
 
+        if (state.readyToConfirm) {
+          context.read<ReservationDetailFormBloc>().add(
+            const ResetConfirmFlagEvent(),
+          );
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) _showConfirmReservationDialog(context);
+          });
+        }
+
         if (state.status == FormzSubmissionStatus.success) {
           AppSnackbar.showSuccess(
             'Pemesanan berhasil dibuat. Silakan selesaikan pembayaran.',
@@ -117,9 +128,8 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
           final error = state.errorMessage ?? 'Gagal membuat pemesanan';
           AppSnackbar.showError(error);
 
-          // Jika error dari server menyatakan biodata belum lengkap, arahkan ke form biodata
-          if (error.toLowerCase().contains('biodata') ||
-              error.toLowerCase().contains('ktp')) {
+          if (error.toLowerCase().contains('profil') ||
+              error.toLowerCase().contains('biodata')) {
             context.router.push(const CompleteProfileRoute());
           }
         }
@@ -597,16 +607,15 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
       return;
     }
 
-    // 3. Pengecekan Biodata/Profil
+    // 3. Pengecekan Profil
     if (!state.isProfileComplete) {
       AppSnackbar.showInfo(
-        'Demi keamanan dan kenyamanan, silakan lengkapi biodata KTP Anda terlebih dahulu sebelum melanjutkan pemesanan.',
+        'Silakan lengkapi biodata Anda (NIK, nomor telepon, dan alamat KTP) sebelum melanjutkan pemesanan.',
       );
-      // Setelah user kembali dari halaman biodata, re-check status profil
       context.router.push(const CompleteProfileRoute()).then((_) {
         if (context.mounted) {
           context.read<ReservationDetailFormBloc>().add(
-            const RefreshProfileStatusEvent(),
+            const RefreshProfileStatusEvent(thenConfirm: true),
           );
         }
       });

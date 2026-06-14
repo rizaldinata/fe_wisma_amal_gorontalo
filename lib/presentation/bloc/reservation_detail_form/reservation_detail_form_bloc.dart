@@ -5,6 +5,7 @@ import 'package:formz/formz.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/domain/entity/reservation_entity.dart';
 import 'package:frontend/domain/usecase/reservation/create_reservation_usecase.dart';
+import 'package:frontend/domain/usecase/resident/get_resident_profile_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_public_settings_usecase.dart';
 
 part 'reservation_detail_form_event.dart';
@@ -14,10 +15,12 @@ class ReservationDetailFormBloc
     extends Bloc<ReservationDetailFormEvent, ReservationDetailFormState> {
   final GetPublicSettingsUseCase getSettingsUseCase;
   final CreateReservationUseCase createReservationUseCase;
+  final GetResidentProfileUseCase getProfileUseCase;
 
   ReservationDetailFormBloc({
     required this.getSettingsUseCase,
     required this.createReservationUseCase,
+    required this.getProfileUseCase,
   }) : super(const ReservationDetailFormState()) {
     on<InitReservationEvent>(_onInit);
     on<RentTypeChanged>(_onRentTypeChanged);
@@ -28,6 +31,9 @@ class ReservationDetailFormBloc
     on<SelectedMidtransMethodChanged>(_onSelectedMidtransMethodChanged);
     on<SubmitReservation>(_onSubmit);
     on<RefreshProfileStatusEvent>(_onRefreshProfileStatus);
+    on<ResetConfirmFlagEvent>(
+      (event, emit) => emit(state.copyWith(readyToConfirm: false)),
+    );
   }
 
   Future<void> _onInit(
@@ -49,8 +55,14 @@ class ReservationDetailFormBloc
       // Keep default if error
     }
 
-    // Profile completion is handled by admin during schedule creation; always allow reservation
-    isProfileComplete = true;
+    if (event.isLoggedIn) {
+      try {
+        final profile = await getProfileUseCase();
+        isProfileComplete = _isProfileComplete(profile);
+      } catch (_) {
+        isProfileComplete = false;
+      }
+    }
 
     emit(
       state.copyWith(
@@ -181,7 +193,22 @@ class ReservationDetailFormBloc
     RefreshProfileStatusEvent event,
     Emitter<ReservationDetailFormState> emit,
   ) async {
-    emit(state.copyWith(isProfileComplete: true));
+    try {
+      final profile = await getProfileUseCase();
+      final isComplete = _isProfileComplete(profile);
+      emit(state.copyWith(
+        isProfileComplete: isComplete,
+        readyToConfirm: isComplete && event.thenConfirm,
+      ));
+    } catch (_) {
+      emit(state.copyWith(isProfileComplete: false));
+    }
+  }
+
+  bool _isProfileComplete(dynamic profile) {
+    return profile.idCardNumber.isNotEmpty &&
+        profile.phoneNumber.isNotEmpty &&
+        profile.addressKtp.isNotEmpty;
   }
 
   void _calculate(Emitter<ReservationDetailFormState> emit) {

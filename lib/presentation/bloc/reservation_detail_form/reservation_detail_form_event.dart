@@ -78,5 +78,13 @@ class SelectedMidtransMethodChanged extends ReservationDetailFormEvent {
 }
 
 class RefreshProfileStatusEvent extends ReservationDetailFormEvent {
-  const RefreshProfileStatusEvent();
+  final bool thenConfirm;
+  const RefreshProfileStatusEvent({this.thenConfirm = false});
+
+  @override
+  List<Object?> get props => [thenConfirm];
+}
+
+class ResetConfirmFlagEvent extends ReservationDetailFormEvent {
+  const ResetConfirmFlagEvent();
 }

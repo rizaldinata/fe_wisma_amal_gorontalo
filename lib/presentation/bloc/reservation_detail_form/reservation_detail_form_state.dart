@@ -19,6 +19,7 @@ class ReservationDetailFormState extends Equatable {
     this.midtransPaymentMethods = const [],
     this.createdReservation,
     this.isProfileComplete = true,
+    this.readyToConfirm = false,
     this.tenantUserId,
     this.tenantName,
   });
@@ -40,6 +41,7 @@ class ReservationDetailFormState extends Equatable {
   final List<String> midtransPaymentMethods;
   final ReservationEntity? createdReservation;
   final bool isProfileComplete;
+  final bool readyToConfirm;
   final int? tenantUserId;
   final String? tenantName;
 
@@ -61,6 +63,7 @@ class ReservationDetailFormState extends Equatable {
     List<String>? midtransPaymentMethods,
     ReservationEntity? createdReservation,
     bool? isProfileComplete,
+    bool? readyToConfirm,
     int? tenantUserId,
     String? tenantName,
   }) {
@@ -82,6 +85,7 @@ class ReservationDetailFormState extends Equatable {
       midtransPaymentMethods: midtransPaymentMethods ?? this.midtransPaymentMethods,
       createdReservation: createdReservation ?? this.createdReservation,
       isProfileComplete: isProfileComplete ?? this.isProfileComplete,
+      readyToConfirm: readyToConfirm ?? this.readyToConfirm,
       tenantUserId: tenantUserId ?? this.tenantUserId,
       tenantName: tenantName ?? this.tenantName,
     );
@@ -106,6 +110,7 @@ class ReservationDetailFormState extends Equatable {
         midtransPaymentMethods,
         createdReservation,
         isProfileComplete,
+        readyToConfirm,
         tenantUserId,
         tenantName,
       ];

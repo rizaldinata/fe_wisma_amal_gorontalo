@@ -67,7 +67,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     add(const InitLoginStatusEvent());
     on<CheckSessionEvent>((event, emit) async {
       _sessionTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
-        print('Checking session validity...');
         _checkSession();
       });
     });
@@ -78,27 +77,40 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
-      // Ambil ulang permissions dari server dan simpan ke SharedPreferences
       await getPermissionsUseCase(NoParams());
 
-      // Setelah tersimpan di storage, sinkronkan kembali ke state.userInfo
       final currentUser = state.userInfo;
-      if (currentUser != null) {
-        final permissions = Permissions(
-          storage.getPermissions()?.toSet() ?? {},
+      if (currentUser == null) return;
+
+      final newPermissions = Permissions(storage.getPermissions()?.toSet() ?? {});
+      final newRoles = storage.getList(StorageConstant.roleActive) ?? currentUser.roles;
+
+      final permissionsChanged = !_setsEqual(
+        currentUser.permissions?.raw ?? {},
+        newPermissions.raw,
+      );
+      final rolesChanged = !_setsEqual(
+        currentUser.roles.toSet(),
+        newRoles.toSet(),
+      );
+
+      if (permissionsChanged || rolesChanged) {
+        final updatedUser = currentUser.copyWith(
+          permissions: newPermissions,
+          roles: newRoles,
         );
-        final updatedUser = currentUser.copyWith(permissions: permissions);
         emit(state.copyWith(userInfo: updatedUser));
       }
     } on AppException catch (e) {
       debugPrint('Error fetching permissions: ${e.message}');
-      AppSnackbar.showError('Gagal mendapatkan izin: ${e.message}');
     } catch (e) {
       debugPrint('Unexpected error fetching permissions: $e');
-      AppSnackbar.showError(
-        'Terjadi kesalahan tak terduga saat mendapatkan izin.',
-      );
     }
+  }
+
+  bool _setsEqual(Set<String> a, Set<String> b) {
+    if (a.length != b.length) return false;
+    return a.containsAll(b);
   }
 
   Future<void> _checkSession() async {

@@ -75,6 +75,7 @@ import 'package:frontend/domain/usecase/my_reservation/get_my_reservations_useca
 import 'package:frontend/domain/repository/resident_repository.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_resident_detail_usecase.dart';
+import 'package:frontend/domain/usecase/resident/get_resident_profile_usecase.dart';
 import 'package:frontend/domain/repository/guest_repository.dart';
 import 'package:frontend/domain/usecase/guest/get_admin_guests_usecase.dart';
 import 'package:frontend/domain/usecase/guest/get_my_guests_usecase.dart';
@@ -312,6 +313,9 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => GetAdminResidentDetailUseCase(serviceLocator<ResidentRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetResidentProfileUseCase(serviceLocator<ResidentRepository>()),
   );
 
   // serviceLocator.registerFactory(
