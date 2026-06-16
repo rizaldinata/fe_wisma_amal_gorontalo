@@ -98,11 +98,14 @@ import 'package:frontend/domain/usecase/guest/get_admin_guests_usecase.dart';
 import 'package:frontend/domain/usecase/guest/get_my_guests_usecase.dart';
 import 'package:frontend/domain/usecase/guest/create_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/create_admin_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/checkout_admin_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/delete_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/checkout_my_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/pay_guest_bill_usecase.dart';
 import 'package:frontend/domain/usecase/guest/get_admin_guest_bills_usecase.dart';
 import 'package:frontend/domain/usecase/guest/verify_guest_bill_usecase.dart';
 import 'package:frontend/domain/usecase/notification/get_notification_logs_usecase.dart';
+import 'package:frontend/domain/usecase/notification/mark_all_notification_logs_read_usecase.dart';
 
 Future<void> initializeBloc() async {
   serviceLocator.registerLazySingleton<AuthBloc>(
@@ -333,6 +336,7 @@ Future<void> initializeBloc() async {
     () => GuestBloc(
       getAdminGuestsUseCase: serviceLocator.get<GetAdminGuestsUseCase>(),
       createAdminGuestUseCase: serviceLocator.get<CreateAdminGuestUseCase>(),
+      checkoutAdminGuestUseCase: serviceLocator.get<CheckoutAdminGuestUseCase>(),
     ),
   );
 
@@ -342,6 +346,7 @@ Future<void> initializeBloc() async {
       createGuestUseCase: serviceLocator.get<CreateGuestUseCase>(),
       deleteGuestUseCase: serviceLocator.get<DeleteGuestUseCase>(),
       payGuestBillUseCase: serviceLocator.get<PayGuestBillUseCase>(),
+      checkoutMyGuestUseCase: serviceLocator.get<CheckoutMyGuestUseCase>(),
     ),
   );
 
@@ -356,6 +361,8 @@ Future<void> initializeBloc() async {
     () => NotificationLogBloc(
       getNotificationLogsUseCase:
           serviceLocator.get<GetNotificationLogsUseCase>(),
+      markAllNotificationLogsReadUseCase:
+          serviceLocator.get<MarkAllNotificationLogsReadUseCase>(),
     ),
   );
 }

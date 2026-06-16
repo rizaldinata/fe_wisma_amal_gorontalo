@@ -103,6 +103,28 @@ class GuestDatasource {
     }
   }
 
+  Future<GuestItem> checkoutAdminGuest(int id) async {
+    try {
+      final response = await dioClient.post(EndpointConstant.checkoutAdminGuestEndpoint(id));
+      final payload = response.data['data'];
+      return GuestItem.fromJson(
+          payload is Map<String, dynamic> ? payload : <String, dynamic>{});
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<MyGuestItem> checkoutMyGuest(int id) async {
+    try {
+      final response = await dioClient.post(EndpointConstant.checkoutMyGuestEndpoint(id));
+      final payload = response.data['data'];
+      return MyGuestItem.fromJson(
+          payload is Map<String, dynamic> ? payload : <String, dynamic>{});
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<GuestBillItem> payGuestBill({
     required int guestId,
     required String paymentMethod,

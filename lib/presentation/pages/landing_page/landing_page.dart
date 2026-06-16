@@ -141,7 +141,7 @@ class _HeroSection extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         Text(
-          'Satu portal untuk calon penghuni mengecek ketersediaan kamar, melihat fasilitas, dan melakukan reservasi secara cepat.',
+          'Mengecek ketersediaan kamar, melihat fasilitas, dan melakukan reservasi secara cepat.',
           style: textTheme.bodyLarge?.copyWith(
             color: LandingPalette.muted,
             fontSize: 16,
@@ -592,6 +592,7 @@ class _RoomSection extends StatelessWidget {
                 status: 'Tersedia',
                 statusColor: LandingPalette.primary,
                 detail: 'Kamar nyaman dengan meja belajar dan lemari.',
+                roomIcon: Icons.bed,
               ),
               _RoomCard(
                 title: 'Premium',
@@ -599,6 +600,7 @@ class _RoomSection extends StatelessWidget {
                 status: 'Sisa 2 kamar',
                 statusColor: Color(0xFFF9A825),
                 detail: 'Ruang lebih luas, kamar mandi dalam, AC.',
+                roomIcon: Icons.hotel,
               ),
               _RoomCard(
                 title: 'VIP',
@@ -606,6 +608,7 @@ class _RoomSection extends StatelessWidget {
                 status: 'Penuh',
                 statusColor: Color(0xFFE53935),
                 detail: 'Fasilitas lengkap dengan balkon pribadi.',
+                roomIcon: Icons.apartment,
               ),
             ],
           ),
@@ -622,6 +625,8 @@ class _RoomCard extends StatelessWidget {
     required this.status,
     required this.statusColor,
     required this.detail,
+    this.roomImage,
+    this.roomIcon,
   });
 
   final String title;
@@ -629,6 +634,8 @@ class _RoomCard extends StatelessWidget {
   final String status;
   final Color statusColor;
   final String detail;
+  final String? roomImage;
+  final IconData? roomIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -649,12 +656,17 @@ class _RoomCard extends StatelessWidget {
               color: LandingPalette.surface,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Center(
-              child: Icon(
-                Icons.bed,
-                size: 52,
-                color: LandingPalette.primary,
-              ),
+            child: Center(
+              child: roomImage != null
+                  ? Image.asset(
+                      roomImage!,
+                      fit: BoxFit.cover,
+                    )
+                  : Icon(
+                      roomIcon ?? Icons.bed,
+                      size: 52,
+                      color: LandingPalette.primary,
+                    ),
             ),
           ),
           const SizedBox(height: 16),
@@ -756,7 +768,7 @@ class _FeatureSection extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: const Icon(
-              Icons.phone_iphone,
+              Icons.apartment,
               size: 120,
               color: LandingPalette.primaryDark,
             ),

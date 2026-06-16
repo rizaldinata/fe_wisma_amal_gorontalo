@@ -24,4 +24,12 @@ class NotificationDatasource {
       rethrow;
     }
   }
+
+  Future<void> markAllNotificationLogsRead() async {
+    try {
+      await dioClient.patch(EndpointConstant.markAllNotificationLogsReadEndpoint);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

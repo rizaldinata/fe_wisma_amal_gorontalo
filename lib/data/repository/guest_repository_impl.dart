@@ -81,6 +81,24 @@ class GuestRepositoryImpl implements GuestRepository {
   }
 
   @override
+  Future<GuestItem> checkoutAdminGuest(int id) async {
+    try {
+      return await datasource.checkoutAdminGuest(id);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<MyGuestItem> checkoutMyGuest(int id) async {
+    try {
+      return await datasource.checkoutMyGuest(id);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
   Future<GuestBillItem> payGuestBill({
     required int guestId,
     required String paymentMethod,

@@ -84,9 +84,11 @@ import 'package:frontend/domain/usecase/guest/delete_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/pay_guest_bill_usecase.dart';
 import 'package:frontend/domain/usecase/guest/get_admin_guest_bills_usecase.dart';
 import 'package:frontend/domain/usecase/guest/verify_guest_bill_usecase.dart';
+import 'package:frontend/domain/usecase/guest/checkout_admin_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/checkout_my_guest_usecase.dart';
 import 'package:frontend/domain/repository/notification_repository.dart';
 import 'package:frontend/domain/usecase/notification/get_notification_logs_usecase.dart';
-
+import 'package:frontend/domain/usecase/notification/mark_all_notification_logs_read_usecase.dart';
 
 Future<void> initializeUseCase() async {
   // Auth UseCases
@@ -368,10 +370,21 @@ Future<void> initializeUseCase() async {
   serviceLocator.registerFactory(
     () => VerifyGuestBillUseCase(serviceLocator<GuestRepository>()),
   );
+  serviceLocator.registerFactory(
+    () => CheckoutAdminGuestUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CheckoutMyGuestUseCase(serviceLocator<GuestRepository>()),
+  );
 
   serviceLocator.registerFactory(
     () => GetNotificationLogsUseCase(
       serviceLocator<NotificationRepository>(),
+    ),
+  );
+  serviceLocator.registerFactory(
+    () => MarkAllNotificationLogsReadUseCase(
+      repository: serviceLocator<NotificationRepository>(),
     ),
   );
 }
