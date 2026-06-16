@@ -17,6 +17,7 @@ import 'package:frontend/main.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 import 'package:frontend/domain/entity/room_entity.dart';
+import 'package:frontend/domain/usecase/resident/get_resident_profile_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_public_settings_usecase.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 
@@ -28,14 +29,19 @@ class ReservationDetailFormPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ReservationDetailFormBloc(
-        getSettingsUseCase: serviceLocator.get<GetPublicSettingsUseCase>(),
-        createReservationUseCase: serviceLocator.get(),
-        residentRepository: serviceLocator.get(),
-      )..add(InitReservationEvent(
-          room,
-          isLoggedIn: context.read<AuthBloc>().state.isLoggedIn,
-        )),
+      create: (_) =>
+          ReservationDetailFormBloc(
+            getSettingsUseCase: serviceLocator.get<GetPublicSettingsUseCase>(),
+            createReservationUseCase: serviceLocator.get(),
+            getProfileUseCase: serviceLocator.get<GetResidentProfileUseCase>(),
+          )..add(
+            InitReservationEvent(
+              room,
+              isLoggedIn: context.read<AuthBloc>().state.isLoggedIn,
+              userId: context.read<AuthBloc>().state.userInfo?.id,
+              userName: context.read<AuthBloc>().state.userInfo?.name,
+            ),
+          ),
       child: const ReservationDetailFormView(),
     );
   }
@@ -92,6 +98,15 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
           _endDateController.text = '${date.day}/${date.month}/${date.year}';
         }
 
+        if (state.readyToConfirm) {
+          context.read<ReservationDetailFormBloc>().add(
+            const ResetConfirmFlagEvent(),
+          );
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (context.mounted) _showConfirmReservationDialog(context);
+          });
+        }
+
         if (state.status == FormzSubmissionStatus.success) {
           AppSnackbar.showSuccess(
             'Pemesanan berhasil dibuat. Silakan selesaikan pembayaran.',
@@ -113,9 +128,8 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
           final error = state.errorMessage ?? 'Gagal membuat pemesanan';
           AppSnackbar.showError(error);
 
-          // Jika error dari server menyatakan biodata belum lengkap, arahkan ke form biodata
-          if (error.toLowerCase().contains('biodata') || 
-              error.toLowerCase().contains('ktp')) {
+          if (error.toLowerCase().contains('profil') ||
+              error.toLowerCase().contains('biodata')) {
             context.router.push(const CompleteProfileRoute());
           }
         }
@@ -177,7 +191,7 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        'Bulanan: ${room.priceFormatted}${room.priceDaily > 0 ? ' | Harian: ${room.priceDailyFormatted}' : ''}',
+                                        'Bulanan: ${room.priceFormatted} | Tahunan: Rp ${NumberFormat.decimalPattern('id').format((room.price * 12).toInt()).replaceAll(',', '.')}',
                                         style: const TextStyle(
                                           color: Colors.blue,
                                         ),
@@ -208,17 +222,22 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                     .read<ReservationDetailFormBloc>()
                                     .add(const RentTypeChanged('Bulanan')),
                               ),
+
+                              _rentCard(
+                                title: 'Sewa Tahunan',
+                                subtitle: 'Lebih hemat untuk jangka panjang',
+                                price:
+                                    'Rp ${NumberFormat.decimalPattern('id').format((room.price * 12).toInt()).replaceAll(',', '.')} / tahun',
+                                selected: state.rentType == 'Tahunan',
+                                onTap: () => context
+                                    .read<ReservationDetailFormBloc>()
+                                    .add(const RentTypeChanged('Tahunan')),
+                              ),
+
+                              // Daily logic (dipertahankan)
                               if (state.isDailyRentalEnabled &&
                                   room.priceDaily > 0)
-                                _rentCard(
-                                  title: 'Sewa Harian',
-                                  subtitle: 'Fleksibel jangka pendek',
-                                  price: '${room.priceDailyFormatted} / hari',
-                                  selected: state.rentType == 'Harian',
-                                  onTap: () => context
-                                      .read<ReservationDetailFormBloc>()
-                                      .add(const RentTypeChanged('Harian')),
-                                ),
+                                const SizedBox.shrink(),
                             ],
                           ),
                         ),
@@ -258,48 +277,26 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                     ),
                                   ),
                                   const SizedBox(width: 12),
-                                  if (state.rentType == 'Harian')
-                                    Expanded(
-                                      child: GestureDetector(
-                                        onTap: () => _pickDate(
-                                          context,
-                                          _endDateController,
-                                          (date) {
-                                            context
-                                                .read<
-                                                  ReservationDetailFormBloc
-                                                >()
-                                                .add(EndDateChanged(date));
-                                          },
-                                        ),
-                                        child: AbsorbPointer(
-                                          child: CustomTextForm(
-                                            title: 'Tanggal Selesai',
-                                            hintText: 'Pilih tanggal',
-                                            controller: _endDateController,
-                                            isRequired: true,
-                                            suffixIcon: const Icon(
-                                              Icons.calendar_today,
-                                              size: 18,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  if (state.rentType == 'Bulanan')
+                                  if (state.rentType == 'Bulanan' ||
+                                      state.rentType == 'Tahunan')
                                     Expanded(
                                       child: CustomTextForm(
-                                        title: 'Jumlah Bulan',
-                                        hintText: 'Berapa bulan?',
+                                        title: state.rentType == 'Bulanan'
+                                            ? 'Jumlah Bulan'
+                                            : 'Jumlah Tahun',
+                                        hintText: state.rentType == 'Bulanan'
+                                            ? 'Berapa bulan?'
+                                            : 'Berapa tahun?',
                                         keyboardType: TextInputType.number,
                                         initialValue: state.durationMonths
                                             .toString(),
                                         onChanged: (val) {
-                                          final months = int.tryParse(val) ?? 1;
+                                          final value = int.tryParse(val) ?? 1;
+
                                           context
                                               .read<ReservationDetailFormBloc>()
                                               .add(
-                                                DurationMonthsChanged(months),
+                                                DurationMonthsChanged(value),
                                               );
                                         },
                                         isRequired: true,
@@ -307,7 +304,8 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                     ),
                                 ],
                               ),
-                              if (state.rentType == 'Bulanan') ...[
+                              if (state.rentType == 'Bulanan' ||
+                                  state.rentType == 'Tahunan') ...[
                                 const SizedBox(height: 16),
                                 CustomTextForm(
                                   title: 'Estimasi Tanggal Selesai',
@@ -336,25 +334,28 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                     paymentMethodCard(
                                       title: 'Pembayaran Online',
                                       subtitle: _midtransSubtitle(
-                                          state.midtransPaymentMethods),
+                                        state.midtransPaymentMethods,
+                                      ),
                                       icon: Icons.account_balance_wallet,
-                                      selected:
-                                          state.paymentMethod == 'online',
+                                      selected: state.paymentMethod == 'online',
                                       onTap: () => context
                                           .read<ReservationDetailFormBloc>()
-                                          .add(const PaymentMethodChanged(
-                                              'online')),
+                                          .add(
+                                            const PaymentMethodChanged(
+                                              'online',
+                                            ),
+                                          ),
                                     ),
                                   paymentMethodCard(
                                     title: 'Pembayaran Manual',
-                                    subtitle:
-                                        'Transfer atau Cash dengan Bukti',
+                                    subtitle: 'Transfer atau Cash dengan Bukti',
                                     icon: Icons.payments,
                                     selected: state.paymentMethod == 'tunai',
                                     onTap: () => context
                                         .read<ReservationDetailFormBloc>()
-                                        .add(const PaymentMethodChanged(
-                                            'tunai')),
+                                        .add(
+                                          const PaymentMethodChanged('tunai'),
+                                        ),
                                   ),
                                 ],
                               ),
@@ -378,22 +379,22 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                   child: Text(
                                     'Metode yang Anda pilih akan dibuka di halaman pembayaran Midtrans.',
                                     style: TextStyle(
-                                        fontSize: 11,
-                                        color: Colors.grey.shade500),
+                                      fontSize: 11,
+                                      color: Colors.grey.shade500,
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
                                 GridView.builder(
                                   shrinkWrap: true,
-                                  physics:
-                                      const NeverScrollableScrollPhysics(),
+                                  physics: const NeverScrollableScrollPhysics(),
                                   gridDelegate:
                                       const SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: 2,
-                                    mainAxisSpacing: 8,
-                                    crossAxisSpacing: 8,
-                                    mainAxisExtent: 72,
-                                  ),
+                                        crossAxisCount: 2,
+                                        mainAxisSpacing: 8,
+                                        crossAxisSpacing: 8,
+                                        mainAxisExtent: 72,
+                                      ),
                                   itemCount:
                                       state.midtransPaymentMethods.length,
                                   itemBuilder: (context, index) {
@@ -406,8 +407,11 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                       selected: isSelected,
                                       onTap: () => context
                                           .read<ReservationDetailFormBloc>()
-                                          .add(SelectedMidtransMethodChanged(
-                                              isSelected ? null : code)),
+                                          .add(
+                                            SelectedMidtransMethodChanged(
+                                              isSelected ? null : code,
+                                            ),
+                                          ),
                                     );
                                   },
                                 ),
@@ -419,13 +423,16 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                     color: Colors.orange.shade50,
                                     borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
-                                        color: Colors.orange.shade200),
+                                      color: Colors.orange.shade200,
+                                    ),
                                   ),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.info_outline,
-                                          color: Colors.orange.shade700,
-                                          size: 20),
+                                      Icon(
+                                        Icons.info_outline,
+                                        color: Colors.orange.shade700,
+                                        size: 20,
+                                      ),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Column(
@@ -444,9 +451,9 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                             Text(
                                               'Lakukan transfer bank atau bayar cash, lalu unggah bukti pembayaran di langkah berikutnya.',
                                               style: TextStyle(
-                                                  fontSize: 12,
-                                                  color:
-                                                      Colors.orange.shade600),
+                                                fontSize: 12,
+                                                color: Colors.orange.shade600,
+                                              ),
                                             ),
                                           ],
                                         ),
@@ -480,7 +487,12 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                               children: [
                                 Text(room.title),
                                 Text(
-                                  '${state.duration} ${state.rentType == 'Bulanan' ? 'Bulan' : 'Hari'}',
+                                  '${state.duration} '
+                                  '${state.rentType == 'Bulanan'
+                                      ? 'Bulan'
+                                      : state.rentType == 'Tahunan'
+                                      ? 'Tahun'
+                                      : 'Hari'}',
                                 ),
                               ],
                             ),
@@ -490,11 +502,18 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Text(
-                                  'Harga / ${state.rentType == 'Bulanan' ? 'bulan' : 'hari'}',
+                                  'Harga / '
+                                  '${state.rentType == 'Bulanan'
+                                      ? 'bulan'
+                                      : state.rentType == 'Tahunan'
+                                      ? 'tahun'
+                                      : 'hari'}',
                                 ),
                                 Text(
                                   state.rentType == 'Bulanan'
                                       ? room.priceFormatted
+                                      : state.rentType == 'Tahunan'
+                                      ? 'Rp ${NumberFormat.decimalPattern('id').format((room.price * 12).toInt()).replaceAll(',', '.')}'
                                       : room.priceDailyFormatted,
                                 ),
                               ],
@@ -550,6 +569,7 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
       },
     );
   }
+
   void _showConfirmReservationDialog(BuildContext context) {
     final state = context.read<ReservationDetailFormBloc>().state;
     final authState = context.read<AuthBloc>().state;
@@ -571,9 +591,7 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
             ElevatedButton(
               onPressed: () {
                 Navigator.pop(ctx);
-                context.router.push(
-                  LoginRoute(pendingRoom: state.room),
-                );
+                context.router.push(LoginRoute(pendingRoom: state.room));
               },
               child: const Text('Login Sekarang'),
             ),
@@ -589,16 +607,15 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
       return;
     }
 
-    // 3. Pengecekan Biodata/Profil
+    // 3. Pengecekan Profil
     if (!state.isProfileComplete) {
       AppSnackbar.showInfo(
-        'Demi keamanan dan kenyamanan, silakan lengkapi biodata KTP Anda terlebih dahulu sebelum melanjutkan pemesanan.',
+        'Silakan lengkapi biodata Anda (NIK, nomor telepon, dan alamat KTP) sebelum melanjutkan pemesanan.',
       );
-      // Setelah user kembali dari halaman biodata, re-check status profil
       context.router.push(const CompleteProfileRoute()).then((_) {
         if (context.mounted) {
           context.read<ReservationDetailFormBloc>().add(
-            const RefreshProfileStatusEvent(),
+            const RefreshProfileStatusEvent(thenConfirm: true),
           );
         }
       });
@@ -613,17 +630,22 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Apakah Anda yakin ingin melakukan pemesanan kamar ini?'),
+            const Text(
+              'Apakah Anda yakin ingin melakukan pemesanan kamar ini?',
+            ),
             const SizedBox(height: 16),
             _infoRow('Kamar', state.room?.title ?? '-'),
-            _infoRow('Mulai', DateFormat('dd/MM/yyyy').format(state.startDate!)),
+            _infoRow(
+              'Mulai',
+              DateFormat('dd/MM/yyyy').format(state.startDate!),
+            ),
             _infoRow('Total', 'Rp ${state.totalPrice}'),
             _infoRow(
               'Metode',
               state.paymentMethod == 'online'
                   ? (state.selectedMidtransMethod != null
-                      ? 'Online · ${_kMidtransMethodMap[state.selectedMidtransMethod]?.name ?? state.selectedMidtransMethod!.toUpperCase()}'
-                      : 'Online (Midtrans)')
+                        ? 'Online · ${_kMidtransMethodMap[state.selectedMidtransMethod]?.name ?? state.selectedMidtransMethod!.toUpperCase()}'
+                        : 'Online (Midtrans)')
                   : 'Manual',
             ),
           ],
@@ -796,24 +818,96 @@ class _MidtransMethodInfo {
 }
 
 const Map<String, _MidtransMethodInfo> _kMidtransMethodMap = {
-  'qris':        _MidtransMethodInfo('QRIS',                  'Scan QR dari semua e-wallet & bank',  Icons.qr_code),
-  'gopay':       _MidtransMethodInfo('GoPay',                 'Bayar dengan saldo GoPay',            Icons.account_balance_wallet),
-  'shopeepay':   _MidtransMethodInfo('ShopeePay',             'Bayar dengan saldo ShopeePay',        Icons.shopping_bag),
-  'dana':        _MidtransMethodInfo('DANA',                  'Bayar dengan saldo DANA',             Icons.account_balance_wallet),
-  'linkaja':     _MidtransMethodInfo('LinkAja',               'Bayar dengan LinkAja',                Icons.account_balance_wallet),
-  'ovo':         _MidtransMethodInfo('OVO',                   'Bayar dengan saldo OVO',              Icons.account_balance_wallet),
-  'bca_va':      _MidtransMethodInfo('BCA Virtual Account',   'Transfer via ATM / m-BCA',           Icons.account_balance),
-  'bni_va':      _MidtransMethodInfo('BNI Virtual Account',   'Transfer via ATM / BNI Mobile',      Icons.account_balance),
-  'bri_va':      _MidtransMethodInfo('BRI Virtual Account',   'Transfer via ATM / BRImo',           Icons.account_balance),
-  'mandiri_va':  _MidtransMethodInfo('Mandiri Virtual Account','Transfer via Mandiri Livin\'',      Icons.account_balance),
-  'echannel':    _MidtransMethodInfo('Mandiri Bill',          'Bayar via Mandiri Livin\'',          Icons.account_balance),
-  'permata_va':  _MidtransMethodInfo('Permata Virtual Account','Transfer via ATM Permata',          Icons.account_balance),
-  'other_va':    _MidtransMethodInfo('Virtual Account',       'Transfer via bank lain',              Icons.account_balance),
-  'alfamart':    _MidtransMethodInfo('Alfamart',              'Bayar di kasir Alfamart',             Icons.store),
-  'indomaret':   _MidtransMethodInfo('Indomaret',             'Bayar di kasir Indomaret',            Icons.store),
-  'credit_card': _MidtransMethodInfo('Kartu Kredit/Debit',    'Visa, Mastercard, JCB',               Icons.credit_card),
-  'akulaku':     _MidtransMethodInfo('Akulaku',               'Cicilan 0% via Akulaku',              Icons.credit_card),
-  'kredivo':     _MidtransMethodInfo('Kredivo',               'Cicilan via Kredivo',                 Icons.credit_card),
+  'qris': _MidtransMethodInfo(
+    'QRIS',
+    'Scan QR dari semua e-wallet & bank',
+    Icons.qr_code,
+  ),
+  'gopay': _MidtransMethodInfo(
+    'GoPay',
+    'Bayar dengan saldo GoPay',
+    Icons.account_balance_wallet,
+  ),
+  'shopeepay': _MidtransMethodInfo(
+    'ShopeePay',
+    'Bayar dengan saldo ShopeePay',
+    Icons.shopping_bag,
+  ),
+  'dana': _MidtransMethodInfo(
+    'DANA',
+    'Bayar dengan saldo DANA',
+    Icons.account_balance_wallet,
+  ),
+  'linkaja': _MidtransMethodInfo(
+    'LinkAja',
+    'Bayar dengan LinkAja',
+    Icons.account_balance_wallet,
+  ),
+  'ovo': _MidtransMethodInfo(
+    'OVO',
+    'Bayar dengan saldo OVO',
+    Icons.account_balance_wallet,
+  ),
+  'bca_va': _MidtransMethodInfo(
+    'BCA Virtual Account',
+    'Transfer via ATM / m-BCA',
+    Icons.account_balance,
+  ),
+  'bni_va': _MidtransMethodInfo(
+    'BNI Virtual Account',
+    'Transfer via ATM / BNI Mobile',
+    Icons.account_balance,
+  ),
+  'bri_va': _MidtransMethodInfo(
+    'BRI Virtual Account',
+    'Transfer via ATM / BRImo',
+    Icons.account_balance,
+  ),
+  'mandiri_va': _MidtransMethodInfo(
+    'Mandiri Virtual Account',
+    'Transfer via Mandiri Livin\'',
+    Icons.account_balance,
+  ),
+  'echannel': _MidtransMethodInfo(
+    'Mandiri Bill',
+    'Bayar via Mandiri Livin\'',
+    Icons.account_balance,
+  ),
+  'permata_va': _MidtransMethodInfo(
+    'Permata Virtual Account',
+    'Transfer via ATM Permata',
+    Icons.account_balance,
+  ),
+  'other_va': _MidtransMethodInfo(
+    'Virtual Account',
+    'Transfer via bank lain',
+    Icons.account_balance,
+  ),
+  'alfamart': _MidtransMethodInfo(
+    'Alfamart',
+    'Bayar di kasir Alfamart',
+    Icons.store,
+  ),
+  'indomaret': _MidtransMethodInfo(
+    'Indomaret',
+    'Bayar di kasir Indomaret',
+    Icons.store,
+  ),
+  'credit_card': _MidtransMethodInfo(
+    'Kartu Kredit/Debit',
+    'Visa, Mastercard, JCB',
+    Icons.credit_card,
+  ),
+  'akulaku': _MidtransMethodInfo(
+    'Akulaku',
+    'Cicilan 0% via Akulaku',
+    Icons.credit_card,
+  ),
+  'kredivo': _MidtransMethodInfo(
+    'Kredivo',
+    'Cicilan via Kredivo',
+    Icons.credit_card,
+  ),
 };
 
 /// Subtitle dinamis berdasarkan metode yang tersedia
@@ -832,7 +926,8 @@ Widget _midtransMethodCard({
   required bool selected,
   required VoidCallback onTap,
 }) {
-  final info = _kMidtransMethodMap[code] ??
+  final info =
+      _kMidtransMethodMap[code] ??
       _MidtransMethodInfo(code.toUpperCase(), 'Metode Midtrans', Icons.payment);
 
   return HoverTapWrapper(
@@ -854,7 +949,7 @@ Widget _midtransMethodCard({
                   color: Colors.blue.withValues(alpha: 0.12),
                   blurRadius: 6,
                   offset: const Offset(0, 2),
-                )
+                ),
               ]
             : null,
       ),

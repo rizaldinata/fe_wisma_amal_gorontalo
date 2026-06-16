@@ -6,8 +6,10 @@ abstract class ReservationRepository {
   Future<ReservationEntity> createReservation({
     required int roomId,
     required String startDate,
-    required int duration,
-    required String rentalType,
+    required String endDate,
+    required int agreedPrice,
+    int? tenantUserId,
+    String? tenantName,
   });
 
   Future<void> cancelReservation(int leaseId);

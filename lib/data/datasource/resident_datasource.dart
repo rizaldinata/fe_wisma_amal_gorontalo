@@ -21,6 +21,7 @@ class ResidentDatasource {
       final response = await dioClient.get(
         EndpointConstant.adminResidentsEndpoint,
         queryParams: <String, dynamic>{
+          'type': 'sewa',
           'page': page,
           'per_page': perPage,
         },

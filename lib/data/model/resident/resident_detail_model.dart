@@ -13,37 +13,35 @@ class ResidentDetailModel extends ResidentDetailEntity {
   });
 
   factory ResidentDetailModel.fromJson(Map<String, dynamic> json) {
+    // Schedule API format: tenant{user_id, name, id_number, phone, id_photo}, room{id, number, title, price}
+    final tenantJson = json['tenant'] as Map<String, dynamic>? ?? <String, dynamic>{};
     final roomJson = json['room'] as Map<String, dynamic>? ?? <String, dynamic>{};
-    final residentJson =
-        json['resident'] as Map<String, dynamic>? ?? <String, dynamic>{};
 
     return ResidentDetailModel(
       id: json['id']?.toString() ?? '-',
-      status: json['status'] ?? '-',
+      status: json['status']?.toString() ?? '-',
       startDate: json['start_date']?.toString() ?? '-',
       endDate: json['end_date']?.toString() ?? '-',
       finishedAt: json['finished_at']?.toString(),
-      paymentProofUrl: json['payment_proof_url']?.toString(),
+      paymentProofUrl: null,
       room: ResidentDetailRoom(
-        id: roomJson['id'],
+        id: _parseNullableInt(roomJson['id']),
         number: roomJson['number']?.toString() ?? '-',
         title: roomJson['title']?.toString() ?? '-',
         price: _parseNullableInt(roomJson['price']),
       ),
       resident: ResidentDetailPerson(
-        id: residentJson['id']?.toString(),
-        name: residentJson['name']?.toString() ?? '-',
-        email: residentJson['email']?.toString() ?? '-',
-        idCardNumber: residentJson['id_card_number']?.toString() ?? '-',
-        phoneNumber: residentJson['phone_number']?.toString() ?? '-',
-        gender: residentJson['gender']?.toString() ?? '-',
-        job: residentJson['job']?.toString() ?? '-',
-        addressKtp: residentJson['address_ktp']?.toString() ?? '-',
-        emergencyContactName:
-            residentJson['emergency_contact_name']?.toString() ?? '-',
-        emergencyContactPhone:
-            residentJson['emergency_contact_phone']?.toString() ?? '-',
-        ktpPhotoUrl: residentJson['ktp_photo_url']?.toString(),
+        id: tenantJson['user_id']?.toString(),
+        name: tenantJson['name']?.toString() ?? '-',
+        email: '-',
+        idCardNumber: tenantJson['id_number']?.toString() ?? '-',
+        phoneNumber: tenantJson['phone']?.toString() ?? '-',
+        gender: '-',
+        job: '-',
+        addressKtp: '-',
+        emergencyContactName: '-',
+        emergencyContactPhone: '-',
+        ktpPhotoUrl: tenantJson['id_photo']?.toString(),
       ),
     );
   }

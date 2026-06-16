@@ -5,26 +5,22 @@ import 'package:formz/formz.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/domain/entity/reservation_entity.dart';
 import 'package:frontend/domain/usecase/reservation/create_reservation_usecase.dart';
+import 'package:frontend/domain/usecase/resident/get_resident_profile_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_public_settings_usecase.dart';
-import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
-import 'package:frontend/core/dependency_injection/dependency_injection.dart';
-import 'package:frontend/domain/repository/resident_repository.dart';
-import 'package:frontend/core/services/network/exception.dart';
 
 part 'reservation_detail_form_event.dart';
 part 'reservation_detail_form_state.dart';
 
-class ReservationDetailFormBloc extends Bloc<
-    ReservationDetailFormEvent,
-    ReservationDetailFormState> {
+class ReservationDetailFormBloc
+    extends Bloc<ReservationDetailFormEvent, ReservationDetailFormState> {
   final GetPublicSettingsUseCase getSettingsUseCase;
   final CreateReservationUseCase createReservationUseCase;
-  final ResidentRepository residentRepository;
+  final GetResidentProfileUseCase getProfileUseCase;
 
   ReservationDetailFormBloc({
     required this.getSettingsUseCase,
     required this.createReservationUseCase,
-    required this.residentRepository,
+    required this.getProfileUseCase,
   }) : super(const ReservationDetailFormState()) {
     on<InitReservationEvent>(_onInit);
     on<RentTypeChanged>(_onRentTypeChanged);
@@ -35,6 +31,9 @@ class ReservationDetailFormBloc extends Bloc<
     on<SelectedMidtransMethodChanged>(_onSelectedMidtransMethodChanged);
     on<SubmitReservation>(_onSubmit);
     on<RefreshProfileStatusEvent>(_onRefreshProfileStatus);
+    on<ResetConfirmFlagEvent>(
+      (event, emit) => emit(state.copyWith(readyToConfirm: false)),
+    );
   }
 
   Future<void> _onInit(
@@ -58,27 +57,27 @@ class ReservationDetailFormBloc extends Bloc<
 
     if (event.isLoggedIn) {
       try {
-        await residentRepository.getProfile();
-        isProfileComplete = true;
-      } catch (e) {
-        if (e is AppException && e.code == 404) {
-          isProfileComplete = false;
-        } else {
-          isProfileComplete = true;
-        }
+        final profile = await getProfileUseCase();
+        isProfileComplete = _isProfileComplete(profile);
+      } catch (_) {
+        isProfileComplete = false;
       }
     }
 
-    emit(state.copyWith(
-      room: event.room,
-      isDailyRentalEnabled: isDailyEnabled,
-      isMidtransEnabled: isMidtransEnabled,
-      midtransPaymentMethods: midtransPaymentMethods,
-      isProfileComplete: isProfileComplete,
-      paymentMethod: isMidtransEnabled ? 'online' : 'tunai',
-      rentType: 'Bulanan',
-      price: event.room.price.toInt(),
-    ));
+    emit(
+      state.copyWith(
+        room: event.room,
+        isDailyRentalEnabled: isDailyEnabled,
+        isMidtransEnabled: isMidtransEnabled,
+        midtransPaymentMethods: midtransPaymentMethods,
+        isProfileComplete: isProfileComplete,
+        paymentMethod: isMidtransEnabled ? 'online' : 'tunai',
+        rentType: 'Bulanan',
+        price: event.room.price.toInt(),
+        tenantUserId: event.userId,
+        tenantName: event.userName,
+      ),
+    );
 
     _calculate(emit);
   }
@@ -89,14 +88,17 @@ class ReservationDetailFormBloc extends Bloc<
   ) {
     if (state.room == null) return;
 
-    int price = event.rentType == 'Bulanan' 
-        ? state.room!.price.toInt() 
-        : state.room!.priceDaily.toInt();
+    int price;
 
-    emit(state.copyWith(
-      rentType: event.rentType,
-      price: price,
-    ));
+    if (event.rentType == 'Bulanan') {
+      price = state.room!.price.toInt();
+    } else if (event.rentType == 'Tahunan') {
+      price = (state.room!.price * 12).toInt();
+    } else {
+      price = state.room!.priceDaily.toInt();
+    }
+
+    emit(state.copyWith(rentType: event.rentType, price: price));
 
     _calculate(emit);
   }
@@ -129,10 +131,13 @@ class ReservationDetailFormBloc extends Bloc<
     PaymentMethodChanged event,
     Emitter<ReservationDetailFormState> emit,
   ) {
-    emit(state.copyWith(
-      paymentMethod: event.paymentMethod,
-      selectedMidtransMethod: null, // Reset pilihan metode saat method berubah
-    ));
+    emit(
+      state.copyWith(
+        paymentMethod: event.paymentMethod,
+        selectedMidtransMethod:
+            null, // Reset pilihan metode saat method berubah
+      ),
+    );
   }
 
   void _onSelectedMidtransMethodChanged(
@@ -152,30 +157,35 @@ class ReservationDetailFormBloc extends Bloc<
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
 
     try {
-      final startDateStr = "${state.startDate!.year}-${state.startDate!.month.toString().padLeft(2, '0')}-${state.startDate!.day.toString().padLeft(2, '0')}";
-      
-      final rentalType = state.rentType == 'Bulanan' ? 'monthly' : 'daily';
+      String _fmtDate(DateTime d) =>
+          "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}";
 
       final reservation = await createReservationUseCase.execute(
         roomId: state.room!.id,
-        startDate: startDateStr,
-        duration: state.duration,
-        rentalType: rentalType,
+        startDate: _fmtDate(state.startDate!),
+        endDate: _fmtDate(state.endDate!),
+        agreedPrice: state.totalPrice,
+        tenantUserId: state.tenantUserId,
+        tenantName: state.tenantName,
       );
-      
-      emit(state.copyWith(
-        status: FormzSubmissionStatus.success,
-        createdReservation: reservation,
-      ));
+
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.success,
+          createdReservation: reservation,
+        ),
+      );
     } catch (e) {
       String message = 'Gagal membuat reservasi';
       if (e is DioException) {
         message = e.response?.data['message'] ?? message;
       }
-      emit(state.copyWith(
-        status: FormzSubmissionStatus.failure,
-        errorMessage: message,
-      ));
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.failure,
+          errorMessage: message,
+        ),
+      );
     }
   }
 
@@ -184,33 +194,46 @@ class ReservationDetailFormBloc extends Bloc<
     Emitter<ReservationDetailFormState> emit,
   ) async {
     try {
-      await residentRepository.getProfile();
-      emit(state.copyWith(isProfileComplete: true));
-    } catch (e) {
-      if (e is AppException && e.code == 404) {
-        emit(state.copyWith(isProfileComplete: false));
-      }
-      // Error lain (network) → tidak ubah state agar tidak mengganggu flow
+      final profile = await getProfileUseCase();
+      final isComplete = _isProfileComplete(profile);
+      emit(state.copyWith(
+        isProfileComplete: isComplete,
+        readyToConfirm: isComplete && event.thenConfirm,
+      ));
+    } catch (_) {
+      emit(state.copyWith(isProfileComplete: false));
     }
+  }
+
+  bool _isProfileComplete(dynamic profile) {
+    return profile.idCardNumber.isNotEmpty &&
+        profile.phoneNumber.isNotEmpty &&
+        profile.addressKtp.isNotEmpty;
   }
 
   void _calculate(Emitter<ReservationDetailFormState> emit) {
     final start = state.startDate;
-    
+
     if (start == null) return;
 
     if (state.rentType == 'Bulanan') {
       final months = state.durationMonths;
+
       // Calculate end date: same day of month, plus N months
       final end = DateTime(start.year, start.month + months, start.day);
-      
+
       final total = months * state.price;
 
-      emit(state.copyWith(
-        endDate: end,
-        duration: months,
-        totalPrice: total,
-      ));
+      emit(state.copyWith(endDate: end, duration: months, totalPrice: total));
+    } else if (state.rentType == 'Tahunan') {
+      final years = state.durationMonths;
+
+      // Calculate end date: same day, plus N years
+      final end = DateTime(start.year + years, start.month, start.day);
+
+      final total = years * state.price;
+
+      emit(state.copyWith(endDate: end, duration: years, totalPrice: total));
     } else {
       // Daily logic
       final end = state.endDate;
@@ -218,15 +241,9 @@ class ReservationDetailFormBloc extends Bloc<
         final duration = end.difference(start).inDays;
         if (duration > 0) {
           final total = duration * state.price;
-          emit(state.copyWith(
-            duration: duration,
-            totalPrice: total,
-          ));
+          emit(state.copyWith(duration: duration, totalPrice: total));
         } else {
-          emit(state.copyWith(
-            duration: 0,
-            totalPrice: 0,
-          ));
+          emit(state.copyWith(duration: 0, totalPrice: 0));
         }
       }
     }

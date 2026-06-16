@@ -6,8 +6,11 @@ import 'package:frontend/domain/entity/room/room_schedule_entity.dart';
 import 'package:frontend/presentation/bloc/room/room_schedule/room_schedule_bloc.dart';
 import 'package:frontend/presentation/bloc/room/room_schedule/room_schedule_event.dart';
 import 'package:frontend/presentation/bloc/room/room_schedule/room_schedule_state.dart';
-import 'package:frontend/presentation/widget/core/card/basic_card.dart';
-import 'package:frontend/presentation/widget/core/textform/dropdown_field.dart';
+import 'package:frontend/presentation/widget/core/card/summary_stat_card.dart';
+import 'package:frontend/presentation/widget/core/appbar/app_topbar.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_theme.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:intl/intl.dart';
 
 import 'package:frontend/presentation/pages/room_schedule/widget/room_availability_grid.dart';
@@ -22,210 +25,171 @@ class RoomSchedulePage extends StatefulWidget {
 
 class _RoomSchedulePageState extends State<RoomSchedulePage> {
   String? _selectedRoom = 'Semua Kamar';
-
   String? _selectedStatus = 'Semua Status';
-
   DateTime _currentMonth = DateTime.now();
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = AppTheme.isDark(context);
 
     return BlocProvider.value(
       value: serviceLocator.get<RoomScheduleBloc>()..add(FetchRoomSchedules()),
-
       child: Scaffold(
-        backgroundColor: theme.colorScheme.surface,
+        backgroundColor: isDark ? AppColorsDark.background : AppColorsLight.background,
+        body: Column(
+          children: [
+            AppTopBar(
+              title: 'Jadwal Kamar',
+              breadcrumb: 'Kamar & Reservasi / Jadwal Kamar',
+            ),
+            
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.xxxl),
+                child: BlocBuilder<RoomScheduleBloc, RoomScheduleState>(
+                  builder: (context, state) {
+                    if (state is RoomScheduleLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-        body: Padding(
-          padding: const EdgeInsets.all(24.0),
-
-          child: BlocBuilder<RoomScheduleBloc, RoomScheduleState>(
-            builder: (context, state) {
-              if (state is RoomScheduleLoading) {
-                return const Center(child: CircularProgressIndicator());
-              }
-
-              if (state is RoomScheduleError) {
-                return Center(child: Text('Error: ${state.message}'));
-              }
-
-              if (state is RoomScheduleLoaded) {
-                final filteredRooms = _getFilteredRooms(state.schedules);
-
-                final gridData = _convertToGridData(filteredRooms);
-
-                return SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-
-                    children: [
-                      Text(
-                        'Jadwal Kamar',
-
-                        style: theme.textTheme.headlineLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                    if (state is RoomScheduleError) {
+                      return Center(
+                        child: Text(
+                          'Error: ${state.message}',
+                          style: TextStyle(color: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled),
                         ),
-                      ),
+                      );
+                    }
 
-                      const SizedBox(height: 4),
+                    if (state is RoomScheduleLoaded) {
+                      final filteredRooms = _getFilteredRooms(state.schedules);
+                      final gridData = _convertToGridData(filteredRooms);
 
-                      Text(
-                        'Kelola Sistem Kost Anda dengan Mudah',
-
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant,
-                        ),
-                      ),
-
-                      const SizedBox(height: 32),
-
-                      BasicCard(
-                        padding: const EdgeInsets.all(32),
-
+                      return SingleChildScrollView(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-
-                              children: [
-                                Text(
-                                  'Jadwal Kamar - ${DateFormat('MMMM yyyy').format(_currentMonth)}',
-
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-
-                                _MonthNavigator(
-                                  currentMonth: _currentMonth,
-
-                                  onChanged: (newMonth) {
-                                    setState(() {
-                                      _currentMonth = newMonth;
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 24),
-
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-
+                            Container(
+                              padding: const EdgeInsets.all(AppSpacing.xxxl),
+                              decoration: BoxDecoration(
+                                color: isDark ? AppColorsDark.surface : AppColorsLight.surface,
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                                border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Row(
-                                        children: [
-                                          SizedBox(
-                                            width: 220,
-
-                                            child: CustomDropdownField(
-                                              title: 'Filter Kamar',
-
-                                              hint: 'Semua Kamar',
-
-                                              value: _selectedRoom,
-
-                                              items: [
-                                                'Semua Kamar',
-
-                                                ...state.schedules.map(
-                                                  (e) => e.number,
-                                                ),
-                                              ],
-
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  _selectedRoom = value;
-                                                });
-                                              },
-                                            ),
-                                          ),
-
-                                          const SizedBox(width: 16),
-
-                                          SizedBox(
-                                            width: 220,
-
-                                            child: CustomDropdownField(
-                                              title: 'Status Reservasi',
-
-                                              hint: 'Semua Status',
-
-                                              value: _selectedStatus,
-
-                                              items: const [
-                                                'Semua Status',
-
-                                                'Menunggu',
-
-                                                'Aktif',
-
-                                                'Selesai',
-                                              ],
-
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  _selectedStatus = value;
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ],
+                                      Text(
+                                        'Jadwal Kamar - ${DateFormat('MMMM yyyy').format(_currentMonth)}',
+                                        style: theme.textTheme.titleLarge?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-
-                                      const SizedBox(height: 24),
-
-                                      _StatusLegend(),
+                                      _MonthNavigator(
+                                        currentMonth: _currentMonth,
+                                        onChanged: (newMonth) {
+                                          setState(() {
+                                            _currentMonth = newMonth;
+                                          });
+                                        },
+                                      ),
                                     ],
                                   ),
-                                ),
+                                  const SizedBox(height: AppSpacing.xxxl),
 
-                                const SizedBox(width: 24),
-
-                                _TotalBookingStat(
-                                  count: _calculateTotalBookings(filteredRooms),
-                                ),
-                              ],
-                            ),
-
-                            const SizedBox(height: 40),
-
-                            RoomAvailabilityGrid(
-                              daysInMonth: DateTime(
-                                _currentMonth.year,
-
-                                _currentMonth.month + 1,
-
-                                0,
-                              ).day,
-
-                              monthYear: DateFormat(
-                                'MMMM yyyy',
-                              ).format(_currentMonth),
-
-                              rooms: gridData,
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              children: [
+                                                // Dropdown Filter Kamar
+                                                Container(
+                                                  height: 40,
+                                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                                  decoration: BoxDecoration(
+                                                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                                    border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+                                                  ),
+                                                  child: DropdownButtonHideUnderline(
+                                                    child: DropdownButton<String>(
+                                                      value: _selectedRoom,
+                                                      items: [
+                                                        'Semua Kamar',
+                                                        ...state.schedules.map((e) => e.number),
+                                                      ].map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 14)))).toList(),
+                                                      onChanged: (v) => setState(() => _selectedRoom = v),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: AppSpacing.lg),
+                                                // Dropdown Filter Status
+                                                Container(
+                                                  height: 40,
+                                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                                  decoration: BoxDecoration(
+                                                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                                    border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+                                                  ),
+                                                  child: DropdownButtonHideUnderline(
+                                                    child: DropdownButton<String>(
+                                                      value: _selectedStatus,
+                                                      items: [
+                                                        'Semua Status',
+                                                        'Menunggu',
+                                                        'Aktif',
+                                                        'Selesai',
+                                                      ].map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 14)))).toList(),
+                                                      onChanged: (v) => setState(() => _selectedStatus = v),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: AppSpacing.xxxl),
+                                            _StatusLegend(),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: AppSpacing.xxxl),
+                                      SizedBox(
+                                        width: 250,
+                                        child: SummaryStatCard(
+                                          label: 'Total Sewa Aktif',
+                                          value: _calculateTotalBookings(filteredRooms).toString(),
+                                          icon: Icons.calendar_month_outlined,
+                                          iconColor: isDark ? AppColorsDark.primary : AppColorsLight.primary,
+                                          iconBg: isDark ? AppColorsDark.primaryLight : AppColorsLight.primaryLight,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: AppSpacing.xxxl),
+                                  RoomAvailabilityGrid(
+                                    daysInMonth: DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day,
+                                    monthYear: DateFormat('MMMM yyyy').format(_currentMonth),
+                                    rooms: gridData,
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              return const SizedBox.shrink();
-            },
-          ),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -233,35 +197,27 @@ class _RoomSchedulePageState extends State<RoomSchedulePage> {
 
   List<RoomScheduleEntity> _getFilteredRooms(List<RoomScheduleEntity> rooms) {
     return rooms.where((room) {
-      // FILTER KAMAR
       if (_selectedRoom != 'Semua Kamar' && room.number != _selectedRoom) {
         return false;
       }
-
       if (_selectedStatus != 'Semua Status') {
         final hasMatchingStatus = room.schedules.any((schedule) {
           final status = schedule.status.toLowerCase();
-
           switch (_selectedStatus) {
             case 'Menunggu':
               return status == 'pending';
-
             case 'Aktif':
               return status == 'active';
-
             case 'Selesai':
               return status == 'finished';
-
             default:
               return true;
           }
         });
-
         if (!hasMatchingStatus) {
           return false;
         }
       }
-
       return true;
     }).toList();
   }
@@ -269,45 +225,32 @@ class _RoomSchedulePageState extends State<RoomSchedulePage> {
   List<RoomGridData> _convertToGridData(List<RoomScheduleEntity> rooms) {
     return rooms.map((room) {
       final Map<int, RoomDayStatus> dailyStatus = {};
-
-      final daysInMonth = DateTime(
-        _currentMonth.year,
-        _currentMonth.month + 1,
-        0,
-      ).day;
+      final daysInMonth = DateTime(_currentMonth.year, _currentMonth.month + 1, 0).day;
 
       for (int day = 0; day < daysInMonth; day++) {
         final date = DateTime(_currentMonth.year, _currentMonth.month, day + 1);
-
         for (final lease in room.schedules) {
           final start = DateTime.parse(lease.startDate);
-
           final end = DateTime.parse(lease.endDate);
 
           if ((date.isAfter(start) || date.isAtSameMomentAs(start)) &&
               (date.isBefore(end) || date.isAtSameMomentAs(end))) {
             RoomDayStatus status;
-
             switch (lease.status.toLowerCase()) {
               case 'pending':
                 status = RoomDayStatus.pending;
                 break;
-
               case 'active':
                 status = RoomDayStatus.ongoing;
                 break;
-
               case 'finished':
                 status = RoomDayStatus.completed;
                 break;
-
               default:
                 status = RoomDayStatus.available;
             }
-
             if (status != RoomDayStatus.available) {
               dailyStatus[day] = status;
-
               break;
             }
           }
@@ -316,9 +259,7 @@ class _RoomSchedulePageState extends State<RoomSchedulePage> {
 
       return RoomGridData(
         roomNumber: room.number,
-
         roomType: room.title,
-
         dailyStatus: dailyStatus,
       );
     }).toList();
@@ -326,22 +267,18 @@ class _RoomSchedulePageState extends State<RoomSchedulePage> {
 
   int _calculateTotalBookings(List<RoomScheduleEntity> rooms) {
     int total = 0;
-
     for (var room in rooms) {
       total += room.schedules.where((schedule) {
         final status = schedule.status.toLowerCase();
-
         return status == 'pending' || status == 'active';
       }).length;
     }
-
     return total;
   }
 }
 
 class _MonthNavigator extends StatelessWidget {
   final DateTime currentMonth;
-
   final Function(DateTime) onChanged;
 
   const _MonthNavigator({required this.currentMonth, required this.onChanged});
@@ -349,47 +286,45 @@ class _MonthNavigator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = AppTheme.isDark(context);
 
     return Container(
       decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-
+        border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
         borderRadius: BorderRadius.circular(8),
       ),
-
       child: Row(
         mainAxisSize: MainAxisSize.min,
-
         children: [
           IconButton(
             onPressed: () {
               onChanged(DateTime(currentMonth.year, currentMonth.month - 1));
             },
-
             icon: const Icon(Icons.chevron_left),
           ),
-
-          const VerticalDivider(width: 1),
-
+          Container(
+            width: 1,
+            height: 24,
+            color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight,
+          ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
-
             child: Text(
               DateFormat('MMMM yyyy').format(currentMonth),
-
               style: theme.textTheme.bodyLarge?.copyWith(
                 fontWeight: FontWeight.w500,
               ),
             ),
           ),
-
-          const VerticalDivider(width: 1),
-
+          Container(
+            width: 1,
+            height: 24,
+            color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight,
+          ),
           IconButton(
             onPressed: () {
               onChanged(DateTime(currentMonth.year, currentMonth.month + 1));
             },
-
             icon: const Icon(Icons.chevron_right),
           ),
         ],
@@ -401,30 +336,35 @@ class _MonthNavigator extends StatelessWidget {
 class _StatusLegend extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isDark = AppTheme.isDark(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withOpacity(0.3),
-
+        color: isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant,
         borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
       ),
-
       child: Row(
         mainAxisSize: MainAxisSize.min,
-
-        children: const [
-          _LegendItem(color: Color(0xFFFFF9C4), label: 'Menunggu'),
-
-          SizedBox(width: 32),
-
-          _LegendItem(color: Color(0xFFC8E6C9), label: 'Aktif'),
-
-          SizedBox(width: 32),
-
-          _LegendItem(color: Color(0xFFBBDEFB), label: 'Selesai'),
+        children: [
+          _LegendItem(
+            color: isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg,
+            borderColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
+            label: 'Menunggu'
+          ),
+          const SizedBox(width: 32),
+          _LegendItem(
+            color: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
+            borderColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
+            label: 'Aktif'
+          ),
+          const SizedBox(width: 32),
+          _LegendItem(
+            color: isDark ? AppColorsDark.statusProcessBg : AppColorsLight.statusProcessBg,
+            borderColor: isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess,
+            label: 'Selesai'
+          ),
         ],
       ),
     );
@@ -433,10 +373,10 @@ class _StatusLegend extends StatelessWidget {
 
 class _LegendItem extends StatelessWidget {
   final Color color;
-
+  final Color borderColor;
   final String label;
 
-  const _LegendItem({required this.color, required this.label});
+  const _LegendItem({required this.color, required this.borderColor, required this.label});
 
   @override
   Widget build(BuildContext context) {
@@ -446,81 +386,25 @@ class _LegendItem extends StatelessWidget {
       children: [
         Container(
           width: 16,
-
           height: 16,
-
           decoration: BoxDecoration(
             color: color,
-
             borderRadius: BorderRadius.circular(4),
-
             border: Border.all(
-              color: theme.colorScheme.outlineVariant,
-
-              width: 0.5,
+              color: borderColor,
+              width: 1,
             ),
           ),
         ),
-
         const SizedBox(width: 8),
-
         Text(
           label,
-
           style: theme.textTheme.bodyMedium?.copyWith(
             color: theme.colorScheme.onSurface,
-
             fontWeight: FontWeight.w500,
           ),
         ),
       ],
-    );
-  }
-}
-
-class _TotalBookingStat extends StatelessWidget {
-  final int count;
-
-  const _TotalBookingStat({required this.count});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      width: 140,
-
-      padding: const EdgeInsets.symmetric(vertical: 24),
-
-      decoration: BoxDecoration(
-        border: Border.all(color: theme.colorScheme.outlineVariant),
-
-        borderRadius: BorderRadius.circular(12),
-      ),
-
-      child: Column(
-        children: [
-          Text(
-            'Total Sewa Aktif',
-
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-            ),
-          ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            count.toString(),
-
-            style: theme.textTheme.displaySmall?.copyWith(
-              fontWeight: FontWeight.bold,
-
-              color: theme.colorScheme.onSurface,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

@@ -13,6 +13,7 @@ import 'package:frontend/presentation/widget/core/appbar/custom_appbar.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:frontend/presentation/widget/core/chip/custom_chip.dart';
+import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/presentation/widget/core/image/image_carousel.dart';
 
 @RoutePage()
@@ -244,29 +245,40 @@ class RoomDetailView extends StatelessWidget {
                                   if (state.room?.priceDaily != null &&
                                       state.room!.priceDaily > 0) ...[
                                     const SizedBox(height: 8),
-                                    Text(
-                                      '${state.room?.priceDailyFormatted} / hari',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(
-                                            color: Colors.blue.shade700,
-                                          ),
-                                    ),
+                                    // Text(
+                                    //   '${state.room?.priceDailyFormatted} / hari',
+                                    //   style: Theme.of(context)
+                                    //       .textTheme
+                                    //       .titleMedium
+                                    //       ?.copyWith(
+                                    //         color: Colors.blue.shade700,
+                                    //       ),
+                                    // ),
                                   ],
-
-                                  if (!isAdmin) ...[
+                                  if (!isAdmin &&
+                                      state.room?.status ==
+                                          RoomStatusEnum.available) ...[
                                     const SizedBox(height: 20),
-                                    BasicButton(
-                                      onPressed: () {
-                                        context.router.push(
-                                          ReservationDetailFormRoute(
-                                            room: state.room!,
-                                          ),
-                                        );
-                                      },
-                                      label: 'Pesan Sekarang',
-                                    ),
+                                    if (isLoggedIn)
+                                      BasicButton(
+                                        onPressed: () {
+                                          context.router.push(
+                                            ReservationDetailFormRoute(
+                                              room: state.room!,
+                                            ),
+                                          );
+                                        },
+                                        label: 'Pesan Sekarang',
+                                      )
+                                    else
+                                      BasicButton(
+                                        onPressed: () {
+                                          context.router.push(
+                                            LoginRoute(pendingRoom: state.room),
+                                          );
+                                        },
+                                        label: 'Login untuk Memesan',
+                                      ),
                                   ],
                                 ],
                               ),

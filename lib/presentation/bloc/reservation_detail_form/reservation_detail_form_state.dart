@@ -19,6 +19,9 @@ class ReservationDetailFormState extends Equatable {
     this.midtransPaymentMethods = const [],
     this.createdReservation,
     this.isProfileComplete = true,
+    this.readyToConfirm = false,
+    this.tenantUserId,
+    this.tenantName,
   });
 
   final String rentType;
@@ -34,10 +37,13 @@ class ReservationDetailFormState extends Equatable {
   final FormzSubmissionStatus status;
   final String? errorMessage;
   final String paymentMethod; // 'online' atau 'tunai'
-  final String? selectedMidtransMethod; // kode metode yang dipilih user, e.g. 'qris', 'gopay'
-  final List<String> midtransPaymentMethods; // metode yang tersedia dari konfigurasi backend
+  final String? selectedMidtransMethod;
+  final List<String> midtransPaymentMethods;
   final ReservationEntity? createdReservation;
   final bool isProfileComplete;
+  final bool readyToConfirm;
+  final int? tenantUserId;
+  final String? tenantName;
 
   ReservationDetailFormState copyWith({
     String? rentType,
@@ -57,6 +63,9 @@ class ReservationDetailFormState extends Equatable {
     List<String>? midtransPaymentMethods,
     ReservationEntity? createdReservation,
     bool? isProfileComplete,
+    bool? readyToConfirm,
+    int? tenantUserId,
+    String? tenantName,
   }) {
     return ReservationDetailFormState(
       rentType: rentType ?? this.rentType,
@@ -76,6 +85,9 @@ class ReservationDetailFormState extends Equatable {
       midtransPaymentMethods: midtransPaymentMethods ?? this.midtransPaymentMethods,
       createdReservation: createdReservation ?? this.createdReservation,
       isProfileComplete: isProfileComplete ?? this.isProfileComplete,
+      readyToConfirm: readyToConfirm ?? this.readyToConfirm,
+      tenantUserId: tenantUserId ?? this.tenantUserId,
+      tenantName: tenantName ?? this.tenantName,
     );
   }
 
@@ -98,5 +110,8 @@ class ReservationDetailFormState extends Equatable {
         midtransPaymentMethods,
         createdReservation,
         isProfileComplete,
+        readyToConfirm,
+        tenantUserId,
+        tenantName,
       ];
 }

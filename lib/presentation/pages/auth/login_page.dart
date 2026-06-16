@@ -36,7 +36,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    // Tampilkan SnackBar setelah widget selesai di-build
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.reason == 'unauthenticated') {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -47,9 +47,6 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
     });
-
-    // Toggle obscure text saat pertama kali
-    context.read<AuthBloc>().add(const ToggleObscureTextEvent());
   }
 
   @override
@@ -120,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Login Page',
+                          'Halaman Login',
                           style: StyleConstant.customTextStyle.copyWith(
                             fontSize: 30,
                             fontWeight: FontWeight.w900,
@@ -128,7 +125,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         SizedBox(height: 10),
                         Text(
-                          'Masukan Email dan Password untuk melanjutkan',
+                          'Masukkan Email dan Password untuk melanjutkan',
                           style: StyleConstant.customTextStyle.copyWith(
                             fontSize: 16,
                           ),
@@ -208,7 +205,9 @@ class _LoginPageState extends State<LoginPage> {
                             TextButton(
                               onPressed: () {
                                 context.router.replace(
-                                  RegisterRoute(pendingRoom: widget.pendingRoom),
+                                  RegisterRoute(
+                                    pendingRoom: widget.pendingRoom,
+                                  ),
                                 );
                               },
                               child: Text('Daftar disini'),

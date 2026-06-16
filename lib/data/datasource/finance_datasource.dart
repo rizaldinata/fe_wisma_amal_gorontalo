@@ -36,7 +36,14 @@ abstract class FinanceRemoteDatasource {
     String? paymentProofName,
     String? preferredPaymentType,
   });
-  Future<void> extendLease(int leaseId, int durationMonths);
+  Future<PaymentModel> extendLease(
+    int leaseId,
+    int durationMonths,
+    String paymentMethod, {
+    Uint8List? paymentProofBytes,
+    String? paymentProofName,
+    String? preferredPaymentType,
+  });
   Future<String> getInvoicePrintLink(int invoiceId);
 }
 
@@ -278,11 +285,36 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
   }
 
   @override
-  Future<void> extendLease(int leaseId, int durationMonths) async {
-    await _dioClient.post(
-      '/rentals/$leaseId/extend',
-      data: {'duration': durationMonths},
+  Future<PaymentModel> extendLease(
+    int leaseId,
+    int durationMonths,
+    String paymentMethod, {
+    Uint8List? paymentProofBytes,
+    String? paymentProofName,
+    String? preferredPaymentType,
+  }) async {
+    dynamic data;
+    if (paymentMethod == 'manual' && paymentProofBytes != null) {
+      data = FormData.fromMap({
+        'duration_months': durationMonths,
+        'payment_method': paymentMethod,
+        'payment_proof': MultipartFile.fromBytes(
+          paymentProofBytes,
+          filename: paymentProofName ?? 'payment_proof.jpg',
+        ),
+      });
+    } else {
+      data = {
+        'duration_months': durationMonths,
+        'payment_method': paymentMethod,
+        if (preferredPaymentType != null) 'payment_type': preferredPaymentType,
+      };
+    }
+    final response = await _dioClient.post(
+      '/finance/me/leases/$leaseId/perpanjang',
+      data: data,
     );
+    return PaymentModel.fromJson(response.data['data']);
   }
 
   @override

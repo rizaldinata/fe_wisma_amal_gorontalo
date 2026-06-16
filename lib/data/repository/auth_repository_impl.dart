@@ -32,7 +32,12 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> getPermissions() async {
     try {
       final response = await datasource.getPermissions();
-      await _savePermissions(Permissions(response.data.toSet()));
+      final permissions = List<String>.from(response.data['permissions'] ?? []);
+      final roles = List<String>.from(response.data['roles'] ?? []);
+      await _savePermissions(Permissions(permissions.toSet()));
+      if (roles.isNotEmpty) {
+        await storage.setList(StorageConstant.roleActive, roles);
+      }
     } catch (e) {
       rethrow;
     }
@@ -44,9 +49,10 @@ class AuthRepositoryImpl implements AuthRepository {
       final response = await datasource.register(request);
       final token = response.data.token.split('|').last;
       await secureStorage.set(StorageConstant.token, token);
-      final permissions = await datasource.getPermissions();
+      final permData = await datasource.getPermissions();
+      final permList = List<String>.from(permData.data['permissions'] ?? []);
       UserEntity userEntity = response.data.toEntity();
-      userEntity.permissions = Permissions(permissions.data.toSet());
+      userEntity.permissions = Permissions(permList.toSet());
       if (response.status) {
         await _saveUserInfo(userEntity);
       }
@@ -62,9 +68,10 @@ class AuthRepositoryImpl implements AuthRepository {
       final response = await datasource.login(request);
       final token = response.data.token.split('|').last;
       await secureStorage.set(StorageConstant.token, token);
-      final permissions = await datasource.getPermissions();
+      final permData = await datasource.getPermissions();
+      final permList = List<String>.from(permData.data['permissions'] ?? []);
       UserEntity userEntity = response.data.toEntity();
-      userEntity.permissions = Permissions(permissions.data.toSet());
+      userEntity.permissions = Permissions(permList.toSet());
       if (response.status) {
         await _saveUserInfo(userEntity);
       }

@@ -88,6 +88,7 @@ import 'package:frontend/domain/usecase/reservation/get_reservations_usecase.dar
 // import 'package:frontend/domain/usecase/reservation/update_reservation_status_usecase.dart';
 import 'package:frontend/presentation/bloc/reservation_list/reservation_bloc.dart';
 import 'package:frontend/domain/usecase/my_reservation/get_my_reservations_usecase.dart';
+import 'package:frontend/domain/usecase/reservation/cancel_reservation_usecase.dart';
 import 'package:frontend/presentation/bloc/my_reservation/my_reservation_bloc.dart';
 import 'package:frontend/presentation/bloc/my_reservation/my_reservation_event.dart';
 import 'package:frontend/presentation/bloc/guest/guest_bloc.dart';
@@ -318,6 +319,7 @@ Future<void> initializeBloc() async {
   serviceLocator.registerFactory(
     () => MyReservationBloc(
       getMyReservationsUseCase: serviceLocator<GetMyReservationsUseCase>(),
+      cancelReservationUseCase: serviceLocator<CancelReservationUseCase>(),
     )..add(GetMyReservationsEvent()),
   );
 

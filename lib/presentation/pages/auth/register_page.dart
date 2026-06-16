@@ -105,7 +105,7 @@ class RegisterPage extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              'Register Page',
+                              'Halaman Register',
                               style: StyleConstant.customTextStyle.copyWith(
                                 fontSize: 30,
                                 fontWeight: FontWeight.w900,

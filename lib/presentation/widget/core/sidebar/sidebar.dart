@@ -6,6 +6,9 @@ import 'package:frontend/core/constant/storage_constant.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/core/services/storage/secure_storage.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
@@ -16,7 +19,6 @@ import 'package:frontend/presentation/widget/core/botton/icon_button.dart';
 class SidebarItem {
   final String label;
   final IconData? icon;
-  // final String? routeName;
   final VoidCallback? onTap;
   final PageRouteInfo? page;
   final List<SidebarItem>? children;
@@ -37,13 +39,13 @@ class SidebarItem {
 class CustomSidebar extends StatefulWidget {
   final double width;
   final List<SidebarItem> items;
-  final String? activeRouteName;
+  final Set<String> activeRouteNames;
 
   const CustomSidebar({
     super.key,
-    this.width = 250,
+    this.width = 240,
     required this.items,
-    this.activeRouteName,
+    required this.activeRouteNames,
   });
 
   @override
@@ -52,6 +54,7 @@ class CustomSidebar extends StatefulWidget {
 
 class _CustomSidebarState extends State<CustomSidebar> {
   final Set<String> _expanded = {};
+  String? _hoveredItem;
 
   void _toggleExpanded(String id) {
     setState(() {
@@ -63,39 +66,22 @@ class _CustomSidebarState extends State<CustomSidebar> {
     });
   }
 
-  final SecureStorageService storage = serviceLocator
-      .get<SecureStorageService>();
+  final SecureStorageService storage = serviceLocator.get<SecureStorageService>();
 
   Future<bool> isLoggedIn() async {
     final token = await storage.get(StorageConstant.token);
     return token != null;
   }
 
-  bool _isSelected(BuildContext context, SidebarItem item) {
-    final current = context.router.current;
-    final segments = context.router.currentSegments;
-
+  bool _isSelected(SidebarItem item) {
     if (item.page != null) {
-      final activeOverride = (widget.activeRouteName != null)
-          ? widget.activeRouteName
-          : null;
-      if (activeOverride != null && activeOverride == item.page!.routeName) {
+      if (widget.activeRouteNames.contains(item.page!.routeName)) {
         return true;
       }
-
-      if (current.name == item.page!.routeName) return true;
-
-      if (segments.any((s) => s.name == item.page!.routeName)) return true;
-      try {
-        final stack = context.router.stack;
-        for (final entry in stack) {
-          if (entry.name == item.page!.routeName) return true;
-        }
-      } catch (_) {}
     }
 
     if (item.hasChildren) {
-      return item.children!.any((c) => _isSelected(context, c));
+      return item.children!.any((c) => _isSelected(c));
     }
     return false;
   }
@@ -115,128 +101,116 @@ class _CustomSidebarState extends State<CustomSidebar> {
   @override
   Widget build(BuildContext context) {
     var isDarkMode = context.select((AppBloc bloc) => bloc.state.isDarkMode);
+    final isDark = AppTheme.isDark(context);
+    
+    final sidebarBg = isDark ? AppColorsDark.sidebarBg : AppColorsLight.sidebarBg;
+    final sidebarBorder = isDark ? AppColorsDark.borderLight : AppColorsLight.sidebarBorder;
 
     return BlocBuilder<AppBloc, AppState>(
       builder: (context, state) {
         return Container(
           width: widget.width,
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surfaceContainerLow,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.08),
-                blurRadius: 12,
-                offset: const Offset(4, 4),
-              ),
-            ],
+            color: sidebarBg,
+            border: Border(
+              right: BorderSide(color: sidebarBorder),
+            ),
           ),
           child: BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {
               return SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Header
                       Row(
                         children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: isDark ? AppColorsDark.primaryLight : AppColorsLight.primaryLight,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(Icons.apartment, color: isDark ? AppColorsDark.primary : AppColorsLight.primary),
+                          ),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'Wisma Amal',
-                                  style: Theme.of(context).textTheme.titleLarge
-                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary,
+                                  ),
                                 ),
-                                const SizedBox(height: 2),
                                 Text(
-                                  'Operational & Maintenance',
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: Theme.of(context)
-                                            .colorScheme
-                                            .onSurface
-                                            .withOpacity(0.6),
-                                      ),
+                                  'Operational & Maint',
+                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
-
-                      // Divider + menu label
-                      Text(
-                        'Menu',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.6),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 32),
 
                       Expanded(
                         child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
                           itemCount: widget.items.length,
                           itemBuilder: (context, index) {
                             final item = widget.items[index];
                             if (!item.hasAccess) {
-                              // Return an empty widget instead of null to keep
-                              // the children's indices contiguous for the
-                              // underlying sliver list.
                               return const SizedBox.shrink();
                             }
 
                             if (item.hasChildren) {
                               final id = item.label;
-                              final isOpen =
-                                  _expanded.contains(id) ||
-                                  _isSelected(context, item);
-                              return _buildAccordionSection(
-                                context,
-                                item,
-                                isOpen,
-                                id,
-                              );
+                              final isOpen = _expanded.contains(id) || _isSelected(item);
+                              return _buildAccordionSection(context, item, isOpen, id, isDark);
                             }
 
-                            return _buildMenuTile(context, item);
+                            return _buildMenuTile(context, item, isDark);
                           },
                         ),
                       ),
-                      ToggleButtons(
-                        isSelected: [!isDarkMode, isDarkMode],
-                        onPressed: (index) {
-                          context.read<AppBloc>().add(
-                            AppBlocChangeThemeEvent(),
-                          );
-                        },
-                        borderRadius: BorderRadius.circular(8),
-                        selectedColor: Theme.of(context).colorScheme.onPrimary,
-                        fillColor: Theme.of(context).colorScheme.primary,
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.7),
-                        constraints: const BoxConstraints(
-                          minWidth: 105,
-                          minHeight: 30,
+                      
+                      // Dark Mode Toggle
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant,
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                         ),
-                        children: const [
-                          Icon(Icons.light_mode_rounded, size: 18),
-                          Icon(Icons.dark_mode_rounded, size: 18),
-                        ],
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              isDarkMode ? 'Dark Mode' : 'Light Mode',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary,
+                              ),
+                            ),
+                            Switch(
+                              value: isDarkMode,
+                              onChanged: (val) {
+                                context.read<AppBloc>().add(AppBlocChangeThemeEvent());
+                              },
+                              activeColor: isDark ? AppColorsDark.primary : AppColorsLight.primary,
+                            ),
+                          ],
+                        ),
                       ),
+                      const SizedBox(height: 16),
 
                       // Profile
-                      const SizedBox(height: 8),
-
                       if (state.isLoggedIn == false)
                         BasicButton(
                           onPressed: () {
@@ -249,80 +223,67 @@ class _CustomSidebarState extends State<CustomSidebar> {
                         Material(
                           color: Colors.transparent,
                           child: InkWell(
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                             onTap: () {
-                              context.router.navigatePath(
-                                '/${RouteConstant.residentProfileName}',
-                              );
+                              context.router.navigatePath('/${RouteConstant.residentProfileName}');
                             },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                               decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.surfaceContainerHigh,
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
                               ),
                               child: BlocBuilder<AuthBloc, AuthState>(
                                 builder: (context, state) {
-                                  if (state.userInfo == null ||
-                                      state.userInfo?.id == null) {
-                                    context.read<AuthBloc>().add(
-                                      const GetUserInfoEvent(),
-                                    );
+                                  if (state.userInfo == null || state.userInfo?.id == null) {
+                                    context.read<AuthBloc>().add(const GetUserInfoEvent());
                                   }
 
                                   return Row(
                                     children: [
                                       CircleAvatar(
-                                        radius: 20,
-                                        backgroundColor: Theme.of(
-                                          context,
-                                        ).colorScheme.primary,
+                                        radius: 16,
+                                        backgroundColor: isDark ? AppColorsDark.primaryLight : AppColorsLight.primaryLight,
                                         child: Icon(
                                           Icons.person,
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.onPrimary,
+                                          size: 18,
+                                          color: isDark ? AppColorsDark.primary : AppColorsLight.primary,
                                         ),
                                       ),
                                       const SizedBox(width: 10),
-
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              state.userInfo?.name ?? 'User',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodyMedium
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.w600,
-                                                  ),
+                                              state.userInfo?.name ?? 'Super Admin',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                color: isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            const SizedBox(height: 2),
                                             Text(
-                                              state.userInfo?.roles.join(
-                                                    ', ',
-                                                  ) ??
-                                                  'Guest',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall
-                                                  ?.copyWith(
-                                                    color: Theme.of(context)
-                                                        .colorScheme
-                                                        .onSurface
-                                                        .withOpacity(0.6),
-                                                  ),
+                                              state.userInfo?.roles.join(', ') ?? 'super-admin',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary,
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ],
                                         ),
+                                      ),
+                                      IconButton(
+                                        icon: Icon(Icons.logout, size: 18, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary),
+                                        onPressed: () {
+                                          context.read<AuthBloc>().add(const LogoutEvent());
+                                        },
+                                        constraints: const BoxConstraints(),
+                                        padding: EdgeInsets.zero,
                                       ),
                                     ],
                                   );
@@ -331,18 +292,6 @@ class _CustomSidebarState extends State<CustomSidebar> {
                             ),
                           ),
                         ),
-                      SizedBox(height: 12),
-
-                      if (state.isLoggedIn == true)
-                        CustomIconButton(
-                          boxShadow: [],
-                          icon: Icon(Icons.logout),
-                          title: 'Logout',
-                          onPressed: () {
-                            context.read<AuthBloc>().add(const LogoutEvent());
-                          },
-                        ),
-                      const SizedBox(height: 12),
                     ],
                   ),
                 ),
@@ -354,108 +303,75 @@ class _CustomSidebarState extends State<CustomSidebar> {
     );
   }
 
-  Widget _buildAccordionSection(
-    BuildContext context,
-    SidebarItem section,
-    bool isOpen,
-    String id,
-  ) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
-        color: isOpen
-            ? Theme.of(context).colorScheme.primary.withOpacity(0.06)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-          child: ExpansionTile(
-            key: PageStorageKey(id),
-            initiallyExpanded: isOpen,
-            onExpansionChanged: (v) => _toggleExpanded(id),
-            tilePadding: const EdgeInsets.symmetric(
-              horizontal: 12,
-              vertical: 8,
+  Widget _buildAccordionSection(BuildContext context, SidebarItem section, bool isOpen, String id, bool isDark) {
+    final sectionColor = isDark ? AppColorsDark.sidebarSection : AppColorsLight.sidebarSection;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 12, bottom: 8, top: 16),
+          child: Text(
+            section.label.toUpperCase(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              letterSpacing: 0.5,
+              color: sectionColor,
             ),
-            leading: section.icon != null
-                ? Icon(
-                    section.icon,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withAlpha(170),
-                  )
-                : null,
-            title: Text(
-              section.label,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha(200),
-              ),
-            ),
-            childrenPadding: const EdgeInsets.only(
-              left: 20,
-              right: 12,
-              bottom: 8,
-            ),
-            children: section.children!
-                .map((child) => _buildMenuTile(context, child))
-                .toList(),
           ),
         ),
-      ),
+        ...section.children!.map((child) => _buildMenuTile(context, child, isDark)),
+      ],
     );
   }
 
-  Widget _buildMenuTile(BuildContext context, SidebarItem item) {
-    final selected = _isSelected(context, item);
+  Widget _buildMenuTile(BuildContext context, SidebarItem item, bool isDark) {
+    final isActive = _isSelected(item);
+    final isHovered = _hoveredItem == item.label;
+
+    final activeBg     = isDark ? AppColorsDark.sidebarActive    : AppColorsLight.sidebarActive;
+    final hoverBg      = isDark ? AppColorsDark.sidebarHoverBg   : AppColorsLight.sidebarHoverBg;
+    final activeIcon   = isDark ? AppColorsDark.sidebarActiveIcon : Colors.white;
+    final inactiveIcon = isDark ? AppColorsDark.sidebarMuted     : AppColorsLight.sidebarMuted;
+    final activeText   = isDark ? AppColorsDark.sidebarActiveText : AppColorsLight.sidebarActiveText;
+    final inactiveText = isDark ? AppColorsDark.sidebarText      : AppColorsLight.sidebarText;
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Material(
-        color: selected
-            ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(10),
+      padding: const EdgeInsets.only(bottom: 4),
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _hoveredItem = item.label),
+        onExit: (_) => setState(() => _hoveredItem = null),
+        child: GestureDetector(
           onTap: () => _handleTap(context, item),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-            child: Row(
-              children: [
-                if (item.icon != null)
-                  Icon(
-                    item.icon,
-                    size: 20,
-                    color: selected
-                        ? Theme.of(context).colorScheme.primary
-                        : Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.8),
-                  ),
-                if (item.icon != null) const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    item.label,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                      color: selected
-                          ? Theme.of(context).colorScheme.primary
-                          : Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withOpacity(0.8),
-                    ),
-                  ),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            decoration: BoxDecoration(
+              color: isActive ? activeBg : (isHovered ? hoverBg : Colors.transparent),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            ),
+            child: ListTile(
+              dense: true,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+              minLeadingWidth: 20,
+              leading: item.icon != null ? Icon(
+                item.icon,
+                color: isActive ? activeIcon : inactiveIcon,
+                size: 18,
+              ) : null,
+              title: Text(
+                item.label,
+                style: TextStyle(
+                  color: isActive ? activeText : inactiveText,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+                  fontSize: 14,
                 ),
-                if (selected)
-                  Icon(
-                    Icons.circle,
-                    size: 8,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-              ],
+              ),
+              trailing: item.hasChildren ? Icon(
+                Icons.chevron_right,
+                size: 16,
+                color: isActive ? activeIcon : inactiveIcon,
+              ) : null,
             ),
           ),
         ),
