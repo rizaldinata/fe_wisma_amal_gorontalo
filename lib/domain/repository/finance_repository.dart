@@ -38,6 +38,13 @@ abstract class FinanceRepository {
     String? paymentProofName,
     String? preferredPaymentType,
   });
-  Future<void> extendLease(int leaseId, int durationMonths);
+  Future<PaymentEntity> extendLease(
+    int leaseId,
+    int durationMonths,
+    String paymentMethod, {
+    Uint8List? paymentProofBytes,
+    String? paymentProofName,
+    String? preferredPaymentType,
+  });
   Future<String> getInvoicePrintLink(int invoiceId);
 }

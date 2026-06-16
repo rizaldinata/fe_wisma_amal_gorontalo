@@ -138,10 +138,27 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
   ) async {
     emit(state.copyWith(status: MemberFinanceStatus.loading));
     try {
-      await _extendLease.execute(event.leaseId, event.duration);
-      emit(state.copyWith(status: MemberFinanceStatus.extensionSuccess));
-      // Refresh summary
-      add(FetchMemberFinanceSummary());
+      final payment = await _extendLease.execute(
+        event.leaseId,
+        event.duration,
+        event.paymentMethod,
+        paymentProofBytes: event.paymentProofBytes,
+        paymentProofName: event.paymentProofName,
+        preferredPaymentType: event.preferredPaymentType,
+      );
+      if (payment.snapToken != null && payment.snapToken!.isNotEmpty ||
+          payment.paymentData != null) {
+        emit(state.copyWith(
+          status: MemberFinanceStatus.paymentSuccess,
+          snapToken: payment.snapToken,
+          paymentData: payment.paymentData,
+          paymentInvoiceId: payment.invoiceId,
+          paymentAmount: payment.amount,
+        ));
+      } else {
+        emit(state.copyWith(status: MemberFinanceStatus.extensionSuccess));
+        add(FetchMemberFinanceSummary());
+      }
     } catch (e) {
       emit(state.copyWith(
         status: MemberFinanceStatus.failure,

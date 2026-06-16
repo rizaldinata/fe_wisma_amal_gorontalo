@@ -1,12 +1,12 @@
 class MemberFinanceSummaryEntity {
   final String residentName;
-  final ActiveLeaseEntity? activeLease;
+  final List<ActiveLeaseEntity> activeLeases;
   final double totalUnpaid;
   final int unpaidCount;
 
   MemberFinanceSummaryEntity({
     required this.residentName,
-    this.activeLease,
+    this.activeLeases = const [],
     required this.totalUnpaid,
     required this.unpaidCount,
   });

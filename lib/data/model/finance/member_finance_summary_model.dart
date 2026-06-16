@@ -3,7 +3,7 @@ import '../../../domain/entity/finance/member_finance_summary_entity.dart';
 class MemberFinanceSummaryModel extends MemberFinanceSummaryEntity {
   MemberFinanceSummaryModel({
     required super.residentName,
-    super.activeLease,
+    super.activeLeases = const [],
     required super.totalUnpaid,
     required super.unpaidCount,
   });
@@ -11,9 +11,9 @@ class MemberFinanceSummaryModel extends MemberFinanceSummaryEntity {
   factory MemberFinanceSummaryModel.fromJson(Map<String, dynamic> json) {
     return MemberFinanceSummaryModel(
       residentName: json['resident_name'] ?? '',
-      activeLease: json['active_lease'] != null
-          ? ActiveLeaseModel.fromJson(json['active_lease'])
-          : null,
+      activeLeases: (json['active_leases'] as List<dynamic>? ?? [])
+          .map((e) => ActiveLeaseModel.fromJson(e as Map<String, dynamic>))
+          .toList(),
       totalUnpaid: (json['total_unpaid'] ?? 0.0).toDouble(),
       unpaidCount: json['unpaid_count'] ?? 0,
     );

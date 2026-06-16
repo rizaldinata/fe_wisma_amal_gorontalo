@@ -408,8 +408,8 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
           .execute();
       _residentController.text =
           summary.residentName.isNotEmpty ? summary.residentName : '-';
-      if (summary.activeLease != null) {
-        _roomController.text = summary.activeLease!.roomNumber;
+      if (summary.activeLeases.isNotEmpty) {
+        _roomController.text = summary.activeLeases.first.roomNumber;
         _hasActiveLease = true;
       } else {
         _roomController.text = '-';

@@ -158,8 +158,22 @@ class FinanceRepositoryImpl implements FinanceRepository {
   }
 
   @override
-  Future<void> extendLease(int leaseId, int durationMonths) async {
-    return await remoteDatasource.extendLease(leaseId, durationMonths);
+  Future<PaymentEntity> extendLease(
+    int leaseId,
+    int durationMonths,
+    String paymentMethod, {
+    Uint8List? paymentProofBytes,
+    String? paymentProofName,
+    String? preferredPaymentType,
+  }) async {
+    return await remoteDatasource.extendLease(
+      leaseId,
+      durationMonths,
+      paymentMethod,
+      paymentProofBytes: paymentProofBytes,
+      paymentProofName: paymentProofName,
+      preferredPaymentType: preferredPaymentType,
+    );
   }
 
   @override
