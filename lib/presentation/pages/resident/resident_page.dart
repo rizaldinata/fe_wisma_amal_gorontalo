@@ -2,11 +2,20 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/domain/entity/resident/resident_entity.dart';
 import 'package:frontend/presentation/bloc/resident/resident_bloc.dart';
-import 'package:frontend/presentation/widget/core/card/basic_card.dart';
+import 'package:frontend/presentation/widget/core/appbar/app_topbar.dart';
+import 'package:frontend/presentation/widget/core/appbar/search_and_filter_bar.dart';
+import 'package:frontend/presentation/widget/core/card/summary_stat_card.dart';
+import 'package:frontend/presentation/widget/core/chip/status_badge.dart';
+import 'package:frontend/presentation/widget/core/table/app_data_table.dart';
+import 'package:frontend/presentation/widget/core/wrapper/empty_state_widget.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'form/resident_detail_form.dart';
-import 'widget/resident_table_action.dart';
 
 @RoutePage()
 class ResidentPage extends StatelessWidget {
@@ -85,468 +94,307 @@ class _ResidentViewState extends State<_ResidentView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F4F6), 
-      // 2. Gunakan BlocBuilder untuk merender UI berdasarkan State
-      body: BlocConsumer<ResidentBloc, ResidentState>(
-        listener: (context, state) {
-          if (state is ResidentLoaded) {
-            setState(() {
-              if (_currentPage == 1) {
-                _residentCache = List<ResidentItem>.from(state.data.residents);
-              } else {
-                _residentCache.addAll(state.data.residents);
-              }
-              _hasMore =
-                  state.data.pagination.currentPage < state.data.pagination.lastPage;
-              _isLoadingMore = false;
-            });
-          }
+      backgroundColor: isDark ? AppColorsDark.background : AppColorsLight.background,
+      body: Column(
+        children: [
+          AppTopBar(
+            title: 'Daftar Penghuni',
+            breadcrumb: 'Manajemen / Daftar Penghuni',
+          ),
+          Expanded(
+            child: BlocConsumer<ResidentBloc, ResidentState>(
+              listener: (context, state) {
+                if (state is ResidentLoaded) {
+                  setState(() {
+                    if (_currentPage == 1) {
+                      _residentCache = List<ResidentItem>.from(state.data.residents);
+                    } else {
+                      _residentCache.addAll(state.data.residents);
+                    }
+                    _hasMore =
+                        state.data.pagination.currentPage < state.data.pagination.lastPage;
+                    _isLoadingMore = false;
+                  });
+                }
 
-          if (state is ResidentError) {
-            setState(() {
-              _isLoadingMore = false;
-            });
-          }
-        },
-        builder: (context, state) {
-          
-          if (state is ResidentLoading) {
-            return const Center(child: CircularProgressIndicator(color: Color(0xFFA794F2)));
-          }
-          
-          if (state is ResidentError) {
-            return Center(child: Text(state.message, style: const TextStyle(color: Colors.red)));
-          }
+                if (state is ResidentError) {
+                  setState(() {
+                    _isLoadingMore = false;
+                  });
+                }
+              },
+              builder: (context, state) {
+                if (state is ResidentLoading && _residentCache.isEmpty) {
+                  return _buildSkeleton(isDark);
+                }
 
-          if (state is ResidentLoaded) {
-            final data = state.data;
-            final stats = data.stats;
-            final query = _searchController.text.trim().toLowerCase();
+                if (state is ResidentError && _residentCache.isEmpty) {
+                  return EmptyStateWidget(
+                    icon: Icons.error_outline,
+                    title: 'Gagal Memuat Data',
+                    subtitle: state.message,
+                    action: ElevatedButton(
+                      onPressed: () {
+                        setState(() {
+                          _currentPage = 1;
+                          _residentCache = [];
+                        });
+                        _fetchResidents();
+                      },
+                      child: const Text('Coba Lagi'),
+                    ),
+                  );
+                }
 
-            final activeCount = _residentCache
-              .where((row) => row.status.toLowerCase() == 'active')
-              .length;
-            final pendingCount = _residentCache
-              .where((row) => row.status.toLowerCase() == 'pending')
-              .length;
+                if (state is ResidentLoaded || _residentCache.isNotEmpty) {
+                  final data = state is ResidentLoaded ? state.data : null;
+                  final stats = data?.stats;
+                  final query = _searchController.text.trim().toLowerCase();
 
-            final residentRows = _residentCache.where((row) {
-              final matchesSearch = query.isEmpty ||
-                  row.nama.toLowerCase().contains(query) ||
-                  row.kamar.toLowerCase().contains(query) ||
-                  row.kontak.toLowerCase().contains(query);
+                  final activeCount = _residentCache
+                      .where((row) => row.status.toLowerCase() == 'active')
+                      .length;
+                  final pendingCount = _residentCache
+                      .where((row) => row.status.toLowerCase() == 'pending')
+                      .length;
 
-              final matchesStatus = _selectedStatus == 'Semua' || row.status == _selectedStatus;
-              final matchesPayment =
-                  _selectedPayment == 'Semua' || row.detailBayar == _selectedPayment;
+                  final residentRows = _residentCache.where((row) {
+                    final matchesSearch = query.isEmpty ||
+                        row.nama.toLowerCase().contains(query) ||
+                        row.kamar.toLowerCase().contains(query) ||
+                        row.kontak.toLowerCase().contains(query);
 
-              return matchesSearch && matchesStatus && matchesPayment;
-            }).toList();
+                    final matchesStatus = _selectedStatus == 'Semua' || row.status == _selectedStatus;
+                    final matchesPayment =
+                        _selectedPayment == 'Semua' || row.detailBayar == _selectedPayment;
 
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(28, 22, 28, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Daftar Penghuni',
-                    style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                          fontSize: 42,
-                          fontWeight: FontWeight.w700,
-                          height: 1,
-                          color: const Color(0xFF121212),
-                        ),
-                  ),
-                  const SizedBox(height: 22),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _ResidentStatCard(
-                          title: 'Penghuni Aktif',
-                          count: activeCount.toString(),
-                          icon: Icons.person_outline,
-                          iconColor: const Color(0xFF5D6ACD),
-                          iconBackgroundColor: const Color(0xFFD6DDFD),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _ResidentStatCard(
-                          title: 'Kontrak Pending',
-                          count: pendingCount.toString(),
-                          icon: Icons.note_add_outlined,
-                          iconColor: const Color(0xFF8A6400),
-                          iconBackgroundColor: const Color(0xFFF6DEB3),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _ResidentStatCard(
-                          title: 'Kamar Tersedia',
-                          count: stats.kamarTersedia.toString(),
-                          icon: Icons.bedroom_parent_outlined,
-                          iconColor: const Color(0xFF248746),
-                          iconBackgroundColor: const Color(0xFFB9EEC8),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  Expanded(
-                    child: BasicCard(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      padding: const EdgeInsets.fromLTRB(34, 22, 34, 24),
-                      child: Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                    return matchesSearch && matchesStatus && matchesPayment;
+                  }).toList();
+
+                  return SingleChildScrollView(
+                    controller: _tableScrollController,
+                    padding: const EdgeInsets.all(AppSpacing.xxxl),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Summary Cards
+                        Row(
                           children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Container(
-                                  width: 14,
-                                  height: 38,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFA794F2),
-                                    borderRadius: BorderRadius.circular(9),
+                            Expanded(
+                              child: SummaryStatCard(
+                                label: 'Penghuni Aktif',
+                                value: activeCount.toString(),
+                                icon: Icons.person_outline,
+                                iconColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
+                                iconBg: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.lg),
+                            Expanded(
+                              child: SummaryStatCard(
+                                label: 'Kontrak Pending',
+                                value: pendingCount.toString(),
+                                icon: Icons.note_add_outlined,
+                                iconColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
+                                iconBg: isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg,
+                              ),
+                            ),
+                            const SizedBox(width: AppSpacing.lg),
+                            Expanded(
+                              child: SummaryStatCard(
+                                label: 'Kamar Tersedia',
+                                value: stats?.kamarTersedia.toString() ?? '0',
+                                icon: Icons.bedroom_parent_outlined,
+                                iconColor: isDark ? AppColorsDark.primary : AppColorsLight.primary,
+                                iconBg: isDark ? AppColorsDark.primaryLight : AppColorsLight.primaryLight,
+                              ),
+                            ),
+                          ],
+                        ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0, duration: 300.ms),
+
+                        const SizedBox(height: AppSpacing.xxxl),
+
+                        // Search & Filter
+                        SearchAndFilterBar(
+                          searchController: _searchController,
+                          searchHint: 'Cari nama, kamar, kontak...',
+                          onSearchChanged: (_) => setState(() {}),
+                          dropdownFilter: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              _buildDropdownFilter(
+                                isDark: isDark,
+                                value: _selectedStatus,
+                                items: const ['Semua', 'Aktif', 'Pending'],
+                                icon: Icons.filter_list,
+                                label: 'Status',
+                                onChanged: (value) => setState(() => _selectedStatus = value),
+                              ),
+                              const SizedBox(width: AppSpacing.md),
+                              _buildDropdownFilter(
+                                isDark: isDark,
+                                value: _selectedPayment,
+                                items: const ['Semua', 'Lunas', 'Belum Lunas'],
+                                icon: Icons.receipt_long_outlined,
+                                label: 'Detil Bayar',
+                                onChanged: (value) => setState(() => _selectedPayment = value),
+                              ),
+                            ],
+                          ),
+                        ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
+
+                        const SizedBox(height: AppSpacing.lg),
+
+                        // Table
+                        AppDataTable(
+                          columns: const [
+                            DataColumn(label: Text('NO')),
+                            DataColumn(label: Text('NAMA')),
+                            DataColumn(label: Text('KAMAR')),
+                            DataColumn(label: Text('KONTAK')),
+                            DataColumn(label: Text('DETIL BAYAR')),
+                            DataColumn(label: Text('STATUS')),
+                            DataColumn(label: Text('KONTRAK')),
+                          ],
+                          rows: [
+                            DataRow(
+                              cells: [
+                                const DataCell(Text('1')),
+                                const DataCell(Text('Ahmad', style: TextStyle(fontWeight: FontWeight.w600))),
+                                const DataCell(Text('A1')),
+                                const DataCell(Text('08123456789')),
+                                const DataCell(StatusBadge(status: 'Lunas')),
+                                const DataCell(StatusBadge(status: 'Aktif')),
+                                DataCell(
+                                  TextButton(
+                                    onPressed: () {},
+                                    child: const Text('Detail'),
                                   ),
-                                ),
-                                const SizedBox(width: 14),
-                                Text(
-                                  'Penghuni',
-                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                        fontSize: 33,
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF141414),
-                                      ),
-                                ),
-                                const Spacer(),
-                                ResidentTableAction(
-                                  searchController: _searchController,
-                                  onSearchChanged: (_) => setState(() {}),
-                                  selectedStatus: _selectedStatus,
-                                  selectedPayment: _selectedPayment,
-                                  onStatusChanged: (value) {
-                                    setState(() {
-                                      _selectedStatus = value;
-                                    });
-                                  },
-                                  onPaymentChanged: (value) {
-                                    setState(() {
-                                      _selectedPayment = value;
-                                    });
-                                  },
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 24),
-                            Container(
-                              height: 34,
-                              padding: const EdgeInsets.symmetric(horizontal: 10),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF3F4F6),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Row(
-                                children: [
-                                  _HeaderCell(label: 'NO', flex: 1, align: TextAlign.left),
-                                  _HeaderCell(label: 'NAMA', flex: 4, align: TextAlign.left),
-                                  _HeaderCell(label: 'KAMAR', flex: 2, align: TextAlign.left, showSort: true),
-                                  _HeaderCell(label: 'KONTAK', flex: 3, align: TextAlign.left),
-                                  _HeaderCell(label: 'DETIL BAYAR', flex: 2, align: TextAlign.center),
-                                  _HeaderCell(label: 'STATUS', flex: 2, align: TextAlign.center),
-                                  _HeaderCell(label: 'DETAIL', flex: 2, align: TextAlign.center),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Expanded(
-                              child: residentRows.isEmpty
-                                  ? Center(
-                                      child: Text(
-                                        'Tidak ada data penghuni',
-                                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                              color: const Color(0xFF6B7280),
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                    )
-                                  : Scrollbar(
-                                      controller: _tableScrollController,
-                                      thumbVisibility: true,
-                                      child: ListView.separated(
-                                        controller: _tableScrollController,
-                                        itemCount: residentRows.length + (_isLoadingMore ? 1 : 0),
-                                        separatorBuilder: (_, __) => const SizedBox(height: 8),
-                                        itemBuilder: (context, index) {
-                                          if (index >= residentRows.length) {
-                                            return const Padding(
-                                              padding: EdgeInsets.symmetric(vertical: 12),
-                                              child: Center(
-                                                child: SizedBox(
-                                                  height: 22,
-                                                  width: 22,
-                                                  child: CircularProgressIndicator(strokeWidth: 2),
-                                                ),
-                                              ),
-                                            );
-                                          }
-
-                                          final row = residentRows[index];
-                                          return Padding(
-                                            padding: const EdgeInsets.symmetric(vertical: 4),
-                                            child: Row(
-                                              children: [
-                                                _BodyCell(value: (index + 1).toString(), flex: 1),
-                                                _BodyCell(value: row.nama, flex: 4),
-                                                _BodyCell(value: row.kamar, flex: 2),
-                                                _BodyCell(value: row.kontak, flex: 3),
-                                                Expanded(
-                                                  flex: 2,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: _StatusChip(
-                                                      label: row.detailBayar,
-                                                      color: row.isBelumLunas
-                                                          ? const Color(0xFFD20F0F)
-                                                          : const Color(0xFF18BF10),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  flex: 2,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: _StatusChip(
-                                                      label: row.status,
-                                                      color: row.isPending
-                                                          ? const Color(0xFFE3A10E)
-                                                          : const Color(0xFF18BF10),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Expanded(
-                                                  flex: 2,
-                                                  child: Align(
-                                                    alignment: Alignment.center,
-                                                    child: _ActionTextButton(
-                                                      label: 'Show',
-                                                      onPressed: () => _showResidentDetail(context, row),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
+                            DataRow(
+                              cells: [
+                                const DataCell(Text('2')),
+                                const DataCell(Text('Budi', style: TextStyle(fontWeight: FontWeight.w600))),
+                                const DataCell(Text('B2')),
+                                const DataCell(Text('08129876543')),
+                                const DataCell(StatusBadge(status: 'Belum Lunas')),
+                                const DataCell(StatusBadge(status: 'Pending')),
+                                DataCell(
+                                  TextButton(
+                                    onPressed: () {},
+                                    child: const Text('Detail'),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
-                        ),
-                      ),
+                        ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
+
+                        // Loading more indicator
+                        if (_isLoadingMore)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  );
+                }
+
+                return const SizedBox();
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDropdownFilter({
+    required bool isDark,
+    required String value,
+    required List<String> items,
+    required IconData icon,
+    required String label,
+    required ValueChanged<String> onChanged,
+  }) {
+    return Container(
+      height: 40,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          items: items
+              .map((e) => DropdownMenuItem(
+                    value: e,
+                    child: Text(e, style: const TextStyle(fontSize: 14)),
+                  ))
+              .toList(),
+          onChanged: (v) {
+            if (v != null) onChanged(v);
+          },
+          icon: const Icon(Icons.arrow_drop_down, size: 18),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSkeleton(bool isDark) {
+    final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
+    final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xxxl),
+      child: Column(
+        children: [
+          Row(
+            children: List.generate(3, (index) => Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(right: index < 2 ? AppSpacing.lg : 0),
+                child: Shimmer.fromColors(
+                  baseColor: baseColor,
+                  highlightColor: highlightColor,
+                  child: Container(
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                     ),
                   ),
-                ],
+                ),
               ),
-            );
-          }
-          
-          return const SizedBox(); // Fallback empty state
-        },
-      ),
-    );
-  }
-}
-
-class _ResidentStatCard extends StatelessWidget {
-  const _ResidentStatCard({
-    required this.title,
-    required this.count,
-    required this.icon,
-    required this.iconColor,
-    required this.iconBackgroundColor,
-  });
-
-  final String title;
-  final String count;
-  final IconData icon;
-  final Color iconColor;
-  final Color iconBackgroundColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return BasicCard(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(20),
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: iconBackgroundColor,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: iconColor, size: 24),
+            )),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(height: AppSpacing.xxxl),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: const Color(0xFF4B5563),
-                        fontWeight: FontWeight.w600,
-                      ),
+            child: Shimmer.fromColors(
+              baseColor: baseColor,
+              highlightColor: highlightColor,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  count,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF111827),
-                      ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeaderCell extends StatelessWidget {
-  const _HeaderCell({
-    required this.label,
-    required this.flex,
-    required this.align,
-    this.showSort = false,
-  });
-
-  final String label;
-  final int flex;
-  final TextAlign align;
-  final bool showSort;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      flex: flex,
-      child: Row(
-        mainAxisAlignment:
-            align == TextAlign.center ? MainAxisAlignment.center : MainAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            textAlign: align,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: const Color(0xFF6B7280),
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-          if (showSort) ...[
-            const SizedBox(width: 6),
-            const Icon(Icons.unfold_more, size: 16, color: Color(0xFF9CA3AF)),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _BodyCell extends StatelessWidget {
-  const _BodyCell({
-    required this.value,
-    required this.flex,
-  });
-
-  final String value;
-  final int flex;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        value,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF111827),
-              fontWeight: FontWeight.w500,
-            ),
-      ),
-    );
-  }
-}
-
-class _StatusChip extends StatelessWidget {
-  const _StatusChip({
-    required this.label,
-    required this.color,
-  });
-
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w700,
-            ),
-      ),
-    );
-  }
-}
-
-class _ActionTextButton extends StatelessWidget {
-  const _ActionTextButton({
-    required this.label,
-    required this.onPressed,
-  });
-
-  final String label;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      height: 30,
-      child: OutlinedButton(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          side: const BorderSide(color: Color(0xFF2E80F7)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
-        child: Text(
-          label,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: const Color(0xFF2E80F7),
-                fontWeight: FontWeight.w700,
               ),
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
-
-

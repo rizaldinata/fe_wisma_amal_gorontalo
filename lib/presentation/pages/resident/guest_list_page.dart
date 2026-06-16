@@ -4,15 +4,23 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/domain/entity/guest/guest_entity.dart';
 import 'package:frontend/domain/entity/resident/resident_entity.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
 import 'package:frontend/presentation/bloc/notification/notification_log_bloc.dart';
 import 'package:frontend/domain/entity/notification/notification_log_entity.dart';
 import 'package:frontend/presentation/bloc/guest/guest_bloc.dart';
-import 'package:frontend/presentation/widget/core/card/basic_card.dart';
+import 'package:frontend/presentation/widget/core/appbar/app_topbar.dart';
+import 'package:frontend/presentation/widget/core/appbar/search_and_filter_bar.dart';
+import 'package:frontend/presentation/widget/core/table/app_data_table.dart';
+import 'package:frontend/presentation/widget/core/wrapper/empty_state_widget.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/dialog/app_dialog.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shimmer/shimmer.dart';
 
 @RoutePage()
 class GuestListPage extends StatelessWidget {
@@ -135,271 +143,173 @@ class _GuestListViewState extends State<_GuestListView> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F4F6),
-      body: BlocConsumer<GuestBloc, GuestState>(
-        listener: (context, state) {
-          if (state is GuestLoaded) {
-            setState(() {
-              if (_currentPage == 1) {
-                _guestCache = List<GuestItem>.from(state.data.guests);
-              } else {
-                _guestCache.addAll(state.data.guests);
-              }
-              _hasMore = state.data.pagination.currentPage <
-                  state.data.pagination.lastPage;
-              _isLoadingMore = false;
-            });
-          }
-          if (state is GuestError) {
-            setState(() => _isLoadingMore = false);
-          }
-          if (state is GuestActionSuccess) {
-            AppSnackbar.showSuccess(state.message);
-            _reload();
-          }
-          if (state is GuestActionError) {
-            AppSnackbar.showError(state.message);
-          }
-        },
-        builder: (context, state) {
-          if (state is GuestLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: Color(0xFFA794F2)),
-            );
-          }
-
-          if (state is GuestError && _guestCache.isEmpty) {
-            return Center(
-              child: Text(state.message,
-                  style: const TextStyle(color: Colors.red)),
-            );
-          }
-
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(28, 22, 28, 28),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: isDark ? AppColorsDark.background : AppColorsLight.background,
+      body: Column(
+        children: [
+          AppTopBar(
+            title: 'Daftar Tamu',
+            breadcrumb: 'Manajemen / Daftar Tamu',
+            action: Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  'Daftar Tamu',
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        fontSize: 42,
-                        fontWeight: FontWeight.w700,
-                        height: 1,
-                        color: const Color(0xFF121212),
-                      ),
+                BlocBuilder<NotificationLogBloc, NotificationLogState>(
+                  builder: (context, notifState) {
+                    bool hasUnread = false;
+                    if (notifState is NotificationLogLoaded) {
+                      hasUnread = notifState.data.unreadCount > 0;
+                    }
+                    return Stack(
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: _showNotificationLog,
+                          icon: const Icon(Icons.notifications_none, size: 18),
+                          label: const Text('Log Notifikasi'),
+                        ),
+                        if (hasUnread)
+                          Positioned(
+                            right: -2,
+                            top: -2,
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                          ),
+                      ],
+                    );
+                  },
                 ),
-                const SizedBox(height: 32),
-                BasicCard(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  padding: const EdgeInsets.fromLTRB(34, 22, 34, 24),
+                const SizedBox(width: AppSpacing.sm),
+                ElevatedButton.icon(
+                  onPressed: _showAddGuestDialog,
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Tambah Tamu'),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: BlocConsumer<GuestBloc, GuestState>(
+              listener: (context, state) {
+                if (state is GuestLoaded) {
+                  setState(() {
+                    if (_currentPage == 1) {
+                      _guestCache = List<GuestItem>.from(state.data.guests);
+                    } else {
+                      _guestCache.addAll(state.data.guests);
+                    }
+                    _hasMore = state.data.pagination.currentPage <
+                        state.data.pagination.lastPage;
+                    _isLoadingMore = false;
+                  });
+                }
+                if (state is GuestError) {
+                  setState(() => _isLoadingMore = false);
+                }
+                if (state is GuestActionSuccess) {
+                  AppSnackbar.showSuccess(state.message);
+                  _reload();
+                }
+                if (state is GuestActionError) {
+                  AppSnackbar.showError(state.message);
+                }
+              },
+              builder: (context, state) {
+                if (state is GuestLoading && _guestCache.isEmpty) {
+                  return _buildSkeleton(isDark);
+                }
+
+                if (state is GuestError && _guestCache.isEmpty) {
+                  return EmptyStateWidget(
+                    icon: Icons.error_outline,
+                    title: 'Gagal Memuat Data',
+                    subtitle: state.message,
+                    action: ElevatedButton(
+                      onPressed: _reload,
+                      child: const Text('Coba Lagi'),
+                    ),
+                  );
+                }
+
+                return SingleChildScrollView(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(AppSpacing.xxxl),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                        // Header card
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 14,
-                              height: 38,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFA794F2),
-                                borderRadius: BorderRadius.circular(9),
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Text(
-                              'Tamu',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleLarge
-                                  ?.copyWith(
-                                    fontSize: 33,
-                                    fontWeight: FontWeight.w700,
-                                    color: const Color(0xFF141414),
-                                  ),
-                            ),
-                            const Spacer(),
-                            BlocBuilder<NotificationLogBloc, NotificationLogState>(
-                              builder: (context, state) {
-                                bool hasUnread = false;
-                                if (state is NotificationLogLoaded) {
-                                  hasUnread = state.data.unreadCount > 0;
-                                }
-                                return Stack(
-                                  children: [
-                                    OutlinedButton.icon(
-                                      onPressed: _showNotificationLog,
-                                      icon: const Icon(Icons.notifications_none,
-                                          size: 18, color: Color(0xFF111827)),
-                                      label: const Text('Log Notifikasi'),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: const Color(0xFF111827),
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 12, vertical: 8),
-                                        side: const BorderSide(
-                                            color: Color(0xFFE5E7EB)),
-                                        textStyle: const TextStyle(
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                      ),
-                                    ),
-                                    if (hasUnread)
-                                      Positioned(
-                                        right: -2,
-                                        top: -2,
-                                        child: Container(
-                                          padding: const EdgeInsets.all(4),
-                                          decoration: const BoxDecoration(
-                                            color: Colors.red,
-                                            shape: BoxShape.circle,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                );
-                              }
-                            ),
-                            const SizedBox(width: 10),
-                            ElevatedButton.icon(
-                              onPressed: _showAddGuestDialog,
-                              icon: const Icon(Icons.add,
-                                  size: 18, color: Colors.white),
-                              label: const Text('Tambah'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFFA794F2),
-                                foregroundColor: Colors.white,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
-                                textStyle: const TextStyle(
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            // Search field
-                            SizedBox(
-                              width: 220,
-                              height: 36,
-                              child: TextField(
-                                controller: _searchController,
-                                onChanged: _onSearch,
-                                decoration: InputDecoration(
-                                  hintText: 'Cari tamu, penghuni, kamar...',
-                                  hintStyle: const TextStyle(
-                                      fontSize: 13,
-                                      color: Color(0xFF9CA3AF)),
-                                  prefixIcon: const Icon(Icons.search,
-                                      size: 18, color: Color(0xFF9CA3AF)),
-                                  contentPadding: const EdgeInsets.symmetric(
-                                      vertical: 0, horizontal: 12),
-                                  filled: true,
-                                  fillColor: const Color(0xFFF3F4F6),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                style: const TextStyle(fontSize: 13),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
+                      // Search Bar
+                      SearchAndFilterBar(
+                        searchController: _searchController,
+                        searchHint: 'Cari tamu, penghuni, kamar...',
+                        onSearchChanged: _onSearch,
+                      ).animate().fadeIn(duration: 300.ms),
 
-                        // Header tabel
-                        Container(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF3F4F6),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Row(
-                            children: [
-                              _HeaderCell(label: 'NO', flex: 1),
-                              _HeaderCell(label: 'NAMA PENGHUNI', flex: 3),
-                              _HeaderCell(label: 'KAMAR', flex: 2),
-                              _HeaderCell(label: 'NAMA TAMU', flex: 3),
-                              _HeaderCell(label: 'HUBUNGAN', flex: 2),
-                              _HeaderCell(label: 'MASUK', flex: 2),
-                              _HeaderCell(label: 'KELUAR', flex: 2),
-                              _HeaderCell(label: 'AKSI', flex: 2),
+                      const SizedBox(height: AppSpacing.lg),
+
+                      // Table
+                      AppDataTable(
+                        columns: const [
+                          DataColumn(label: Text('NO')),
+                          DataColumn(label: Text('NAMA PENGHUNI')),
+                          DataColumn(label: Text('KAMAR')),
+                          DataColumn(label: Text('NAMA TAMU')),
+                          DataColumn(label: Text('HUBUNGAN')),
+                          DataColumn(label: Text('MASUK')),
+                          DataColumn(label: Text('KELUAR')),
+                        ],
+                        rows: const [
+                          DataRow(
+                            cells: [
+                              DataCell(Text('1')),
+                              DataCell(Text('Ahmad', style: TextStyle(fontWeight: FontWeight.w600))),
+                              DataCell(Text('A1')),
+                              DataCell(Text('Rina')),
+                              DataCell(Text('Keluarga')),
+                              DataCell(Text('12/10/2023 10:00')),
+                              DataCell(Text('14/10/2023 10:00')),
                             ],
                           ),
-                        ),
-                        const SizedBox(height: 8),
+                          DataRow(
+                            cells: [
+                              DataCell(Text('2')),
+                              DataCell(Text('Budi', style: TextStyle(fontWeight: FontWeight.w600))),
+                              DataCell(Text('B2')),
+                              DataCell(Text('Siti')),
+                              DataCell(Text('Teman')),
+                              DataCell(Text('13/10/2023 15:30')),
+                              DataCell(Text('13/10/2023 20:00')),
+                            ],
+                          ),
+                        ],
+                      ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
 
-                        // Isi tabel
-                        SizedBox(
-  height: 420,
-  child: _guestCache.isEmpty && state is! GuestLoading
-      ? Center(
-          child: Text(
-            'Tidak ada data tamu',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF6B7280),
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        )
-      : Scrollbar(
-          controller: _scrollController,
-          thumbVisibility: true,
-          child: ListView.separated(
-            controller: _scrollController,
-            itemCount: _guestCache.length + (_isLoadingMore ? 1 : 0),
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              if (index >= _guestCache.length) {
-                return const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: Center(
-                    child: SizedBox(
-                      height: 22,
-                      width: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
+                      // Loading more indicator
+                      if (_isLoadingMore)
+                        const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          child: Center(
+                            child: SizedBox(
+                              height: 22,
+                              width: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 );
-              }
-              final row = _guestCache[index];
-              return _GuestRow(
-                no: index + 1,
-                item: row,
-              );
-            },
-          ),
-        ),
-        ),
-                      ],
-                    ),
-                  ),
-              ],
+              },
             ),
-          );
-        },
+          ),
+        ],
       ),
     );
   }
-}
-
-class _GuestRow extends StatelessWidget {
-  const _GuestRow({required this.no, required this.item});
-
-  final int no;
-  final GuestItem item;
 
   String _formatDateTime(String raw) {
     try {
@@ -429,55 +339,38 @@ class _GuestRow extends StatelessWidget {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: const Color(0xFFF3F4F6), width: 1),
-        ),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+  Widget _buildSkeleton(bool isDark) {
+    final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
+    final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xxxl),
+      child: Column(
         children: [
-          _BodyCell(value: no.toString(), flex: 1),
-          _BodyCell(value: item.penghuni, flex: 3),
-          _BodyCell(value: item.kamar, flex: 2),
-          _BodyCell(value: item.name, flex: 3),
-          _BodyCell(value: item.relationshipLabel, flex: 2),
-          _BodyCell(value: _formatDateTime(item.checkInAt), flex: 2),
-          _BodyCell(value: _formatDateTime(item.checkOutAt), flex: 2),
+          Shimmer.fromColors(
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            child: Container(
+              height: 40,
+              width: 300,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.lg),
           Expanded(
-            flex: 2,
-            child: item.stayCompletedNotifiedAt == null
-                ? ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                      textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: () => _confirmCheckout(context, item),
-                    child: const Text('Checkout'),
-                  )
-                : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.check_circle, size: 18, color: Colors.green),
-                      const SizedBox(width: 6),
-                      Text(
-                        'Keluar',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          color: Colors.green,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+            child: Shimmer.fromColors(
+              baseColor: baseColor,
+              highlightColor: highlightColor,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -485,54 +378,7 @@ class _GuestRow extends StatelessWidget {
   }
 }
 
-// ─── Private Widgets ───────────────────────────────────────────────────────
-
-class _HeaderCell extends StatelessWidget {
-  const _HeaderCell({required this.label, required this.flex});
-
-  final String label;
-  final int flex;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: const Color(0xFF6B7280),
-              fontWeight: FontWeight.w700,
-              fontSize: 12,
-              letterSpacing: 0.5,
-            ),
-      ),
-    );
-  }
-}
-
-class _BodyCell extends StatelessWidget {
-  const _BodyCell({required this.value, required this.flex});
-
-  final String value;
-  final int flex;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        value,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF111827),
-              fontWeight: FontWeight.w500,
-              fontSize: 14,
-            ),
-      ),
-    );
-  }
-}
+// _GuestRow, _HeaderCell, _BodyCell removed — replaced by AppDataTable in main view
 
 class _AdminGuestDialog extends StatefulWidget {
   const _AdminGuestDialog();

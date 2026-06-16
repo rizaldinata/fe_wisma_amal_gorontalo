@@ -3,9 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/domain/entity/guest/guest_entity.dart';
 import 'package:frontend/domain/usecase/finance/get_member_finance_summary_usecase.dart';
 import 'package:frontend/presentation/bloc/guest/my_guest_bloc.dart';
+import 'package:frontend/presentation/widget/core/appbar/app_topbar.dart';
+import 'package:frontend/presentation/widget/core/wrapper/empty_state_widget.dart';
 import 'package:frontend/presentation/widget/core/dialog/app_dialog.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:intl/intl.dart';
@@ -35,6 +40,8 @@ class _MyGuestView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return BlocListener<MyGuestBloc, MyGuestState>(
       listener: (context, state) {
         if (state is MyGuestActionSuccess) {
@@ -49,42 +56,21 @@ class _MyGuestView extends StatelessWidget {
         }
       },
       child: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Tamu Saya',
-                          style: Theme.of(context).textTheme.headlineLarge,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Daftar tamu yang menginap di kamar Anda',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .onSurfaceVariant,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () => _showAddGuestDialog(context),
-                    icon: const Icon(Icons.add_rounded, size: 18),
-                    label: const Text('Tambah Tamu'),
-                  ),
-                ],
+        backgroundColor: isDark ? AppColorsDark.background : AppColorsLight.background,
+        body: Column(
+          children: [
+            AppTopBar(
+              title: 'Tamu Saya',
+              breadcrumb: 'Penghuni / Tamu Saya',
+              action: ElevatedButton.icon(
+                onPressed: () => _showAddGuestDialog(context),
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: const Text('Tambah Tamu'),
               ),
-              const SizedBox(height: 20),
-              Expanded(
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl, vertical: AppSpacing.lg),
                 child: BlocBuilder<MyGuestBloc, MyGuestState>(
                   builder: (context, state) {
                     if (state is MyGuestLoading) {
@@ -99,8 +85,15 @@ class _MyGuestView extends StatelessWidget {
                     }
                     if (state is MyGuestLoaded) {
                       if (state.guests.isEmpty) {
-                        return _EmptyView(
-                          onAdd: () => _showAddGuestDialog(context),
+                        return EmptyStateWidget(
+                          icon: Icons.people_outline,
+                          title: 'Belum ada tamu',
+                          subtitle: 'Tambahkan tamu pertama Anda dengan menekan tombol di atas.',
+                          action: ElevatedButton.icon(
+                            onPressed: () => _showAddGuestDialog(context),
+                            icon: const Icon(Icons.add_rounded, size: 18),
+                            label: const Text('Tambah Tamu'),
+                          ),
                         );
                       }
                       return RefreshIndicator(
@@ -129,8 +122,8 @@ class _MyGuestView extends StatelessWidget {
                   },
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

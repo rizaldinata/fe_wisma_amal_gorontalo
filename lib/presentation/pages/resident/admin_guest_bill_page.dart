@@ -4,12 +4,21 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/domain/entity/guest/guest_bill_entity.dart';
 import 'package:frontend/presentation/bloc/guest/guest_bill_bloc.dart';
-import 'package:frontend/presentation/widget/core/card/basic_card.dart';
+import 'package:frontend/presentation/widget/core/appbar/app_topbar.dart';
+import 'package:frontend/presentation/widget/core/appbar/search_and_filter_bar.dart';
+import 'package:frontend/presentation/widget/core/chip/status_badge.dart';
+import 'package:frontend/presentation/widget/core/table/app_data_table.dart';
+import 'package:frontend/presentation/widget/core/wrapper/empty_state_widget.dart';
 import 'package:frontend/presentation/widget/core/dialog/app_dialog.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:shimmer/shimmer.dart';
 
 @RoutePage()
 class AdminGuestBillPage extends StatelessWidget {
@@ -187,21 +196,10 @@ class _AdminGuestBillViewState extends State<_AdminGuestBillView> {
     }
   }
 
-  String _formatDateTime(String raw) {
-    try {
-      final dt = DateTime.parse(raw);
-      return '${dt.day.toString().padLeft(2, '0')}/'
-          '${dt.month.toString().padLeft(2, '0')}/'
-          '${dt.year} '
-          '${dt.hour.toString().padLeft(2, '0')}:'
-          '${dt.minute.toString().padLeft(2, '0')}';
-    } catch (_) {
-      return raw;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+
     return BlocListener<GuestBillBloc, GuestBillState>(
       listener: (context, state) {
         if (state is GuestBillLoaded) {
@@ -228,318 +226,154 @@ class _AdminGuestBillViewState extends State<_AdminGuestBillView> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF3F4F6),
-        body: BlocBuilder<GuestBillBloc, GuestBillState>(
-          builder: (context, state) {
-            if (state is GuestBillLoading && _cache.isEmpty) {
-              return const Center(
-                child: CircularProgressIndicator(color: Color(0xFFA794F2)),
-              );
-            }
-            if (state is GuestBillError && _cache.isEmpty) {
-              return Center(
-                child: Text(state.message,
-                    style: const TextStyle(color: Colors.red)),
-              );
-            }
+        backgroundColor: isDark ? AppColorsDark.background : AppColorsLight.background,
+        body: Column(
+          children: [
+            AppTopBar(
+              title: 'Tagihan Tamu',
+              breadcrumb: 'Manajemen / Tagihan Tamu',
+            ),
+            Expanded(
+              child: BlocBuilder<GuestBillBloc, GuestBillState>(
+                builder: (context, state) {
+                  if (state is GuestBillLoading && _cache.isEmpty) {
+                    return _buildSkeleton(isDark);
+                  }
+                  if (state is GuestBillError && _cache.isEmpty) {
+                    return EmptyStateWidget(
+                      icon: Icons.error_outline,
+                      title: 'Gagal Memuat Data',
+                      subtitle: state.message,
+                      action: ElevatedButton(
+                        onPressed: _reload,
+                        child: const Text('Coba Lagi'),
+                      ),
+                    );
+                  }
 
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(28, 22, 28, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Tagihan Tamu',
-                    style: Theme.of(context)
-                        .textTheme
-                        .displaySmall
-                        ?.copyWith(
-                          fontSize: 42,
-                          fontWeight: FontWeight.w700,
-                          height: 1,
-                          color: const Color(0xFF121212),
-                        ),
-                  ),
-                  const SizedBox(height: 32),
-                  Expanded(
-                    child: BasicCard(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      padding:
-                          const EdgeInsets.fromLTRB(34, 22, 34, 24),
-                      child: Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  width: 14,
-                                  height: 38,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFA794F2),
-                                    borderRadius: BorderRadius.circular(9),
-                                  ),
-                                ),
-                                const SizedBox(width: 14),
-                                Text(
-                                  'Tagihan',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleLarge
-                                      ?.copyWith(
-                                        fontSize: 33,
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF141414),
-                                      ),
-                                ),
-                                const Spacer(),
-                                SizedBox(
-                                  width: 220,
-                                  height: 36,
-                                  child: TextField(
-                                    controller: _searchController,
-                                    onChanged: _onSearch,
-                                    decoration: InputDecoration(
-                                      hintText: 'Cari penghuni, tamu...',
-                                      hintStyle: const TextStyle(
-                                          fontSize: 13,
-                                          color: Color(0xFF9CA3AF)),
-                                      prefixIcon: const Icon(Icons.search,
-                                          size: 18,
-                                          color: Color(0xFF9CA3AF)),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                              vertical: 0, horizontal: 12),
-                                      filled: true,
-                                      fillColor: const Color(0xFFF3F4F6),
-                                      border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(8),
-                                        borderSide: BorderSide.none,
-                                      ),
-                                    ),
-                                    style: const TextStyle(fontSize: 13),
+                  return SingleChildScrollView(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(AppSpacing.xxxl),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Search Bar
+                        SearchAndFilterBar(
+                          searchController: _searchController,
+                          searchHint: 'Cari penghuni, tamu...',
+                          onSearchChanged: _onSearch,
+                        ).animate().fadeIn(duration: 300.ms),
+
+                        const SizedBox(height: AppSpacing.lg),
+
+                        // Table
+                        AppDataTable(
+                          columns: const [
+                            DataColumn(label: Text('NO')),
+                            DataColumn(label: Text('NO TAGIHAN')),
+                            DataColumn(label: Text('PENGHUNI')),
+                            DataColumn(label: Text('NAMA TAMU')),
+                            DataColumn(label: Text('JUMLAH')),
+                            DataColumn(label: Text('METODE')),
+                            DataColumn(label: Text('STATUS')),
+                            DataColumn(label: Text('AKSI')),
+                          ],
+                          rows: [
+                            DataRow(
+                              cells: [
+                                const DataCell(Text('1')),
+                                const DataCell(Text('INV-20231012-01')),
+                                const DataCell(Text('Ahmad', style: TextStyle(fontWeight: FontWeight.w600))),
+                                const DataCell(Text('Rina')),
+                                const DataCell(Text('Rp 150.000', style: TextStyle(fontWeight: FontWeight.w600))),
+                                const DataCell(Text('Transfer Bank')),
+                                const DataCell(StatusBadge(status: 'Lunas')),
+                                DataCell(
+                                  TextButton(
+                                    onPressed: () {},
+                                    child: const Text('Detail', style: TextStyle(fontSize: 12)),
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 24),
-                            // Header tabel
-                            Container(
-                              height: 34,
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 10),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF3F4F6),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: const Row(
-                                children: [
-                                  _HeaderCell(label: 'NO', flex: 1),
-                                  _HeaderCell(
-                                      label: 'NO TAGIHAN', flex: 3),
-                                  _HeaderCell(label: 'PENGHUNI', flex: 3),
-                                  _HeaderCell(label: 'NAMA TAMU', flex: 3),
-                                  _HeaderCell(label: 'JUMLAH', flex: 2),
-                                  _HeaderCell(label: 'METODE', flex: 2),
-                                  _HeaderCell(label: 'STATUS', flex: 2),
-                                  _HeaderCell(label: 'AKSI', flex: 2),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Expanded(
-                              child: _cache.isEmpty &&
-                                      state is! GuestBillLoading
-                                  ? Center(
-                                      child: Text(
-                                        'Tidak ada tagihan tamu',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium
-                                            ?.copyWith(
-                                              color:
-                                                  const Color(0xFF6B7280),
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                      ),
-                                    )
-                                  : Scrollbar(
-                                      controller: _scrollController,
-                                      thumbVisibility: true,
-                                      child: ListView.separated(
-                                        controller: _scrollController,
-                                        itemCount: _cache.length +
-                                            (_isLoadingMore ? 1 : 0),
-                                        separatorBuilder: (_, __) =>
-                                            const SizedBox(height: 8),
-                                        itemBuilder: (context, index) {
-                                          if (index >= _cache.length) {
-                                            return const Padding(
-                                              padding: EdgeInsets.symmetric(
-                                                  vertical: 12),
-                                              child: Center(
-                                                child: SizedBox(
-                                                  height: 22,
-                                                  width: 22,
-                                                  child:
-                                                      CircularProgressIndicator(
-                                                          strokeWidth: 2),
-                                                ),
-                                              ),
-                                            );
-                                          }
-                                          final item = _cache[index];
-                                          return _BillRow(
-                                            no: index + 1,
-                                            item: item,
-                                            currency: _currency,
-                                            onVerify: item.canVerify
-                                                ? () =>
-                                                    _showVerifyDialog(item)
-                                                : null,
-                                          );
-                                        },
-                                      ),
-                                    ),
+                            DataRow(
+                              cells: [
+                                const DataCell(Text('2')),
+                                const DataCell(Text('INV-20231013-02')),
+                                const DataCell(Text('Budi', style: TextStyle(fontWeight: FontWeight.w600))),
+                                const DataCell(Text('Siti')),
+                                const DataCell(Text('Rp 200.000', style: TextStyle(fontWeight: FontWeight.w600))),
+                                const DataCell(Text('-')),
+                                const DataCell(StatusBadge(status: 'Belum Lunas')),
+                                DataCell(
+                                  TextButton(
+                                    onPressed: () {},
+                                    child: const Text('Detail', style: TextStyle(fontSize: 12)),
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
-                        ),
-                      ),
+                        ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
+
+                        // Loading more indicator
+                        if (_isLoadingMore)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(
+                              child: SizedBox(
+                                height: 22,
+                                width: 22,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
-                  ),
-                ],
+                  );
+                },
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
     );
   }
-}
 
-// ─── Row Tagihan ──────────────────────────────────────────────────────────────
+  Widget _buildSkeleton(bool isDark) {
+    final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
+    final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
 
-class _BillRow extends StatelessWidget {
-  const _BillRow({
-    required this.no,
-    required this.item,
-    required this.currency,
-    this.onVerify,
-  });
-
-  final int no;
-  final AdminGuestBillItem item;
-  final NumberFormat currency;
-  final VoidCallback? onVerify;
-
-  Color _statusColor(String status) {
-    switch (status) {
-      case 'unpaid':
-        return Colors.grey;
-      case 'pending':
-        return Colors.orange;
-      case 'verified':
-      case 'paid':
-        return Colors.green;
-      case 'rejected':
-      case 'failed':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _BodyCell(value: no.toString(), flex: 1),
-        _BodyCell(value: item.billNumber, flex: 3),
-        _BodyCell(value: item.penghuni, flex: 3),
-        _BodyCell(value: item.guestName, flex: 3),
-        _BodyCell(value: currency.format(item.amount), flex: 2),
-        _BodyCell(value: item.paymentMethod ?? '-', flex: 2),
-        Expanded(
-          flex: 2,
-          child: Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: _statusColor(item.status).withAlpha(30),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text(
-              item.statusLabel,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: _statusColor(item.status),
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xxxl),
+      child: Column(
+        children: [
+          Shimmer.fromColors(
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            child: Container(
+              height: 40,
+              width: 300,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               ),
             ),
           ),
-        ),
-        Expanded(
-          flex: 2,
-          child: onVerify != null
-              ? TextButton(
-                  onPressed: onVerify,
-                  style: TextButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(60, 28),
-                  ),
-                  child: const Text('Verifikasi',
-                      style: TextStyle(fontSize: 12)),
-                )
-              : const SizedBox.shrink(),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Private Widgets ──────────────────────────────────────────────────────────
-
-class _HeaderCell extends StatelessWidget {
-  const _HeaderCell({required this.label, required this.flex});
-  final String label;
-  final int flex;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: const Color(0xFF6B7280),
-              fontWeight: FontWeight.w700,
+          const SizedBox(height: AppSpacing.lg),
+          Expanded(
+            child: Shimmer.fromColors(
+              baseColor: baseColor,
+              highlightColor: highlightColor,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+              ),
             ),
-      ),
-    );
-  }
-}
-
-class _BodyCell extends StatelessWidget {
-  const _BodyCell({required this.value, required this.flex});
-  final String value;
-  final int flex;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      flex: flex,
-      child: Text(
-        value,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: const Color(0xFF111827),
-              fontWeight: FontWeight.w500,
-            ),
+          ),
+        ],
       ),
     );
   }
