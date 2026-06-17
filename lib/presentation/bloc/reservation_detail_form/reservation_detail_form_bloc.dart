@@ -47,20 +47,14 @@ class ReservationDetailFormBloc
     bool isDailyEnabled = true;
     bool isMidtransEnabled = true;
     bool isProfileComplete = true;
-    List<MidtransMethodEntity> midtransPaymentMethods = const [
-      MidtransMethodEntity(code: 'qris', label: 'QRIS'),
-      MidtransMethodEntity(code: 'gopay', label: 'GoPay'),
-      MidtransMethodEntity(code: 'shopeepay', label: 'ShopeePay'),
-    ];
+    List<MidtransMethodEntity> midtransPaymentMethods = const [];
 
     try {
       final settingEntity = await getSettingsUseCase.execute();
       isDailyEnabled = settingEntity.getBool('feature_daily_rental');
       isMidtransEnabled = settingEntity.getBool('feature_payment_midtrans');
       final codes = settingEntity.getList('midtrans_enabled_payments');
-      if (codes.isNotEmpty) {
-        midtransPaymentMethods = codes.map((c) => MidtransMethodEntity(code: c, label: '')).toList();
-      }
+      midtransPaymentMethods = codes.map((c) => MidtransMethodEntity(code: c, label: '')).toList();
     } catch (_) {}
 
     if (event.isLoggedIn) {

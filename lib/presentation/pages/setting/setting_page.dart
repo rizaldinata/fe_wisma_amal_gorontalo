@@ -56,7 +56,31 @@ class _SettingPageState extends State<SettingPage> {
 
   void _markChanged() => setState(() => _hasChanges = true);
 
+  List<MidtransMethodEntity> _currentPaymentMethods() {
+    final s = _paymentCubit.state;
+    if (s is PaymentMethodSettingLoaded) return s.methods;
+    if (s is PaymentMethodSettingSaving) return s.methods;
+    if (s is PaymentMethodSettingSaved) return s.methods;
+    return [];
+  }
+
   void _saveSettings() {
+    if (_featurePaymentMidtrans) {
+      final methods = _currentPaymentMethods();
+      if (methods.isNotEmpty && !methods.any((m) => m.enabled)) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Row(children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+            SizedBox(width: 10),
+            Expanded(child: Text('Aktifkan minimal satu metode pembayaran Midtrans terlebih dahulu.')),
+          ]),
+          backgroundColor: Colors.orange.shade700,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ));
+        return;
+      }
+    }
     final payload = {
       'wisma_name': _wismaNameController.text.trim(),
       'feature_daily_rental': _featureDailyRental,
@@ -279,8 +303,31 @@ class _SettingPageState extends State<SettingPage> {
                       }
 
                       final isSaving = pmState is PaymentMethodSettingSaving;
+                      final enabledCount = methods.where((m) => m.enabled).length;
+                      final showWarning = methods.isNotEmpty && enabledCount == 0;
 
-                      return GridView.builder(
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          if (showWarning)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                              decoration: BoxDecoration(
+                                color: Colors.orange.shade50,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.orange.shade300),
+                              ),
+                              child: Row(children: [
+                                Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700, size: 18),
+                                const SizedBox(width: 10),
+                                const Expanded(child: Text(
+                                  'Tidak ada metode yang aktif. Aktifkan minimal satu metode, atau matikan fitur Midtrans.',
+                                  style: TextStyle(fontSize: 12, height: 1.4),
+                                )),
+                              ]),
+                            ),
+                          GridView.builder(
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
@@ -314,6 +361,19 @@ class _SettingPageState extends State<SettingPage> {
                               onChanged: isSaving
                                   ? null
                                   : (val) {
+                                      if (!val && enabledCount <= 1 && method.enabled) {
+                                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                          content: const Row(children: [
+                                            Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
+                                            SizedBox(width: 10),
+                                            Expanded(child: Text('Minimal satu metode harus aktif selama Midtrans dinyalakan.')),
+                                          ]),
+                                          backgroundColor: Colors.orange.shade700,
+                                          behavior: SnackBarBehavior.floating,
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                        ));
+                                        return;
+                                      }
                                       final enabledCodes = methods
                                           .where((m) => m.code == method.code ? val : m.enabled)
                                           .map((m) => m.code)
@@ -323,6 +383,8 @@ class _SettingPageState extends State<SettingPage> {
                             ),
                           );
                         },
+                      ),
+                        ],
                       );
                     },
                   ),
@@ -444,39 +506,6 @@ class _FeatureToggle extends StatelessWidget {
           Switch(value: value, onChanged: onChanged, activeColor: iconColor),
         ]),
       ),
-    );
-  }
-}
-
-// ── ENV Info Row ──────────────────────────────────────────────────────────────
-class _EnvInfoRow extends StatelessWidget {
-  final String label;
-  final String hint;
-
-  const _EnvInfoRow({required this.label, required this.hint});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.grey.shade100,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(children: [
-        const Icon(Icons.key_outlined, size: 16, color: Colors.grey),
-        const SizedBox(width: 10),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(label, style: const TextStyle(fontSize: 12, fontFamily: 'monospace', fontWeight: FontWeight.w600)),
-          Text(hint, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
-        ])),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-          decoration: BoxDecoration(color: Colors.grey.shade200, borderRadius: BorderRadius.circular(6)),
-          child: Text('.env', style: TextStyle(fontSize: 10, color: Colors.grey.shade600, fontWeight: FontWeight.w600)),
-        ),
-      ]),
     );
   }
 }

@@ -106,13 +106,10 @@ import 'package:frontend/domain/usecase/guest/pay_guest_bill_usecase.dart';
 import 'package:frontend/domain/usecase/guest/get_admin_guest_bills_usecase.dart';
 import 'package:frontend/domain/usecase/guest/verify_guest_bill_usecase.dart';
 import 'package:frontend/domain/usecase/notification/get_notification_logs_usecase.dart';
-<<<<<<< HEAD
 import 'package:frontend/domain/usecase/notification/mark_all_notification_logs_read_usecase.dart';
-=======
 import 'package:frontend/domain/usecase/setting/get_payment_methods_usecase.dart';
 import 'package:frontend/domain/usecase/setting/update_payment_methods_usecase.dart';
 import 'package:frontend/presentation/bloc/payment_method_setting/payment_method_setting_cubit.dart';
->>>>>>> fix/extend-lease
 
 Future<void> initializeBloc() async {
   serviceLocator.registerLazySingleton<AuthBloc>(

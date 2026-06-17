@@ -388,6 +388,69 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                   ),
                                 ),
                                 const SizedBox(height: 12),
+                                if (state.midtransPaymentMethods.isNotEmpty &&
+                                    state.midtransPaymentMethods.every((m) => !m.available)) ...[
+                                  Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.shade50,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: Colors.orange.shade300),
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Icon(Icons.build_outlined, color: Colors.orange.shade700, size: 20),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Semua metode pembayaran online sedang maintenance',
+                                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.orange.shade800),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                'Tidak ada metode yang tersedia saat ini. Silakan gunakan Pembayaran Manual atau coba lagi nanti.',
+                                                style: TextStyle(fontSize: 12, color: Colors.orange.shade700, height: 1.4),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              GestureDetector(
+                                                onTap: () => context.read<ReservationDetailFormBloc>().add(const PaymentMethodChanged('tunai')),
+                                                child: Text(
+                                                  'Beralih ke Pembayaran Manual →',
+                                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.orange.shade800, decoration: TextDecoration.underline),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
+                                if (state.midtransPaymentMethods.isEmpty) ...[
+                                  Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: Colors.grey.shade300),
+                                    ),
+                                    child: Row(children: [
+                                      Icon(Icons.info_outline, color: Colors.grey.shade500, size: 18),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          'Tidak ada metode pembayaran online yang aktif. Hubungi pengelola atau gunakan Pembayaran Manual.',
+                                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600, height: 1.4),
+                                        ),
+                                      ),
+                                    ]),
+                                  ),
+                                ] else
                                 GridView.builder(
                                   shrinkWrap: true,
                                   physics: const NeverScrollableScrollPhysics(),
@@ -612,7 +675,20 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
       return;
     }
 
-    // 3. Pengecekan Profil
+    // 3. Pengecekan ketersediaan metode Midtrans
+    if (state.paymentMethod == 'online') {
+      final methods = state.midtransPaymentMethods;
+      if (methods.isEmpty || methods.every((m) => !m.available)) {
+        AppSnackbar.showError(
+          methods.isEmpty
+              ? 'Tidak ada metode pembayaran online yang aktif. Gunakan Pembayaran Manual.'
+              : 'Semua metode pembayaran online sedang maintenance. Gunakan Pembayaran Manual.',
+        );
+        return;
+      }
+    }
+
+    // 4. Pengecekan Profil
     if (!state.isProfileComplete) {
       AppSnackbar.showInfo(
         'Silakan lengkapi biodata Anda (NIK, nomor telepon, dan alamat KTP) sebelum melanjutkan pemesanan.',
@@ -917,14 +993,14 @@ const Map<String, _MidtransMethodInfo> _kMidtransMethodMap = {
 
 /// Subtitle dinamis berdasarkan metode yang tersedia
 String _midtransSubtitle(List<MidtransMethodEntity> methods) {
-  if (methods.isEmpty) return 'QRIS, GoPay, dan lainnya';
+  if (methods.isEmpty) return 'Tidak ada metode aktif';
   final available = methods.where((m) => !m.maintenance).toList();
-  final display = available.isEmpty ? methods : available;
-  final names = display
+  if (available.isEmpty) return 'Semua metode sedang maintenance';
+  final names = available
       .map((m) => m.label.isNotEmpty ? m.label : (_kMidtransMethodMap[m.code]?.name ?? m.code.toUpperCase()))
       .take(3)
       .join(', ');
-  return display.length > 3 ? '$names, +${display.length - 3} lainnya' : names;
+  return available.length > 3 ? '$names, +${available.length - 3} lainnya' : names;
 }
 
 /// Kartu metode pembayaran Midtrans — list-tile style, tinggi tetap 72px
