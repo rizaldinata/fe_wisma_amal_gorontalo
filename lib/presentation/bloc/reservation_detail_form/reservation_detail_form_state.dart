@@ -16,7 +16,7 @@ class ReservationDetailFormState extends Equatable {
     this.errorMessage,
     this.paymentMethod = 'online',
     this.selectedMidtransMethod,
-    this.midtransPaymentMethods = const [],
+    this.midtransPaymentMethods = const <MidtransMethodEntity>[],
     this.createdReservation,
     this.isProfileComplete = true,
     this.readyToConfirm = false,
@@ -38,7 +38,7 @@ class ReservationDetailFormState extends Equatable {
   final String? errorMessage;
   final String paymentMethod; // 'online' atau 'tunai'
   final String? selectedMidtransMethod;
-  final List<String> midtransPaymentMethods;
+  final List<MidtransMethodEntity> midtransPaymentMethods;
   final ReservationEntity? createdReservation;
   final bool isProfileComplete;
   final bool readyToConfirm;
@@ -60,7 +60,7 @@ class ReservationDetailFormState extends Equatable {
     String? errorMessage,
     String? paymentMethod,
     String? selectedMidtransMethod,
-    List<String>? midtransPaymentMethods,
+    List<MidtransMethodEntity>? midtransPaymentMethods,
     ReservationEntity? createdReservation,
     bool? isProfileComplete,
     bool? readyToConfirm,

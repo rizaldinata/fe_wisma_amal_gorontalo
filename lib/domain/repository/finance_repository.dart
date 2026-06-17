@@ -5,6 +5,7 @@ import '../entity/finance/invoice_entity.dart';
 import '../entity/finance/payment_entity.dart';
 import '../entity/finance/expense_entity.dart';
 import '../entity/finance/member_finance_summary_entity.dart';
+import '../entity/setting/midtrans_method_entity.dart';
 
 abstract class FinanceRepository {
   Future<List<InvoiceEntity>> getDueInvoices();
@@ -47,4 +48,5 @@ abstract class FinanceRepository {
     String? preferredPaymentType,
   });
   Future<String> getInvoicePrintLink(int invoiceId);
+  Future<List<MidtransMethodEntity>> getAvailablePaymentMethods();
 }
