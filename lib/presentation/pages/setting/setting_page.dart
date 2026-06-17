@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/dependency_injection/dependency_injection.dart';
+import '../../../domain/entity/setting/midtrans_method_entity.dart';
+import '../../bloc/payment_method_setting/payment_method_setting_cubit.dart';
 import '../../bloc/setting/setting_bloc.dart';
 import '../../bloc/setting/setting_event.dart';
 import '../../bloc/setting/setting_state.dart';
@@ -18,6 +20,7 @@ class SettingPage extends StatefulWidget {
 
 class _SettingPageState extends State<SettingPage> {
   late SettingBloc _bloc;
+  late PaymentMethodSettingCubit _paymentCubit;
 
   final _wismaNameController = TextEditingController();
   bool _featureDailyRental = false;
@@ -31,11 +34,14 @@ class _SettingPageState extends State<SettingPage> {
     super.initState();
     _bloc = serviceLocator.get<SettingBloc>();
     _bloc.add(FetchSettingsEvent());
+    _paymentCubit = serviceLocator.get<PaymentMethodSettingCubit>();
+    _paymentCubit.load();
   }
 
   @override
   void dispose() {
     _wismaNameController.dispose();
+    _paymentCubit.close();
     super.dispose();
   }
 
@@ -63,8 +69,11 @@ class _SettingPageState extends State<SettingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: _bloc,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _bloc),
+        BlocProvider.value(value: _paymentCubit),
+      ],
       child: BlocConsumer<SettingBloc, SettingState>(
         listener: (context, state) {
           if (state is SettingLoaded) {
@@ -215,69 +224,110 @@ class _SettingPageState extends State<SettingPage> {
                     ],
                   ]),
                 ),
+                if (_featurePaymentMidtrans) ...[
                 const SizedBox(height: 20),
 
-                // ── Info Midtrans (read-only dari ENV) ─────────────────
+                // ── Metode Pembayaran Midtrans ─────────────────────────
                 _SectionCard(
-                  icon: Icons.payment_outlined,
-                  color: Colors.orange.shade600,
-                  title: 'Konfigurasi Pembayaran (Midtrans)',
-                  subtitle: 'Konfigurasi Midtrans dikelola melalui file .env di server.',
-                  child: Column(children: [
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.shade50,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.amber.shade300),
-                      ),
-                      child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        Icon(Icons.info_outline, color: Colors.amber.shade800, size: 20),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                            Text('Dikelola via Environment Variable', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                            SizedBox(height: 4),
-                            Text(
-                              'Konfigurasi Midtrans (Server Key & Client Key) kini dibaca langsung dari file .env di server backend untuk keamanan yang lebih baik. '
-                              'Untuk mengubahnya, edit file .env dan restart server.',
-                              style: TextStyle(fontSize: 13, height: 1.5),
-                            ),
+                  icon: Icons.payment_rounded,
+                  color: Colors.teal.shade600,
+                  title: 'Metode Pembayaran Midtrans',
+                  subtitle: 'Pilih metode yang tersedia untuk penghuni. Toggle tersimpan otomatis.',
+                  child: BlocConsumer<PaymentMethodSettingCubit, PaymentMethodSettingState>(
+                    listener: (context, pmState) {
+                      if (pmState is PaymentMethodSettingSaved) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: const Row(children: [
+                            Icon(Icons.check_circle, color: Colors.white, size: 18),
+                            SizedBox(width: 10),
+                            Text('Metode pembayaran diperbarui'),
                           ]),
-                        ),
-                      ]),
-                    ),
-                    const SizedBox(height: 16),
-                    // Info item
-                    _EnvInfoRow(label: 'MIDTRANS_SERVER_KEY', hint: 'SB-Mid-server-xxxx... / Mid-server-xxxx...'),
-                    const SizedBox(height: 8),
-                    _EnvInfoRow(label: 'MIDTRANS_CLIENT_KEY', hint: 'SB-Mid-client-xxxx... / Mid-client-xxxx...'),
-                    const SizedBox(height: 8),
-                    _EnvInfoRow(label: 'MIDTRANS_IS_PRODUCTION', hint: 'true = Production, false = Sandbox'),
-                  ]),
-                ),
-                const SizedBox(height: 20),
+                          backgroundColor: Colors.teal.shade600,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          duration: const Duration(seconds: 2),
+                        ));
+                      } else if (pmState is PaymentMethodSettingError) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('Gagal: ${pmState.message}'),
+                          backgroundColor: Colors.red.shade600,
+                          behavior: SnackBarBehavior.floating,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ));
+                      }
+                    },
+                    builder: (context, pmState) {
+                      if (pmState is PaymentMethodSettingInitial || pmState is PaymentMethodSettingLoading) {
+                        return const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()));
+                      }
+                      if (pmState is PaymentMethodSettingError) {
+                        return Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Text('Gagal memuat metode: ${pmState.message}', style: TextStyle(color: Colors.red.shade600)),
+                        );
+                      }
 
-                // ── Info WhatsApp (ENV) ─────────────────────────────────
-                _SectionCard(
-                  icon: Icons.phone_android_outlined,
-                  color: Colors.green.shade600,
-                  title: 'Token WhatsApp (Fonnte)',
-                  subtitle: 'Token API Fonnte untuk pengiriman notifikasi WhatsApp.',
-                  child: Column(children: [
-                    _EnvInfoRow(label: 'FONNTE_API_TOKEN', hint: 'Token API dari dashboard Fonnte.com'),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(color: Colors.green.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.green.shade200)),
-                      child: Row(children: [
-                        Icon(Icons.info_outline, color: Colors.green.shade700, size: 16),
-                        const SizedBox(width: 10),
-                        const Expanded(child: Text('Token dikelola di file .env server. Aktifkan toggle notifikasi WA di atas untuk mulai mengirim struk otomatis.', style: TextStyle(fontSize: 12, height: 1.4))),
-                      ]),
-                    ),
-                  ]),
+                      final List<MidtransMethodEntity> methods;
+                      if (pmState is PaymentMethodSettingLoaded) {
+                        methods = pmState.methods;
+                      } else if (pmState is PaymentMethodSettingSaving) {
+                        methods = pmState.methods;
+                      } else if (pmState is PaymentMethodSettingSaved) {
+                        methods = pmState.methods;
+                      } else {
+                        methods = [];
+                      }
+
+                      final isSaving = pmState is PaymentMethodSettingSaving;
+
+                      return GridView.builder(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 8,
+                          crossAxisSpacing: 8,
+                          mainAxisExtent: 52,
+                        ),
+                        itemCount: methods.length,
+                        itemBuilder: (context, index) {
+                          final method = methods[index];
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: method.enabled ? Colors.teal.shade50 : Colors.grey.shade50,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: method.enabled ? Colors.teal.shade200 : Colors.grey.shade200,
+                              ),
+                            ),
+                            child: SwitchListTile(
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                              dense: true,
+                              title: Text(
+                                method.label,
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              value: method.enabled,
+                              activeColor: Colors.teal.shade600,
+                              onChanged: isSaving
+                                  ? null
+                                  : (val) {
+                                      final enabledCodes = methods
+                                          .where((m) => m.code == method.code ? val : m.enabled)
+                                          .map((m) => m.code)
+                                          .toList();
+                                      context.read<PaymentMethodSettingCubit>().save(enabledCodes);
+                                    },
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
+                ], // end if (_featurePaymentMidtrans)
 
                 // Indikator perubahan belum disimpan
                 if (_hasChanges) ...[

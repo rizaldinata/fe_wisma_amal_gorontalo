@@ -56,6 +56,9 @@ import 'package:frontend/domain/usecase/finance/get_member_payments_usecase.dart
 import 'package:frontend/domain/usecase/finance/pay_invoice_usecase.dart';
 import 'package:frontend/domain/usecase/finance/extend_lease_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_member_invoice_by_id_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_available_payment_methods_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_payment_methods_usecase.dart';
+import 'package:frontend/domain/usecase/setting/update_payment_methods_usecase.dart';
 
 import 'package:frontend/domain/repository/inventory_repository.dart';
 import 'package:frontend/domain/usecase/inventory/get_inventories_usecase.dart';
@@ -207,6 +210,9 @@ Future<void> initializeUseCase() async {
   serviceLocator.registerFactory(
     () => GetMemberInvoiceByIdUseCase(serviceLocator.get<FinanceRepository>()),
   );
+  serviceLocator.registerFactory(
+    () => GetAvailablePaymentMethodsUseCase(serviceLocator.get<FinanceRepository>()),
+  );
 
   // Setting UseCases
   serviceLocator.registerFactory(
@@ -217,6 +223,12 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => UpdateBulkSettingsUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetPaymentMethodsUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdatePaymentMethodsUseCase(serviceLocator.get<SettingRepository>()),
   );
 
   // Maintenance UseCases

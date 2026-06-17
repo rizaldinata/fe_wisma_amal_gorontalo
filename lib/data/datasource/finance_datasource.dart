@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../../core/services/network/dio_client.dart';
+import '../../domain/entity/setting/midtrans_method_entity.dart';
 import '../model/finance/invoice_model.dart';
 import '../model/finance/payment_model.dart';
 import '../model/finance/kpi_model.dart';
@@ -45,6 +46,7 @@ abstract class FinanceRemoteDatasource {
     String? preferredPaymentType,
   });
   Future<String> getInvoicePrintLink(int invoiceId);
+  Future<List<MidtransMethodEntity>> getAvailablePaymentMethods();
 }
 
 class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
@@ -322,5 +324,18 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
     final response = await _dioClient.get('/finance/invoices/$invoiceId/print-link');
     final data = response.data['data'] as Map<String, dynamic>?;
     return data?['url'] as String? ?? '';
+  }
+
+  @override
+  Future<List<MidtransMethodEntity>> getAvailablePaymentMethods() async {
+    final response = await _dioClient.get('/finance/payment-methods');
+    final List<dynamic> data = response.data['data'] ?? [];
+    return data.map((item) => MidtransMethodEntity(
+          code: item['code'] as String,
+          label: item['label'] as String,
+          enabled: true,
+          available: item['available'] == true,
+          maintenance: item['maintenance'] == true,
+        )).toList();
   }
 }
