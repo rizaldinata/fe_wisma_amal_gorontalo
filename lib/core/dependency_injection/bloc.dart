@@ -110,6 +110,11 @@ import 'package:frontend/domain/usecase/notification/mark_all_notification_logs_
 import 'package:frontend/domain/usecase/setting/get_payment_methods_usecase.dart';
 import 'package:frontend/domain/usecase/setting/update_payment_methods_usecase.dart';
 import 'package:frontend/presentation/bloc/payment_method_setting/payment_method_setting_cubit.dart';
+import 'package:frontend/domain/usecase/finance/get_fixed_expenses_usecase.dart';
+import 'package:frontend/domain/usecase/finance/update_fixed_expense_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_fixed_expense_status_usecase.dart';
+import 'package:frontend/domain/usecase/finance/generate_fixed_expenses_usecase.dart';
+import 'package:frontend/presentation/bloc/fixed_expense/fixed_expense_bloc.dart';
 
 Future<void> initializeBloc() async {
   serviceLocator.registerLazySingleton<AuthBloc>(
@@ -375,6 +380,14 @@ Future<void> initializeBloc() async {
     () => PaymentMethodSettingCubit(
       getUseCase: serviceLocator.get<GetPaymentMethodsUseCase>(),
       updateUseCase: serviceLocator.get<UpdatePaymentMethodsUseCase>(),
+    ),
+  );
+  serviceLocator.registerFactory<FixedExpenseBloc>(
+    () => FixedExpenseBloc(
+      getFixedExpenses: serviceLocator.get<GetFixedExpensesUseCase>(),
+      updateFixedExpense: serviceLocator.get<UpdateFixedExpenseUseCase>(),
+      getFixedExpenseStatus: serviceLocator.get<GetFixedExpenseStatusUseCase>(),
+      generateFixedExpenses: serviceLocator.get<GenerateFixedExpensesUseCase>(),
     ),
   );
 }

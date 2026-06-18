@@ -4,9 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/dependency_injection/dependency_injection.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../bloc/finance_dashboard/finance_dashboard_bloc.dart';
 import '../../bloc/finance_dashboard/finance_dashboard_event.dart';
 import '../../bloc/finance_dashboard/finance_dashboard_state.dart';
+import '../../widget/core/appbar/app_topbar.dart';
 import '../../widget/core/card/basic_card.dart';
 import '../../../domain/entity/finance/invoice_entity.dart';
 import '../../../domain/entity/finance/payment_entity.dart';
@@ -88,110 +92,94 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isDark = AppTheme.isDark(context);
+    final bgColor = isDark ? AppColorsDark.background : AppColorsLight.background;
 
     return BlocProvider.value(
       value: _financeBloc,
       child: Scaffold(
-        backgroundColor: theme.colorScheme.surface,
-        body: SingleChildScrollView(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Header ──────────────────────────────────────────────────
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Dashboard Keuangan',
-                          style: theme.textTheme.headlineLarge,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Periode: $_periodLabel',
-                          style: theme.textTheme.bodyMedium?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  IconButton(
-                    tooltip: 'Muat Ulang',
-                    onPressed: _applyFilter,
-                    icon: const Icon(Icons.refresh_rounded),
-                  ),
-                ],
+        backgroundColor: bgColor,
+        body: Column(
+          children: [
+            AppTopBar(
+              title: 'Dashboard Keuangan',
+              breadcrumb: 'Keuangan / Dashboard',
+              action: ElevatedButton.icon(
+                onPressed: _applyFilter,
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('Refresh'),
               ),
-              const SizedBox(height: 20),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.xxxl),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // ── Filter ──────────────────────────────────────────────────
+                    BasicCard(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      child: Row(children: [
+                        _DashboardFilterDropdown<int?>(
+                          hint: 'Semua Tahun',
+                          value: _selectedYear,
+                          items: [null, ...List.generate(6, (i) => DateTime.now().year - i)],
+                          labelBuilder: (v) => v == null ? 'Semua Tahun' : '$v',
+                          onChanged: (v) { setState(() { _selectedYear = v; _selectedMonth = null; }); _applyFilter(); },
+                        ),
+                        const SizedBox(width: AppSpacing.sm),
+                        _DashboardFilterDropdown<int?>(
+                          hint: 'Semua Bulan',
+                          value: _selectedMonth,
+                          items: [null, ...List.generate(12, (i) => i + 1)],
+                          labelBuilder: (v) => v == null ? 'Semua Bulan' : DateFormat('MMMM', 'id_ID').format(DateTime(0, v)),
+                          onChanged: (v) { setState(() => _selectedMonth = v); _applyFilter(); },
+                        ),
+                        if (_selectedYear != DateTime.now().year || _selectedMonth != DateTime.now().month) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          TextButton.icon(
+                            onPressed: () { setState(() { _selectedYear = DateTime.now().year; _selectedMonth = DateTime.now().month; }); _applyFilter(); },
+                            icon: const Icon(Icons.close, size: 14),
+                            label: const Text('Reset', style: TextStyle(fontSize: 12)),
+                            style: TextButton.styleFrom(foregroundColor: Colors.grey.shade600),
+                          ),
+                        ],
+                      ]),
+                    ),
+                    const SizedBox(height: AppSpacing.xxxl),
 
-              // ── Filter ──────────────────────────────────────────────────
-              BasicCard(
-                padding: const EdgeInsets.all(14),
-                child: Row(children: [
-                  _DashboardFilterDropdown<int?>(
-                    hint: 'Semua Tahun',
-                    value: _selectedYear,
-                    items: [null, ...List.generate(6, (i) => DateTime.now().year - i)],
-                    labelBuilder: (v) => v == null ? 'Semua Tahun' : '$v',
-                    onChanged: (v) { setState(() { _selectedYear = v; _selectedMonth = null; }); _applyFilter(); },
-                  ),
-                  const SizedBox(width: 8),
-                  _DashboardFilterDropdown<int?>(
-                    hint: 'Semua Bulan',
-                    value: _selectedMonth,
-                    items: [null, ...List.generate(12, (i) => i + 1)],
-                    labelBuilder: (v) => v == null ? 'Semua Bulan' : DateFormat('MMMM', 'id_ID').format(DateTime(0, v)),
-                    onChanged: (v) { setState(() => _selectedMonth = v); _applyFilter(); },
-                  ),
-                  if (_selectedYear != DateTime.now().year || _selectedMonth != DateTime.now().month) ...[
-                    const SizedBox(width: 8),
-                    TextButton.icon(
-                      onPressed: () { setState(() { _selectedYear = DateTime.now().year; _selectedMonth = DateTime.now().month; }); _applyFilter(); },
-                      icon: const Icon(Icons.close, size: 14),
-                      label: const Text('Reset', style: TextStyle(fontSize: 12)),
-                      style: TextButton.styleFrom(foregroundColor: Colors.grey.shade600),
+                    // ── Body ────────────────────────────────────────────────────
+                    BlocBuilder<FinanceDashboardBloc, FinanceDashboardState>(
+                      builder: (context, state) {
+                        if (state is FinanceDashboardLoading) {
+                          return const _LoadingView();
+                        }
+                        if (state is FinanceDashboardError) {
+                          return _ErrorView(
+                            message: state.message,
+                            onRetry: _applyFilter,
+                          );
+                        }
+                        if (state is FinanceDashboardLoaded) {
+                          return _DashboardContent(
+                            kpi: state.kpiSummary,
+                            revenueChart: state.revenueChart,
+                            dueInvoices: state.dueInvoices,
+                            pendingPayments: state.pendingPayments,
+                            periodLabel: _periodLabel,
+                            formatRupiah: _formatRupiah,
+                            compact: _compact,
+                            dateFmt: _dateFmt,
+                          );
+                        }
+                        return const SizedBox.shrink();
+                      },
                     ),
                   ],
-                ]),
+                ),
               ),
-              const SizedBox(height: 28),
-
-              // ── Body ────────────────────────────────────────────────────
-              BlocBuilder<FinanceDashboardBloc, FinanceDashboardState>(
-                builder: (context, state) {
-                  if (state is FinanceDashboardLoading) {
-                    return const _LoadingView();
-                  }
-                  if (state is FinanceDashboardError) {
-                    return _ErrorView(
-                      message: state.message,
-                      onRetry: _applyFilter,
-                    );
-                  }
-                  if (state is FinanceDashboardLoaded) {
-                    return _DashboardContent(
-                      kpi: state.kpiSummary,
-                      revenueChart: state.revenueChart,
-                      dueInvoices: state.dueInvoices,
-                      pendingPayments: state.pendingPayments,
-                      periodLabel: _periodLabel,
-                      formatRupiah: _formatRupiah,
-                      compact: _compact,
-                      dateFmt: _dateFmt,
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -217,22 +205,26 @@ class _DashboardFilterDropdown<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+    final borderColor = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+    final hintColor = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: borderColor),
         borderRadius: BorderRadius.circular(10),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
-          hint: Text(hint, style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
+          hint: Text(hint, style: TextStyle(fontSize: 13, color: hintColor)),
           items: items.map((item) => DropdownMenuItem<T>(
             value: item,
             child: Text(labelBuilder(item), style: const TextStyle(fontSize: 13)),
           )).toList(),
           onChanged: (v) { if (v != null || null is T) onChanged(v as T); },
-          icon: Icon(Icons.keyboard_arrow_down, size: 18, color: Colors.grey.shade500),
+          icon: Icon(Icons.keyboard_arrow_down, size: 18, color: hintColor),
         ),
       ),
     );
@@ -273,9 +265,9 @@ class _ErrorView extends StatelessWidget {
               size: 56,
               color: theme.colorScheme.error,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             Text('Gagal memuat data', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppSpacing.sm),
             Text(
               message,
               style: theme.textTheme.bodySmall?.copyWith(
@@ -283,7 +275,7 @@ class _ErrorView extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.xxl),
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded, size: 18),
@@ -321,7 +313,7 @@ class _DashboardContent extends StatelessWidget {
 
   // ─── Section title helper ──────────────────────────────────────────────
 
-  Widget _sectionTitle(BuildContext context, String title) {
+  Widget _sectionTitle(BuildContext context, String title, bool isDark) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -329,7 +321,7 @@ class _DashboardContent extends StatelessWidget {
           width: 6,
           height: 22,
           decoration: BoxDecoration(
-            color: Colors.deepPurple,
+            color: isDark ? AppColorsDark.primary : AppColorsLight.primary,
             borderRadius: BorderRadius.circular(4),
           ),
         ),
@@ -347,39 +339,40 @@ class _DashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
     final isProfit = kpi.netProfit >= 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // ── KPI Section ───────────────────────────────────────────────────
-        _sectionTitle(context, 'Ringkasan Keuangan'),
-        const SizedBox(height: 16),
+        _sectionTitle(context, 'Ringkasan Keuangan', isDark),
+        const SizedBox(height: AppSpacing.lg),
         _KpiGrid(
           kpi: kpi,
           isProfit: isProfit,
           formatRupiah: formatRupiah,
           periodLabel: periodLabel,
         ),
-        const SizedBox(height: 32),
+        const SizedBox(height: AppSpacing.xxxl),
 
         // ── Revenue Chart ─────────────────────────────────────────────────
-        _sectionTitle(context, 'Pendapatan 6 Bulan Terakhir'),
-        const SizedBox(height: 16),
+        _sectionTitle(context, 'Pendapatan 6 Bulan Terakhir', isDark),
+        const SizedBox(height: AppSpacing.lg),
         _RevenueChart(chartData: revenueChart, compact: compact),
-        const SizedBox(height: 32),
+        const SizedBox(height: AppSpacing.xxxl),
 
         // ── Due Invoices ──────────────────────────────────────────────────
-        _sectionTitle(context, 'Tagihan Jatuh Tempo'),
-        const SizedBox(height: 16),
+        _sectionTitle(context, 'Tagihan Jatuh Tempo', isDark),
+        const SizedBox(height: AppSpacing.lg),
         _DueInvoicesTable(invoices: dueInvoices, formatRupiah: formatRupiah, dateFmt: dateFmt),
-        const SizedBox(height: 32),
+        const SizedBox(height: AppSpacing.xxxl),
 
         // ── Pending Payments ──────────────────────────────────────────────
-        _sectionTitle(context, 'Pembayaran Perlu Konfirmasi'),
-        const SizedBox(height: 16),
+        _sectionTitle(context, 'Pembayaran Perlu Konfirmasi', isDark),
+        const SizedBox(height: AppSpacing.lg),
         _PendingPaymentsTable(payments: pendingPayments, formatRupiah: formatRupiah),
-        const SizedBox(height: 24),
+        const SizedBox(height: AppSpacing.xxl),
       ],
     );
   }

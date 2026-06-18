@@ -1,5 +1,141 @@
 import 'package:flutter/material.dart';
 
+abstract class AppColorPalette {
+  Color get primary;
+  Color get primaryLight;
+  Color get primaryDark;
+
+  Color get background;
+  Color get surface;
+  Color get surfaceVariant;
+
+  Color get textPrimary;
+  Color get textSecondary;
+  Color get textHint;
+
+  Color get borderLight;
+  Color get borderMedium;
+
+  Color get sidebarBg;
+  Color get sidebarBorder;
+  Color get sidebarActive;
+  Color get sidebarActiveText;
+  Color get sidebarActiveIcon;
+  Color get sidebarHoverBg;
+  Color get sidebarText;
+  Color get sidebarMuted;
+  Color get sidebarSection;
+
+  Color get statusWaiting;
+  Color get statusWaitingBg;
+  Color get statusWaitingBorder;
+  Color get statusProcess;
+  Color get statusProcessBg;
+  Color get statusProcessBorder;
+  Color get statusDone;
+  Color get statusDoneBg;
+  Color get statusDoneBorder;
+  Color get statusCancelled;
+  Color get statusCancelledBg;
+  Color get statusCancelledBorder;
+
+  Color get conditionGood;
+  Color get conditionFair;
+  Color get conditionPoor;
+}
+
+class AppColorsLightPalette implements AppColorPalette {
+  const AppColorsLightPalette();
+
+  @override Color get primary => AppColorsLight.primary;
+  @override Color get primaryLight => AppColorsLight.primaryLight;
+  @override Color get primaryDark => AppColorsLight.primaryDark;
+
+  @override Color get background => AppColorsLight.background;
+  @override Color get surface => AppColorsLight.surface;
+  @override Color get surfaceVariant => AppColorsLight.surfaceVariant;
+
+  @override Color get textPrimary => AppColorsLight.textPrimary;
+  @override Color get textSecondary => AppColorsLight.textSecondary;
+  @override Color get textHint => AppColorsLight.textHint;
+
+  @override Color get borderLight => AppColorsLight.borderLight;
+  @override Color get borderMedium => AppColorsLight.borderMedium;
+
+  @override Color get sidebarBg => AppColorsLight.sidebarBg;
+  @override Color get sidebarBorder => AppColorsLight.sidebarBorder;
+  @override Color get sidebarActive => AppColorsLight.sidebarActive;
+  @override Color get sidebarActiveText => AppColorsLight.sidebarActiveText;
+  @override Color get sidebarActiveIcon => AppColorsLight.sidebarActive; // Fallback
+  @override Color get sidebarHoverBg => AppColorsLight.sidebarHoverBg;
+  @override Color get sidebarText => AppColorsLight.sidebarText;
+  @override Color get sidebarMuted => AppColorsLight.sidebarMuted;
+  @override Color get sidebarSection => AppColorsLight.sidebarSection;
+
+  @override Color get statusWaiting => AppColorsLight.statusWaiting;
+  @override Color get statusWaitingBg => AppColorsLight.statusWaitingBg;
+  @override Color get statusWaitingBorder => AppColorsLight.statusWaitingBorder;
+  @override Color get statusProcess => AppColorsLight.statusProcess;
+  @override Color get statusProcessBg => AppColorsLight.statusProcessBg;
+  @override Color get statusProcessBorder => AppColorsLight.statusProcessBorder;
+  @override Color get statusDone => AppColorsLight.statusDone;
+  @override Color get statusDoneBg => AppColorsLight.statusDoneBg;
+  @override Color get statusDoneBorder => AppColorsLight.statusDoneBorder;
+  @override Color get statusCancelled => AppColorsLight.statusCancelled;
+  @override Color get statusCancelledBg => AppColorsLight.statusCancelledBg;
+  @override Color get statusCancelledBorder => AppColorsLight.statusCancelledBorder;
+
+  @override Color get conditionGood => AppColorsLight.conditionGood;
+  @override Color get conditionFair => AppColorsLight.conditionFair;
+  @override Color get conditionPoor => AppColorsLight.conditionPoor;
+}
+
+class AppColorsDarkPalette implements AppColorPalette {
+  const AppColorsDarkPalette();
+
+  @override Color get primary => AppColorsDark.primary;
+  @override Color get primaryLight => AppColorsDark.primaryLight;
+  @override Color get primaryDark => AppColorsDark.primaryDark;
+
+  @override Color get background => AppColorsDark.background;
+  @override Color get surface => AppColorsDark.surface;
+  @override Color get surfaceVariant => AppColorsDark.surfaceVariant;
+
+  @override Color get textPrimary => AppColorsDark.textPrimary;
+  @override Color get textSecondary => AppColorsDark.textSecondary;
+  @override Color get textHint => AppColorsDark.textHint;
+
+  @override Color get borderLight => AppColorsDark.borderLight;
+  @override Color get borderMedium => AppColorsDark.borderMedium;
+
+  @override Color get sidebarBg => AppColorsDark.sidebarBg;
+  @override Color get sidebarBorder => AppColorsDark.sidebarBg; // Same as background/bg
+  @override Color get sidebarActive => AppColorsDark.sidebarActive;
+  @override Color get sidebarActiveText => AppColorsDark.sidebarActiveText;
+  @override Color get sidebarActiveIcon => AppColorsDark.sidebarActiveIcon;
+  @override Color get sidebarHoverBg => AppColorsDark.sidebarHoverBg;
+  @override Color get sidebarText => AppColorsDark.sidebarText;
+  @override Color get sidebarMuted => AppColorsDark.sidebarMuted;
+  @override Color get sidebarSection => AppColorsDark.sidebarSection;
+
+  @override Color get statusWaiting => AppColorsDark.statusWaiting;
+  @override Color get statusWaitingBg => AppColorsDark.statusWaitingBg;
+  @override Color get statusWaitingBorder => AppColorsDark.statusWaitingBorder;
+  @override Color get statusProcess => AppColorsDark.statusProcess;
+  @override Color get statusProcessBg => AppColorsDark.statusProcessBg;
+  @override Color get statusProcessBorder => AppColorsDark.statusProcessBorder;
+  @override Color get statusDone => AppColorsDark.statusDone;
+  @override Color get statusDoneBg => AppColorsDark.statusDoneBg;
+  @override Color get statusDoneBorder => AppColorsDark.statusDoneBorder;
+  @override Color get statusCancelled => AppColorsDark.statusCancelled;
+  @override Color get statusCancelledBg => AppColorsDark.statusCancelledBg;
+  @override Color get statusCancelledBorder => AppColorsDark.statusCancelledBorder;
+
+  @override Color get conditionGood => AppColorsDark.conditionGood;
+  @override Color get conditionFair => AppColorsDark.conditionFair;
+  @override Color get conditionPoor => AppColorsDark.conditionPoor;
+}
+
 class AppColorsLight {
   // Primary — clean rich blue, no violet tint
   static const Color primary        = Color(0xFF2563EB); // Blue 600
@@ -90,7 +226,7 @@ class AppColorsDark {
   static const Color statusDone         = Color(0xFF22C55E);
   static const Color statusDoneBg       = Color(0xFF0D2818);
   static const Color statusDoneBorder   = Color(0xFF166534);
-  static const Color statusCancelled    = Color(0xFFEF4444);
+  static const Color statusCancelled    = Color(0xFFDC2626);
   static const Color statusCancelledBg  = Color(0xFF2D0A0A);
   static const Color statusCancelledBorder = Color(0xFF7F1D1D);
 

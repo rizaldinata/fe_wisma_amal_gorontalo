@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/dependency_injection/dependency_injection.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../domain/entity/setting/midtrans_method_entity.dart';
 import '../../bloc/payment_method_setting/payment_method_setting_cubit.dart';
 import '../../bloc/setting/setting_bloc.dart';
 import '../../bloc/setting/setting_event.dart';
 import '../../bloc/setting/setting_state.dart';
+import '../../widget/core/appbar/app_topbar.dart';
 import '../../widget/core/card/basic_card.dart';
 
 @RoutePage()
@@ -27,7 +31,12 @@ class _SettingPageState extends State<SettingPage> {
   bool _featureWhatsappReceipt = false;
   bool _featureWhatsappPdfLink = false;
   bool _featurePaymentMidtrans = true;
+  bool _featurePengeluaranTetap = false;
+  final Set<String> _jenisAktif = {};
   bool _hasChanges = false;
+
+  static const _allJenis = {'listrik', 'air', 'wifi'};
+  static const _jenisLabel = {'listrik': 'Listrik', 'air': 'Air', 'wifi': 'WiFi'};
 
   @override
   void initState() {
@@ -47,10 +56,16 @@ class _SettingPageState extends State<SettingPage> {
 
   void _populateData(Map<String, dynamic> settings) {
     _wismaNameController.text = settings['wisma_name']?.toString() ?? 'Wisma Amal Gorontalo';
-    _featureDailyRental      = settings['feature_daily_rental'] == true || settings['feature_daily_rental']?.toString() == 'true';
-    _featureWhatsappReceipt  = settings['feature_whatsapp_receipt'] == true || settings['feature_whatsapp_receipt']?.toString() == 'true';
-    _featureWhatsappPdfLink  = settings['feature_whatsapp_pdf_link'] == true || settings['feature_whatsapp_pdf_link']?.toString() == 'true';
-    _featurePaymentMidtrans  = settings['feature_payment_midtrans'] == true || settings['feature_payment_midtrans']?.toString() == 'true';
+    _featureDailyRental       = settings['feature_daily_rental'] == true || settings['feature_daily_rental']?.toString() == 'true';
+    _featureWhatsappReceipt   = settings['feature_whatsapp_receipt'] == true || settings['feature_whatsapp_receipt']?.toString() == 'true';
+    _featureWhatsappPdfLink   = settings['feature_whatsapp_pdf_link'] == true || settings['feature_whatsapp_pdf_link']?.toString() == 'true';
+    _featurePaymentMidtrans   = settings['feature_payment_midtrans'] == true || settings['feature_payment_midtrans']?.toString() == 'true';
+    _featurePengeluaranTetap  = settings['feature_pengeluaran_tetap'] == true || settings['feature_pengeluaran_tetap']?.toString() == 'true';
+    _jenisAktif.clear();
+    final rawJenis = settings['pengeluaran_tetap_jenis_aktif'];
+    if (rawJenis is List) {
+      _jenisAktif.addAll(rawJenis.map((e) => e.toString()));
+    }
     _hasChanges = false;
   }
 
@@ -68,18 +83,13 @@ class _SettingPageState extends State<SettingPage> {
     if (_featurePaymentMidtrans) {
       final methods = _currentPaymentMethods();
       if (methods.isNotEmpty && !methods.any((m) => m.enabled)) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Row(children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
-            SizedBox(width: 10),
-            Expanded(child: Text('Aktifkan minimal satu metode pembayaran Midtrans terlebih dahulu.')),
-          ]),
-          backgroundColor: Colors.orange.shade700,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ));
+        _showWarningSnackBar('Aktifkan minimal satu metode pembayaran Midtrans terlebih dahulu.');
         return;
       }
+    }
+    if (_featurePengeluaranTetap && _jenisAktif.isEmpty) {
+      _showWarningSnackBar('Pilih minimal satu jenis utilitas untuk fitur Pengeluaran Tetap.');
+      return;
     }
     final payload = {
       'wisma_name': _wismaNameController.text.trim(),
@@ -87,12 +97,33 @@ class _SettingPageState extends State<SettingPage> {
       'feature_whatsapp_receipt': _featureWhatsappReceipt,
       'feature_whatsapp_pdf_link': _featureWhatsappPdfLink,
       'feature_payment_midtrans': _featurePaymentMidtrans,
+      'feature_pengeluaran_tetap': _featurePengeluaranTetap,
+      'pengeluaran_tetap_jenis_aktif': _jenisAktif.toList(),
     };
     _bloc.add(UpdateSettingsEvent(payload));
   }
 
+  void _showWarningSnackBar(String message) {
+    final isDark = AppTheme.isDark(context);
+    final warningColor = isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Row(children: [
+        Icon(Icons.warning_amber_rounded, color: warningColor, size: 18),
+        const SizedBox(width: 10),
+        Expanded(child: Text(message, style: TextStyle(color: warningColor))),
+      ]),
+      backgroundColor: isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg,
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+      margin: const EdgeInsets.all(AppSpacing.lg),
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+    final bgColor = isDark ? AppColorsDark.background : AppColorsLight.background;
+
     return MultiBlocProvider(
       providers: [
         BlocProvider.value(value: _bloc),
@@ -104,359 +135,487 @@ class _SettingPageState extends State<SettingPage> {
             setState(() => _populateData(state.entity.settings));
           } else if (state is SettingUpdateSuccess) {
             setState(() => _populateData(state.entity.settings));
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Row(children: [
-                  Icon(Icons.check_circle, color: Colors.white, size: 18),
-                  SizedBox(width: 10),
-                  Text('Pengaturan berhasil disimpan'),
-                ]),
-                backgroundColor: Colors.green.shade600,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            );
+            final doneColor = isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone;
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Row(children: [
+                Icon(Icons.check_circle, color: doneColor, size: 18),
+                const SizedBox(width: 10),
+                Text('Pengaturan berhasil disimpan', style: TextStyle(color: doneColor)),
+              ]),
+              backgroundColor: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+              margin: const EdgeInsets.all(AppSpacing.lg),
+            ));
           } else if (state is SettingError) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Gagal: ${state.message}'),
-                backgroundColor: Colors.red.shade600,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-            );
+            final cancelColor = isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Row(children: [
+                Icon(Icons.error_outline, color: cancelColor, size: 18),
+                const SizedBox(width: 10),
+                Expanded(child: Text('Gagal: ${state.message}', style: TextStyle(color: cancelColor))),
+              ]),
+              backgroundColor: isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+              margin: const EdgeInsets.all(AppSpacing.lg),
+            ));
           }
         },
         builder: (context, state) {
           if (state is SettingInitial || (state is SettingLoading && _wismaNameController.text.isEmpty)) {
-            return const Scaffold(body: Center(child: CircularProgressIndicator()));
+            return Scaffold(
+              backgroundColor: bgColor,
+              body: const Center(child: CircularProgressIndicator()),
+            );
           }
 
           final isSaving = state is SettingLoading;
 
           return Scaffold(
-            backgroundColor: Theme.of(context).colorScheme.surface,
-            body: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                // ── Header ────────────────────────────────────────────
-                Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [
-                  const Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Text('Pengaturan Aplikasi', style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-                    SizedBox(height: 6),
-                    Text('Kelola konfigurasi umum dan fitur sistem wisma.', style: TextStyle(fontSize: 14, color: Colors.grey)),
-                  ]),
-                  // Tombol simpan
-                  isSaving
+            backgroundColor: bgColor,
+            body: Column(
+              children: [
+                AppTopBar(
+                  title: 'Pengaturan Aplikasi',
+                  breadcrumb: 'Pengaturan / Umum',
+                  action: isSaving
                       ? const SizedBox(
                           width: 140,
-                          height: 44,
-                          child: Center(child: SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2.5))),
+                          height: 36,
+                          child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2.5))),
                         )
-                      : FilledButton.icon(
+                      : ElevatedButton.icon(
                           onPressed: _hasChanges ? _saveSettings : null,
                           icon: const Icon(Icons.save_outlined, size: 18),
                           label: const Text('Simpan Perubahan'),
-                          style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(AppSpacing.xxxl),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _SectionCard(
+                          isDark: isDark,
+                          icon: Icons.apartment_outlined,
+                          accentColor: isDark ? AppColorsDark.primary : AppColorsLight.primary,
+                          title: 'Informasi Wisma',
+                          subtitle: 'Data identitas wisma yang ditampilkan pada invoice dan notifikasi.',
+                          child: _buildWismaNameField(isDark),
+                        ),
+                        const SizedBox(height: AppSpacing.xl),
+
+                        _SectionCard(
+                          isDark: isDark,
+                          icon: Icons.tune_outlined,
+                          accentColor: isDark ? AppColorsDark.primaryDark : AppColorsLight.primaryDark,
+                          title: 'Fitur Sistem',
+                          subtitle: 'Aktifkan atau nonaktifkan fitur tertentu sesuai kebutuhan operasional.',
+                          child: _buildFiturSistem(isDark),
+                        ),
+
+                        if (_featurePengeluaranTetap) ...[
+                          const SizedBox(height: AppSpacing.xl),
+                          _SectionCard(
+                            isDark: isDark,
+                            icon: Icons.bolt_outlined,
+                            accentColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
+                            title: 'Jenis Utilitas Pengeluaran Tetap',
+                            subtitle: 'Pilih jenis utilitas yang akan dipantau setiap bulan (minimal satu).',
+                            child: _buildJenisUtilitas(isDark),
                           ),
-                        ),
-                ]),
-                const SizedBox(height: 32),
-
-                // ── Informasi Wisma ────────────────────────────────────
-                _SectionCard(
-                  icon: Icons.apartment_outlined,
-                  color: Colors.blue.shade600,
-                  title: 'Informasi Wisma',
-                  subtitle: 'Data identitas wisma yang ditampilkan pada invoice dan notifikasi.',
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text('Nama Wisma / Kos', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey)),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _wismaNameController,
-                      onChanged: (_) => _markChanged(),
-                      decoration: InputDecoration(
-                        hintText: 'Contoh: Wisma Amal Gorontalo',
-                        prefixIcon: const Icon(Icons.apartment_outlined, size: 20),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
-                        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      ),
-                    ),
-                  ]),
-                ),
-                const SizedBox(height: 20),
-
-                // ── Fitur Sistem ───────────────────────────────────────
-                _SectionCard(
-                  icon: Icons.tune_outlined,
-                  color: Colors.purple.shade600,
-                  title: 'Fitur Sistem',
-                  subtitle: 'Aktifkan atau nonaktifkan fitur tertentu sesuai kebutuhan operasional.',
-                  child: Column(children: [
-                    _FeatureToggle(
-                      icon: Icons.today_outlined,
-                      iconColor: Colors.teal.shade600,
-                      title: 'Sewa Harian',
-                      description: 'Izinkan penghuni menyewa kamar per hari (mode hotel/kos harian). Jika dinonaktifkan, hanya sewa bulanan yang tersedia.',
-                      value: _featureDailyRental,
-                      onChanged: (val) { setState(() => _featureDailyRental = val); _markChanged(); },
-                    ),
-                    const SizedBox(height: 12),
-                    _FeatureToggle(
-                      icon: Icons.chat_outlined,
-                      iconColor: Colors.green.shade600,
-                      title: 'Notifikasi WhatsApp Struk Pembayaran',
-                      description: 'Kirim pesan WhatsApp otomatis ke penghuni setiap kali pembayaran berhasil diverifikasi oleh admin.',
-                      value: _featureWhatsappReceipt,
-                      onChanged: (val) { setState(() => _featureWhatsappReceipt = val); _markChanged(); },
-                    ),
-                    const SizedBox(height: 12),
-                    _FeatureToggle(
-                      icon: Icons.picture_as_pdf_outlined,
-                      iconColor: Colors.deepOrange.shade600,
-                      title: 'Sertakan Link PDF Invoice di WA',
-                      description: 'Tambahkan link unduh invoice PDF ke dalam pesan WhatsApp struk. Membutuhkan fitur notifikasi WA aktif.',
-                      value: _featureWhatsappPdfLink,
-                      onChanged: _featureWhatsappReceipt
-                          ? (val) { setState(() => _featureWhatsappPdfLink = val); _markChanged(); }
-                          : null,
-                    ),
-                    const SizedBox(height: 12),
-                    _FeatureToggle(
-                      icon: Icons.account_balance_wallet_outlined,
-                      iconColor: Colors.indigo.shade600,
-                      title: 'Pembayaran Midtrans (Online)',
-                      description: 'Aktifkan integrasi Midtrans untuk pembayaran melalui Virtual Account, QRIS, dan metode online lainnya.',
-                      value: _featurePaymentMidtrans,
-                      onChanged: (val) {
-                        setState(() => _featurePaymentMidtrans = val);
-                        _markChanged();
-                      },
-                    ),
-                    if (!_featureWhatsappReceipt) ...[
-                      const SizedBox(height: 8),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 52),
-                        child: Text(
-                          'Aktifkan "Notifikasi WhatsApp Struk" terlebih dahulu untuk menggunakan fitur ini.',
-                          style: TextStyle(fontSize: 11, color: Colors.grey.shade400, fontStyle: FontStyle.italic),
-                        ),
-                      ),
-                    ],
-                  ]),
-                ),
-                if (_featurePaymentMidtrans) ...[
-                const SizedBox(height: 20),
-
-                // ── Metode Pembayaran Midtrans ─────────────────────────
-                _SectionCard(
-                  icon: Icons.payment_rounded,
-                  color: Colors.teal.shade600,
-                  title: 'Metode Pembayaran Midtrans',
-                  subtitle: 'Pilih metode yang tersedia untuk penghuni. Toggle tersimpan otomatis.',
-                  child: BlocConsumer<PaymentMethodSettingCubit, PaymentMethodSettingState>(
-                    listener: (context, pmState) {
-                      if (pmState is PaymentMethodSettingSaved) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: const Row(children: [
-                            Icon(Icons.check_circle, color: Colors.white, size: 18),
-                            SizedBox(width: 10),
-                            Text('Metode pembayaran diperbarui'),
-                          ]),
-                          backgroundColor: Colors.teal.shade600,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                          duration: const Duration(seconds: 2),
-                        ));
-                      } else if (pmState is PaymentMethodSettingError) {
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                          content: Text('Gagal: ${pmState.message}'),
-                          backgroundColor: Colors.red.shade600,
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ));
-                      }
-                    },
-                    builder: (context, pmState) {
-                      if (pmState is PaymentMethodSettingInitial || pmState is PaymentMethodSettingLoading) {
-                        return const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator()));
-                      }
-                      if (pmState is PaymentMethodSettingError) {
-                        return Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Text('Gagal memuat metode: ${pmState.message}', style: TextStyle(color: Colors.red.shade600)),
-                        );
-                      }
-
-                      final List<MidtransMethodEntity> methods;
-                      if (pmState is PaymentMethodSettingLoaded) {
-                        methods = pmState.methods;
-                      } else if (pmState is PaymentMethodSettingSaving) {
-                        methods = pmState.methods;
-                      } else if (pmState is PaymentMethodSettingSaved) {
-                        methods = pmState.methods;
-                      } else {
-                        methods = [];
-                      }
-
-                      final isSaving = pmState is PaymentMethodSettingSaving;
-                      final enabledCount = methods.where((m) => m.enabled).length;
-                      final showWarning = methods.isNotEmpty && enabledCount == 0;
-
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          if (showWarning)
-                            Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                              decoration: BoxDecoration(
-                                color: Colors.orange.shade50,
-                                borderRadius: BorderRadius.circular(10),
-                                border: Border.all(color: Colors.orange.shade300),
-                              ),
-                              child: Row(children: [
-                                Icon(Icons.warning_amber_rounded, color: Colors.orange.shade700, size: 18),
-                                const SizedBox(width: 10),
-                                const Expanded(child: Text(
-                                  'Tidak ada metode yang aktif. Aktifkan minimal satu metode, atau matikan fitur Midtrans.',
-                                  style: TextStyle(fontSize: 12, height: 1.4),
-                                )),
-                              ]),
-                            ),
-                          GridView.builder(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 8,
-                          crossAxisSpacing: 8,
-                          mainAxisExtent: 52,
-                        ),
-                        itemCount: methods.length,
-                        itemBuilder: (context, index) {
-                          final method = methods[index];
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: method.enabled ? Colors.teal.shade50 : Colors.grey.shade50,
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: method.enabled ? Colors.teal.shade200 : Colors.grey.shade200,
-                              ),
-                            ),
-                            child: SwitchListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-                              dense: true,
-                              title: Text(
-                                method.label,
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              value: method.enabled,
-                              activeColor: Colors.teal.shade600,
-                              onChanged: isSaving
-                                  ? null
-                                  : (val) {
-                                      if (!val && enabledCount <= 1 && method.enabled) {
-                                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                                          content: const Row(children: [
-                                            Icon(Icons.warning_amber_rounded, color: Colors.white, size: 18),
-                                            SizedBox(width: 10),
-                                            Expanded(child: Text('Minimal satu metode harus aktif selama Midtrans dinyalakan.')),
-                                          ]),
-                                          backgroundColor: Colors.orange.shade700,
-                                          behavior: SnackBarBehavior.floating,
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                                        ));
-                                        return;
-                                      }
-                                      final enabledCodes = methods
-                                          .where((m) => m.code == method.code ? val : m.enabled)
-                                          .map((m) => m.code)
-                                          .toList();
-                                      context.read<PaymentMethodSettingCubit>().save(enabledCodes);
-                                    },
-                            ),
-                          );
-                        },
-                      ),
                         ],
-                      );
-                    },
+
+                        if (_featurePaymentMidtrans) ...[
+                          const SizedBox(height: AppSpacing.xl),
+                          _SectionCard(
+                            isDark: isDark,
+                            icon: Icons.payment_rounded,
+                            accentColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
+                            title: 'Metode Pembayaran Midtrans',
+                            subtitle: 'Pilih metode yang tersedia untuk penghuni. Toggle tersimpan otomatis.',
+                            child: _buildPaymentMethods(isDark),
+                          ),
+                        ],
+
+                        const SizedBox(height: AppSpacing.xxxl),
+                      ],
+                    ),
                   ),
                 ),
-                ], // end if (_featurePaymentMidtrans)
-
-                // Indikator perubahan belum disimpan
-                if (_hasChanges) ...[
-                  const SizedBox(height: 20),
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.blue.shade50,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.blue.shade200),
-                    ),
-                    child: Row(children: [
-                      Icon(Icons.edit_note, color: Colors.blue.shade700, size: 20),
-                      const SizedBox(width: 10),
-                      Text('Ada perubahan yang belum disimpan.', style: TextStyle(color: Colors.blue.shade800, fontWeight: FontWeight.w600)),
-                      const Spacer(),
-                      TextButton(onPressed: () => _bloc.add(FetchSettingsEvent()), child: const Text('Reset')),
-                      const SizedBox(width: 8),
-                      FilledButton(
-                        onPressed: _saveSettings,
-                        style: FilledButton.styleFrom(shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
-                        child: const Text('Simpan Sekarang'),
-                      ),
-                    ]),
-                  ),
-                ],
-                const SizedBox(height: 32),
-              ]),
+              ],
             ),
           );
         },
       ),
     );
   }
+
+  Widget _buildWismaNameField(bool isDark) {
+    final borderColor = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+    final borderMedColor = isDark ? AppColorsDark.borderMedium : AppColorsLight.borderMedium;
+    final textSecColor = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Nama Wisma / Kos',
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textSecColor),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        TextField(
+          controller: _wismaNameController,
+          onChanged: (_) => _markChanged(),
+          decoration: InputDecoration(
+            hintText: 'Contoh: Wisma Amal Gorontalo',
+            prefixIcon: const Icon(Icons.apartment_outlined, size: 20),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              borderSide: BorderSide(color: borderColor),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              borderSide: BorderSide(color: borderColor),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              borderSide: BorderSide(color: borderMedColor),
+            ),
+            contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFiturSistem(bool isDark) {
+    final warningColor = isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _FeatureToggle(
+          isDark: isDark,
+          icon: Icons.today_outlined,
+          accentColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
+          title: 'Sewa Harian',
+          description: 'Izinkan penghuni menyewa kamar per hari (mode hotel/kos harian). Jika dinonaktifkan, hanya sewa bulanan yang tersedia.',
+          value: _featureDailyRental,
+          onChanged: (val) { setState(() => _featureDailyRental = val); _markChanged(); },
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _FeatureToggle(
+          isDark: isDark,
+          icon: Icons.chat_outlined,
+          accentColor: isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess,
+          title: 'Notifikasi WhatsApp Struk Pembayaran',
+          description: 'Kirim pesan WhatsApp otomatis ke penghuni setiap kali pembayaran berhasil diverifikasi oleh admin.',
+          value: _featureWhatsappReceipt,
+          onChanged: (val) { setState(() => _featureWhatsappReceipt = val); _markChanged(); },
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _FeatureToggle(
+          isDark: isDark,
+          icon: Icons.picture_as_pdf_outlined,
+          accentColor: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled,
+          title: 'Sertakan Link PDF Invoice di WA',
+          description: 'Tambahkan link unduh invoice PDF ke dalam pesan WhatsApp struk. Membutuhkan fitur notifikasi WA aktif.',
+          value: _featureWhatsappPdfLink,
+          onChanged: _featureWhatsappReceipt
+              ? (val) { setState(() => _featureWhatsappPdfLink = val); _markChanged(); }
+              : null,
+        ),
+        if (!_featureWhatsappReceipt) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Padding(
+            padding: const EdgeInsets.only(left: 52),
+            child: Text(
+              'Aktifkan "Notifikasi WhatsApp Struk" terlebih dahulu untuk menggunakan fitur ini.',
+              style: TextStyle(
+                fontSize: 11,
+                color: isDark ? AppColorsDark.textHint : AppColorsLight.textHint,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.md),
+        _FeatureToggle(
+          isDark: isDark,
+          icon: Icons.account_balance_wallet_outlined,
+          accentColor: isDark ? AppColorsDark.primaryDark : AppColorsLight.primary,
+          title: 'Pembayaran Midtrans (Online)',
+          description: 'Aktifkan integrasi Midtrans untuk pembayaran melalui Virtual Account, QRIS, dan metode online lainnya.',
+          value: _featurePaymentMidtrans,
+          onChanged: (val) { setState(() => _featurePaymentMidtrans = val); _markChanged(); },
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _FeatureToggle(
+          isDark: isDark,
+          icon: Icons.bolt_outlined,
+          accentColor: warningColor,
+          title: 'Pengeluaran Tetap (Listrik, Air, WiFi)',
+          description: 'Aktifkan untuk mendapat pengingat mengisi nominal biaya utilitas setiap bulan. Dashboard akan menampilkan indikator "Belum Diisi" jika belum dicatat.',
+          value: _featurePengeluaranTetap,
+          onChanged: (val) {
+            setState(() {
+              _featurePengeluaranTetap = val;
+              if (!val) _jenisAktif.clear();
+            });
+            _markChanged();
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildJenisUtilitas(bool isDark) {
+    final warningColor = isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
+    final warningBg = isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg;
+    final warningBorder = isDark ? AppColorsDark.statusWaitingBorder : AppColorsLight.statusWaitingBorder;
+    final borderColor = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+    final primaryColor = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+    final primaryBg = isDark ? AppColorsDark.primaryLight : AppColorsLight.primaryLight;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (_jenisAktif.isEmpty)
+          Container(
+            margin: const EdgeInsets.only(bottom: AppSpacing.md),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
+            decoration: BoxDecoration(
+              color: warningBg,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              border: Border.all(color: warningBorder),
+            ),
+            child: Row(children: [
+              Icon(Icons.warning_amber_rounded, color: warningColor, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text(
+                'Pilih minimal satu jenis utilitas sebelum menyimpan.',
+                style: TextStyle(fontSize: 12, color: warningColor),
+              )),
+            ]),
+          ),
+        Wrap(
+          spacing: AppSpacing.sm,
+          runSpacing: AppSpacing.sm,
+          children: _allJenis.map((jenis) {
+            final isSelected = _jenisAktif.contains(jenis);
+            return FilterChip(
+              label: Text(_jenisLabel[jenis] ?? jenis),
+              selected: isSelected,
+              selectedColor: primaryBg,
+              checkmarkColor: primaryColor,
+              side: BorderSide(color: isSelected ? primaryColor : borderColor),
+              onSelected: (selected) {
+                setState(() {
+                  if (selected) {
+                    _jenisAktif.add(jenis);
+                  } else {
+                    _jenisAktif.remove(jenis);
+                  }
+                });
+                _markChanged();
+              },
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPaymentMethods(bool isDark) {
+    final warningColor = isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
+    final warningBg = isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg;
+    final warningBorder = isDark ? AppColorsDark.statusWaitingBorder : AppColorsLight.statusWaitingBorder;
+    final activeColor = isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone;
+    final activeBg = isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg;
+    final activeBorder = isDark ? AppColorsDark.statusDoneBorder : AppColorsLight.statusDoneBorder;
+    final surfaceVariant = isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant;
+    final borderColor = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+
+    return BlocConsumer<PaymentMethodSettingCubit, PaymentMethodSettingState>(
+      listener: (context, pmState) {
+        if (pmState is PaymentMethodSettingSaved) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Row(children: [
+              Icon(Icons.check_circle, color: activeColor, size: 18),
+              const SizedBox(width: 10),
+              Text('Metode pembayaran diperbarui', style: TextStyle(color: activeColor)),
+            ]),
+            backgroundColor: activeBg,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+            margin: const EdgeInsets.all(AppSpacing.lg),
+            duration: const Duration(seconds: 2),
+          ));
+        } else if (pmState is PaymentMethodSettingError) {
+          final cancelColor = isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Row(children: [
+              Icon(Icons.error_outline, color: cancelColor, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Gagal: ${pmState.message}', style: TextStyle(color: cancelColor))),
+            ]),
+            backgroundColor: isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+            margin: const EdgeInsets.all(AppSpacing.lg),
+          ));
+        }
+      },
+      builder: (context, pmState) {
+        if (pmState is PaymentMethodSettingInitial || pmState is PaymentMethodSettingLoading) {
+          return const Center(child: Padding(padding: EdgeInsets.all(AppSpacing.lg), child: CircularProgressIndicator()));
+        }
+        if (pmState is PaymentMethodSettingError) {
+          return Padding(
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            child: Text(
+              'Gagal memuat metode: ${pmState.message}',
+              style: TextStyle(color: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled),
+            ),
+          );
+        }
+
+        final List<MidtransMethodEntity> methods;
+        if (pmState is PaymentMethodSettingLoaded) {
+          methods = pmState.methods;
+        } else if (pmState is PaymentMethodSettingSaving) {
+          methods = pmState.methods;
+        } else if (pmState is PaymentMethodSettingSaved) {
+          methods = pmState.methods;
+        } else {
+          methods = [];
+        }
+
+        final isSavingPm = pmState is PaymentMethodSettingSaving;
+        final enabledCount = methods.where((m) => m.enabled).length;
+        final showWarning = methods.isNotEmpty && enabledCount == 0;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (showWarning)
+              Container(
+                margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
+                decoration: BoxDecoration(
+                  color: warningBg,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  border: Border.all(color: warningBorder),
+                ),
+                child: Row(children: [
+                  Icon(Icons.warning_amber_rounded, color: warningColor, size: 18),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(
+                    'Tidak ada metode yang aktif. Aktifkan minimal satu metode, atau matikan fitur Midtrans.',
+                    style: TextStyle(fontSize: 12, height: 1.4, color: warningColor),
+                  )),
+                ]),
+              ),
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                mainAxisSpacing: AppSpacing.sm,
+                crossAxisSpacing: AppSpacing.sm,
+                mainAxisExtent: 52,
+              ),
+              itemCount: methods.length,
+              itemBuilder: (context, index) {
+                final method = methods[index];
+                return Container(
+                  decoration: BoxDecoration(
+                    color: method.enabled ? activeBg : surfaceVariant,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    border: Border.all(color: method.enabled ? activeBorder : borderColor),
+                  ),
+                  child: SwitchListTile(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                    dense: true,
+                    title: Text(
+                      method.label,
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    value: method.enabled,
+                    activeColor: activeColor,
+                    onChanged: isSavingPm
+                        ? null
+                        : (val) {
+                            if (!val && enabledCount <= 1 && method.enabled) {
+                              _showWarningSnackBar('Minimal satu metode harus aktif selama Midtrans dinyalakan.');
+                              return;
+                            }
+                            final enabledCodes = methods
+                                .where((m) => m.code == method.code ? val : m.enabled)
+                                .map((m) => m.code)
+                                .toList();
+                            context.read<PaymentMethodSettingCubit>().save(enabledCodes);
+                          },
+                  ),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
 }
 
 // ── Section Card ──────────────────────────────────────────────────────────────
 class _SectionCard extends StatelessWidget {
+  final bool isDark;
   final IconData icon;
-  final Color color;
+  final Color accentColor;
   final String title;
   final String subtitle;
   final Widget child;
 
-  const _SectionCard({required this.icon, required this.color, required this.title, required this.subtitle, required this.child});
+  const _SectionCard({
+    required this.isDark,
+    required this.icon,
+    required this.accentColor,
+    required this.title,
+    required this.subtitle,
+    required this.child,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final textSecColor = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+
     return BasicCard(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.xxl),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          // Section header
           Row(children: [
             Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(10)),
-              child: Icon(icon, color: color, size: 22),
+              padding: const EdgeInsets.all(AppSpacing.sm),
+              decoration: BoxDecoration(
+                color: accentColor.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              ),
+              child: Icon(icon, color: accentColor, size: 22),
             ),
             const SizedBox(width: 14),
             Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text(title, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
               const SizedBox(height: 2),
-              Text(subtitle, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+              Text(subtitle, style: TextStyle(fontSize: 12, color: textSecColor)),
             ])),
           ]),
-          const Divider(height: 28),
+          const Divider(height: AppSpacing.xxxl - 4),
           child,
         ]),
       ),
@@ -466,44 +625,63 @@ class _SectionCard extends StatelessWidget {
 
 // ── Feature Toggle Row ────────────────────────────────────────────────────────
 class _FeatureToggle extends StatelessWidget {
+  final bool isDark;
   final IconData icon;
-  final Color iconColor;
+  final Color accentColor;
   final String title;
   final String description;
   final bool value;
-  final ValueChanged<bool>? onChanged; // nullable = disabled
+  final ValueChanged<bool>? onChanged;
 
-  const _FeatureToggle({required this.icon, required this.iconColor, required this.title, required this.description, required this.value, required this.onChanged});
+  const _FeatureToggle({
+    required this.isDark,
+    required this.icon,
+    required this.accentColor,
+    required this.title,
+    required this.description,
+    required this.value,
+    required this.onChanged,
+  });
 
   @override
   Widget build(BuildContext context) {
     final isDisabled = onChanged == null;
-    final effectiveColor = isDisabled ? Colors.grey.shade400 : iconColor;
+    final effectiveColor = isDisabled
+        ? (isDark ? AppColorsDark.textHint : AppColorsLight.textHint)
+        : accentColor;
+    final inactiveBg = isDark ? AppColorsDark.surface : AppColorsLight.surface;
+    final inactiveBorder = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+    final textSecColor = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
 
     return AnimatedOpacity(
       opacity: isDisabled ? 0.55 : 1.0,
       duration: const Duration(milliseconds: 200),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: (!isDisabled && value) ? iconColor.withOpacity(0.05) : Colors.grey.shade50,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: (!isDisabled && value) ? iconColor.withOpacity(0.3) : Colors.grey.shade200),
+          color: (!isDisabled && value) ? accentColor.withOpacity(0.06) : inactiveBg,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(
+            color: (!isDisabled && value) ? accentColor.withOpacity(0.3) : inactiveBorder,
+          ),
         ),
         child: Row(children: [
           Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: effectiveColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+            padding: const EdgeInsets.all(AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: effectiveColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            ),
             child: Icon(icon, color: effectiveColor, size: 20),
           ),
           const SizedBox(width: 14),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600)),
             const SizedBox(height: 2),
-            Text(description, style: TextStyle(fontSize: 12, color: Colors.grey.shade500, height: 1.4)),
+            Text(description, style: TextStyle(fontSize: 12, color: textSecColor, height: 1.4)),
           ])),
-          const SizedBox(width: 12),
-          Switch(value: value, onChanged: onChanged, activeColor: iconColor),
+          const SizedBox(width: AppSpacing.md),
+          Switch(value: value, onChanged: onChanged, activeColor: accentColor),
         ]),
       ),
     );

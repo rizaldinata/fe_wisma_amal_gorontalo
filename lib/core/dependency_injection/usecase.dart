@@ -93,6 +93,11 @@ import 'package:frontend/domain/usecase/guest/checkout_my_guest_usecase.dart';
 import 'package:frontend/domain/repository/notification_repository.dart';
 import 'package:frontend/domain/usecase/notification/get_notification_logs_usecase.dart';
 import 'package:frontend/domain/usecase/notification/mark_all_notification_logs_read_usecase.dart';
+import 'package:frontend/domain/repository/fixed_expense_repository.dart';
+import 'package:frontend/domain/usecase/finance/get_fixed_expenses_usecase.dart';
+import 'package:frontend/domain/usecase/finance/update_fixed_expense_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_fixed_expense_status_usecase.dart';
+import 'package:frontend/domain/usecase/finance/generate_fixed_expenses_usecase.dart';
 
 Future<void> initializeUseCase() async {
   // Auth UseCases
@@ -402,5 +407,19 @@ Future<void> initializeUseCase() async {
     () => MarkAllNotificationLogsReadUseCase(
       repository: serviceLocator<NotificationRepository>(),
     ),
+  );
+
+  // Fixed Expense UseCases
+  serviceLocator.registerFactory(
+    () => GetFixedExpensesUseCase(serviceLocator<FixedExpenseRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateFixedExpenseUseCase(serviceLocator<FixedExpenseRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetFixedExpenseStatusUseCase(serviceLocator<FixedExpenseRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GenerateFixedExpensesUseCase(serviceLocator<FixedExpenseRepository>()),
   );
 }

@@ -8,8 +8,8 @@ class AppTheme {
       Theme.of(context).brightness == Brightness.dark;
 
   // Shorthand getter
-  static dynamic colors(BuildContext context) =>
-      isDark(context) ? AppColorsDark() : AppColorsLight();
+  static AppColorPalette colors(BuildContext context) =>
+      isDark(context) ? const AppColorsDarkPalette() : const AppColorsLightPalette();
 
   static TextTheme get _textTheme => GoogleFonts.plusJakartaSansTextTheme().copyWith(
         displayLarge: GoogleFonts.plusJakartaSans(
