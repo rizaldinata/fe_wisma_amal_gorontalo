@@ -36,7 +36,8 @@ class ReservationDetailFormPage extends StatelessWidget {
             getSettingsUseCase: serviceLocator.get<GetPublicSettingsUseCase>(),
             createReservationUseCase: serviceLocator.get(),
             getProfileUseCase: serviceLocator.get<GetResidentProfileUseCase>(),
-            getAvailablePaymentMethodsUseCase: serviceLocator.get<GetAvailablePaymentMethodsUseCase>(),
+            getAvailablePaymentMethodsUseCase: serviceLocator
+                .get<GetAvailablePaymentMethodsUseCase>(),
           )..add(
             InitReservationEvent(
               room,
@@ -144,6 +145,8 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
             body: Center(child: CircularProgressIndicator()),
           );
 
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
         return Scaffold(
           appBar: CustomAppbar(
             icon: const Icon(Icons.arrow_back),
@@ -172,10 +175,14 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                 child: Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: Colors.blue.shade50,
+                                    color: isDark
+                                        ? Colors.blue.withOpacity(0.15)
+                                        : Colors.blue.shade50,
                                     borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
-                                      color: Colors.blue.shade200,
+                                      color: isDark
+                                          ? Colors.blue.shade800
+                                          : Colors.blue.shade200,
                                     ),
                                   ),
                                   child: Column(
@@ -184,13 +191,21 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                     children: [
                                       Text(
                                         room.title,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontWeight: FontWeight.bold,
+                                          color: isDark
+                                              ? Colors.white
+                                              : Colors.black87,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         'No. ${room.number} • ${room.facilities.join(', ')}',
+                                        style: TextStyle(
+                                          color: isDark
+                                              ? Colors.grey.shade300
+                                              : Colors.grey.shade800,
+                                        ),
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
@@ -372,7 +387,11 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
-                                      color: Colors.grey.shade800,
+                                      color: isDark
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.onSurface
+                                          : Colors.grey.shade800,
                                     ),
                                   ),
                                 ),
@@ -383,44 +402,79 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                     'Metode yang Anda pilih akan dibuka di halaman pembayaran Midtrans.',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: Colors.grey.shade500,
+                                      color: isDark
+                                          ? Colors.grey.shade400
+                                          : Colors.grey.shade500,
                                     ),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
                                 if (state.midtransPaymentMethods.isNotEmpty &&
-                                    state.midtransPaymentMethods.every((m) => !m.available)) ...[
+                                    state.midtransPaymentMethods.every(
+                                      (m) => !m.available,
+                                    )) ...[
                                   Container(
                                     padding: const EdgeInsets.all(14),
                                     decoration: BoxDecoration(
                                       color: Colors.orange.shade50,
                                       borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(color: Colors.orange.shade300),
+                                      border: Border.all(
+                                        color: Colors.orange.shade300,
+                                      ),
                                     ),
                                     child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Icon(Icons.build_outlined, color: Colors.orange.shade700, size: 20),
+                                        Icon(
+                                          Icons.build_outlined,
+                                          color: Colors.orange.shade700,
+                                          size: 20,
+                                        ),
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
                                             children: [
                                               Text(
                                                 'Semua metode pembayaran online sedang maintenance',
-                                                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.orange.shade800),
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13,
+                                                  color: Colors.orange.shade800,
+                                                ),
                                               ),
                                               const SizedBox(height: 4),
                                               Text(
                                                 'Tidak ada metode yang tersedia saat ini. Silakan gunakan Pembayaran Manual atau coba lagi nanti.',
-                                                style: TextStyle(fontSize: 12, color: Colors.orange.shade700, height: 1.4),
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.orange.shade700,
+                                                  height: 1.4,
+                                                ),
                                               ),
                                               const SizedBox(height: 10),
                                               GestureDetector(
-                                                onTap: () => context.read<ReservationDetailFormBloc>().add(const PaymentMethodChanged('tunai')),
+                                                onTap: () => context
+                                                    .read<
+                                                      ReservationDetailFormBloc
+                                                    >()
+                                                    .add(
+                                                      const PaymentMethodChanged(
+                                                        'tunai',
+                                                      ),
+                                                    ),
                                                 child: Text(
                                                   'Beralih ke Pembayaran Manual →',
-                                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.orange.shade800, decoration: TextDecoration.underline),
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                    color:
+                                                        Colors.orange.shade800,
+                                                    decoration: TextDecoration
+                                                        .underline,
+                                                  ),
                                                 ),
                                               ),
                                             ],
@@ -435,54 +489,82 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                   Container(
                                     padding: const EdgeInsets.all(14),
                                     decoration: BoxDecoration(
-                                      color: Colors.grey.shade100,
+                                      color: isDark
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.surfaceContainerLow
+                                          : Colors.grey.shade100,
                                       borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(color: Colors.grey.shade300),
-                                    ),
-                                    child: Row(children: [
-                                      Icon(Icons.info_outline, color: Colors.grey.shade500, size: 18),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Text(
-                                          'Tidak ada metode pembayaran online yang aktif. Hubungi pengelola atau gunakan Pembayaran Manual.',
-                                          style: TextStyle(fontSize: 12, color: Colors.grey.shade600, height: 1.4),
-                                        ),
+                                      border: Border.all(
+                                        color: isDark
+                                            ? Colors.grey.shade800
+                                            : Colors.grey.shade300,
                                       ),
-                                    ]),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.info_outline,
+                                          color: isDark
+                                              ? Colors.grey.shade400
+                                              : Colors.grey.shade500,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            'Tidak ada metode pembayaran online yang aktif. Hubungi pengelola atau gunakan Pembayaran Manual.',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: isDark
+                                                  ? Colors.grey.shade300
+                                                  : Colors.grey.shade600,
+                                              height: 1.4,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ] else
-                                GridView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 2,
-                                        mainAxisSpacing: 8,
-                                        crossAxisSpacing: 8,
-                                        mainAxisExtent: 72,
-                                      ),
-                                  itemCount:
-                                      state.midtransPaymentMethods.length,
-                                  itemBuilder: (context, index) {
-                                    final method =
-                                        state.midtransPaymentMethods[index];
-                                    final isSelected =
-                                        state.selectedMidtransMethod == method.code;
-                                    return _midtransMethodCard(
-                                      method: method,
-                                      selected: isSelected,
-                                      onTap: method.available
-                                          ? () => context
-                                              .read<ReservationDetailFormBloc>()
-                                              .add(
-                                                SelectedMidtransMethodChanged(
-                                                  isSelected ? null : method.code,
-                                                ),
-                                              )
-                                          : () {},
-                                    );
-                                  },
-                                ),
+                                  GridView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    gridDelegate:
+                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 2,
+                                          mainAxisSpacing: 8,
+                                          crossAxisSpacing: 8,
+                                          mainAxisExtent: 72,
+                                        ),
+                                    itemCount:
+                                        state.midtransPaymentMethods.length,
+                                    itemBuilder: (context, index) {
+                                      final method =
+                                          state.midtransPaymentMethods[index];
+                                      final isSelected =
+                                          state.selectedMidtransMethod ==
+                                          method.code;
+                                      return _midtransMethodCard(
+                                        method: method,
+                                        selected: isSelected,
+                                        onTap: method.available
+                                            ? () => context
+                                                  .read<
+                                                    ReservationDetailFormBloc
+                                                  >()
+                                                  .add(
+                                                    SelectedMidtransMethodChanged(
+                                                      isSelected
+                                                          ? null
+                                                          : method.code,
+                                                    ),
+                                                  )
+                                            : () {},
+                                      );
+                                    },
+                                  ),
                               ] else if (state.paymentMethod == 'tunai') ...[
                                 const SizedBox(height: 16),
                                 Container(
@@ -594,7 +676,7 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                               children: [
                                 const Text('Total Biaya'),
                                 Text(
-                                  'Rp ${state.totalPrice}',
+                                  'Rp ${NumberFormat.decimalPattern('id').format(state.totalPrice).replaceAll(',', '.')}',
                                   style: const TextStyle(
                                     color: Colors.blue,
                                     fontWeight: FontWeight.bold,
@@ -720,7 +802,10 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
               'Mulai',
               DateFormat('dd/MM/yyyy').format(state.startDate!),
             ),
-            _infoRow('Total', 'Rp ${state.totalPrice}'),
+            _infoRow(
+              'Total',
+              'Rp ${NumberFormat.decimalPattern('id').format(state.totalPrice).replaceAll(',', '.')}',
+            ),
             _infoRow(
               'Metode',
               state.paymentMethod == 'online'
@@ -778,49 +863,70 @@ Widget _rentCard({
   required bool selected,
   required VoidCallback onTap,
 }) {
-  return HoverTapWrapper(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(12),
-    hoverColor: Colors.blue.withOpacity(0.05),
-    child: Container(
-      constraints: const BoxConstraints(minWidth: 260, maxWidth: 358),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: selected ? Colors.blue.shade50 : Colors.white,
+  return Builder(
+    builder: (context) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return HoverTapWrapper(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: selected ? Colors.blue : Colors.grey.shade300,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        hoverColor: Colors.blue.withOpacity(0.05),
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 260, maxWidth: 358),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: selected
+                ? (isDark ? Colors.blue.withOpacity(0.15) : Colors.blue.shade50)
+                : (isDark
+                      ? Theme.of(context).colorScheme.surface
+                      : Colors.white),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected
+                  ? Colors.blue
+                  : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              Icon(
-                selected ? Icons.radio_button_checked : Icons.radio_button_off,
-                color: selected ? Colors.blue : Colors.grey,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Icon(
+                    selected
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_off,
+                    color: selected
+                        ? Colors.blue
+                        : (isDark ? Colors.grey.shade500 : Colors.grey),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                price,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: selected ? Colors.blue : Colors.green,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            price,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: selected ? Colors.blue : Colors.green,
-            ),
-          ),
-        ],
-      ),
-    ),
+        ),
+      );
+    },
   );
 }
 
@@ -832,60 +938,70 @@ Widget paymentMethodCard({
   required bool selected,
   required VoidCallback onTap,
 }) {
-  return HoverTapWrapper(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(12),
-    hoverColor: Colors.blue.withOpacity(0.05),
-
-    child: Container(
-      constraints: const BoxConstraints(minWidth: 260, maxWidth: 358),
-
-      padding: const EdgeInsets.all(16),
-
-      decoration: BoxDecoration(
-        color: selected ? Colors.blue.shade50 : Colors.white,
-
+  return Builder(
+    builder: (context) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return HoverTapWrapper(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-
-        border: Border.all(
-          color: selected ? Colors.blue : Colors.grey.shade300,
-        ),
-      ),
-
-      child: Row(
-        children: [
-          Icon(icon, color: selected ? Colors.blue : Colors.grey),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-
-                const SizedBox(height: 4),
-
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                ),
-              ],
+        hoverColor: Colors.blue.withOpacity(0.05),
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 260, maxWidth: 358),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: selected
+                ? (isDark ? Colors.blue.withOpacity(0.15) : Colors.blue.shade50)
+                : (isDark
+                      ? Theme.of(context).colorScheme.surface
+                      : Colors.white),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected
+                  ? Colors.blue
+                  : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
             ),
           ),
-
-          Icon(
-            selected ? Icons.radio_button_checked : Icons.radio_button_off,
-
-            color: selected ? Colors.blue : Colors.grey,
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: selected
+                    ? Colors.blue
+                    : (isDark ? Colors.grey.shade400 : Colors.grey),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                selected ? Icons.radio_button_checked : Icons.radio_button_off,
+                color: selected
+                    ? Colors.blue
+                    : (isDark ? Colors.grey.shade500 : Colors.grey),
+              ),
+            ],
           ),
-        ],
-      ),
-    ),
+        ),
+      );
+    },
   );
 }
 
@@ -997,10 +1113,16 @@ String _midtransSubtitle(List<MidtransMethodEntity> methods) {
   final available = methods.where((m) => !m.maintenance).toList();
   if (available.isEmpty) return 'Semua metode sedang maintenance';
   final names = available
-      .map((m) => m.label.isNotEmpty ? m.label : (_kMidtransMethodMap[m.code]?.name ?? m.code.toUpperCase()))
+      .map(
+        (m) => m.label.isNotEmpty
+            ? m.label
+            : (_kMidtransMethodMap[m.code]?.name ?? m.code.toUpperCase()),
+      )
       .take(3)
       .join(', ');
-  return available.length > 3 ? '$names, +${available.length - 3} lainnya' : names;
+  return available.length > 3
+      ? '$names, +${available.length - 3} lainnya'
+      : names;
 }
 
 /// Kartu metode pembayaran Midtrans — list-tile style, tinggi tetap 72px
@@ -1009,117 +1131,160 @@ Widget _midtransMethodCard({
   required bool selected,
   required VoidCallback onTap,
 }) {
-  final info =
-      _kMidtransMethodMap[method.code] ??
-      _MidtransMethodInfo(method.code.toUpperCase(), 'Metode Midtrans', Icons.payment);
-  final displayName = method.label.isNotEmpty ? method.label : info.name;
-  final isMaintenance = method.maintenance;
-  final isUnavailable = !method.available;
+  return Builder(
+    builder: (context) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final info =
+          _kMidtransMethodMap[method.code] ??
+          _MidtransMethodInfo(
+            method.code.toUpperCase(),
+            'Metode Midtrans',
+            Icons.payment,
+          );
+      final displayName = method.label.isNotEmpty ? method.label : info.name;
+      final isMaintenance = method.maintenance;
+      final isUnavailable = !method.available;
 
-  return Opacity(
-    opacity: isUnavailable ? 0.5 : 1.0,
-    child: HoverTapWrapper(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(10),
-      hoverColor: isUnavailable ? Colors.transparent : Colors.blue.withValues(alpha: 0.04),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        decoration: BoxDecoration(
-          color: selected ? Colors.blue.shade50 : Colors.white,
+      return Opacity(
+        opacity: isUnavailable ? 0.5 : 1.0,
+        child: HoverTapWrapper(
+          onTap: onTap,
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: selected ? Colors.blue : Colors.grey.shade300,
-            width: selected ? 1.5 : 1.0,
-          ),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: Colors.blue.withValues(alpha: 0.12),
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // Ikon
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: selected
-                      ? Colors.blue.withValues(alpha: 0.12)
-                      : Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Icon(
-                  info.icon,
-                  size: 20,
-                  color: selected ? Colors.blue : Colors.grey.shade500,
-                ),
+          hoverColor: isUnavailable
+              ? Colors.transparent
+              : Colors.blue.withValues(alpha: 0.04),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            decoration: BoxDecoration(
+              color: selected
+                  ? (isDark
+                        ? Colors.blue.withOpacity(0.15)
+                        : Colors.blue.shade50)
+                  : (isDark
+                        ? Theme.of(context).colorScheme.surface
+                        : Colors.white),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: selected
+                    ? Colors.blue
+                    : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                width: selected ? 1.5 : 1.0,
               ),
-              const SizedBox(width: 10),
-              // Nama + deskripsi
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      displayName,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12.5,
-                        height: 1.3,
-                        color: selected ? Colors.blue.shade800 : Colors.black87,
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: Colors.blue.withValues(alpha: 0.12),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
+                    ]
+                  : null,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Ikon
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? (isDark
+                                ? Colors.blue.withOpacity(0.2)
+                                : Colors.blue.withValues(alpha: 0.12))
+                          : (isDark
+                                ? Colors.grey.shade900
+                                : Colors.grey.shade100),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    const SizedBox(height: 2),
-                    if (isMaintenance)
-                      Text(
-                        'Sedang Maintenance',
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          height: 1.2,
-                          color: Colors.orange.shade600,
-                          fontWeight: FontWeight.w500,
+                    child: Icon(
+                      info.icon,
+                      size: 20,
+                      color: selected
+                          ? Colors.blue
+                          : (isDark
+                                ? Colors.grey.shade400
+                                : Colors.grey.shade500),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  // Nama + deskripsi
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          displayName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12.5,
+                            height: 1.3,
+                            color: selected
+                                ? (isDark
+                                      ? Colors.blue.shade300
+                                      : Colors.blue.shade800)
+                                : (isDark
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Colors.black87),
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      )
-                    else
-                      Text(
-                        info.desc,
-                        style: TextStyle(
-                          fontSize: 10.5,
-                          height: 1.2,
-                          color: Colors.grey.shade500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                  ],
-                ),
+                        const SizedBox(height: 2),
+                        if (isMaintenance)
+                          Text(
+                            'Sedang Maintenance',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              height: 1.2,
+                              color: Colors.orange.shade600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          )
+                        else
+                          Text(
+                            info.desc,
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              height: 1.2,
+                              color: isDark
+                                  ? Colors.grey.shade400
+                                  : Colors.grey.shade500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  if (isMaintenance)
+                    Icon(
+                      Icons.build_outlined,
+                      size: 16,
+                      color: Colors.orange.shade400,
+                    )
+                  else
+                    Icon(
+                      selected ? Icons.check_circle : Icons.circle_outlined,
+                      size: 18,
+                      color: selected
+                          ? Colors.blue
+                          : (isDark
+                                ? Colors.grey.shade700
+                                : Colors.grey.shade300),
+                    ),
+                ],
               ),
-              const SizedBox(width: 6),
-              if (isMaintenance)
-                Icon(Icons.build_outlined, size: 16, color: Colors.orange.shade400)
-              else
-                Icon(
-                  selected ? Icons.check_circle : Icons.circle_outlined,
-                  size: 18,
-                  color: selected ? Colors.blue : Colors.grey.shade300,
-                ),
-            ],
+            ),
           ),
         ),
-      ),
-    ),
+      );
+    },
   );
 }
