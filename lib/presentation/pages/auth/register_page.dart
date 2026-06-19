@@ -35,12 +35,14 @@ class RegisterPage extends StatelessWidget {
       context.read<AuthBloc>().add(const ToggleObscureTextEvent());
     });
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
       appBar: CustomAppbar(
-        icon: Icon(Icons.arrow_back, color: Colors.black),
+        icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
         title: 'Kembali',
       ),
-      backgroundColor: Colors.grey.shade300,
+      backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.grey.shade300,
       body: Stack(
         children: [
           Align(
@@ -66,7 +68,7 @@ class RegisterPage extends StatelessWidget {
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 30, horizontal: 40),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? Theme.of(context).colorScheme.surface : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -109,6 +111,7 @@ class RegisterPage extends StatelessWidget {
                               style: StyleConstant.customTextStyle.copyWith(
                                 fontSize: 30,
                                 fontWeight: FontWeight.w900,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                             SizedBox(height: 10),
@@ -116,6 +119,7 @@ class RegisterPage extends StatelessWidget {
                               'Daftar akun baru untuk melanjutkan',
                               style: StyleConstant.customTextStyle.copyWith(
                                 fontSize: 16,
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
                               ),
                             ),
                             SizedBox(height: 30),
@@ -261,12 +265,14 @@ class RegisterPage extends StatelessWidget {
                                   : 'Register',
                             ),
                             SizedBox(height: 30),
-                            Row(
+                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
                                   'Sudah punya akun?',
-                                  style: StyleConstant.customTextStyle,
+                                  style: StyleConstant.customTextStyle.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurface,
+                                  ),
                                 ),
                                 TextButton(
                                   onPressed: () {

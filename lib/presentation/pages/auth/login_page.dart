@@ -51,10 +51,11 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.grey.shade300,
+      backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.grey.shade300,
       appBar: CustomAppbar(
-        icon: Icon(Icons.arrow_back, color: Colors.black),
+        icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
         title: 'Kembali',
       ),
       body: Stack(
@@ -70,6 +71,7 @@ class _LoginPageState extends State<LoginPage> {
                     style: StyleConstant.customTextStyle.copyWith(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -82,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 30, horizontal: 40),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? Theme.of(context).colorScheme.surface : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -121,6 +123,7 @@ class _LoginPageState extends State<LoginPage> {
                           style: StyleConstant.customTextStyle.copyWith(
                             fontSize: 30,
                             fontWeight: FontWeight.w900,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                         SizedBox(height: 10),
@@ -128,6 +131,7 @@ class _LoginPageState extends State<LoginPage> {
                           'Masukkan Email dan Password untuk melanjutkan',
                           style: StyleConstant.customTextStyle.copyWith(
                             fontSize: 16,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
                           ),
                         ),
                         SizedBox(height: 40),
@@ -200,7 +204,9 @@ class _LoginPageState extends State<LoginPage> {
                           children: [
                             Text(
                               'Belum punya akun?',
-                              style: StyleConstant.customTextStyle,
+                              style: StyleConstant.customTextStyle.copyWith(
+                                color: Theme.of(context).colorScheme.onSurface,
+                              ),
                             ),
                             TextButton(
                               onPressed: () {
