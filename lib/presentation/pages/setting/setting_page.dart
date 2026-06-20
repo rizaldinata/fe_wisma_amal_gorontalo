@@ -1,14 +1,17 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:intl/intl.dart';
 
 import '../../../core/dependency_injection/dependency_injection.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../domain/entity/setting/bank_account_entity.dart';
+import '../../../domain/entity/setting/midtrans_fee_config_entity.dart';
 import '../../../domain/entity/setting/midtrans_method_entity.dart';
 import '../../bloc/bank_account/bank_account_cubit.dart';
+import '../../bloc/midtrans_fee/midtrans_fee_cubit.dart';
 import '../../bloc/payment_method_setting/payment_method_setting_cubit.dart';
 import '../../bloc/setting/setting_bloc.dart';
 import '../../bloc/setting/setting_event.dart';
@@ -28,6 +31,7 @@ class _SettingPageState extends State<SettingPage> {
   late SettingBloc _bloc;
   late PaymentMethodSettingCubit _paymentCubit;
   late BankAccountCubit _bankAccountCubit;
+  late MidtransFeeCubit _midtransFeeCubit;
 
   final _wismaNameController = TextEditingController();
   bool _featureDailyRental = false;
@@ -50,6 +54,8 @@ class _SettingPageState extends State<SettingPage> {
     _paymentCubit.load();
     _bankAccountCubit = serviceLocator.get<BankAccountCubit>();
     _bankAccountCubit.load();
+    _midtransFeeCubit = serviceLocator.get<MidtransFeeCubit>();
+    _midtransFeeCubit.load();
   }
 
   @override
@@ -57,6 +63,7 @@ class _SettingPageState extends State<SettingPage> {
     _wismaNameController.dispose();
     _paymentCubit.close();
     _bankAccountCubit.close();
+    _midtransFeeCubit.close();
     super.dispose();
   }
 
@@ -135,6 +142,7 @@ class _SettingPageState extends State<SettingPage> {
         BlocProvider.value(value: _bloc),
         BlocProvider.value(value: _paymentCubit),
         BlocProvider.value(value: _bankAccountCubit),
+        BlocProvider.value(value: _midtransFeeCubit),
       ],
       child: BlocConsumer<SettingBloc, SettingState>(
         listener: (context, state) {
@@ -255,6 +263,15 @@ class _SettingPageState extends State<SettingPage> {
                             title: 'Metode Pembayaran Midtrans',
                             subtitle: 'Pilih metode yang tersedia untuk penghuni. Toggle tersimpan otomatis.',
                             child: _buildPaymentMethods(isDark),
+                          ),
+                          const SizedBox(height: AppSpacing.xl),
+                          _SectionCard(
+                            isDark: isDark,
+                            icon: Icons.percent_rounded,
+                            accentColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
+                            title: 'Biaya Transaksi Midtrans',
+                            subtitle: 'Atur siapa yang menanggung biaya transaksi dan besaran tarifnya.',
+                            child: _buildMidtransFeeSetting(isDark),
                           ),
                         ],
 
@@ -756,6 +773,64 @@ class _SettingPageState extends State<SettingPage> {
     );
   }
 
+  Widget _buildMidtransFeeSetting(bool isDark) {
+    final cancelColor = isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
+    final doneColor   = isDark ? AppColorsDark.statusDone      : AppColorsLight.statusDone;
+    final doneBg      = isDark ? AppColorsDark.statusDoneBg    : AppColorsLight.statusDoneBg;
+
+    return BlocConsumer<MidtransFeeCubit, MidtransFeeState>(
+      listener: (context, state) {
+        if (state is MidtransFeeSaved) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Row(children: [
+              Icon(Icons.check_circle, color: doneColor, size: 18),
+              const SizedBox(width: 10),
+              Text('Pengaturan biaya Midtrans disimpan', style: TextStyle(color: doneColor)),
+            ]),
+            backgroundColor: doneBg,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+            margin: const EdgeInsets.all(AppSpacing.lg),
+            duration: const Duration(seconds: 2),
+          ));
+        } else if (state is MidtransFeeError) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Row(children: [
+              Icon(Icons.error_outline, color: cancelColor, size: 18),
+              const SizedBox(width: 10),
+              Expanded(child: Text('Gagal: ${state.message}', style: TextStyle(color: cancelColor))),
+            ]),
+            backgroundColor: isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+            margin: const EdgeInsets.all(AppSpacing.lg),
+          ));
+        }
+      },
+      builder: (context, state) {
+        if (state is MidtransFeeInitial || state is MidtransFeeLoading) {
+          return const Center(child: Padding(padding: EdgeInsets.all(AppSpacing.lg), child: CircularProgressIndicator()));
+        }
+        if (state is MidtransFeeError) {
+          return Text('Gagal memuat: ${state.message}', style: TextStyle(color: cancelColor));
+        }
+
+        final config = state is MidtransFeeLoaded ? state.config
+                     : state is MidtransFeeSaving ? state.config
+                     : state is MidtransFeeSaved  ? state.config
+                     : null;
+        if (config == null) return const SizedBox.shrink();
+
+        return _MidtransFeeSettingBody(
+          isDark: isDark,
+          config: config,
+          isSaving: state is MidtransFeeSaving,
+          cubit: context.read<MidtransFeeCubit>(),
+        );
+      },
+    );
+  }
+
   Widget _buildPaymentMethods(bool isDark) {
     final warningColor = isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
     final warningBg = isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg;
@@ -1010,6 +1085,508 @@ class _FeatureToggle extends StatelessWidget {
           const SizedBox(width: AppSpacing.md),
           Switch(value: value, onChanged: onChanged, activeColor: accentColor),
         ]),
+      ),
+    );
+  }
+}
+
+class _MidtransFeeSettingBody extends StatefulWidget {
+  final bool isDark;
+  final MidtransFeeConfigEntity config;
+  final bool isSaving;
+  final MidtransFeeCubit cubit;
+
+  const _MidtransFeeSettingBody({
+    required this.isDark,
+    required this.config,
+    required this.isSaving,
+    required this.cubit,
+  });
+
+  @override
+  State<_MidtransFeeSettingBody> createState() => _MidtransFeeSettingBodyState();
+}
+
+class _MidtransFeeSettingBodyState extends State<_MidtransFeeSettingBody> {
+  late Map<String, TextEditingController> _controllers;
+  final TextEditingController _simulationCtrl = TextEditingController(text: '100000');
+
+  @override
+  void initState() {
+    super.initState();
+    _controllers = _buildControllers(widget.config);
+    _simulationCtrl.addListener(() => setState(() {}));
+  }
+
+  @override
+  void didUpdateWidget(_MidtransFeeSettingBody old) {
+    super.didUpdateWidget(old);
+    // Update controller values when config changes (e.g. after save), but only
+    // if the fee list changed (different keys or a new bearer-change reload).
+    final oldKeys = old.config.fees.map((f) => f.key).join(',');
+    final newKeys = widget.config.fees.map((f) => f.key).join(',');
+    if (oldKeys != newKeys) {
+      _disposeControllers();
+      _controllers = _buildControllers(widget.config);
+    }
+  }
+
+  @override
+  void dispose() {
+    _disposeControllers();
+    _simulationCtrl.dispose();
+    super.dispose();
+  }
+
+  Map<String, TextEditingController> _buildControllers(MidtransFeeConfigEntity config) =>
+      {
+        for (final fee in config.fees)
+          fee.key: TextEditingController(
+            text: fee.type == 'flat'
+                ? (fee.amount?.toStringAsFixed(0) ?? '0')
+                : (fee.rate?.toString() ?? '0'),
+          ),
+      };
+
+  void _disposeControllers() {
+    for (final ctrl in _controllers.values) {
+      ctrl.dispose();
+    }
+  }
+
+  MidtransFeeConfigEntity _buildUpdatedConfig(String bearer) {
+    final newFees = widget.config.fees.map((fee) {
+      final raw = double.tryParse(_controllers[fee.key]?.text ?? '') ?? 0;
+      return MidtransFeeItemEntity(
+        key: fee.key, label: fee.label, type: fee.type,
+        amount: fee.type == 'flat' ? raw : null,
+        rate:   fee.type == 'percent' ? raw : null,
+      );
+    }).toList();
+    return MidtransFeeConfigEntity(bearer: bearer, fees: newFees);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark        = widget.isDark;
+    final config        = widget.config;
+    final isSaving      = widget.isSaving;
+    final cubit         = widget.cubit;
+
+    final surfaceVariant = isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant;
+    final borderColor    = isDark ? AppColorsDark.borderLight    : AppColorsLight.borderLight;
+    final textPrimary    = isDark ? AppColorsDark.textPrimary    : AppColorsLight.textPrimary;
+    final textSecondary  = isDark ? AppColorsDark.textSecondary  : AppColorsLight.textSecondary;
+    final textHint       = isDark ? AppColorsDark.textHint       : AppColorsLight.textHint;
+    final primaryColor   = isDark ? AppColorsDark.primary        : AppColorsLight.primary;
+    final warningColor   = isDark ? AppColorsDark.statusWaiting  : AppColorsLight.statusWaiting;
+    final warningBg      = isDark ? AppColorsDark.statusWaitingBg: AppColorsLight.statusWaitingBg;
+
+    final isCustomer = config.isCustomerBearer;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // ── Pilihan bearer ─────────────────────────────────────────────
+        Text('Biaya ditanggung oleh',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textSecondary)),
+        const SizedBox(height: AppSpacing.sm),
+        Row(children: [
+          _BearerOption(
+            isDark: isDark,
+            label: 'Wisma (Merchant)',
+            description: 'Biaya dipotong dari penerimaan wisma. Penghuni bayar sesuai tagihan.',
+            icon: Icons.store_outlined,
+            selected: !isCustomer,
+            accentColor: primaryColor,
+            onTap: isSaving ? null : () => cubit.save(_buildUpdatedConfig('merchant')),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          _BearerOption(
+            isDark: isDark,
+            label: 'Penghuni',
+            description: 'Biaya ditambahkan ke tagihan penghuni saat checkout.',
+            icon: Icons.person_outline,
+            selected: isCustomer,
+            accentColor: warningColor,
+            onTap: isSaving ? null : () => cubit.save(_buildUpdatedConfig('customer')),
+          ),
+        ]),
+
+        if (isCustomer) ...[
+          const SizedBox(height: AppSpacing.xl),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
+            decoration: BoxDecoration(
+              color: warningBg,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+              border: Border.all(color: warningColor.withOpacity(0.4)),
+            ),
+            child: Row(children: [
+              Icon(Icons.info_outline, size: 16, color: warningColor),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(child: Text(
+                'Biaya akan ditambahkan ke tagihan penghuni saat memilih metode pembayaran online.',
+                style: TextStyle(fontSize: 12, color: warningColor, height: 1.4),
+              )),
+            ]),
+          ),
+        ],
+
+        // ── Tabel tarif ────────────────────────────────────────────────
+        const SizedBox(height: AppSpacing.xl),
+        Row(children: [
+          Expanded(
+            child: Text('Tarif Biaya per Metode',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textSecondary)),
+          ),
+        ]),
+        const SizedBox(height: AppSpacing.sm),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
+          decoration: BoxDecoration(
+            color: isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            border: Border.all(
+              color: (isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.verified_outlined, size: 15,
+                  color: isDark ? AppColorsDark.primary : AppColorsLight.primary),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: RichText(
+                  text: TextSpan(
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: textSecondary,
+                        height: 1.45),
+                    children: [
+                      const TextSpan(
+                          text: 'Tarif di bawah sesuai ketentuan resmi Midtrans. '),
+                      TextSpan(
+                          text: 'Jangan ubah kecuali ada pembaruan tarif dari Midtrans.',
+                          style: TextStyle(
+                              fontWeight: FontWeight.w700,
+                              color: isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: AppSpacing.sm),
+        Container(
+          decoration: BoxDecoration(
+            color: surfaceVariant,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+            border: Border.all(color: borderColor),
+          ),
+          child: Column(
+            children: config.fees.asMap().entries.map((entry) {
+              final index  = entry.key;
+              final fee    = entry.value;
+              final ctrl   = _controllers[fee.key]!;
+              final isLast = index == config.fees.length - 1;
+
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
+                    child: Row(children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(fee.label,
+                                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textPrimary)),
+                            Text(fee.type == 'flat' ? 'Flat per transaksi' : 'Persentase dari nominal',
+                                style: TextStyle(fontSize: 11, color: textHint)),
+                          ],
+                        ),
+                      ),
+                      SizedBox(
+                        width: 120,
+                        child: TextField(
+                          controller: ctrl,
+                          enabled: !isSaving,
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          textAlign: TextAlign.right,
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textPrimary),
+                          decoration: InputDecoration(
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: AppSpacing.sm, vertical: AppSpacing.sm),
+                            suffixText: fee.type == 'flat' ? 'Rp' : '%',
+                            suffixStyle: TextStyle(fontSize: 12, color: textHint),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                              borderSide: BorderSide(color: borderColor),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
+                              borderSide: BorderSide(color: borderColor),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ]),
+                  ),
+                  if (!isLast) Divider(height: 1, color: borderColor),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+
+        const SizedBox(height: AppSpacing.lg),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: isSaving ? null : () => cubit.save(_buildUpdatedConfig(config.bearer)),
+            icon: isSaving
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.save_outlined, size: 18),
+            label: Text(isSaving ? 'Menyimpan...' : 'Simpan Tarif'),
+          ),
+        ),
+
+        // ── Simulasi biaya ─────────────────────────────────────────────
+        const SizedBox(height: AppSpacing.xl),
+        Divider(color: borderColor),
+        const SizedBox(height: AppSpacing.lg),
+        Row(children: [
+          Icon(Icons.calculate_outlined, size: 16, color: textSecondary),
+          const SizedBox(width: AppSpacing.sm),
+          Text('Simulasi Biaya',
+              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textSecondary)),
+        ]),
+        const SizedBox(height: AppSpacing.sm),
+        Text(
+          'Masukkan nominal untuk melihat perkiraan biaya yang ditanggung dan uang yang diterima.',
+          style: TextStyle(fontSize: 11, color: textHint, height: 1.4),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        TextField(
+          controller: _simulationCtrl,
+          keyboardType: TextInputType.number,
+          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textPrimary),
+          decoration: InputDecoration(
+            labelText: 'Nominal Pembayaran',
+            prefixText: 'Rp ',
+            prefixStyle: TextStyle(fontSize: 14, color: textSecondary),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              borderSide: BorderSide(color: borderColor),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              borderSide: BorderSide(color: borderColor),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.md),
+        _buildSimulationTable(config, isCustomer, textPrimary, textSecondary, textHint, borderColor, surfaceVariant, primaryColor, warningColor, isDark),
+      ],
+    );
+  }
+
+  Widget _buildSimulationTable(
+    MidtransFeeConfigEntity config,
+    bool isCustomer,
+    Color textPrimary,
+    Color textSecondary,
+    Color textHint,
+    Color borderColor,
+    Color surfaceVariant,
+    Color primaryColor,
+    Color warningColor,
+    bool isDark,
+  ) {
+    final fmt = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    final nominal = double.tryParse(_simulationCtrl.text.replaceAll('.', '').replaceAll(',', '')) ?? 0;
+
+    if (nominal <= 0) {
+      return Container(
+        padding: const EdgeInsets.all(AppSpacing.md),
+        decoration: BoxDecoration(
+          color: surfaceVariant,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(color: borderColor),
+        ),
+        child: Center(
+          child: Text('Masukkan nominal di atas untuk melihat simulasi.',
+              style: TextStyle(fontSize: 12, color: textHint)),
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: surfaceVariant,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: (isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight).withOpacity(0.5),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(AppSpacing.radiusMd)),
+            ),
+            child: Row(children: [
+              Expanded(flex: 3, child: Text('Metode',
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: textSecondary))),
+              Expanded(flex: 3, child: Text('Biaya',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: textSecondary))),
+              Expanded(flex: 4, child: Text('Dibayar Penghuni',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
+                      color: isCustomer ? warningColor : textSecondary))),
+              Expanded(flex: 4, child: Text('Diterima Wisma',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
+                      color: primaryColor))),
+            ]),
+          ),
+          ...config.fees.asMap().entries.map((entry) {
+            final index  = entry.key;
+            final fee    = entry.value;
+            final isLast = index == config.fees.length - 1;
+
+            final rawVal  = double.tryParse(_controllers[fee.key]?.text ?? '') ?? 0;
+            final feeAmt  = fee.type == 'flat' ? rawVal : (nominal * rawVal / 100).roundToDouble();
+            final customerPays  = isCustomer ? nominal + feeAmt : nominal;
+            final adminReceives = isCustomer ? nominal           : nominal - feeAmt;
+
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: 10),
+                  child: Row(children: [
+                    Expanded(flex: 3, child: Text(fee.label,
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: textPrimary))),
+                    Expanded(flex: 3, child: Text(fmt.format(feeAmt),
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 11, color: textHint))),
+                    Expanded(flex: 4, child: Text(fmt.format(customerPays),
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: isCustomer ? warningColor : textPrimary))),
+                    Expanded(flex: 4, child: Text(fmt.format(adminReceives),
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: primaryColor))),
+                  ]),
+                ),
+                if (!isLast) Divider(height: 1, color: borderColor),
+              ],
+            );
+          }),
+          // Footer note
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm),
+            decoration: BoxDecoration(
+              color: (isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight).withOpacity(0.3),
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(AppSpacing.radiusMd)),
+            ),
+            child: Row(children: [
+              Icon(Icons.info_outline, size: 12, color: textHint),
+              const SizedBox(width: 4),
+              Expanded(child: Text(
+                isCustomer
+                    ? 'Bearer: Penghuni — biaya ditambahkan ke tagihan. Wisma menerima penuh ${fmt.format(nominal)}.'
+                    : 'Bearer: Wisma — penghuni bayar ${fmt.format(nominal)}, selisih biaya ditanggung wisma.',
+                style: TextStyle(fontSize: 10, color: textHint, height: 1.3),
+              )),
+            ]),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BearerOption extends StatelessWidget {
+  final bool isDark;
+  final String label;
+  final String description;
+  final IconData icon;
+  final bool selected;
+  final Color accentColor;
+  final VoidCallback? onTap;
+
+  const _BearerOption({
+    required this.isDark,
+    required this.label,
+    required this.description,
+    required this.icon,
+    required this.selected,
+    required this.accentColor,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final surfaceVariant = isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant;
+    final borderColor    = isDark ? AppColorsDark.borderLight    : AppColorsLight.borderLight;
+    final textPrimary    = isDark ? AppColorsDark.textPrimary    : AppColorsLight.textPrimary;
+    final textSecondary  = isDark ? AppColorsDark.textSecondary  : AppColorsLight.textSecondary;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(
+            color: selected ? accentColor.withOpacity(0.08) : surfaceVariant,
+            borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            border: Border.all(
+              color: selected ? accentColor.withOpacity(0.5) : borderColor,
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(children: [
+                Icon(icon, size: 16, color: selected ? accentColor : textSecondary),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(label,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: selected ? accentColor : textPrimary,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                if (selected)
+                  Icon(Icons.check_circle, size: 14, color: accentColor),
+              ]),
+              const SizedBox(height: 4),
+              Text(description,
+                style: TextStyle(fontSize: 10, color: textSecondary, height: 1.3),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

@@ -62,6 +62,8 @@ import 'package:frontend/domain/usecase/finance/get_available_payment_methods_us
 import 'package:frontend/domain/usecase/setting/create_bank_account_usecase.dart';
 import 'package:frontend/domain/usecase/setting/delete_bank_account_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_bank_accounts_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_midtrans_fee_config_usecase.dart';
+import 'package:frontend/domain/usecase/setting/update_midtrans_fee_config_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_payment_methods_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_public_bank_accounts_usecase.dart';
 import 'package:frontend/domain/usecase/setting/update_bank_account_usecase.dart';
@@ -262,6 +264,12 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => DeleteBankAccountUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetMidtransFeeConfigUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateMidtransFeeConfigUseCase(serviceLocator.get<SettingRepository>()),
   );
 
   // Maintenance UseCases

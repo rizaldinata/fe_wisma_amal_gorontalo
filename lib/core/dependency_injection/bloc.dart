@@ -118,6 +118,9 @@ import 'package:frontend/presentation/bloc/bank_account/bank_account_cubit.dart'
 import 'package:frontend/presentation/bloc/payment_method_setting/payment_method_setting_cubit.dart';
 import 'package:frontend/domain/usecase/finance/get_midtrans_monitoring_usecase.dart';
 import 'package:frontend/presentation/bloc/midtrans_monitoring/midtrans_monitoring_cubit.dart';
+import 'package:frontend/domain/usecase/setting/get_midtrans_fee_config_usecase.dart';
+import 'package:frontend/domain/usecase/setting/update_midtrans_fee_config_usecase.dart';
+import 'package:frontend/presentation/bloc/midtrans_fee/midtrans_fee_cubit.dart';
 import 'package:frontend/domain/usecase/finance/get_fixed_expenses_usecase.dart';
 import 'package:frontend/domain/usecase/finance/update_fixed_expense_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_fixed_expense_status_usecase.dart';
@@ -402,6 +405,12 @@ Future<void> initializeBloc() async {
   serviceLocator.registerFactory<MidtransMonitoringCubit>(
     () => MidtransMonitoringCubit(
       getUseCase: serviceLocator.get<GetMidtransMonitoringUseCase>(),
+    ),
+  );
+  serviceLocator.registerFactory<MidtransFeeCubit>(
+    () => MidtransFeeCubit(
+      getUseCase: serviceLocator.get<GetMidtransFeeConfigUseCase>(),
+      updateUseCase: serviceLocator.get<UpdateMidtransFeeConfigUseCase>(),
     ),
   );
   serviceLocator.registerFactory<FixedExpenseBloc>(

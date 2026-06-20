@@ -121,6 +121,9 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
         status: MemberFinanceStatus.paymentSuccess,
         snapToken: payment.snapToken,
         paymentData: payment.paymentData,
+        paymentGrossAmount: payment.grossAmount,
+        paymentMidtransFee: payment.midtransFee,
+        paymentFeeBearer: payment.feeBearer,
       ));
       if (event.paymentMethod == 'manual') {
         add(FetchMemberInvoices());
@@ -156,6 +159,9 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
           paymentData: payment.paymentData,
           paymentInvoiceId: payment.invoiceId,
           paymentAmount: payment.amount,
+          paymentGrossAmount: payment.grossAmount,
+          paymentMidtransFee: payment.midtransFee,
+          paymentFeeBearer: payment.feeBearer,
         ));
       } else {
         emit(state.copyWith(status: MemberFinanceStatus.extensionSuccess));

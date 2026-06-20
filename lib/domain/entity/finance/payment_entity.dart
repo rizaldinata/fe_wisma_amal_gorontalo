@@ -8,6 +8,9 @@ class PaymentEntity {
   final String status;
   final String? adminNotes;
   final double amount;
+  final int midtransFee;
+  final String? feeBearer;
+  final double grossAmount;
   final String paymentDate;
   final String? snapToken;
   final Map<String, dynamic>? paymentData;
@@ -25,11 +28,14 @@ class PaymentEntity {
     required this.status,
     this.adminNotes,
     required this.amount,
+    this.midtransFee = 0,
+    this.feeBearer,
+    double? grossAmount,
     required this.paymentDate,
     this.snapToken,
     this.paymentData,
     this.residentName,
     this.roomNumber,
     this.updatedAt,
-  });
+  }) : grossAmount = grossAmount ?? amount;
 }

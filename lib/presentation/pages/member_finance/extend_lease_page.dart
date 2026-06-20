@@ -232,11 +232,14 @@ class _ExtendLeasePageState extends State<ExtendLeasePage> {
           if (state.status == MemberFinanceStatus.paymentSuccess) {
             // Navigasi ke halaman pembayaran dengan data yang sudah ada
             context.router.push(ExtendLeasePaymentRoute(
-              invoiceId:   state.paymentInvoiceId ?? 0,
-              roomNumber:  widget.roomNumber,
-              amount:      state.paymentAmount ?? 0,
-              snapToken:   state.snapToken,
-              paymentData: state.paymentData,
+              invoiceId:    state.paymentInvoiceId ?? 0,
+              roomNumber:   widget.roomNumber,
+              amount:       state.paymentGrossAmount ?? state.paymentAmount ?? 0,
+              baseAmount:   state.paymentAmount ?? 0,
+              midtransFee:  state.paymentMidtransFee ?? 0,
+              feeBearer:    state.paymentFeeBearer,
+              snapToken:    state.snapToken,
+              paymentData:  state.paymentData,
             ));
           } else if (state.status == MemberFinanceStatus.extensionSuccess) {
             // Manual yang tidak perlu halaman pembayaran (sudah selesai langsung)

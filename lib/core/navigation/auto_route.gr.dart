@@ -372,6 +372,9 @@ class ExtendLeasePaymentRoute
     required int invoiceId,
     required String roomNumber,
     required double amount,
+    double? baseAmount,
+    int midtransFee = 0,
+    String? feeBearer,
     String? snapToken,
     Map<String, dynamic>? paymentData,
     List<_i47.PageRouteInfo>? children,
@@ -382,6 +385,9 @@ class ExtendLeasePaymentRoute
            invoiceId: invoiceId,
            roomNumber: roomNumber,
            amount: amount,
+           baseAmount: baseAmount,
+           midtransFee: midtransFee,
+           feeBearer: feeBearer,
            snapToken: snapToken,
            paymentData: paymentData,
          ),
@@ -399,6 +405,9 @@ class ExtendLeasePaymentRoute
         invoiceId: args.invoiceId,
         roomNumber: args.roomNumber,
         amount: args.amount,
+        baseAmount: args.baseAmount,
+        midtransFee: args.midtransFee,
+        feeBearer: args.feeBearer,
         snapToken: args.snapToken,
         paymentData: args.paymentData,
       );
@@ -412,6 +421,9 @@ class ExtendLeasePaymentRouteArgs {
     required this.invoiceId,
     required this.roomNumber,
     required this.amount,
+    this.baseAmount,
+    this.midtransFee = 0,
+    this.feeBearer,
     this.snapToken,
     this.paymentData,
   });
@@ -424,13 +436,19 @@ class ExtendLeasePaymentRouteArgs {
 
   final double amount;
 
+  final double? baseAmount;
+
+  final int midtransFee;
+
+  final String? feeBearer;
+
   final String? snapToken;
 
   final Map<String, dynamic>? paymentData;
 
   @override
   String toString() {
-    return 'ExtendLeasePaymentRouteArgs{key: $key, invoiceId: $invoiceId, roomNumber: $roomNumber, amount: $amount, snapToken: $snapToken, paymentData: $paymentData}';
+    return 'ExtendLeasePaymentRouteArgs{key: $key, invoiceId: $invoiceId, roomNumber: $roomNumber, amount: $amount, baseAmount: $baseAmount, midtransFee: $midtransFee, feeBearer: $feeBearer, snapToken: $snapToken, paymentData: $paymentData}';
   }
 
   @override
@@ -441,6 +459,9 @@ class ExtendLeasePaymentRouteArgs {
         invoiceId == other.invoiceId &&
         roomNumber == other.roomNumber &&
         amount == other.amount &&
+        baseAmount == other.baseAmount &&
+        midtransFee == other.midtransFee &&
+        feeBearer == other.feeBearer &&
         snapToken == other.snapToken &&
         const _i49.MapEquality<String, dynamic>().equals(
           paymentData,
@@ -454,6 +475,9 @@ class ExtendLeasePaymentRouteArgs {
       invoiceId.hashCode ^
       roomNumber.hashCode ^
       amount.hashCode ^
+      baseAmount.hashCode ^
+      midtransFee.hashCode ^
+      feeBearer.hashCode ^
       snapToken.hashCode ^
       const _i49.MapEquality<String, dynamic>().hash(paymentData);
 }
