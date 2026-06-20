@@ -17,6 +17,7 @@ class RouteConstant {
   static const String permissionName = 'permissions';
   static const String roleName = 'roles';
   static const String settingName = 'setting';
+  static const String featureToggleName = 'setting/feature-toggles';
   static const String userManagementName = 'users';
   static const String profileName = 'profile';
   static const String editProfileName = 'edit-profile';

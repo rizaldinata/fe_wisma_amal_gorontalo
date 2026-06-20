@@ -1,5 +1,10 @@
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/core/dependency_injection/repository.dart';
+import 'package:frontend/core/dependency_injection/storage.dart';
+import 'package:frontend/core/dependency_injection/usecase.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
+import 'package:frontend/data/repository/feature_toggle_repository.dart';
+import 'package:frontend/presentation/bloc/setting/feature_toggle/feature_toggle_bloc.dart';
 import 'package:frontend/domain/usecase/auth/check_session_usecase.dart';
 import 'package:frontend/domain/usecase/auth/get_permissions_usecase.dart';
 import 'package:frontend/domain/usecase/auth/is_logged_in_usecase.dart';
@@ -410,6 +415,11 @@ Future<void> initializeBloc() async {
       updateFixedExpense: serviceLocator.get<UpdateFixedExpenseUseCase>(),
       getFixedExpenseStatus: serviceLocator.get<GetFixedExpenseStatusUseCase>(),
       generateFixedExpenses: serviceLocator.get<GenerateFixedExpensesUseCase>(),
+    ),
+  );
+  serviceLocator.registerFactory<FeatureToggleBloc>(
+    () => FeatureToggleBloc(
+      repository: serviceLocator.get<FeatureToggleRepository>(),
     ),
   );
 }

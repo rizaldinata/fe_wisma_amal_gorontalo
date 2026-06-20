@@ -228,6 +228,11 @@ class AppRouter extends RootStackRouter {
         ),
         AutoRoute(
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.featureToggleName,
+          page: FeatureToggleRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: RouteConstant.userManagementName,
           page: UserManagementRoute.page,
         ),

@@ -17,6 +17,7 @@ import 'package:frontend/data/datasource/my_reservation_remote_datasource.dart';
 import 'package:frontend/data/datasource/guest_datasource.dart';
 import 'package:frontend/data/datasource/notification_datasource.dart';
 import 'package:frontend/data/datasource/fixed_expense_datasource.dart';
+import 'package:frontend/data/datasource/feature_toggle_datasource.dart';
 
 Future<void> initializeDatasource() async {
   serviceLocator.registerFactory<AuthDatasource>(
@@ -77,5 +78,8 @@ Future<void> initializeDatasource() async {
   );
   serviceLocator.registerFactory<FixedExpenseRemoteDatasource>(
     () => FixedExpenseRemoteDatasourceImpl(serviceLocator<DioClient>()),
+  );
+  serviceLocator.registerFactory<FeatureToggleRemoteDataSource>(
+    () => FeatureToggleRemoteDataSource(serviceLocator<DioClient>()),
   );
 }

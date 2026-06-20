@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/core/navigation/auto_route.gr.dart';
+import '../../../core/constant/route_constant.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_theme.dart';
@@ -310,83 +312,59 @@ class _SettingPageState extends State<SettingPage> {
   }
 
   Widget _buildFiturSistem(bool isDark) {
-    final warningColor = isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
+    final surfaceVariant = isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant;
+    final borderColor = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+    final primaryColor = isDark ? AppColorsDark.primary : AppColorsLight.primary;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _FeatureToggle(
-          isDark: isDark,
-          icon: Icons.today_outlined,
-          accentColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
-          title: 'Sewa Harian',
-          description: 'Izinkan penghuni menyewa kamar per hari (mode hotel/kos harian). Jika dinonaktifkan, hanya sewa bulanan yang tersedia.',
-          value: _featureDailyRental,
-          onChanged: (val) { setState(() => _featureDailyRental = val); _markChanged(); },
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _FeatureToggle(
-          isDark: isDark,
-          icon: Icons.chat_outlined,
-          accentColor: isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess,
-          title: 'Notifikasi WhatsApp Struk Pembayaran',
-          description: 'Kirim pesan WhatsApp otomatis ke penghuni setiap kali pembayaran berhasil diverifikasi oleh admin.',
-          value: _featureWhatsappReceipt,
-          onChanged: (val) { setState(() => _featureWhatsappReceipt = val); _markChanged(); },
-        ),
-        const SizedBox(height: AppSpacing.md),
-        _FeatureToggle(
-          isDark: isDark,
-          icon: Icons.picture_as_pdf_outlined,
-          accentColor: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled,
-          title: 'Sertakan Link PDF Invoice di WA',
-          description: 'Tambahkan link unduh invoice PDF ke dalam pesan WhatsApp struk. Membutuhkan fitur notifikasi WA aktif.',
-          value: _featureWhatsappPdfLink,
-          onChanged: _featureWhatsappReceipt
-              ? (val) { setState(() => _featureWhatsappPdfLink = val); _markChanged(); }
-              : null,
-        ),
-        if (!_featureWhatsappReceipt) ...[
-          const SizedBox(height: AppSpacing.sm),
-          Padding(
-            padding: const EdgeInsets.only(left: 52),
-            child: Text(
-              'Aktifkan "Notifikasi WhatsApp Struk" terlebih dahulu untuk menggunakan fitur ini.',
-              style: TextStyle(
-                fontSize: 11,
-                color: isDark ? AppColorsDark.textHint : AppColorsLight.textHint,
-                fontStyle: FontStyle.italic,
-              ),
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: surfaceVariant,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: borderColor),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          onTap: () {
+            context.router.push(const FeatureToggleRoute());
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.settings_suggest_outlined, color: primaryColor, size: 24),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Kelola Fitur & Modul',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      ),
+                      SizedBox(height: 4),
+                      Text(
+                        'Mengaktifkan atau menonaktifkan modul dan fitur secara granular di seluruh sistem.',
+                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: Colors.grey),
+              ],
             ),
           ),
-        ],
-        const SizedBox(height: AppSpacing.md),
-        _FeatureToggle(
-          isDark: isDark,
-          icon: Icons.account_balance_wallet_outlined,
-          accentColor: isDark ? AppColorsDark.primaryDark : AppColorsLight.primary,
-          title: 'Pembayaran Midtrans (Online)',
-          description: 'Aktifkan integrasi Midtrans untuk pembayaran melalui Virtual Account, QRIS, dan metode online lainnya.',
-          value: _featurePaymentMidtrans,
-          onChanged: (val) { setState(() => _featurePaymentMidtrans = val); _markChanged(); },
         ),
-        const SizedBox(height: AppSpacing.md),
-        _FeatureToggle(
-          isDark: isDark,
-          icon: Icons.bolt_outlined,
-          accentColor: warningColor,
-          title: 'Pengeluaran Tetap (Listrik, Air, WiFi)',
-          description: 'Aktifkan untuk mendapat pengingat mengisi nominal biaya utilitas setiap bulan. Dashboard akan menampilkan indikator "Belum Diisi" jika belum dicatat.',
-          value: _featurePengeluaranTetap,
-          onChanged: (val) {
-            setState(() {
-              _featurePengeluaranTetap = val;
-              if (!val) _jenisAktif.clear();
-            });
-            _markChanged();
-          },
-        ),
-      ],
+      ),
     );
   }
 
