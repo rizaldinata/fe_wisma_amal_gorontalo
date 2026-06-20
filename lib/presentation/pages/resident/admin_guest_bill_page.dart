@@ -16,6 +16,8 @@ import 'package:frontend/presentation/widget/core/table/app_data_table.dart';
 import 'package:frontend/presentation/widget/core/wrapper/empty_state_widget.dart';
 import 'package:frontend/presentation/widget/core/dialog/app_dialog.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
+import 'package:frontend/presentation/widget/core/botton/button.dart';
+import 'package:frontend/presentation/widget/core/textform/textfield.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shimmer/shimmer.dart';
@@ -140,42 +142,36 @@ class _AdminGuestBillViewState extends State<_AdminGuestBillView> {
                   label: const Text('Lihat Bukti Bayar'),
                 ),
               const SizedBox(height: 12),
-              TextField(
+              CustomTextField(
                 controller: notesController,
-                decoration: const InputDecoration(
-                  labelText: 'Catatan Admin (opsional)',
-                  border: OutlineInputBorder(),
-                ),
+                hintText: 'Catatan Admin (opsional)',
                 maxLines: 2,
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton.icon(
+                    child: BasicButton(
+                      type: ButtonType.secondary,
+                      foregroundColor: Colors.red,
                       onPressed: () {
                         setDialogState(() => isApproved = false);
                         Navigator.pop(ctx);
                       },
-                      icon: const Icon(Icons.close, color: Colors.red),
-                      label: const Text('Tolak',
-                          style: TextStyle(color: Colors.red)),
-                      style: OutlinedButton.styleFrom(
-                          side: const BorderSide(color: Colors.red)),
+                      leadIcon: const Icon(Icons.close, color: Colors.red, size: 18),
+                      label: 'Tolak',
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton.icon(
+                    child: BasicButton(
+                      type: ButtonType.primary,
                       onPressed: () {
                         setDialogState(() => isApproved = true);
                         Navigator.pop(ctx);
                       },
-                      icon: const Icon(Icons.check),
-                      label: const Text('Terima'),
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white),
+                      leadIcon: const Icon(Icons.check, color: Colors.white, size: 18),
+                      label: 'Terima',
                     ),
                   ),
                 ],
@@ -244,9 +240,9 @@ class _AdminGuestBillViewState extends State<_AdminGuestBillView> {
                       icon: Icons.error_outline,
                       title: 'Gagal Memuat Data',
                       subtitle: state.message,
-                      action: ElevatedButton(
+                      action: BasicButton(
                         onPressed: _reload,
-                        child: const Text('Coba Lagi'),
+                        label: 'Coba Lagi',
                       ),
                     );
                   }
@@ -278,42 +274,27 @@ class _AdminGuestBillViewState extends State<_AdminGuestBillView> {
                             DataColumn(label: Text('STATUS')),
                             DataColumn(label: Text('AKSI')),
                           ],
-                          rows: [
-                            DataRow(
+                          rows: _cache.asMap().entries.map((entry) {
+                            final index = entry.key + 1;
+                            final row = entry.value;
+                            return DataRow(
                               cells: [
-                                const DataCell(Text('1')),
-                                const DataCell(Text('INV-20231012-01')),
-                                const DataCell(Text('Ahmad', style: TextStyle(fontWeight: FontWeight.w600))),
-                                const DataCell(Text('Rina')),
-                                const DataCell(Text('Rp 150.000', style: TextStyle(fontWeight: FontWeight.w600))),
-                                const DataCell(Text('Transfer Bank')),
-                                const DataCell(StatusBadge(status: 'Lunas')),
+                                DataCell(Text('$index')),
+                                DataCell(Text(row.billNumber)),
+                                DataCell(Text(row.penghuni, style: const TextStyle(fontWeight: FontWeight.w600))),
+                                DataCell(Text(row.guestName)),
+                                DataCell(Text(_currency.format(row.amount), style: const TextStyle(fontWeight: FontWeight.w600))),
+                                DataCell(Text(row.paymentMethod ?? '-')),
+                                DataCell(StatusBadge(status: row.status)),
                                 DataCell(
                                   TextButton(
-                                    onPressed: () {},
+                                    onPressed: () => _showVerifyDialog(row),
                                     child: const Text('Detail', style: TextStyle(fontSize: 12)),
                                   ),
                                 ),
                               ],
-                            ),
-                            DataRow(
-                              cells: [
-                                const DataCell(Text('2')),
-                                const DataCell(Text('INV-20231013-02')),
-                                const DataCell(Text('Budi', style: TextStyle(fontWeight: FontWeight.w600))),
-                                const DataCell(Text('Siti')),
-                                const DataCell(Text('Rp 200.000', style: TextStyle(fontWeight: FontWeight.w600))),
-                                const DataCell(Text('-')),
-                                const DataCell(StatusBadge(status: 'Belum Lunas')),
-                                DataCell(
-                                  TextButton(
-                                    onPressed: () {},
-                                    child: const Text('Detail', style: TextStyle(fontSize: 12)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                            );
+                          }).toList(),
                         ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
 
                         // Loading more indicator

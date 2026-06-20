@@ -98,9 +98,9 @@ class ResidentItem {
 
     return ResidentItem(
       id: json['id'].toString(),
-      nama: tenantJson['name']?.toString() ?? '-',
-      kamar: roomJson['number']?.toString() ?? '-',
-      kontak: tenantJson['phone']?.toString() ?? '-',
+      nama: tenantJson['name']?.toString() ?? json['tenant_name']?.toString() ?? '-',
+      kamar: roomJson['number']?.toString() ?? json['room_number']?.toString() ?? '-',
+      kontak: tenantJson['phone']?.toString() ?? json['tenant_phone']?.toString() ?? '-',
       detailBayar: '-',
       isBelumLunas: false,
       status: status,

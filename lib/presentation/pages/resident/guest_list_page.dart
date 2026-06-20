@@ -19,6 +19,8 @@ import 'package:frontend/presentation/widget/core/table/app_data_table.dart';
 import 'package:frontend/presentation/widget/core/wrapper/empty_state_widget.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/dialog/app_dialog.dart';
+import 'package:frontend/presentation/widget/core/botton/button.dart';
+import 'package:frontend/presentation/widget/core/textform/textfield.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -163,10 +165,11 @@ class _GuestListViewState extends State<_GuestListView> {
                     }
                     return Stack(
                       children: [
-                        OutlinedButton.icon(
+                        BasicButton(
+                          type: ButtonType.secondary,
                           onPressed: _showNotificationLog,
-                          icon: const Icon(Icons.notifications_none, size: 18),
-                          label: const Text('Log Notifikasi'),
+                          leadIcon: const Icon(Icons.notifications_none, size: 18),
+                          label: 'Log Notifikasi',
                         ),
                         if (hasUnread)
                           Positioned(
@@ -185,10 +188,10 @@ class _GuestListViewState extends State<_GuestListView> {
                   },
                 ),
                 const SizedBox(width: AppSpacing.sm),
-                ElevatedButton.icon(
+                BasicButton(
                   onPressed: _showAddGuestDialog,
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Tambah Tamu'),
+                  leadIcon: const Icon(Icons.add, size: 18, color: Colors.white),
+                  label: 'Tambah Tamu',
                 ),
               ],
             ),
@@ -229,9 +232,9 @@ class _GuestListViewState extends State<_GuestListView> {
                     icon: Icons.error_outline,
                     title: 'Gagal Memuat Data',
                     subtitle: state.message,
-                    action: ElevatedButton(
+                    action: BasicButton(
                       onPressed: _reload,
-                      child: const Text('Coba Lagi'),
+                      label: 'Coba Lagi',
                     ),
                   );
                 }
@@ -261,31 +264,29 @@ class _GuestListViewState extends State<_GuestListView> {
                           DataColumn(label: Text('HUBUNGAN')),
                           DataColumn(label: Text('MASUK')),
                           DataColumn(label: Text('KELUAR')),
+                          DataColumn(label: Text('AKSI')),
                         ],
-                        rows: const [
-                          DataRow(
+                        rows: _guestCache.asMap().entries.map((entry) {
+                          final index = entry.key + 1;
+                          final row = entry.value;
+                          return DataRow(
                             cells: [
-                              DataCell(Text('1')),
-                              DataCell(Text('Ahmad', style: TextStyle(fontWeight: FontWeight.w600))),
-                              DataCell(Text('A1')),
-                              DataCell(Text('Rina')),
-                              DataCell(Text('Keluarga')),
-                              DataCell(Text('12/10/2023 10:00')),
-                              DataCell(Text('14/10/2023 10:00')),
+                              DataCell(Text('$index')),
+                              DataCell(Text(row.penghuni, style: const TextStyle(fontWeight: FontWeight.w600))),
+                              DataCell(Text(row.kamar)),
+                              DataCell(Text(row.name)),
+                              DataCell(Text(row.relationshipLabel)),
+                              DataCell(Text(_formatDateTime(row.checkInAt))),
+                              DataCell(Text(_formatDateTime(row.checkOutAt))),
+                              DataCell(
+                                TextButton(
+                                  onPressed: () => _confirmCheckout(context, row),
+                                  child: const Text('Checkout', style: TextStyle(color: Colors.red)),
+                                ),
+                              ),
                             ],
-                          ),
-                          DataRow(
-                            cells: [
-                              DataCell(Text('2')),
-                              DataCell(Text('Budi', style: TextStyle(fontWeight: FontWeight.w600))),
-                              DataCell(Text('B2')),
-                              DataCell(Text('Siti')),
-                              DataCell(Text('Teman')),
-                              DataCell(Text('13/10/2023 15:30')),
-                              DataCell(Text('13/10/2023 20:00')),
-                            ],
-                          ),
-                        ],
+                          );
+                        }).toList(),
                       ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
 
                       // Loading more indicator
@@ -600,21 +601,15 @@ class _AdminGuestDialogState extends State<_AdminGuestDialog> {
                     value == null ? 'Pilih penghuni aktif' : null,
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              CustomTextField(
                 controller: _roomController,
-                readOnly: true,
-                decoration: const InputDecoration(
-                  labelText: 'Nomor Kamar',
-                  border: OutlineInputBorder(),
-                ),
+                enabled: false,
+                hintText: 'Nomor Kamar',
               ),
               const SizedBox(height: 16),
-              TextFormField(
+              CustomTextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nama Tamu',
-                  border: OutlineInputBorder(),
-                ),
+                hintText: 'Nama Tamu',
                 validator: (v) => (v == null || v.trim().isEmpty)
                     ? 'Nama tamu tidak boleh kosong'
                     : null,
@@ -657,16 +652,18 @@ class _AdminGuestDialogState extends State<_AdminGuestDialog> {
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
+                    child: BasicButton(
+                      type: ButtonType.secondary,
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Batal'),
+                      label: 'Batal',
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton(
+                    child: BasicButton(
+                      isLoading: _isSubmitting,
                       onPressed: _isSubmitting ? null : _submit,
-                      child: const Text('Simpan'),
+                      label: 'Simpan',
                     ),
                   ),
                 ],
@@ -825,12 +822,13 @@ class _NotificationLogDialogState extends State<_NotificationLogDialog> {
                           Text(state.message,
                               style: const TextStyle(color: Colors.red)),
                           const SizedBox(height: 12),
-                          OutlinedButton.icon(
+                          BasicButton(
+                            type: ButtonType.secondary,
                             onPressed: () => context
                                 .read<NotificationLogBloc>()
                                 .add(FetchNotificationLogs()),
-                            icon: const Icon(Icons.refresh),
-                            label: const Text('Muat Ulang'),
+                            leadIcon: const Icon(Icons.refresh, size: 18),
+                            label: 'Muat Ulang',
                           ),
                         ],
                       ),

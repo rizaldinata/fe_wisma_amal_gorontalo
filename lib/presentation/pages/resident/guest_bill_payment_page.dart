@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/presentation/bloc/guest/my_guest_bloc.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
+import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:intl/intl.dart';
 
 @RoutePage()
@@ -124,26 +125,13 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
                   const SizedBox(height: 28),
                   SizedBox(
                     width: double.infinity,
-                    child: ElevatedButton.icon(
+                    child: BasicButton(
+                      isLoading: _isSubmitting,
                       onPressed: (_selectedFile == null || _isSubmitting)
                           ? null
                           : _submit,
-                      icon: _isSubmitting
-                          ? const SizedBox(
-                              width: 16,
-                              height: 16,
-                              child: CircularProgressIndicator(
-                                  strokeWidth: 2, color: Colors.white),
-                            )
-                          : const Icon(Icons.send_outlined),
-                      label: Text(_isSubmitting
-                          ? 'Mengirim...'
-                          : 'Kirim Bukti Pembayaran'),
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
-                      ),
+                      leadIcon: const Icon(Icons.send_outlined, color: Colors.white, size: 18),
+                      label: _isSubmitting ? 'Mengirim...' : 'Kirim Bukti Pembayaran',
                     ),
                   ),
                 ],
@@ -320,17 +308,11 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
               ),
             SizedBox(
               width: double.infinity,
-              child: OutlinedButton.icon(
+              child: BasicButton(
+                type: ButtonType.secondary,
                 onPressed: _pickFile,
-                icon: const Icon(Icons.upload_file_outlined),
-                label: Text(_selectedFile == null
-                    ? 'Pilih File Bukti'
-                    : 'Ganti File'),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
-                ),
+                leadIcon: Icon(Icons.upload_file_outlined, color: theme.colorScheme.primary, size: 18),
+                label: _selectedFile == null ? 'Pilih File Bukti' : 'Ganti File',
               ),
             ),
           ],

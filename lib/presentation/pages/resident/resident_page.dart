@@ -15,6 +15,7 @@ import 'package:frontend/presentation/widget/core/table/app_data_table.dart';
 import 'package:frontend/presentation/widget/core/wrapper/empty_state_widget.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'form/resident_detail_form.dart';
 
 @RoutePage()
@@ -136,7 +137,7 @@ class _ResidentViewState extends State<_ResidentView> {
                     icon: Icons.error_outline,
                     title: 'Gagal Memuat Data',
                     subtitle: state.message,
-                    action: ElevatedButton(
+                    action: BasicButton(
                       onPressed: () {
                         setState(() {
                           _currentPage = 1;
@@ -144,7 +145,7 @@ class _ResidentViewState extends State<_ResidentView> {
                         });
                         _fetchResidents();
                       },
-                      child: const Text('Coba Lagi'),
+                      label: 'Coba Lagi',
                     ),
                   );
                 }
@@ -248,52 +249,48 @@ class _ResidentViewState extends State<_ResidentView> {
 
                         const SizedBox(height: AppSpacing.lg),
 
-                        // Table
-                        AppDataTable(
-                          columns: const [
-                            DataColumn(label: Text('NO')),
-                            DataColumn(label: Text('NAMA')),
-                            DataColumn(label: Text('KAMAR')),
-                            DataColumn(label: Text('KONTAK')),
-                            DataColumn(label: Text('DETIL BAYAR')),
-                            DataColumn(label: Text('STATUS')),
-                            DataColumn(label: Text('KONTRAK')),
-                          ],
-                          rows: [
-                            DataRow(
-                              cells: [
-                                const DataCell(Text('1')),
-                                const DataCell(Text('Ahmad', style: TextStyle(fontWeight: FontWeight.w600))),
-                                const DataCell(Text('A1')),
-                                const DataCell(Text('08123456789')),
-                                const DataCell(StatusBadge(status: 'Lunas')),
-                                const DataCell(StatusBadge(status: 'Aktif')),
-                                DataCell(
-                                  TextButton(
-                                    onPressed: () {},
-                                    child: const Text('Detail'),
-                                  ),
-                                ),
-                              ],
+                        // Table or Empty State
+                        if (residentRows.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.only(top: AppSpacing.xxxl),
+                            child: EmptyStateWidget(
+                              icon: Icons.group_off_outlined,
+                              title: 'Tidak Ada Penghuni',
+                              subtitle: 'Belum ada data penghuni yang terdaftar atau sesuai filter saat ini.',
                             ),
-                            DataRow(
-                              cells: [
-                                const DataCell(Text('2')),
-                                const DataCell(Text('Budi', style: TextStyle(fontWeight: FontWeight.w600))),
-                                const DataCell(Text('B2')),
-                                const DataCell(Text('08129876543')),
-                                const DataCell(StatusBadge(status: 'Belum Lunas')),
-                                const DataCell(StatusBadge(status: 'Pending')),
-                                DataCell(
-                                  TextButton(
-                                    onPressed: () {},
-                                    child: const Text('Detail'),
+                          )
+                        else
+                          AppDataTable(
+                            columns: const [
+                              DataColumn(label: Text('NO')),
+                              DataColumn(label: Text('NAMA')),
+                              DataColumn(label: Text('KAMAR')),
+                              DataColumn(label: Text('KONTAK')),
+                              DataColumn(label: Text('DETIL BAYAR')),
+                              DataColumn(label: Text('STATUS')),
+                              DataColumn(label: Text('KONTRAK')),
+                            ],
+                            rows: residentRows.asMap().entries.map((entry) {
+                              final index = entry.key + 1;
+                              final row = entry.value;
+                              return DataRow(
+                                cells: [
+                                  DataCell(Text('$index')),
+                                  DataCell(Text(row.nama, style: const TextStyle(fontWeight: FontWeight.w600))),
+                                  DataCell(Text(row.kamar)),
+                                  DataCell(Text(row.kontak)),
+                                  DataCell(StatusBadge(status: row.detailBayar)),
+                                  DataCell(StatusBadge(status: row.status)),
+                                  DataCell(
+                                    TextButton(
+                                      onPressed: () => _showResidentDetail(context, row),
+                                      child: const Text('Detail'),
+                                    ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
+                                ],
+                              );
+                            }).toList(),
+                          ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
 
                         // Loading more indicator
                         if (_isLoadingMore)
