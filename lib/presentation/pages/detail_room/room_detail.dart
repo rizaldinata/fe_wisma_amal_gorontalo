@@ -184,24 +184,22 @@ class RoomDetailView extends StatelessWidget {
                                   ).textTheme.headlineSmall,
                                 ),
                                 const SizedBox(height: 20),
-                                SizedBox(
-                                  width: 300,
-                                  child: Wrap(
-                                    spacing: 10,
-                                    runSpacing: 10,
-                                    children:
-                                        state.room?.facilities
-                                            .map(
-                                              (facility) => CustomChip(
-                                                label: facility,
-                                                color: Theme.of(
-                                                  context,
-                                                ).colorScheme.primary,
-                                              ),
-                                            )
-                                            .toList() ??
-                                        [],
-                                  ),
+
+                                Wrap(
+                                  spacing: 10,
+                                  runSpacing: 10,
+                                  children:
+                                      state.room?.facilities
+                                          .map(
+                                            (facility) => CustomChip(
+                                              label: facility,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                            ),
+                                          )
+                                          .toList() ??
+                                      [],
                                 ),
 
                                 const SizedBox(height: 30),
@@ -217,7 +215,7 @@ class RoomDetailView extends StatelessWidget {
                                 const SizedBox(height: 20),
                                 Text(
                                   state.room?.description ?? '',
-                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.6, fontSize: 16),
                                 ),
                               ],
                             ),

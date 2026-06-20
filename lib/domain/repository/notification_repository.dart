@@ -5,4 +5,6 @@ abstract class NotificationRepository {
     int page = 1,
     int perPage = 15,
   });
+
+  Future<void> markAllNotificationLogsRead();
 }

@@ -27,6 +27,8 @@ abstract class GuestRepository {
   });
 
   Future<void> deleteGuest(int id);
+  Future<GuestItem> checkoutAdminGuest(int id);
+  Future<MyGuestItem> checkoutMyGuest(int id);
 
   // ─── Billing ─────────────────────────────────────────────────────────────
 

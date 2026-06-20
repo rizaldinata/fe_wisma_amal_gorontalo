@@ -193,6 +193,7 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                   // ─── Keuangan (Admin) ──────────────────────────────
                   if (context.can(PermissionKeys.financeDashboardView) ||
                       context.can(PermissionKeys.financeExpenseView) ||
+                      context.can(PermissionKeys.financeFixedExpenseView) ||
                       context.can(PermissionKeys.financeInvoiceView) ||
                       context.can(PermissionKeys.financePaymentVerify) ||
                       context.can(PermissionKeys.financePaymentView))
@@ -207,7 +208,8 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                             icon: Icons.dashboard_outlined,
                             page: const FinanceDashboardRoute(),
                           ),
-                        if (context.can(PermissionKeys.financeExpenseView))
+                        if (context.can(PermissionKeys.financeExpenseView) ||
+                            context.can(PermissionKeys.financeFixedExpenseView))
                           SidebarItem(
                             label: 'Pengeluaran',
                             icon: Icons.receipt_long,
@@ -221,15 +223,9 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                           ),
                         if (context.can(PermissionKeys.financePaymentVerify))
                           SidebarItem(
-                            label: 'Verifikasi Pembayaran',
-                            icon: Icons.check_circle_outline,
+                            label: 'Manajemen Pembayaran',
+                            icon: Icons.payments_outlined,
                             page: const PaymentVerificationRoute(),
-                          ),
-                        if (context.can(PermissionKeys.financePaymentView))
-                          SidebarItem(
-                            label: 'Riwayat Pembayaran',
-                            icon: Icons.history,
-                            page: const PaymentHistoryRoute(),
                           ),
                       ],
                     ),

@@ -52,30 +52,40 @@ class AppDataTable extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: DataTable(
-          columns: columns.map((col) {
-            // Apply uppercase to header text if it's a Text widget
-            if (col.label is Text) {
-              final textWidget = col.label as Text;
-              return DataColumn(
-                label: Text(
-                  textWidget.data?.toUpperCase() ?? '',
-                  style: textWidget.style,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minWidth: constraints.maxWidth),
+                child: DataTable(
+                  columns: columns.map((col) {
+                    // Apply uppercase to header text if it's a Text widget
+                    if (col.label is Text) {
+                      final textWidget = col.label as Text;
+                      return DataColumn(
+                        label: Text(
+                          textWidget.data?.toUpperCase() ?? '',
+                          style: textWidget.style,
+                        ),
+                        tooltip: col.tooltip,
+                        numeric: col.numeric,
+                        onSort: col.onSort,
+                      );
+                    }
+                    return col;
+                  }).toList(),
+                  rows: rows,
+                  showCheckboxColumn: showCheckboxColumn,
+                  dataRowMinHeight: dataRowMinHeight ?? 56,
+                  dataRowMaxHeight: dataRowMaxHeight ?? double.infinity,
+                  horizontalMargin: 16,
+                  columnSpacing: 24,
+                  headingRowHeight: 48,
                 ),
-                tooltip: col.tooltip,
-                numeric: col.numeric,
-                onSort: col.onSort,
-              );
-            }
-            return col;
-          }).toList(),
-          rows: rows,
-          showCheckboxColumn: showCheckboxColumn,
-          dataRowMinHeight: dataRowMinHeight ?? 56,
-          dataRowMaxHeight: dataRowMaxHeight ?? double.infinity,
-          horizontalMargin: 16,
-          columnSpacing: 24,
-          headingRowHeight: 48,
+              ),
+            );
+          },
         ),
       ),
     );

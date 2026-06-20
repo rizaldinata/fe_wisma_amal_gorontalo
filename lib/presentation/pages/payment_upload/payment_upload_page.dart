@@ -9,7 +9,9 @@ import 'package:intl/intl.dart';
 import '../../../core/dependency_injection/dependency_injection.dart';
 import '../../../core/navigation/auto_route.gr.dart';
 import '../../../domain/entity/reservation_entity.dart';
+import '../../../domain/entity/setting/bank_account_entity.dart';
 import '../../../domain/usecase/reservation/cancel_reservation_usecase.dart';
+import '../../../domain/usecase/setting/get_public_bank_accounts_usecase.dart';
 import '../../bloc/member_finance/member_finance_bloc.dart';
 import '../../bloc/member_finance/member_finance_event.dart';
 import '../../bloc/member_finance/member_finance_state.dart';
@@ -33,6 +35,7 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
   bool _isCancelling = false;
   int _remainingSeconds = 900; // 15 menit default
   Timer? _countdownTimer;
+  List<BankAccountEntity> _bankAccounts = [];
 
   final currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
@@ -44,6 +47,14 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
   void initState() {
     super.initState();
     _initTimer();
+    _loadBankAccounts();
+  }
+
+  Future<void> _loadBankAccounts() async {
+    try {
+      final accounts = await serviceLocator.get<GetPublicBankAccountsUseCase>().execute();
+      if (mounted) setState(() => _bankAccounts = accounts);
+    } catch (_) {}
   }
 
   void _initTimer() {
@@ -386,54 +397,75 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
                 'Pastikan nominal transfer sesuai dengan total tagihan.',
               ),
               const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.blue.shade50,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.blue.shade200),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Informasi Rekening',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              if (_bankAccounts.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.blue.shade200),
+                  ),
+                  child: const Text(
+                    'Hubungi pengelola wisma untuk informasi rekening transfer.',
+                    style: TextStyle(fontSize: 13),
+                  ),
+                )
+              else
+                ..._bankAccounts.map((account) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.shade50,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.blue.shade200),
                     ),
-                    const SizedBox(height: 12),
-                    _bankInfoRow('Bank', 'Bank Syariah Indonesia (BSI)'),
-                    _bankInfoRow('No. Rekening', '7123456789'),
-                    _bankInfoRow('Atas Nama', 'Wisma Amal Gorontalo'),
-                    const SizedBox(height: 12),
-                    if (widget.reservation.invoiceAmount != null)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade100,
-                          borderRadius: BorderRadius.circular(8),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          account.bankName,
+                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text(
-                              'Jumlah Transfer:',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        const SizedBox(height: 8),
+                        _bankInfoRow('No. Rekening', account.accountNumber),
+                        _bankInfoRow('Atas Nama', account.accountHolder),
+                        if (account.paymentInstructions != null && account.paymentInstructions!.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          Text(account.paymentInstructions!,
+                              style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                        ],
+                        const SizedBox(height: 12),
+                        if (widget.reservation.invoiceAmount != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade100,
+                              borderRadius: BorderRadius.circular(8),
                             ),
-                            Text(
-                              currencyFormat.format(widget.reservation.invoiceAmount!),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 16,
-                                color: Colors.blue,
-                              ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                const Text(
+                                  'Jumlah Transfer:',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                                ),
+                                Text(
+                                  currencyFormat.format(widget.reservation.invoiceAmount!),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                    color: Colors.blue,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+                          ),
+                      ],
+                    ),
+                  ),
+                )),
               const SizedBox(height: 16),
               _instructionStep(
                 2,

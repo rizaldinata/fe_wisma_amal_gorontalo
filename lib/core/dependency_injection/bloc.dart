@@ -72,6 +72,7 @@ import 'package:frontend/domain/usecase/finance/get_member_invoices_usecase.dart
 import 'package:frontend/domain/usecase/finance/get_member_payments_usecase.dart';
 import 'package:frontend/domain/usecase/finance/pay_invoice_usecase.dart';
 import 'package:frontend/domain/usecase/finance/extend_lease_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_public_bank_accounts_usecase.dart';
 
 import 'package:frontend/domain/usecase/inventory/get_inventories_usecase.dart';
 import 'package:frontend/domain/usecase/inventory/inventory_action_usecases.dart';
@@ -99,11 +100,29 @@ import 'package:frontend/domain/usecase/guest/get_admin_guests_usecase.dart';
 import 'package:frontend/domain/usecase/guest/get_my_guests_usecase.dart';
 import 'package:frontend/domain/usecase/guest/create_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/create_admin_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/checkout_admin_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/delete_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/checkout_my_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/pay_guest_bill_usecase.dart';
 import 'package:frontend/domain/usecase/guest/get_admin_guest_bills_usecase.dart';
 import 'package:frontend/domain/usecase/guest/verify_guest_bill_usecase.dart';
 import 'package:frontend/domain/usecase/notification/get_notification_logs_usecase.dart';
+import 'package:frontend/domain/usecase/notification/mark_all_notification_logs_read_usecase.dart';
+import 'package:frontend/domain/usecase/setting/create_bank_account_usecase.dart';
+import 'package:frontend/domain/usecase/setting/delete_bank_account_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_bank_accounts_usecase.dart';
+import 'package:frontend/domain/usecase/setting/update_bank_account_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_payment_methods_usecase.dart';
+import 'package:frontend/domain/usecase/setting/update_payment_methods_usecase.dart';
+import 'package:frontend/presentation/bloc/bank_account/bank_account_cubit.dart';
+import 'package:frontend/presentation/bloc/payment_method_setting/payment_method_setting_cubit.dart';
+import 'package:frontend/domain/usecase/finance/get_midtrans_monitoring_usecase.dart';
+import 'package:frontend/presentation/bloc/midtrans_monitoring/midtrans_monitoring_cubit.dart';
+import 'package:frontend/domain/usecase/finance/get_fixed_expenses_usecase.dart';
+import 'package:frontend/domain/usecase/finance/update_fixed_expense_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_fixed_expense_status_usecase.dart';
+import 'package:frontend/domain/usecase/finance/generate_fixed_expenses_usecase.dart';
+import 'package:frontend/presentation/bloc/fixed_expense/fixed_expense_bloc.dart';
 
 Future<void> initializeBloc() async {
   serviceLocator.registerLazySingleton<AuthBloc>(
@@ -328,6 +347,7 @@ Future<void> initializeBloc() async {
       payInvoice: serviceLocator.get<PayInvoiceUseCase>(),
       extendLease: serviceLocator.get<ExtendLeaseUseCase>(),
       getSettings: serviceLocator.get<GetPublicSettingsUseCase>(),
+      getBankAccounts: serviceLocator.get<GetPublicBankAccountsUseCase>(),
     ),
   );
 
@@ -335,6 +355,7 @@ Future<void> initializeBloc() async {
     () => GuestBloc(
       getAdminGuestsUseCase: serviceLocator.get<GetAdminGuestsUseCase>(),
       createAdminGuestUseCase: serviceLocator.get<CreateAdminGuestUseCase>(),
+      checkoutAdminGuestUseCase: serviceLocator.get<CheckoutAdminGuestUseCase>(),
     ),
   );
 
@@ -344,6 +365,7 @@ Future<void> initializeBloc() async {
       createGuestUseCase: serviceLocator.get<CreateGuestUseCase>(),
       deleteGuestUseCase: serviceLocator.get<DeleteGuestUseCase>(),
       payGuestBillUseCase: serviceLocator.get<PayGuestBillUseCase>(),
+      checkoutMyGuestUseCase: serviceLocator.get<CheckoutMyGuestUseCase>(),
     ),
   );
 
@@ -358,6 +380,36 @@ Future<void> initializeBloc() async {
     () => NotificationLogBloc(
       getNotificationLogsUseCase:
           serviceLocator.get<GetNotificationLogsUseCase>(),
+      markAllNotificationLogsReadUseCase:
+          serviceLocator.get<MarkAllNotificationLogsReadUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<PaymentMethodSettingCubit>(
+    () => PaymentMethodSettingCubit(
+      getUseCase: serviceLocator.get<GetPaymentMethodsUseCase>(),
+      updateUseCase: serviceLocator.get<UpdatePaymentMethodsUseCase>(),
+    ),
+  );
+  serviceLocator.registerFactory<BankAccountCubit>(
+    () => BankAccountCubit(
+      getAccounts: serviceLocator.get<GetBankAccountsUseCase>(),
+      createAccount: serviceLocator.get<CreateBankAccountUseCase>(),
+      updateAccount: serviceLocator.get<UpdateBankAccountUseCase>(),
+      deleteAccount: serviceLocator.get<DeleteBankAccountUseCase>(),
+    ),
+  );
+  serviceLocator.registerFactory<MidtransMonitoringCubit>(
+    () => MidtransMonitoringCubit(
+      getUseCase: serviceLocator.get<GetMidtransMonitoringUseCase>(),
+    ),
+  );
+  serviceLocator.registerFactory<FixedExpenseBloc>(
+    () => FixedExpenseBloc(
+      getFixedExpenses: serviceLocator.get<GetFixedExpensesUseCase>(),
+      updateFixedExpense: serviceLocator.get<UpdateFixedExpenseUseCase>(),
+      getFixedExpenseStatus: serviceLocator.get<GetFixedExpenseStatusUseCase>(),
+      generateFixedExpenses: serviceLocator.get<GenerateFixedExpensesUseCase>(),
     ),
   );
 }

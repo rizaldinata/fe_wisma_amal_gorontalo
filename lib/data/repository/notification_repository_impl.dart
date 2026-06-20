@@ -21,4 +21,13 @@ class NotificationRepositoryImpl implements NotificationRepository {
       rethrow;
     }
   }
+
+  @override
+  Future<void> markAllNotificationLogsRead() async {
+    try {
+      await datasource.markAllNotificationLogsRead();
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

@@ -5,6 +5,7 @@ import 'package:frontend/domain/usecase/guest/create_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/delete_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/get_my_guests_usecase.dart';
 import 'package:frontend/domain/usecase/guest/pay_guest_bill_usecase.dart';
+import 'package:frontend/domain/usecase/guest/checkout_my_guest_usecase.dart';
 
 // ─── Events ───────────────────────────────────────────────────────────────────
 
@@ -45,6 +46,11 @@ class PayGuestBillManual extends MyGuestEvent {
 class PayGuestBillMidtrans extends MyGuestEvent {
   final int guestId;
   PayGuestBillMidtrans(this.guestId);
+}
+
+class CheckoutMyGuest extends MyGuestEvent {
+  final int id;
+  CheckoutMyGuest(this.id);
 }
 
 // ─── States ───────────────────────────────────────────────────────────────────
@@ -88,18 +94,32 @@ class MyGuestBloc extends Bloc<MyGuestEvent, MyGuestState> {
   final CreateGuestUseCase createGuestUseCase;
   final DeleteGuestUseCase deleteGuestUseCase;
   final PayGuestBillUseCase payGuestBillUseCase;
+  final CheckoutMyGuestUseCase checkoutMyGuestUseCase;
 
   MyGuestBloc({
     required this.getMyGuestsUseCase,
     required this.createGuestUseCase,
     required this.deleteGuestUseCase,
     required this.payGuestBillUseCase,
+    required this.checkoutMyGuestUseCase,
   }) : super(MyGuestInitial()) {
     on<FetchMyGuests>(_onFetch);
     on<CreateMyGuest>(_onCreate);
     on<DeleteMyGuest>(_onDelete);
     on<PayGuestBillManual>(_onPayManual);
     on<PayGuestBillMidtrans>(_onPayMidtrans);
+    on<CheckoutMyGuest>(_onCheckout);
+  }
+
+  Future<void> _onCheckout(CheckoutMyGuest event, Emitter<MyGuestState> emit) async {
+    try {
+      await checkoutMyGuestUseCase(event.id);
+      emit(MyGuestActionSuccess('Tamu berhasil ditandai keluar.'));
+      final guests = await getMyGuestsUseCase();
+      emit(MyGuestLoaded(guests));
+    } catch (e) {
+      emit(MyGuestActionError(e.toString()));
+    }
   }
 
   Future<void> _onFetch(FetchMyGuests event, Emitter<MyGuestState> emit) async {

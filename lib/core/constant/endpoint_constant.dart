@@ -4,8 +4,8 @@ class EndpointConstant {
   static const String logoutEndpoint = '/logout';
   static const String checkSessionEndpoint = '/me';
   static const String residentProfileEndpoint = '/resident/profile';
-  static const String adminResidentsEndpoint = '/room-schedules';
-  static String adminResidentDetailEndpoint(String id) => '/room-schedules/$id';
+  static const String adminResidentsEndpoint = '/v1/room-schedules';
+  static String adminResidentDetailEndpoint(String id) => '/v1/room-schedules/$id';
   static const String roomSchedulesEndpoint = '/rooms-schedules';
 
   // crud permission
@@ -24,7 +24,9 @@ class EndpointConstant {
   static uploadRoomImage({required int roomId}) => '/rooms/$roomId/images';
 
   static const String adminGuestsEndpoint = '/admin/guests';
+  static String checkoutAdminGuestEndpoint(int id) => '/admin/guests/$id/checkout';
   static const String myGuestsEndpoint = '/guests';
+  static String checkoutMyGuestEndpoint(int id) => '/guests/$id/checkout';
   static String deleteGuestEndpoint(int id) => '/guests/$id';
   static String guestBillEndpoint(int guestId) => '/guests/$guestId/bill';
   static String payGuestBillEndpoint(int guestId) =>
@@ -34,6 +36,6 @@ class EndpointConstant {
       '/admin/guest-bills/$billId/verify';
 
   static const String notificationLogsEndpoint = '/notification/logs';
-  static String resendNotificationLogEndpoint(int id) =>
-      '/notification/logs/$id/resend';
+  static String resendNotificationLogEndpoint(int id) => '/notification/logs/$id/resend';
+  static const String markAllNotificationLogsReadEndpoint = '/notification/logs/mark-all-read';
 }

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+import '../../entity/finance/payment_entity.dart';
 import '../../repository/finance_repository.dart';
 
 class ExtendLeaseUseCase {
@@ -5,7 +7,21 @@ class ExtendLeaseUseCase {
 
   ExtendLeaseUseCase(this.repository);
 
-  Future<void> execute(int leaseId, int durationMonths) async {
-    return await repository.extendLease(leaseId, durationMonths);
+  Future<PaymentEntity> execute(
+    int leaseId,
+    int durationMonths,
+    String paymentMethod, {
+    Uint8List? paymentProofBytes,
+    String? paymentProofName,
+    String? preferredPaymentType,
+  }) async {
+    return await repository.extendLease(
+      leaseId,
+      durationMonths,
+      paymentMethod,
+      paymentProofBytes: paymentProofBytes,
+      paymentProofName: paymentProofName,
+      preferredPaymentType: preferredPaymentType,
+    );
   }
 }

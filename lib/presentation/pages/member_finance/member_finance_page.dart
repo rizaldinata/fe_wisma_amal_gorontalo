@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,10 +6,19 @@ import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../core/dependency_injection/dependency_injection.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_shadows.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../../core/navigation/auto_route.gr.dart';
+import '../../../domain/entity/finance/invoice_entity.dart';
+import '../../../domain/entity/finance/payment_entity.dart';
+import '../../../domain/entity/setting/bank_account_entity.dart';
 import '../../../domain/entity/table/tabel_colum.dart';
 import '../../bloc/member_finance/member_finance_bloc.dart';
 import '../../bloc/member_finance/member_finance_event.dart';
 import '../../bloc/member_finance/member_finance_state.dart';
+import '../../widget/core/card/summary_stat_card.dart';
 import '../../widget/core/table/table.dart';
 
 @RoutePage()
@@ -19,31 +29,15 @@ class MemberFinancePage extends StatefulWidget {
   State<MemberFinancePage> createState() => _MemberFinancePageState();
 }
 
-class _MemberFinancePageState extends State<MemberFinancePage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
+class _MemberFinancePageState extends State<MemberFinancePage> {
   final currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
     decimalDigits: 0,
   );
 
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
   Future<void> _launchMidtrans(String token) async {
-    final url = Uri.parse(
-      'https://app.sandbox.midtrans.com/snap/v2/vtweb/$token',
-    );
+    final url = Uri.parse('https://app.sandbox.midtrans.com/snap/v2/vtweb/$token');
     if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -55,6 +49,10 @@ class _MemberFinancePageState extends State<MemberFinancePage>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+    final doneColor = isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone;
+    final cancelColor = isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
+
     return BlocProvider(
       create: (context) => serviceLocator.get<MemberFinanceBloc>()
         ..add(FetchMemberFinanceSummary())
@@ -67,30 +65,51 @@ class _MemberFinancePageState extends State<MemberFinancePage>
               _launchMidtrans(state.snapToken!);
             } else {
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text(
-                    'Bukti pembayaran berhasil diunggah. Menunggu verifikasi admin.',
-                  ),
+                SnackBar(
+                  content: Row(children: [
+                    Icon(Icons.check_circle_outline, color: doneColor, size: 18),
+                    const SizedBox(width: AppSpacing.sm),
+                    const Expanded(child: Text('Bukti pembayaran berhasil diunggah. Menunggu verifikasi admin.')),
+                  ]),
+                  behavior: SnackBarBehavior.floating,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+                  margin: const EdgeInsets.all(AppSpacing.lg),
+                  duration: const Duration(seconds: 3),
                 ),
               );
             }
           } else if (state.status == MemberFinanceStatus.extensionSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Permintaan perpanjangan sewa berhasil dikirim'),
+              SnackBar(
+                content: Row(children: [
+                  Icon(Icons.check_circle_outline, color: doneColor, size: 18),
+                  const SizedBox(width: AppSpacing.sm),
+                  const Text('Permintaan perpanjangan sewa berhasil dikirim'),
+                ]),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+                margin: const EdgeInsets.all(AppSpacing.lg),
+                duration: const Duration(seconds: 3),
               ),
             );
           } else if (state.status == MemberFinanceStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.errorMessage ?? 'Terjadi kesalahan'),
+                content: Row(children: [
+                  Icon(Icons.error_outline, color: cancelColor, size: 18),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(child: Text(state.errorMessage ?? 'Terjadi kesalahan')),
+                ]),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+                margin: const EdgeInsets.all(AppSpacing.lg),
               ),
             );
           }
         },
         child: Scaffold(
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.all(AppSpacing.xxl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -104,27 +123,12 @@ class _MemberFinancePageState extends State<MemberFinancePage>
                     _buildExtendButton(),
                   ],
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: AppSpacing.xxl),
                 _buildSummaryCards(),
-                const SizedBox(height: 32),
-                TabBar(
-                  controller: _tabController,
-                  tabs: const [
-                    Tab(text: 'Tagihan Aktif'),
-                    Tab(text: 'Riwayat Pembayaran'),
-                  ],
-                  labelColor: Theme.of(context).primaryColor,
-                  unselectedLabelColor: Colors.grey,
-                  indicatorColor: Theme.of(context).primaryColor,
-                ),
-                const SizedBox(height: 24),
-                SizedBox(
-                  height: 500,
-                  child: TabBarView(
-                    controller: _tabController,
-                    children: [_buildInvoiceList(), _buildPaymentHistory()],
-                  ),
-                ),
+                const SizedBox(height: AppSpacing.xxxl),
+                _buildInvoiceList(),
+                const SizedBox(height: AppSpacing.xxl),
+                _buildPaymentHistory(),
               ],
             ),
           ),
@@ -133,110 +137,80 @@ class _MemberFinancePageState extends State<MemberFinancePage>
     );
   }
 
+  // ── Summary section ───────────────────────────────────────────────────────
+
   Widget _buildExtendButton() {
     return BlocBuilder<MemberFinanceBloc, MemberFinanceState>(
       builder: (context, state) {
-        if (state.summary == null || state.summary!.activeLease == null) {
-          return const SizedBox.shrink();
-        }
-
+        final leases = state.summary?.activeLeases ?? [];
+        if (leases.length != 1) return const SizedBox.shrink();
         return ElevatedButton.icon(
-          onPressed: () =>
-              _showExtendDialog(context, state.summary!.activeLease!.id),
+          onPressed: () => context.router.push(ExtendLeaseRoute(
+            leaseId: leases.first.id,
+            roomNumber: leases.first.roomNumber,
+            currentEndDate: leases.first.endDate,
+            isMidtransEnabled: state.isMidtransEnabled,
+          )),
           icon: const Icon(Icons.add_circle_outline, size: 18),
           label: const Text('Perpanjang Sewa'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Theme.of(context).primaryColor,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
-          ),
         );
       },
-    );
-  }
-
-  void _showExtendDialog(BuildContext context, int leaseId) {
-    int duration = 1;
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Perpanjang Sewa'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Pilih durasi perpanjangan (bulan):'),
-            const SizedBox(height: 16),
-            DropdownButtonFormField<int>(
-              value: duration,
-              items: List.generate(12, (i) => i + 1)
-                  .map(
-                    (m) => DropdownMenuItem(value: m, child: Text('$m Bulan')),
-                  )
-                  .toList(),
-              onChanged: (val) => duration = val ?? 1,
-              decoration: const InputDecoration(border: OutlineInputBorder()),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Batal'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              context.read<MemberFinanceBloc>().add(
-                ExtendLeaseEvent(leaseId, duration),
-              );
-              Navigator.pop(dialogContext);
-            },
-            child: const Text('Kirim Permintaan'),
-          ),
-        ],
-      ),
     );
   }
 
   Widget _buildSummaryCards() {
     return BlocBuilder<MemberFinanceBloc, MemberFinanceState>(
       builder: (context, state) {
-        final lease = state.summary?.activeLease;
+        final isDark = AppTheme.isDark(context);
+        final leases = state.summary?.activeLeases ?? [];
         final unpaid = state.summary?.totalUnpaid ?? 0.0;
         final unpaidCount = state.summary?.unpaidCount ?? 0;
 
+        final billIconColor = unpaid > 0
+            ? (isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting)
+            : (isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone);
+        final billIconBg = unpaid > 0
+            ? (isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg)
+            : (isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg);
+        final billTrend = unpaidCount > 0
+            ? '$unpaidCount tagihan belum dibayar'
+            : 'Semua tagihan lunas';
+        final billTrendColor = unpaid > 0
+            ? (isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting)
+            : (isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone);
+
         return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── Kamar ──────────────────────────────────────────────
-            Expanded(
-              child: _summaryCard(
-                title: 'Kamar Saya',
-                value: lease != null ? 'No. ${lease.roomNumber}' : '-',
-                sub: lease != null ? lease.rentalType.toUpperCase() : 'Belum ada kamar aktif',
-                icon: Icons.meeting_room_outlined,
-                color: Colors.blue,
+            if (leases.isEmpty) ...[
+              Expanded(
+                child: SummaryStatCard(
+                  label: 'KAMAR AKTIF',
+                  value: '—',
+                  icon: Icons.home_outlined,
+                  iconColor: isDark ? AppColorsDark.textHint : AppColorsLight.textHint,
+                  iconBg: isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant,
+                  trend: 'Belum ada sewa berjalan',
+                  trendColor: isDark ? AppColorsDark.textHint : AppColorsLight.textHint,
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-
-            // ── Status Sewa + Sisa Hari ─────────────────────────────
+              const SizedBox(width: AppSpacing.lg),
+            ] else
+              ...leases.expand(
+                (lease) => [
+                  Expanded(child: _buildLeaseCard(context, lease, state)),
+                  const SizedBox(width: AppSpacing.lg),
+                ],
+              ),
             Expanded(
-              child: _buildLeaseStatusCard(lease),
-            ),
-            const SizedBox(width: 16),
-
-            // ── Total Tagihan ───────────────────────────────────────
-            Expanded(
-              child: _summaryCard(
-                title: 'Total Tagihan',
+              child: SummaryStatCard(
+                label: 'TOTAL TAGIHAN',
                 value: currencyFormat.format(unpaid),
-                sub: unpaidCount > 0
-                    ? '$unpaidCount tagihan belum dibayar'
-                    : 'Semua tagihan lunas',
                 icon: Icons.account_balance_wallet_outlined,
-                color: unpaid > 0 ? Colors.orange : Colors.green,
+                iconColor: billIconColor,
+                iconBg: billIconBg,
+                trend: billTrend,
+                trendColor: billTrendColor,
               ),
             ),
           ],
@@ -245,203 +219,272 @@ class _MemberFinancePageState extends State<MemberFinancePage>
     );
   }
 
-  Widget _buildLeaseStatusCard(dynamic lease) {
-    if (lease == null) {
-      return _summaryCard(
-        title: 'Status Sewa',
-        value: 'TIDAK AKTIF',
-        sub: 'Belum ada sewa berjalan',
-        icon: Icons.home_outlined,
-        color: Colors.grey,
-      );
-    }
-
+  Widget _buildLeaseCard(BuildContext context, dynamic lease, MemberFinanceState state) {
+    final isDark = AppTheme.isDark(context);
     final now = DateTime.now();
     final endDate = lease.endDate as DateTime;
     final daysLeft = endDate.difference(now).inDays;
     final endDateStr = DateFormat('dd MMM yyyy').format(endDate);
 
-    Color statusColor;
-    String daysLabel;
+    final Color iconColor;
+    final Color iconBg;
+    final Color trendColor;
+    final String daysLabel;
+
     if (daysLeft < 0) {
-      statusColor = Colors.red;
+      iconColor = isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
+      iconBg = isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg;
+      trendColor = iconColor;
       daysLabel = 'Masa sewa telah berakhir';
     } else if (daysLeft <= 7) {
-      statusColor = Colors.red;
+      iconColor = isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
+      iconBg = isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg;
+      trendColor = iconColor;
       daysLabel = 'Berakhir $daysLeft hari lagi';
     } else if (daysLeft <= 30) {
-      statusColor = Colors.orange;
+      iconColor = isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
+      iconBg = isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg;
+      trendColor = iconColor;
       daysLabel = 'Berakhir $daysLeft hari lagi';
     } else {
-      statusColor = Colors.blue;
+      iconColor = isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone;
+      iconBg = isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg;
+      trendColor = iconColor;
       daysLabel = 'Sisa $daysLeft hari';
     }
 
+    final surfaceColor = isDark ? AppColorsDark.surface : AppColorsLight.surface;
+    final borderColor = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+    final textPrimaryColor = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+    final textSecondaryColor = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
-        color: statusColor.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: statusColor.withOpacity(0.2)),
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: borderColor),
+        boxShadow: const [AppShadows.cardShadow],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(Icons.home_outlined, color: statusColor, size: 24),
-              const SizedBox(width: 12),
-              Text(
-                'Status Sewa',
-                style: TextStyle(
-                  color: statusColor,
-                  fontWeight: FontWeight.w600,
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.sm),
+                decoration: BoxDecoration(
+                  color: iconBg,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
+                child: Icon(Icons.meeting_room_outlined, color: iconColor, size: 20),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'KAMAR NO. ${lease.roomNumber}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: textSecondaryColor,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  Tooltip(
+                    message: 'Perpanjang Sewa',
+                    child: GestureDetector(
+                      onTap: () => context.router.push(ExtendLeaseRoute(
+                        leaseId: lease.id as int,
+                        roomNumber: lease.roomNumber as String,
+                        currentEndDate: lease.endDate as DateTime,
+                        isMidtransEnabled: state.isMidtransEnabled,
+                      )),
+                      child: Icon(Icons.add_circle_outline, color: textSecondaryColor, size: 18),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             'AKTIF',
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w700,
+              color: textPrimaryColor,
+            ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: AppSpacing.xs),
           Text(
-            'Berakhir: $endDateStr',
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-          ),
-          const SizedBox(height: 4),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              daysLabel,
-              style: TextStyle(
-                color: statusColor,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+            'Berakhir: $endDateStr · $daysLabel',
+            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: trendColor),
           ),
         ],
       ),
     );
   }
 
-  Widget _summaryCard({
-    required String title,
-    required String value,
-    required String sub,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 24),
-              const SizedBox(width: 12),
-              Text(
-                title,
-                style: TextStyle(color: color, fontWeight: FontWeight.w600),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            sub,
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
+  // ── Invoice & Payment tables ──────────────────────────────────────────────
 
   Widget _buildInvoiceList() {
     return BlocBuilder<MemberFinanceBloc, MemberFinanceState>(
       builder: (context, state) {
-        final unpaidInvoices = state.invoices
-            .where((i) => i.status.toLowerCase() == 'unpaid')
-            .toList();
+        final isDark = AppTheme.isDark(context);
+        final overdueColor = isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
+        final waitingColor = isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
+        final payBtnColor = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+        final now = DateTime.now();
 
-        // Build set of invoiceIds that already have a pending payment
-        final pendingInvoiceIds = state.payments
-            .where((p) => p.status.toLowerCase() == 'pending')
+        // Invoice dengan payment failed tidak ditampilkan — user retry lewat tombol Perpanjang Sewa
+        final failedPaymentInvoiceIds = state.payments
+            .where((p) => p.status.toLowerCase() == 'failed')
             .map((p) => p.invoiceId)
             .toSet();
+
+        final unpaidInvoices = state.invoices
+            .where((i) =>
+                i.status.toLowerCase() == 'unpaid' &&
+                !failedPaymentInvoiceIds.contains(i.id))
+            .toList();
+
+        // Hanya Midtrans pending yang BELUM expired yang bisa dilanjutkan
+        final pendingMidtransMap = Map.fromEntries(
+          state.payments
+              .where((p) {
+                if (p.status.toLowerCase() != 'pending') return false;
+                if (p.paymentMethod.toLowerCase() != 'midtrans') return false;
+                final rawExpiry = p.paymentData?['expiry_time'] as String?;
+                final expiryDt = rawExpiry != null ? DateTime.tryParse(rawExpiry) : null;
+                return expiryDt == null || expiryDt.isAfter(now);
+              })
+              .map((p) => MapEntry(p.invoiceId, p)),
+        );
+
+        // Pending manual → tampilkan badge "Menunggu Verifikasi"
+        final pendingManualIds = state.payments
+            .where((p) =>
+                p.status.toLowerCase() == 'pending' &&
+                p.paymentMethod.toLowerCase() == 'manual')
+            .map((p) => p.invoiceId)
+            .toSet();
+
+        final textPrimary = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+        final textHint = isDark ? AppColorsDark.textHint : AppColorsLight.textHint;
 
         return TableCard(
           title: 'Tagihan Belum Dibayar',
           columns: const [
-            TableColumn(label: 'No. Invoice', flex: 3),
-            TableColumn(label: 'Jatuh Tempo', flex: 2),
+            TableColumn(label: 'No. Invoice / Kamar', flex: 3),
+            TableColumn(label: 'Jenis', flex: 2),
+            TableColumn(label: 'Jatuh Tempo', flex: 3),
             TableColumn(label: 'Jumlah', flex: 2),
-            TableColumn(label: 'Status', flex: 3, align: TextAlign.right),
+            TableColumn(label: 'Aksi', flex: 2, align: TextAlign.right),
           ],
           rows: unpaidInvoices.map((invoice) {
-            final hasPendingPayment = pendingInvoiceIds.contains(invoice.id);
-            final isOverdue = invoice.dueDate.isBefore(DateTime.now());
+            final pendingMidtrans = pendingMidtransMap[invoice.id];
+            final hasPendingManual = pendingManualIds.contains(invoice.id);
+            final hasPendingPayment = pendingMidtrans != null || hasPendingManual;
+            final isOverdue = invoice.dueDate.isBefore(now);
+            final daysOverdue = now.difference(invoice.dueDate).inDays;
+
+            // Midtrans expiry untuk ditampilkan di kolom jatuh tempo
+            final rawExpiry = pendingMidtrans?.paymentData?['expiry_time'] as String?;
+            final expiryDt = rawExpiry != null ? DateTime.tryParse(rawExpiry) : null;
 
             return [
-              Text(
-                invoice.invoiceNumber,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+              // Kolom No. Invoice / Kamar
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    invoice.invoiceNumber,
+                    style: TextStyle(fontWeight: FontWeight.w600, color: textPrimary),
+                  ),
+                  Text(
+                    invoice.roomNumber != null ? 'Kamar ${invoice.roomNumber}' : '—',
+                    style: TextStyle(fontSize: 11, color: textHint),
+                  ),
+                ],
               ),
-              Text(
-                DateFormat('dd MMM yyyy').format(invoice.dueDate),
-                style: TextStyle(
-                  color: isOverdue && !hasPendingPayment
-                      ? Colors.red
-                      : null,
-                  fontWeight: isOverdue && !hasPendingPayment
-                      ? FontWeight.w600
-                      : null,
+              // Kolom Jenis
+              _buildInvoiceTypeBadge(context, invoice.invoiceNumber),
+              // Kolom Jatuh Tempo (invoice due date) atau Batas Bayar Midtrans
+              if (pendingMidtrans != null && expiryDt != null)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.timer_outlined, size: 11, color: waitingColor),
+                        const SizedBox(width: 3),
+                        Text(
+                          'Batas bayar',
+                          style: TextStyle(fontSize: 11, color: waitingColor),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      DateFormat('dd MMM yyyy, HH:mm').format(expiryDt),
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: waitingColor),
+                    ),
+                  ],
+                )
+              else
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      DateFormat('dd MMM yyyy').format(invoice.dueDate),
+                      style: TextStyle(
+                        color: isOverdue && !hasPendingPayment ? overdueColor : null,
+                        fontWeight: isOverdue && !hasPendingPayment ? FontWeight.w600 : null,
+                      ),
+                    ),
+                    Text(
+                      DateFormat('HH:mm').format(invoice.dueDate),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isOverdue && !hasPendingPayment ? overdueColor : textHint,
+                        fontWeight: isOverdue && !hasPendingPayment ? FontWeight.w600 : null,
+                      ),
+                    ),
+                    if (isOverdue && !hasPendingPayment)
+                      Text(
+                        'Terlambat $daysOverdue hari',
+                        style: TextStyle(fontSize: 11, color: overdueColor),
+                      ),
+                  ],
                 ),
-              ),
-              Text(
-                currencyFormat.format(invoice.amount),
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
+              // Kolom Jumlah
+              Text(currencyFormat.format(invoice.amount), style: const TextStyle(fontWeight: FontWeight.w600)),
+              // Kolom Aksi
               Align(
                 alignment: Alignment.centerRight,
-                child: hasPendingPayment
-                    ? _buildStatusBadge('Menunggu Verifikasi', Colors.orange)
-                    : ElevatedButton(
-                        onPressed: () {
-                          _showPaymentMethodDialog(context, invoice.id);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
+                child: pendingMidtrans != null
+                    ? _buildResumeMidtransButton(context, invoice, pendingMidtrans)
+                    : hasPendingManual
+                        ? _buildPaymentStatusBadge(context, 'pending')
+                        : ElevatedButton(
+                            onPressed: () => _showPaymentMethodDialog(context, invoice.id),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: payBtnColor,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                              minimumSize: const Size(0, 36),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+                              textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                            ),
+                            child: const Text('Bayar'),
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Bayar',
-                          style: TextStyle(fontSize: 12),
-                        ),
-                      ),
               ),
             ];
           }).toList(),
@@ -454,45 +497,57 @@ class _MemberFinancePageState extends State<MemberFinancePage>
   Widget _buildPaymentHistory() {
     return BlocBuilder<MemberFinanceBloc, MemberFinanceState>(
       builder: (context, state) {
+        final isDark = AppTheme.isDark(context);
+        final borderColor = isDark ? AppColorsDark.borderMedium : AppColorsLight.borderMedium;
+        final textSecondary = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+
+        final textPrimary = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+        final textHint = isDark ? AppColorsDark.textHint : AppColorsLight.textHint;
+
         return TableCard(
           title: 'Riwayat Pembayaran',
           columns: const [
-            TableColumn(label: 'Tanggal', flex: 2),
-            TableColumn(label: 'Metode', flex: 2),
+            TableColumn(label: 'No. Invoice', flex: 3),
+            TableColumn(label: 'Kamar', flex: 2),
             TableColumn(label: 'Jumlah', flex: 2),
             TableColumn(label: 'Status', flex: 2),
             TableColumn(label: 'Aksi', flex: 1, align: TextAlign.right),
           ],
           rows: state.payments.map((payment) {
+            final dateStr = DateFormat('dd MMM yyyy').format(DateTime.parse(payment.paymentDate));
+            final methodLabel = payment.paymentMethod == 'midtrans' ? 'Midtrans' : 'Transfer Manual';
+
             return [
-              Text(
-                DateFormat('dd MMM yyyy').format(
-                  DateTime.parse(payment.paymentDate),
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    payment.invoiceNumber ?? '—',
+                    style: TextStyle(fontWeight: FontWeight.w600, color: textPrimary),
+                  ),
+                  Text(
+                    '$dateStr · $methodLabel',
+                    style: TextStyle(fontSize: 11, color: textHint),
+                  ),
+                ],
               ),
-              Text(
-                payment.paymentMethod == 'midtrans'
-                    ? 'Midtrans'
-                    : 'Transfer Manual',
-              ),
+              Text(payment.roomNumber ?? '—'),
               Text(currencyFormat.format(payment.amount)),
-              _buildPaymentStatusBadge(payment.status),
+              _buildPaymentStatusBadge(context, payment.status),
               Align(
                 alignment: Alignment.centerRight,
                 child: OutlinedButton(
                   onPressed: () => _showPaymentDetailDialog(context, payment),
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    side: BorderSide(color: Colors.grey.shade300),
-                    minimumSize: const Size(60, 32),
+                    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+                    side: BorderSide(color: borderColor),
+                    minimumSize: const Size(0, 36),
+                    foregroundColor: textSecondary,
+                    textStyle: const TextStyle(fontSize: 13),
                   ),
-                  child: const Text('Detail', style: TextStyle(fontSize: 12)),
+                  child: const Text('Detail'),
                 ),
               ),
             ];
@@ -503,44 +558,243 @@ class _MemberFinancePageState extends State<MemberFinancePage>
     );
   }
 
-  void _showPaymentDetailDialog(BuildContext context, payment) {
+  // ── Badges & action buttons ───────────────────────────────────────────────
+
+  Widget _buildResumeMidtransButton(
+    BuildContext context,
+    InvoiceEntity invoice,
+    PaymentEntity pendingMidtrans,
+  ) {
+    final isDark = AppTheme.isDark(context);
+    final bg = isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess;
+
+    return ElevatedButton.icon(
+      onPressed: () => context.router.push(ExtendLeasePaymentRoute(
+        invoiceId: invoice.id,
+        roomNumber: invoice.roomNumber ?? '—',
+        amount: invoice.amount,
+        snapToken: pendingMidtrans.snapToken,
+        paymentData: pendingMidtrans.paymentData,
+      )),
+      icon: const Icon(Icons.arrow_forward_rounded, size: 14),
+      label: const Text('Lanjutkan'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: bg,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+        minimumSize: const Size(0, 36),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+
+  Widget _buildInvoiceTypeBadge(BuildContext context, String invoiceNumber) {
+    final isDark = AppTheme.isDark(context);
+    final bool isExtension = invoiceNumber.startsWith('EXT');
+
+    final Color color, bg, border;
+    final String label;
+    final IconData icon;
+
+    if (isExtension) {
+      color = isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess;
+      bg = isDark ? AppColorsDark.statusProcessBg : AppColorsLight.statusProcessBg;
+      border = isDark ? AppColorsDark.statusProcessBorder : AppColorsLight.statusProcessBorder;
+      label = 'Perpanjang';
+      icon = Icons.update_rounded;
+    } else {
+      color = isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone;
+      bg = isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg;
+      border = isDark ? AppColorsDark.statusDoneBorder : AppColorsLight.statusDoneBorder;
+      label = 'Sewa Bulanan';
+      icon = Icons.home_outlined;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: border, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 11, color: color),
+          const SizedBox(width: 4),
+          Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  static String _statusLabel(String status) {
+    switch (status.toLowerCase()) {
+      case 'paid':
+      case 'verified':   return 'BERHASIL';
+      case 'pending':    return 'MENUNGGU';
+      case 'rejected':   return 'DITOLAK';
+      case 'failed':     return 'GAGAL';
+      case 'refunded':   return 'DIKEMBALIKAN';
+      default:           return status.toUpperCase();
+    }
+  }
+
+  Widget _buildPaymentStatusBadge(BuildContext context, String status) {
+    final isDark = AppTheme.isDark(context);
+    final Color color;
+    final Color bg;
+    final Color border;
+
+    switch (status.toLowerCase()) {
+      case 'verified':
+      case 'paid':
+        color = isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone;
+        bg = isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg;
+        border = isDark ? AppColorsDark.statusDoneBorder : AppColorsLight.statusDoneBorder;
+        break;
+      case 'pending':
+        color = isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
+        bg = isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg;
+        border = isDark ? AppColorsDark.statusWaitingBorder : AppColorsLight.statusWaitingBorder;
+        break;
+      case 'rejected':
+      case 'failed':
+        color = isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
+        bg = isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg;
+        border = isDark ? AppColorsDark.statusCancelledBorder : AppColorsLight.statusCancelledBorder;
+        break;
+      case 'refunded':
+        color = isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess;
+        bg = isDark ? AppColorsDark.statusProcessBg : AppColorsLight.statusProcessBg;
+        border = isDark ? AppColorsDark.statusProcessBorder : AppColorsLight.statusProcessBorder;
+        break;
+      default:
+        color = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+        bg = isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant;
+        border = isDark ? AppColorsDark.borderMedium : AppColorsLight.borderMedium;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: border, width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(width: 6, height: 6, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+          const SizedBox(width: 6),
+          Text(_statusLabel(status), style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+        ],
+      ),
+    );
+  }
+
+  // ── Dialogs ───────────────────────────────────────────────────────────────
+
+  void _showPaymentMethodDialog(BuildContext context, int invoiceId) {
+    final state = context.read<MemberFinanceBloc>().state;
+    if (!state.isMidtransEnabled) {
+      _showManualPaymentDialog(context, invoiceId);
+      return;
+    }
+
+    final isDark = AppTheme.isDark(context);
+    final processColor = isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess;
+    final doneColor = isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+        title: const Text('Pilih Metode Pembayaran'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+              leading: Icon(Icons.qr_code, color: processColor),
+              title: const Text('Pembayaran Online (Midtrans)'),
+              subtitle: const Text('Otomatis & Cepat'),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.read<MemberFinanceBloc>().add(PayInvoiceEvent(invoiceId, 'midtrans'));
+              },
+            ),
+            const Divider(),
+            ListTile(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+              leading: Icon(Icons.account_balance, color: doneColor),
+              title: const Text('Transfer Manual'),
+              subtitle: const Text('Upload bukti transfer'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _showManualPaymentDialog(context, invoiceId);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showManualPaymentDialog(BuildContext context, int invoiceId) {
+    final bankAccounts = context.read<MemberFinanceBloc>().state.bankAccounts;
+    showDialog(
+      context: context,
+      builder: (ctx) => _ManualPaymentDialog(
+        invoiceId: invoiceId,
+        bankAccounts: bankAccounts,
+        isDark: AppTheme.isDark(context),
+        bloc: context.read<MemberFinanceBloc>(),
+      ),
+    );
+  }
+
+  void _showPaymentDetailDialog(BuildContext context, dynamic payment) {
+    final isDark = AppTheme.isDark(context);
     final status = (payment.status as String).toLowerCase();
 
-    Color statusColor(String s) {
+    Color resolveColor(String s) {
       switch (s) {
         case 'verified':
         case 'paid':
-          return Colors.green.shade700;
+          return isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone;
         case 'pending':
-          return Colors.orange.shade700;
+          return isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
         case 'rejected':
         case 'failed':
-          return Colors.red.shade600;
+          return isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
         case 'refunded':
-          return Colors.blue.shade600;
+          return isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess;
         default:
-          return Colors.grey.shade600;
+          return isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
       }
     }
 
-    Color statusBg(String s) {
+    Color resolveBg(String s) {
       switch (s) {
         case 'verified':
         case 'paid':
-          return Colors.green.shade50;
+          return isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg;
         case 'pending':
-          return Colors.orange.shade50;
+          return isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg;
         case 'rejected':
         case 'failed':
-          return Colors.red.shade50;
+          return isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg;
         case 'refunded':
-          return Colors.blue.shade50;
+          return isDark ? AppColorsDark.statusProcessBg : AppColorsLight.statusProcessBg;
         default:
-          return Colors.grey.shade100;
+          return isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant;
       }
     }
 
-    IconData statusIcon(String s) {
+    IconData resolveIcon(String s) {
       switch (s) {
         case 'verified':
         case 'paid':
@@ -557,50 +811,47 @@ class _MemberFinancePageState extends State<MemberFinancePage>
       }
     }
 
-    String methodLabel(String m) =>
-        m == 'midtrans' ? 'Midtrans / QRIS' : 'Transfer Manual';
+    final surfaceVariant = isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant;
+    final borderColor = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+    final cancelBorderColor = isDark ? AppColorsDark.statusCancelledBorder : AppColorsLight.statusCancelledBorder;
+    final cancelBgColor = isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg;
+    final textHint = isDark ? AppColorsDark.textHint : AppColorsLight.textHint;
+    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+    final processColor = isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess;
+    final doneColor = isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone;
 
     String formatDateTime(String d) {
       final dt = DateTime.tryParse(d);
-      return dt != null
-          ? DateFormat('dd MMM yyyy, HH:mm').format(dt)
-          : '-';
+      return dt != null ? DateFormat('dd MMM yyyy, HH:mm').format(dt) : '-';
     }
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
         title: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(
-                color: statusBg(status),
-                borderRadius: BorderRadius.circular(8),
+                color: resolveBg(status),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               ),
-              child: Icon(
-                statusIcon(status),
-                color: statusColor(status),
-                size: 20,
-              ),
+              child: Icon(resolveIcon(status), color: resolveColor(status), size: 20),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     'Detail Pembayaran',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textPrimary),
                   ),
                   Text(
-                    payment.status.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: statusColor(status),
-                      fontWeight: FontWeight.w600,
-                    ),
+                    _statusLabel(payment.status as String),
+                    style: TextStyle(fontSize: 12, color: resolveColor(status), fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -614,13 +865,12 @@ class _MemberFinancePageState extends State<MemberFinancePage>
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Info utama ────────────────────────────────────────
                 Container(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade50,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey.shade200),
+                    color: surfaceVariant,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    border: Border.all(color: borderColor),
                   ),
                   child: Column(
                     children: [
@@ -631,29 +881,14 @@ class _MemberFinancePageState extends State<MemberFinancePage>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  'No. Invoice',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey.shade500,
-                                  ),
-                                ),
+                                Text('No. Invoice', style: TextStyle(fontSize: 11, color: textHint)),
                                 Text(
                                   payment.invoiceNumber ?? '-',
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: textPrimary),
                                 ),
                                 if (payment.roomNumber != null) ...[
                                   const SizedBox(height: 2),
-                                  Text(
-                                    'Kamar ${payment.roomNumber}',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey.shade600,
-                                    ),
-                                  ),
+                                  Text('Kamar ${payment.roomNumber}', style: TextStyle(fontSize: 12, color: textSecondary)),
                                 ],
                               ],
                             ),
@@ -661,89 +896,53 @@ class _MemberFinancePageState extends State<MemberFinancePage>
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(
-                                'Nominal',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade500,
-                                ),
-                              ),
+                              Text('Nominal', style: TextStyle(fontSize: 11, color: textHint)),
                               Text(
                                 currencyFormat.format(payment.amount),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: textPrimary),
                               ),
                               Text(
-                                methodLabel(payment.paymentMethod),
+                                payment.paymentMethod == 'midtrans' ? 'Midtrans / QRIS' : 'Transfer Manual',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: payment.paymentMethod == 'midtrans'
-                                      ? Colors.indigo.shade600
-                                      : Colors.teal.shade600,
                                   fontWeight: FontWeight.w600,
+                                  color: payment.paymentMethod == 'midtrans' ? processColor : doneColor,
                                 ),
                               ),
                             ],
                           ),
                         ],
                       ),
-                      const Divider(height: 20),
+                      Divider(height: 20, color: borderColor),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                'Tanggal Pembayaran',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey.shade500,
-                                ),
-                              ),
-                              Text(
-                                formatDateTime(payment.paymentDate),
-                                style: const TextStyle(fontSize: 12),
-                              ),
+                              Text('Tanggal Pembayaran', style: TextStyle(fontSize: 11, color: textHint)),
+                              Text(formatDateTime(payment.paymentDate), style: TextStyle(fontSize: 12, color: textPrimary)),
                             ],
                           ),
                           if (payment.updatedAt != null)
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text(
-                                  'Tanggal Diproses',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey.shade500,
-                                  ),
-                                ),
-                                Text(
-                                  formatDateTime(payment.updatedAt!),
-                                  style: const TextStyle(fontSize: 12),
-                                ),
+                                Text('Tanggal Diproses', style: TextStyle(fontSize: 11, color: textHint)),
+                                Text(formatDateTime(payment.updatedAt!), style: TextStyle(fontSize: 12, color: textPrimary)),
                               ],
                             ),
                         ],
                       ),
                       if (payment.transactionId != null) ...[
-                        const Divider(height: 16),
+                        Divider(height: 16, color: borderColor),
                         Row(
                           children: [
-                            Icon(
-                              Icons.tag,
-                              size: 13,
-                              color: Colors.grey.shade400,
-                            ),
+                            Icon(Icons.tag, size: 13, color: textHint),
                             const SizedBox(width: 4),
                             Text(
                               'ID Transaksi: ${payment.transactionId}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade500,
-                              ),
+                              style: TextStyle(fontSize: 12, color: textSecondary),
                             ),
                           ],
                         ),
@@ -752,87 +951,48 @@ class _MemberFinancePageState extends State<MemberFinancePage>
                   ),
                 ),
 
-                // ── Catatan admin (khususnya jika ditolak) ────────────
-                if (payment.adminNotes != null &&
-                    (payment.adminNotes as String).isNotEmpty) ...[
-                  const SizedBox(height: 14),
-                  Text(
-                    'Catatan Admin',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade700,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
+                if (payment.adminNotes != null && (payment.adminNotes as String).isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  Text('Catatan Admin', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textSecondary)),
+                  const SizedBox(height: AppSpacing.sm),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(AppSpacing.md),
                     decoration: BoxDecoration(
-                      color: status == 'rejected'
-                          ? Colors.red.shade50
-                          : Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: status == 'rejected'
-                            ? Colors.red.shade200
-                            : Colors.grey.shade200,
-                      ),
+                      color: status == 'rejected' ? cancelBgColor : surfaceVariant,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                      border: Border.all(color: status == 'rejected' ? cancelBorderColor : borderColor),
                     ),
-                    child: Text(
-                      payment.adminNotes as String,
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey.shade800,
-                      ),
-                    ),
+                    child: Text(payment.adminNotes as String, style: TextStyle(fontSize: 13, color: textPrimary)),
                   ),
                 ],
 
-                // ── Bukti transfer ────────────────────────────────────
-                const SizedBox(height: 14),
-                const Text(
-                  'Bukti Transfer:',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.md),
+                Text('Bukti Transfer:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: textPrimary)),
+                const SizedBox(height: AppSpacing.sm),
                 Container(
                   height: 260,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey.shade300),
+                    color: surfaceVariant,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                    border: Border.all(color: borderColor),
                   ),
-                  child: (payment.paymentProofUrl != null &&
-                          (payment.paymentProofUrl as String).isNotEmpty)
+                  child: (payment.paymentProofUrl != null && (payment.paymentProofUrl as String).isNotEmpty)
                       ? ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
                           child: Image.network(
                             payment.paymentProofUrl as String,
                             fit: BoxFit.contain,
                             loadingBuilder: (_, child, progress) =>
-                                progress == null
-                                    ? child
-                                    : const Center(
-                                        child: CircularProgressIndicator(),
-                                      ),
+                                progress == null ? child : const Center(child: CircularProgressIndicator()),
                             errorBuilder: (_, __, ___) => Center(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(
-                                    Icons.broken_image_outlined,
-                                    size: 40,
-                                    color: Colors.grey.shade400,
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    'Gambar tidak dapat dimuat',
-                                    style: TextStyle(
-                                      color: Colors.grey.shade500,
-                                    ),
-                                  ),
+                                  Icon(Icons.broken_image_outlined, size: 40, color: textHint),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  Text('Gambar tidak dapat dimuat', style: TextStyle(color: textSecondary)),
                                 ],
                               ),
                             ),
@@ -842,17 +1002,13 @@ class _MemberFinancePageState extends State<MemberFinancePage>
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(
-                                Icons.image_not_supported_outlined,
-                                size: 40,
-                                color: Colors.grey.shade400,
-                              ),
-                              const SizedBox(height: 8),
+                              Icon(Icons.image_not_supported_outlined, size: 40, color: textHint),
+                              const SizedBox(height: AppSpacing.sm),
                               Text(
                                 payment.paymentMethod == 'midtrans'
                                     ? 'Pembayaran dilakukan via Midtrans'
                                     : 'Tidak ada bukti transfer',
-                                style: TextStyle(color: Colors.grey.shade500),
+                                style: TextStyle(color: textSecondary),
                               ),
                             ],
                           ),
@@ -871,194 +1027,215 @@ class _MemberFinancePageState extends State<MemberFinancePage>
       ),
     );
   }
+}
 
-  Widget _buildStatusBadge(String label, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.5)),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: color,
-          fontSize: 10,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
+// ── Manual Payment Dialog dengan countdown timer ──────────────────────────────
+
+class _ManualPaymentDialog extends StatefulWidget {
+  const _ManualPaymentDialog({
+    required this.invoiceId,
+    required this.bankAccounts,
+    required this.isDark,
+    required this.bloc,
+  });
+
+  final int invoiceId;
+  final List<BankAccountEntity> bankAccounts;
+  final bool isDark;
+  final MemberFinanceBloc bloc;
+
+  @override
+  State<_ManualPaymentDialog> createState() => _ManualPaymentDialogState();
+}
+
+class _ManualPaymentDialogState extends State<_ManualPaymentDialog> {
+  PlatformFile? _selectedFile;
+  Timer? _timer;
+  int _remainingSeconds = 900;
+  bool _timerExpired = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
   }
 
-  Widget _buildPaymentStatusBadge(String status) {
-    Color color;
-    String label;
-    switch (status.toLowerCase()) {
-      case 'verified':
-      case 'paid':
-        color = Colors.green;
-        label = status.toUpperCase();
-        break;
-      case 'pending':
-        color = Colors.orange;
-        label = 'MENUNGGU';
-        break;
-      case 'rejected':
-        color = Colors.red;
-        label = 'DITOLAK';
-        break;
-      case 'failed':
-        color = Colors.red;
-        label = 'GAGAL';
-        break;
-      case 'refunded':
-        color = Colors.purple;
-        label = 'DIKEMBALIKAN';
-        break;
-      default:
-        color = Colors.grey;
-        label = status.toUpperCase();
-    }
-
-    return _buildStatusBadge(label, color);
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
-  void _showPaymentMethodDialog(BuildContext context, int invoiceId) {
-    final state = context.read<MemberFinanceBloc>().state;
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+      if (!mounted) { t.cancel(); return; }
+      setState(() {
+        if (_remainingSeconds > 0) {
+          _remainingSeconds--;
+        } else {
+          _timerExpired = true;
+          t.cancel();
+        }
+      });
+      if (_timerExpired) Navigator.of(context).pop();
+    });
+  }
 
-    if (!state.isMidtransEnabled) {
-      _showManualPaymentDialog(context, invoiceId);
-      return;
-    }
+  String get _timerLabel {
+    final m = (_remainingSeconds ~/ 60).toString().padLeft(2, '0');
+    final s = (_remainingSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
 
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Pilih Metode Pembayaran'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.qr_code, color: Colors.indigo),
-              title: const Text('Pembayaran Online (Midtrans)'),
-              subtitle: const Text('Otomatis & Cepat'),
-              onTap: () {
-                Navigator.pop(ctx);
-                context.read<MemberFinanceBloc>().add(
-                  PayInvoiceEvent(invoiceId, 'midtrans'),
-                );
-              },
+  Color get _timerColor {
+    if (_remainingSeconds <= 60) return Colors.red;
+    if (_remainingSeconds <= 120) return Colors.orange;
+    return widget.isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = widget.isDark;
+    final surfaceVariant = isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant;
+    final borderColor    = isDark ? AppColorsDark.borderLight    : AppColorsLight.borderLight;
+    final doneColor      = isDark ? AppColorsDark.statusDone     : AppColorsLight.statusDone;
+    final textPrimary    = isDark ? AppColorsDark.textPrimary    : AppColorsLight.textPrimary;
+    final textSecondary  = isDark ? AppColorsDark.textSecondary  : AppColorsLight.textSecondary;
+    final textHint       = isDark ? AppColorsDark.textHint       : AppColorsLight.textHint;
+
+    return AlertDialog(
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+      title: Row(
+        children: [
+          Expanded(child: const Text('Upload Bukti Transfer')),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: _timerColor.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: _timerColor.withValues(alpha: 0.4)),
             ),
-            const Divider(),
-            ListTile(
-              leading: const Icon(Icons.account_balance, color: Colors.teal),
-              title: const Text('Transfer Manual'),
-              subtitle: const Text('Upload bukti transfer'),
-              onTap: () {
-                Navigator.pop(ctx);
-                _showManualPaymentDialog(context, invoiceId);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showManualPaymentDialog(BuildContext context, int invoiceId) {
-    PlatformFile? selectedFile;
-    final state = context.read<MemberFinanceBloc>().state;
-
-    final bankName = state.bankName.isNotEmpty ? state.bankName : 'Bank BSI';
-    final bankAccount =
-        state.bankAccount.isNotEmpty ? state.bankAccount : '—';
-    final bankHolder = state.bankHolder.isNotEmpty
-        ? state.bankHolder
-        : 'Wisma Amal Gorontalo';
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: const Text('Upload Bukti Transfer'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Silakan transfer ke rekening berikut:'),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      bankName,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      bankAccount,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        letterSpacing: 1.2,
-                      ),
-                    ),
-                    Text('a.n. $bankHolder'),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-              if (selectedFile != null) ...[
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.timer_outlined, size: 14, color: _timerColor),
+                const SizedBox(width: 4),
                 Text(
-                  'File terpilih: ${selectedFile!.name}',
-                  style: const TextStyle(fontSize: 12, color: Colors.green),
+                  _timerLabel,
+                  style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: _timerColor),
                 ),
-                const SizedBox(height: 8),
               ],
-              ElevatedButton.icon(
-                onPressed: () async {
-                  final result = await FilePicker.platform.pickFiles(
-                    type: FileType.image,
-                    withData: true,
-                  );
-                  if (result != null) {
-                    setState(() => selectedFile = result.files.first);
-                  }
-                },
-                icon: const Icon(Icons.image),
-                label: Text(
-                  selectedFile == null ? 'Pilih Gambar Bukti' : 'Ganti Gambar',
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Batal'),
             ),
-            ElevatedButton(
-              onPressed: selectedFile == null
+          ),
+        ],
+      ),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (widget.bankAccounts.isEmpty)
+              Text(
+                'Hubungi pengelola wisma untuk informasi rekening transfer.',
+                style: TextStyle(fontSize: 13, color: textSecondary),
+              )
+            else ...[
+              Text(
+                'Silakan transfer ke salah satu rekening berikut:',
+                style: TextStyle(fontSize: 13, color: textSecondary),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              ...widget.bankAccounts.map((account) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: surfaceVariant,
+                    borderRadius:
+                        BorderRadius.circular(AppSpacing.radiusMd),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(account.bankName,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                              color: textPrimary)),
+                      const SizedBox(height: 4),
+                      Text(account.accountNumber,
+                          style: TextStyle(
+                              fontSize: 18,
+                              letterSpacing: 1.5,
+                              fontWeight: FontWeight.w700,
+                              color: textPrimary)),
+                      Text('a.n. ${account.accountHolder}',
+                          style:
+                              TextStyle(fontSize: 12, color: textHint)),
+                      if (account.paymentInstructions != null &&
+                          account.paymentInstructions!.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.sm),
+                        Text(account.paymentInstructions!,
+                            style: TextStyle(
+                                fontSize: 12, color: textSecondary)),
+                      ],
+                    ],
+                  ),
+                ),
+              )),
+            ],
+            const SizedBox(height: AppSpacing.sm),
+            if (_selectedFile != null) ...[
+              Text(
+                'File terpilih: ${_selectedFile!.name}',
+                style: TextStyle(fontSize: 12, color: doneColor),
+              ),
+              const SizedBox(height: AppSpacing.sm),
+            ],
+            ElevatedButton.icon(
+              onPressed: _timerExpired
                   ? null
-                  : () {
-                      context.read<MemberFinanceBloc>().add(
-                        PayInvoiceEvent(
-                          invoiceId,
-                          'manual',
-                          paymentProofBytes: selectedFile!.bytes,
-                          paymentProofName: selectedFile!.name,
-                        ),
-                      );
-                      Navigator.pop(ctx);
+                  : () async {
+                      final result = await FilePicker.platform.pickFiles(
+                          type: FileType.image, withData: true);
+                      if (result != null) {
+                        setState(() => _selectedFile = result.files.first);
+                      }
                     },
-              child: const Text('Kirim Bukti'),
+              icon: const Icon(Icons.image),
+              label: Text(_selectedFile == null
+                  ? 'Pilih Gambar Bukti'
+                  : 'Ganti Gambar'),
             ),
           ],
         ),
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Batal'),
+        ),
+        ElevatedButton(
+          onPressed: (_selectedFile == null || _timerExpired)
+              ? null
+              : () {
+                  widget.bloc.add(PayInvoiceEvent(
+                    widget.invoiceId,
+                    'manual',
+                    paymentProofBytes: _selectedFile!.bytes,
+                    paymentProofName: _selectedFile!.name,
+                  ));
+                  Navigator.pop(context);
+                },
+          child: const Text('Kirim Bukti'),
+        ),
+      ],
     );
   }
 }

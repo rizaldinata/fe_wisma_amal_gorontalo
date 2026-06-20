@@ -37,8 +37,20 @@ class PayInvoiceEvent extends MemberFinanceEvent {
 class ExtendLeaseEvent extends MemberFinanceEvent {
   final int leaseId;
   final int duration;
-  const ExtendLeaseEvent(this.leaseId, this.duration);
+  final String paymentMethod;
+  final Uint8List? paymentProofBytes;
+  final String? paymentProofName;
+  final String? preferredPaymentType;
+
+  const ExtendLeaseEvent(
+    this.leaseId,
+    this.duration,
+    this.paymentMethod, {
+    this.paymentProofBytes,
+    this.paymentProofName,
+    this.preferredPaymentType,
+  });
 
   @override
-  List<Object?> get props => [leaseId, duration];
+  List<Object?> get props => [leaseId, duration, paymentMethod, paymentProofBytes, paymentProofName, preferredPaymentType];
 }

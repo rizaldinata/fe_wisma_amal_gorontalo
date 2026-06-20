@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/domain/entity/guest/guest_entity.dart';
+import 'package:frontend/domain/usecase/guest/checkout_admin_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/create_admin_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/get_admin_guests_usecase.dart';
 
@@ -28,6 +29,11 @@ class CreateAdminGuest extends GuestEvent {
     required this.checkOutAt,
     required this.relationship,
   });
+}
+
+class CheckoutAdminGuest extends GuestEvent {
+  final int id;
+  CheckoutAdminGuest(this.id);
 }
 
 // --- STATES ---
@@ -61,10 +67,12 @@ class GuestActionError extends GuestState {
 class GuestBloc extends Bloc<GuestEvent, GuestState> {
   final GetAdminGuestsUseCase getAdminGuestsUseCase;
   final CreateAdminGuestUseCase createAdminGuestUseCase;
+  final CheckoutAdminGuestUseCase checkoutAdminGuestUseCase;
 
   GuestBloc({
     required this.getAdminGuestsUseCase,
     required this.createAdminGuestUseCase,
+    required this.checkoutAdminGuestUseCase,
   }) : super(GuestInitial()) {
     on<FetchAdminGuests>((event, emit) async {
       if (event.page == 1) {
@@ -92,6 +100,16 @@ class GuestBloc extends Bloc<GuestEvent, GuestState> {
           relationship: event.relationship,
         );
         emit(GuestActionSuccess('Data tamu berhasil ditambahkan.'));
+      } catch (e) {
+        emit(GuestActionError(e.toString()));
+      }
+    });
+
+    on<CheckoutAdminGuest>((event, emit) async {
+      try {
+        await checkoutAdminGuestUseCase(event.id);
+        emit(GuestActionSuccess('Tamu berhasil ditandai keluar.'));
+        // We'll let the UI dispatch FetchAdminGuests again or we can do it here if we know the page
       } catch (e) {
         emit(GuestActionError(e.toString()));
       }

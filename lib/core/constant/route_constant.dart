@@ -61,11 +61,14 @@ class RouteConstant {
   static const String completeProfileName = 'profile/complete';
 
   static const String financeExpenseName = 'finance/expenses';
+  static const String financeFixedExpenseName = 'finance/fixed-expenses';
 
   static const String financeInvoiceName = 'finance/invoices';
   static const String paymentVerificationName = 'finance/payment-verification';
   static const String paymentHistoryName = 'finance/payment-history';
   static const String memberFinanceName = 'me/finance';
+  static const String extendLeaseName = 'me/finance/extend-lease';
+  static const String extendLeasePaymentName = 'me/finance/extend-lease/payment';
   static const String myGuestName = 'me/guests';
   static const String adminGuestBillName = 'admin/guest-bills';
 }

@@ -1,12 +1,14 @@
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../../core/services/network/dio_client.dart';
+import '../../domain/entity/setting/midtrans_method_entity.dart';
 import '../model/finance/invoice_model.dart';
 import '../model/finance/payment_model.dart';
 import '../model/finance/kpi_model.dart';
 import '../model/finance/revenue_model.dart';
 import '../model/finance/expense_model.dart';
 import '../model/finance/member_finance_summary_model.dart';
+import '../model/finance/midtrans_monitoring_model.dart';
 import '../model/base_response_model.dart';
 
 abstract class FinanceRemoteDatasource {
@@ -36,8 +38,18 @@ abstract class FinanceRemoteDatasource {
     String? paymentProofName,
     String? preferredPaymentType,
   });
-  Future<void> extendLease(int leaseId, int durationMonths);
+  Future<InvoiceModel> initiatePerpanjangManual(int leaseId, int durationMonths);
+  Future<PaymentModel> extendLease(
+    int leaseId,
+    int durationMonths,
+    String paymentMethod, {
+    Uint8List? paymentProofBytes,
+    String? paymentProofName,
+    String? preferredPaymentType,
+  });
   Future<String> getInvoicePrintLink(int invoiceId);
+  Future<List<MidtransMethodEntity>> getAvailablePaymentMethods();
+  Future<MidtransMonitoringModel> getMidtransMonitoring();
 }
 
 class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
@@ -278,11 +290,45 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
   }
 
   @override
-  Future<void> extendLease(int leaseId, int durationMonths) async {
-    await _dioClient.post(
-      '/rentals/$leaseId/extend',
-      data: {'duration': durationMonths},
+  Future<InvoiceModel> initiatePerpanjangManual(int leaseId, int durationMonths) async {
+    final response = await _dioClient.post(
+      '/finance/me/leases/$leaseId/perpanjang/initiate',
+      data: {'duration_months': durationMonths},
     );
+    return InvoiceModel.fromJson(response.data['data']);
+  }
+
+  @override
+  Future<PaymentModel> extendLease(
+    int leaseId,
+    int durationMonths,
+    String paymentMethod, {
+    Uint8List? paymentProofBytes,
+    String? paymentProofName,
+    String? preferredPaymentType,
+  }) async {
+    dynamic data;
+    if (paymentMethod == 'manual' && paymentProofBytes != null) {
+      data = FormData.fromMap({
+        'duration_months': durationMonths,
+        'payment_method': paymentMethod,
+        'payment_proof': MultipartFile.fromBytes(
+          paymentProofBytes,
+          filename: paymentProofName ?? 'payment_proof.jpg',
+        ),
+      });
+    } else {
+      data = {
+        'duration_months': durationMonths,
+        'payment_method': paymentMethod,
+        if (preferredPaymentType != null) 'payment_type': preferredPaymentType,
+      };
+    }
+    final response = await _dioClient.post(
+      '/finance/me/leases/$leaseId/perpanjang',
+      data: data,
+    );
+    return PaymentModel.fromJson(response.data['data']);
   }
 
   @override
@@ -290,5 +336,25 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
     final response = await _dioClient.get('/finance/invoices/$invoiceId/print-link');
     final data = response.data['data'] as Map<String, dynamic>?;
     return data?['url'] as String? ?? '';
+  }
+
+  @override
+  Future<MidtransMonitoringModel> getMidtransMonitoring() async {
+    final response = await _dioClient.get('/finance/dashboard/midtrans-monitoring');
+    final data = response.data['data'] as Map<String, dynamic>? ?? {};
+    return MidtransMonitoringModel.fromJson(data);
+  }
+
+  @override
+  Future<List<MidtransMethodEntity>> getAvailablePaymentMethods() async {
+    final response = await _dioClient.get('/finance/payment-methods');
+    final List<dynamic> data = response.data['data'] ?? [];
+    return data.map((item) => MidtransMethodEntity(
+          code: item['code'] as String,
+          label: item['label'] as String,
+          enabled: true,
+          available: item['available'] == true,
+          maintenance: item['maintenance'] == true,
+        )).toList();
   }
 }

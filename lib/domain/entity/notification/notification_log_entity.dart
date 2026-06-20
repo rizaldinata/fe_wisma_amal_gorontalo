@@ -3,6 +3,7 @@ class NotificationLogItem {
   final String message;
   final String createdAt;
   final String status;
+  final bool isRead;
   final String? channel;
   final String? recipient;
 
@@ -11,9 +12,31 @@ class NotificationLogItem {
     required this.message,
     required this.createdAt,
     required this.status,
+    required this.isRead,
     this.channel,
     this.recipient,
   });
+
+  String get typeLabel => _resolveTypeLabel(channel);
+
+  static String _resolveTypeLabel(String? type) {
+    switch (type) {
+      case 'payment_receipt':
+        return 'Pembayaran';
+      case 'payment_reminder':
+        return 'Tagihan';
+      case 'manual_broadcast':
+        return 'Broadcast';
+      case 'system_alert':
+        return 'Sistem';
+      case 'guest_registered':
+        return 'Tamu Masuk';
+      case 'guest_stay_ended':
+        return 'Tamu Keluar';
+      default:
+        return type ?? '-';
+    }
+  }
 
   factory NotificationLogItem.fromJson(Map<String, dynamic> json) {
     final message = _resolveMessage(json);
@@ -25,14 +48,15 @@ class NotificationLogItem {
           json['sent_at']?.toString() ??
           json['sentAt']?.toString() ??
           '-',
-      status: json['status']?.toString() ??
-          json['status_label']?.toString() ??
-          json['state']?.toString() ??
-          '-',
-      channel: json['channel']?.toString() ??
-          json['type']?.toString() ??
+      status: _resolveStatus(json['status']?.toString()),
+      isRead: json['is_read'] == 1 || json['is_read'] == true,
+      // 'type' dari backend (enum value: guest_registered, dll)
+      channel: json['type']?.toString() ??
+          json['channel']?.toString() ??
           json['provider']?.toString(),
-      recipient: json['recipient']?.toString() ??
+      // 'target_phone' dari backend
+      recipient: json['target_phone']?.toString() ??
+          json['recipient']?.toString() ??
           json['to']?.toString() ??
           json['target']?.toString(),
     );
@@ -43,33 +67,30 @@ class NotificationLogItem {
     return int.tryParse(value?.toString() ?? '') ?? 0;
   }
 
+  static String _resolveStatus(String? raw) {
+    switch (raw) {
+      case 'sent':
+        return 'Terkirim';
+      case 'failed':
+        return 'Gagal';
+      case 'pending':
+        return 'Pending';
+      default:
+        return raw ?? '-';
+    }
+  }
+
   static String _resolveMessage(Map<String, dynamic> json) {
-    final raw = json['message'] ??
+    // 'message_body' adalah field utama dari backend NotificationLog model
+    final raw = json['message_body'] ??
+        json['message'] ??
         json['title'] ??
         json['body'] ??
         json['content'] ??
         json['description'];
+
     if (raw != null && raw.toString().trim().isNotEmpty) {
       return raw.toString();
-    }
-
-    final penghuni = json['penghuni'] ??
-        json['resident_name'] ??
-        (json['resident'] is Map<String, dynamic>
-            ? (json['resident'] as Map<String, dynamic>)['name']
-            : null) ??
-        json['resident'];
-    final kamar = json['kamar'] ??
-        json['room_number'] ??
-        (json['room'] is Map<String, dynamic>
-            ? (json['room'] as Map<String, dynamic>)['number']
-            : null) ??
-        json['room'];
-
-    if (penghuni != null || kamar != null) {
-      final penghuniLabel = penghuni?.toString() ?? '-';
-      final kamarLabel = kamar?.toString() ?? '-';
-      return 'Tamu oleh penghuni $penghuniLabel pada kamar $kamarLabel saat nya keluar';
     }
 
     return '-';
@@ -102,18 +123,25 @@ class NotificationLogPagination {
 class NotificationLogResponse {
   final List<NotificationLogItem> logs;
   final NotificationLogPagination pagination;
+  /// Jumlah notifikasi yang belum dibaca (dari field 'unread_count' di root response)
+  final int unreadCount;
 
   const NotificationLogResponse({
     required this.logs,
     required this.pagination,
+    required this.unreadCount,
   });
 
   factory NotificationLogResponse.fromJson(Map<String, dynamic> json) {
+    // 'unread_count' ada di root response: { success, data: {...paginator...}, unread_count: N }
+    final unreadCount = json['unread_count'] as int? ?? 0;
+
     final data = json['data'];
     List<dynamic> items = <dynamic>[];
     Map<String, dynamic> metaMap = <String, dynamic>{};
 
     if (data is Map<String, dynamic>) {
+      // Laravel paginator: data.data = array of items
       if (data['data'] is List<dynamic>) {
         items = data['data'] as List<dynamic>;
       } else if (data['logs'] is List<dynamic>) {
@@ -124,6 +152,7 @@ class NotificationLogResponse {
         items = data['records'] as List<dynamic>;
       }
 
+      // Pagination metadata ada langsung di data (Laravel paginator)
       if (data['meta'] is Map<String, dynamic>) {
         metaMap = Map<String, dynamic>.from(data['meta'] as Map);
       } else if (data['pagination'] is Map<String, dynamic>) {
@@ -141,6 +170,7 @@ class NotificationLogResponse {
               e is Map<String, dynamic> ? e : <String, dynamic>{}))
           .toList(),
       pagination: NotificationLogPagination.fromJson(metaMap),
+      unreadCount: unreadCount,
     );
   }
 }
