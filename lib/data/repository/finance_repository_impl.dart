@@ -6,6 +6,7 @@ import '../../domain/entity/finance/payment_entity.dart';
 import '../../domain/entity/finance/expense_entity.dart';
 import '../../domain/entity/finance/member_finance_summary_entity.dart';
 import '../../domain/entity/setting/midtrans_method_entity.dart';
+import '../../domain/entity/finance/midtrans_monitoring_entity.dart';
 import '../../domain/repository/finance_repository.dart';
 import '../datasource/finance_datasource.dart';
 import '../model/finance/expense_model.dart';
@@ -159,6 +160,11 @@ class FinanceRepositoryImpl implements FinanceRepository {
   }
 
   @override
+  Future<InvoiceEntity> initiatePerpanjangManual(int leaseId, int durationMonths) async {
+    return await remoteDatasource.initiatePerpanjangManual(leaseId, durationMonths);
+  }
+
+  @override
   Future<PaymentEntity> extendLease(
     int leaseId,
     int durationMonths,
@@ -185,5 +191,10 @@ class FinanceRepositoryImpl implements FinanceRepository {
   @override
   Future<List<MidtransMethodEntity>> getAvailablePaymentMethods() async {
     return await remoteDatasource.getAvailablePaymentMethods();
+  }
+
+  @override
+  Future<MidtransMonitoringEntity> getMidtransMonitoring() async {
+    return await remoteDatasource.getMidtransMonitoring();
   }
 }

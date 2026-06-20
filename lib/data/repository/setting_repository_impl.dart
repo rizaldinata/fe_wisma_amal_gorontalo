@@ -1,3 +1,4 @@
+import '../../domain/entity/setting/bank_account_entity.dart';
 import '../../domain/entity/setting/midtrans_method_entity.dart';
 import '../../domain/entity/setting/setting_entity.dart';
 import '../../domain/repository/setting_repository.dart';
@@ -51,6 +52,51 @@ class SettingRepositoryImpl implements SettingRepository {
   Future<List<MidtransMethodEntity>> updatePaymentMethods(List<String> enabledCodes) async {
     try {
       return await remoteDatasource.updatePaymentMethods(enabledCodes);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<BankAccountEntity>> getBankAccounts() async {
+    try {
+      return await remoteDatasource.getBankAccounts();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<BankAccountEntity>> getPublicBankAccounts() async {
+    try {
+      return await remoteDatasource.getPublicBankAccounts();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<BankAccountEntity> createBankAccount(Map<String, dynamic> data) async {
+    try {
+      return await remoteDatasource.createBankAccount(data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<BankAccountEntity> updateBankAccount(int id, Map<String, dynamic> data) async {
+    try {
+      return await remoteDatasource.updateBankAccount(id, data);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> deleteBankAccount(int id) async {
+    try {
+      await remoteDatasource.deleteBankAccount(id);
     } catch (e) {
       rethrow;
     }

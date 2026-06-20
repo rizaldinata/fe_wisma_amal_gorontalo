@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import '../../../domain/entity/finance/invoice_entity.dart';
 import '../../../domain/entity/finance/payment_entity.dart';
 import '../../../domain/entity/finance/member_finance_summary_entity.dart';
+import '../../../domain/entity/setting/bank_account_entity.dart';
 
 enum MemberFinanceStatus { initial, loading, success, failure, paymentSuccess, extensionSuccess }
 
@@ -14,9 +15,7 @@ class MemberFinanceState extends Equatable {
   final String? snapToken;
   final Map<String, dynamic>? paymentData;
   final bool isMidtransEnabled;
-  final String bankName;
-  final String bankAccount;
-  final String bankHolder;
+  final List<BankAccountEntity> bankAccounts;
   final int? paymentInvoiceId;
   final double? paymentAmount;
 
@@ -29,9 +28,7 @@ class MemberFinanceState extends Equatable {
     this.snapToken,
     this.paymentData,
     this.isMidtransEnabled = true,
-    this.bankName = '',
-    this.bankAccount = '',
-    this.bankHolder = '',
+    this.bankAccounts = const [],
     this.paymentInvoiceId,
     this.paymentAmount,
   });
@@ -45,9 +42,7 @@ class MemberFinanceState extends Equatable {
     String? snapToken,
     Map<String, dynamic>? paymentData,
     bool? isMidtransEnabled,
-    String? bankName,
-    String? bankAccount,
-    String? bankHolder,
+    List<BankAccountEntity>? bankAccounts,
     int? paymentInvoiceId,
     double? paymentAmount,
   }) {
@@ -60,14 +55,15 @@ class MemberFinanceState extends Equatable {
       snapToken: snapToken ?? this.snapToken,
       paymentData: paymentData ?? this.paymentData,
       isMidtransEnabled: isMidtransEnabled ?? this.isMidtransEnabled,
-      bankName: bankName ?? this.bankName,
-      bankAccount: bankAccount ?? this.bankAccount,
-      bankHolder: bankHolder ?? this.bankHolder,
+      bankAccounts: bankAccounts ?? this.bankAccounts,
       paymentInvoiceId: paymentInvoiceId ?? this.paymentInvoiceId,
       paymentAmount: paymentAmount ?? this.paymentAmount,
     );
   }
 
   @override
-  List<Object?> get props => [status, summary, invoices, payments, errorMessage, snapToken, paymentData, isMidtransEnabled, bankName, bankAccount, bankHolder, paymentInvoiceId, paymentAmount];
+  List<Object?> get props => [
+        status, summary, invoices, payments, errorMessage, snapToken,
+        paymentData, isMidtransEnabled, bankAccounts, paymentInvoiceId, paymentAmount,
+      ];
 }

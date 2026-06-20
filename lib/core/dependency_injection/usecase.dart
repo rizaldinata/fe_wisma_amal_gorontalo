@@ -28,6 +28,7 @@ import 'package:frontend/domain/usecase/finance/get_all_payments_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_revenue_chart_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_expenses_usecase.dart';
 import 'package:frontend/domain/usecase/finance/create_expense_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_midtrans_monitoring_usecase.dart';
 import 'package:frontend/domain/usecase/finance/update_expense_usecase.dart';
 import 'package:frontend/domain/usecase/finance/delete_expense_usecase.dart';
 import 'package:frontend/domain/usecase/permission/create_permission_usecase.dart';
@@ -55,9 +56,15 @@ import 'package:frontend/domain/usecase/finance/get_member_invoices_usecase.dart
 import 'package:frontend/domain/usecase/finance/get_member_payments_usecase.dart';
 import 'package:frontend/domain/usecase/finance/pay_invoice_usecase.dart';
 import 'package:frontend/domain/usecase/finance/extend_lease_usecase.dart';
+import 'package:frontend/domain/usecase/finance/initiate_perpanjang_manual_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_member_invoice_by_id_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_available_payment_methods_usecase.dart';
+import 'package:frontend/domain/usecase/setting/create_bank_account_usecase.dart';
+import 'package:frontend/domain/usecase/setting/delete_bank_account_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_bank_accounts_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_payment_methods_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_public_bank_accounts_usecase.dart';
+import 'package:frontend/domain/usecase/setting/update_bank_account_usecase.dart';
 import 'package:frontend/domain/usecase/setting/update_payment_methods_usecase.dart';
 
 import 'package:frontend/domain/repository/inventory_repository.dart';
@@ -177,6 +184,9 @@ Future<void> initializeUseCase() async {
     () => GetKpiSummaryUseCase(serviceLocator.get<FinanceRepository>()),
   );
   serviceLocator.registerFactory(
+    () => GetMidtransMonitoringUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
     () => GetRevenueChartUseCase(serviceLocator.get<FinanceRepository>()),
   );
   serviceLocator.registerFactory(
@@ -213,6 +223,9 @@ Future<void> initializeUseCase() async {
     () => ExtendLeaseUseCase(serviceLocator.get<FinanceRepository>()),
   );
   serviceLocator.registerFactory(
+    () => InitiatePerpanjangManualUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
     () => GetMemberInvoiceByIdUseCase(serviceLocator.get<FinanceRepository>()),
   );
   serviceLocator.registerFactory(
@@ -234,6 +247,21 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => UpdatePaymentMethodsUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetBankAccountsUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetPublicBankAccountsUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateBankAccountUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateBankAccountUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => DeleteBankAccountUseCase(serviceLocator.get<SettingRepository>()),
   );
 
   // Maintenance UseCases

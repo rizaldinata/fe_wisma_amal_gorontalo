@@ -6,7 +6,9 @@ import '../../../core/dependency_injection/dependency_injection.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../domain/entity/setting/bank_account_entity.dart';
 import '../../../domain/entity/setting/midtrans_method_entity.dart';
+import '../../bloc/bank_account/bank_account_cubit.dart';
 import '../../bloc/payment_method_setting/payment_method_setting_cubit.dart';
 import '../../bloc/setting/setting_bloc.dart';
 import '../../bloc/setting/setting_event.dart';
@@ -25,6 +27,7 @@ class SettingPage extends StatefulWidget {
 class _SettingPageState extends State<SettingPage> {
   late SettingBloc _bloc;
   late PaymentMethodSettingCubit _paymentCubit;
+  late BankAccountCubit _bankAccountCubit;
 
   final _wismaNameController = TextEditingController();
   bool _featureDailyRental = false;
@@ -45,18 +48,21 @@ class _SettingPageState extends State<SettingPage> {
     _bloc.add(FetchSettingsEvent());
     _paymentCubit = serviceLocator.get<PaymentMethodSettingCubit>();
     _paymentCubit.load();
+    _bankAccountCubit = serviceLocator.get<BankAccountCubit>();
+    _bankAccountCubit.load();
   }
 
   @override
   void dispose() {
     _wismaNameController.dispose();
     _paymentCubit.close();
+    _bankAccountCubit.close();
     super.dispose();
   }
 
   void _populateData(Map<String, dynamic> settings) {
     _wismaNameController.text = settings['wisma_name']?.toString() ?? 'Wisma Amal Gorontalo';
-    _featureDailyRental       = settings['feature_daily_rental'] == true || settings['feature_daily_rental']?.toString() == 'true';
+    _featureDailyRental         = settings['feature_daily_rental'] == true || settings['feature_daily_rental']?.toString() == 'true';
     _featureWhatsappReceipt   = settings['feature_whatsapp_receipt'] == true || settings['feature_whatsapp_receipt']?.toString() == 'true';
     _featureWhatsappPdfLink   = settings['feature_whatsapp_pdf_link'] == true || settings['feature_whatsapp_pdf_link']?.toString() == 'true';
     _featurePaymentMidtrans   = settings['feature_payment_midtrans'] == true || settings['feature_payment_midtrans']?.toString() == 'true';
@@ -128,6 +134,7 @@ class _SettingPageState extends State<SettingPage> {
       providers: [
         BlocProvider.value(value: _bloc),
         BlocProvider.value(value: _paymentCubit),
+        BlocProvider.value(value: _bankAccountCubit),
       ],
       child: BlocConsumer<SettingBloc, SettingState>(
         listener: (context, state) {
@@ -206,6 +213,17 @@ class _SettingPageState extends State<SettingPage> {
                           child: _buildWismaNameField(isDark),
                         ),
                         const SizedBox(height: AppSpacing.xl),
+
+                        _SectionCard(
+                          isDark: isDark,
+                          icon: Icons.account_balance_outlined,
+                          accentColor: isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess,
+                          title: 'Rekening Bank Pemilik',
+                          subtitle: 'Daftar rekening transfer manual yang ditampilkan kepada penghuni saat pembayaran.',
+                          child: _buildRekeningBankCrud(isDark),
+                        ),
+                        const SizedBox(height: AppSpacing.xl),
+
 
                         _SectionCard(
                           isDark: isDark,
@@ -426,6 +444,315 @@ class _SettingPageState extends State<SettingPage> {
           }).toList(),
         ),
       ],
+    );
+  }
+
+  Widget _buildRekeningBankCrud(bool isDark) {
+    final surfaceVariant = isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant;
+    final borderColor    = isDark ? AppColorsDark.borderLight    : AppColorsLight.borderLight;
+    final textPrimary    = isDark ? AppColorsDark.textPrimary    : AppColorsLight.textPrimary;
+    final textSecondary  = isDark ? AppColorsDark.textSecondary  : AppColorsLight.textSecondary;
+    final textHint       = isDark ? AppColorsDark.textHint       : AppColorsLight.textHint;
+    final cancelColor    = isDark ? AppColorsDark.statusCancelled: AppColorsLight.statusCancelled;
+    final cancelBg       = isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg;
+    final processColor   = isDark ? AppColorsDark.statusProcess  : AppColorsLight.statusProcess;
+    final doneColor      = isDark ? AppColorsDark.statusDone     : AppColorsLight.statusDone;
+    final doneBg         = isDark ? AppColorsDark.statusDoneBg   : AppColorsLight.statusDoneBg;
+    final infoColor      = textSecondary;
+    final infoBg         = surfaceVariant;
+    final infoBorder     = borderColor;
+
+    return BlocBuilder<BankAccountCubit, BankAccountState>(
+      builder: (context, state) {
+        final accounts = state is BankAccountLoaded ? state.accounts : <BankAccountEntity>[];
+        final isLoading = state is BankAccountLoading;
+        final actionError = state is BankAccountLoaded ? state.actionError : null;
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (actionError != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(color: cancelBg, borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+                  child: Text(actionError, style: TextStyle(color: cancelColor, fontSize: 12)),
+                ),
+              ),
+
+            if (isLoading)
+              const Center(child: Padding(padding: EdgeInsets.all(AppSpacing.lg), child: CircularProgressIndicator()))
+            else if (accounts.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  color: surfaceVariant,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  border: Border.all(color: borderColor),
+                ),
+                child: Text(
+                  'Belum ada rekening bank. Tambahkan untuk ditampilkan ke penghuni.',
+                  style: TextStyle(fontSize: 13, color: textHint),
+                  textAlign: TextAlign.center,
+                ),
+              )
+            else
+              ...accounts.map((account) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: surfaceVariant,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(account.bankName,
+                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: textPrimary)),
+                                      const SizedBox(width: AppSpacing.sm),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                        decoration: BoxDecoration(
+                                          color: account.isActive ? doneBg : cancelBg,
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: Text(
+                                          account.isActive ? 'Aktif' : 'Nonaktif',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.w600,
+                                            color: account.isActive ? doneColor : cancelColor,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(account.accountNumber,
+                                      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: textPrimary, letterSpacing: 1)),
+                                  Text('a.n. ${account.accountHolder}',
+                                      style: TextStyle(fontSize: 12, color: textHint)),
+                                  if (account.paymentInstructions != null && account.paymentInstructions!.isNotEmpty) ...[
+                                    const SizedBox(height: AppSpacing.xs),
+                                    Text(account.paymentInstructions!,
+                                        style: TextStyle(fontSize: 12, color: textSecondary)),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(Icons.edit_outlined, size: 18, color: processColor),
+                                  tooltip: 'Edit',
+                                  onPressed: () => _showBankAccountDialog(context, isDark, existing: account),
+                                ),
+                                IconButton(
+                                  icon: Icon(Icons.delete_outline, size: 18, color: cancelColor),
+                                  tooltip: 'Hapus',
+                                  onPressed: () => _confirmDeleteBankAccount(context, isDark, account),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )),
+
+            const SizedBox(height: AppSpacing.md),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _showBankAccountDialog(context, isDark),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Tambah Rekening Bank'),
+              ),
+            ),
+
+            const SizedBox(height: AppSpacing.lg),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.sm + 2),
+              decoration: BoxDecoration(
+                color: infoBg,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                border: Border.all(color: infoBorder),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.info_outline, size: 16, color: infoColor),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(
+                    child: Text(
+                      'Rekening ini hanya ditampilkan sebagai referensi transfer manual untuk penghuni. '
+                      'Untuk mengubah rekening pencairan dana Midtrans, login ke dashboard Midtrans secara langsung.',
+                      style: TextStyle(fontSize: 12, color: infoColor, height: 1.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showBankAccountDialog(BuildContext context, bool isDark, {BankAccountEntity? existing}) {
+    final bankNameCtrl    = TextEditingController(text: existing?.bankName ?? '');
+    final accountNumCtrl  = TextEditingController(text: existing?.accountNumber ?? '');
+    final holderCtrl      = TextEditingController(text: existing?.accountHolder ?? '');
+    final instrCtrl       = TextEditingController(text: existing?.paymentInstructions ?? '');
+    bool isActive         = existing?.isActive ?? true;
+    final cubit           = context.read<BankAccountCubit>();
+
+    final borderColor    = isDark ? AppColorsDark.borderLight  : AppColorsLight.borderLight;
+    final borderMedColor = isDark ? AppColorsDark.borderMedium : AppColorsLight.borderMedium;
+    final textSecColor   = isDark ? AppColorsDark.textSecondary: AppColorsLight.textSecondary;
+
+    Widget field(String label, String hint, IconData icon, TextEditingController ctrl, {int maxLines = 1}) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: textSecColor)),
+          const SizedBox(height: 4),
+          TextField(
+            controller: ctrl,
+            maxLines: maxLines,
+            decoration: InputDecoration(
+              hintText: hint,
+              prefixIcon: maxLines == 1 ? Icon(icon, size: 18) : null,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                borderSide: BorderSide(color: borderColor),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                borderSide: BorderSide(color: borderColor),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                borderSide: BorderSide(color: borderMedColor),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+            ),
+          ),
+        ],
+      );
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocalState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+          title: Text(existing == null ? 'Tambah Rekening Bank' : 'Edit Rekening Bank'),
+          content: SizedBox(
+            width: 460,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  field('Nama Bank', 'Contoh: BSI / BCA / BRI', Icons.account_balance_outlined, bankNameCtrl),
+                  const SizedBox(height: AppSpacing.md),
+                  field('Nomor Rekening', 'Contoh: 7000001234', Icons.credit_card_outlined, accountNumCtrl),
+                  const SizedBox(height: AppSpacing.md),
+                  field('Atas Nama', 'Contoh: Pemilik Wisma', Icons.person_outline, holderCtrl),
+                  const SizedBox(height: AppSpacing.md),
+                  field('Cara Pembayaran (Opsional)', 'Contoh: Transfer sesuai nominal tagihan dan kirim bukti.',
+                      Icons.info_outline, instrCtrl, maxLines: 3),
+                  const SizedBox(height: AppSpacing.md),
+                  SwitchListTile(
+                    value: isActive,
+                    onChanged: (val) => setLocalState(() => isActive = val),
+                    title: Text('Rekening Aktif', style: TextStyle(fontSize: 13, color: textSecColor)),
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Batal'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final name   = bankNameCtrl.text.trim();
+                final number = accountNumCtrl.text.trim();
+                final holder = holderCtrl.text.trim();
+                if (name.isEmpty || number.isEmpty || holder.isEmpty) return;
+
+                final data = {
+                  'bank_name':            name,
+                  'account_number':       number,
+                  'account_holder':       holder,
+                  'payment_instructions': instrCtrl.text.trim().isEmpty ? null : instrCtrl.text.trim(),
+                  'is_active':            isActive,
+                };
+
+                if (existing == null) {
+                  cubit.create(data);
+                } else {
+                  cubit.update(existing.id, data);
+                }
+                Navigator.pop(ctx);
+              },
+              child: Text(existing == null ? 'Tambah' : 'Simpan'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _confirmDeleteBankAccount(BuildContext context, bool isDark, BankAccountEntity account) {
+    final cancelColor = isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
+    final cubit = context.read<BankAccountCubit>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+        title: const Text('Hapus Rekening Bank?'),
+        content: Text(
+          'Rekening "${account.bankName} - ${account.accountNumber}" akan dihapus dan tidak lagi ditampilkan ke penghuni.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Batal'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: cancelColor, foregroundColor: Colors.white),
+            onPressed: () {
+              cubit.delete(account.id);
+              Navigator.pop(ctx);
+            },
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
     );
   }
 

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:typed_data';
 import 'package:auto_route/auto_route.dart';
 import 'package:file_picker/file_picker.dart';
@@ -10,6 +11,9 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_shadows.dart';
 import '../../../core/theme/app_spacing.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../domain/entity/setting/bank_account_entity.dart';
+import '../../../domain/usecase/finance/initiate_perpanjang_manual_usecase.dart';
+import '../../../domain/usecase/setting/get_public_bank_accounts_usecase.dart';
 import '../../bloc/member_finance/member_finance_bloc.dart';
 import '../../bloc/member_finance/member_finance_event.dart';
 import '../../bloc/member_finance/member_finance_state.dart';
@@ -50,29 +54,131 @@ class ExtendLeasePage extends StatefulWidget {
     required this.roomNumber,
     required this.currentEndDate,
     required this.isMidtransEnabled,
-    this.bankName = '',
-    this.bankAccount = '',
-    this.bankHolder = '',
   });
 
   final int leaseId;
   final String roomNumber;
   final DateTime currentEndDate;
   final bool isMidtransEnabled;
-  final String bankName;
-  final String bankAccount;
-  final String bankHolder;
 
   @override
   State<ExtendLeasePage> createState() => _ExtendLeasePageState();
 }
 
 class _ExtendLeasePageState extends State<ExtendLeasePage> {
+  // Step 1: pilih durasi + metode
   int _duration = 1;
   String _paymentMethod = 'manual';
   String? _selectedMidtransMethod;
+  bool _isInitiating = false;
+
+  // Step 2 (manual only): upload bukti
+  int _step = 1;
+  int? _invoiceId;
+  double? _invoiceAmount;
   Uint8List? _proofBytes;
   String? _proofName;
+  List<BankAccountEntity> _bankAccounts = [];
+
+  // Countdown (dari server payment_expires_at)
+  Timer? _countdownTimer;
+  int _remainingSeconds = 0;
+  bool _timerExpired = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBankAccounts();
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startCountdownFromExpiry(DateTime expiresAt) {
+    _countdownTimer?.cancel();
+    final remaining = expiresAt.difference(DateTime.now()).inSeconds;
+    setState(() {
+      _remainingSeconds = remaining > 0 ? remaining : 0;
+      _timerExpired = _remainingSeconds <= 0;
+    });
+    if (_timerExpired) { _onTimerExpired(); return; }
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) { timer.cancel(); return; }
+      setState(() {
+        if (_remainingSeconds > 0) {
+          _remainingSeconds--;
+        } else {
+          _timerExpired = true;
+          timer.cancel();
+          _onTimerExpired();
+        }
+      });
+    });
+  }
+
+  void _onTimerExpired() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Waktu pembayaran habis. Invoice dibatalkan otomatis. Silakan ulangi.'),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+        duration: Duration(seconds: 4),
+      ),
+    );
+    context.router.maybePop();
+  }
+
+  String get _timerLabel {
+    final m = (_remainingSeconds ~/ 60).toString().padLeft(2, '0');
+    final s = (_remainingSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  Color _timerColor(BuildContext context) {
+    if (_remainingSeconds <= 60) return Colors.red;
+    if (_remainingSeconds <= 120) return Colors.orange;
+    return Theme.of(context).colorScheme.primary;
+  }
+
+  Future<void> _loadBankAccounts() async {
+    try {
+      final accounts = await serviceLocator.get<GetPublicBankAccountsUseCase>().execute();
+      if (mounted) setState(() => _bankAccounts = accounts);
+    } catch (_) {}
+  }
+
+  Future<void> _initiateManualPayment() async {
+    setState(() => _isInitiating = true);
+    try {
+      final invoice = await serviceLocator
+          .get<InitiatePerpanjangManualUseCase>()
+          .execute(widget.leaseId, _duration);
+      if (!mounted) return;
+      setState(() {
+        _invoiceId    = invoice.id;
+        _invoiceAmount = invoice.amount;
+        _step = 2;
+        _isInitiating = false;
+      });
+      if (invoice.paymentExpiresAt != null) {
+        _startCountdownFromExpiry(invoice.paymentExpiresAt!);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isInitiating = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString().replaceFirst('Exception: ', '')),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
 
   DateTime _addMonths(DateTime date, int months) {
     final totalMonths = date.month + months;
@@ -95,11 +201,7 @@ class _ExtendLeasePageState extends State<ExtendLeasePage> {
     }
   }
 
-  bool get _canSubmit {
-    if (_paymentMethod == 'manual') return _proofBytes != null;
-    // midtrans: bisa submit tanpa pilih sub-metode (gunakan Snap sebagai fallback)
-    return true;
-  }
+  bool get _canSubmitStep2 => _proofBytes != null && !_timerExpired;
 
   @override
   Widget build(BuildContext context) {
@@ -200,79 +302,136 @@ class _ExtendLeasePageState extends State<ExtendLeasePage> {
                 ),
                 const SizedBox(height: AppSpacing.xl),
 
-                // ── Durasi + preview tanggal ──────────────────────────────
-                _buildDurationCard(
-                  surfaceColor: surfaceColor,
-                  borderColor: borderColor,
-                  textHint: textHint,
-                  textSecondary: textSecondary,
-                  doneColor: doneColor,
-                  doneBg: doneBg,
-                  newEndDate: newEndDate,
-                ),
-                const SizedBox(height: AppSpacing.xl),
+                if (_step == 1) ...[
+                  // ── Durasi + preview tanggal ────────────────────────────
+                  _buildDurationCard(
+                    surfaceColor: surfaceColor,
+                    borderColor: borderColor,
+                    textHint: textHint,
+                    textSecondary: textSecondary,
+                    doneColor: doneColor,
+                    doneBg: doneBg,
+                    newEndDate: newEndDate,
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
 
-                // ── Metode pembayaran ─────────────────────────────────────
-                _buildPaymentMethodCard(
-                  surfaceColor: surfaceColor,
-                  surfaceVariant: surfaceVariant,
-                  borderColor: borderColor,
-                  textPrimary: textPrimary,
-                  textSecondary: textSecondary,
-                  textHint: textHint,
-                  doneColor: doneColor,
-                  doneBg: doneBg,
-                ),
-                const SizedBox(height: AppSpacing.xxl),
+                  // ── Metode pembayaran ───────────────────────────────────
+                  _buildPaymentMethodCard(
+                    surfaceColor: surfaceColor,
+                    surfaceVariant: surfaceVariant,
+                    borderColor: borderColor,
+                    textPrimary: textPrimary,
+                    textSecondary: textSecondary,
+                    textHint: textHint,
+                    doneColor: doneColor,
+                    doneBg: doneBg,
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
 
-                // ── Tombol submit ─────────────────────────────────────────
-                BlocBuilder<MemberFinanceBloc, MemberFinanceState>(
-                  builder: (context, state) {
-                    final isLoading = state.status == MemberFinanceStatus.loading;
-                    final label = _paymentMethod == 'midtrans'
-                        ? (_selectedMidtransMethod != null
-                            ? 'Bayar dengan ${_kMidtransMethods[_selectedMidtransMethod]?.label ?? _selectedMidtransMethod!.toUpperCase()}'
-                            : 'Lanjutkan ke Pembayaran')
-                        : 'Kirim Bukti Pembayaran';
-
-                    return SizedBox(
+                  // ── Tombol step 1 ───────────────────────────────────────
+                  if (_paymentMethod == 'manual') ...[
+                    SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(
-                        onPressed: isLoading || !_canSubmit
-                            ? null
-                            : () {
-                                context.read<MemberFinanceBloc>().add(
-                                  ExtendLeaseEvent(
-                                    widget.leaseId,
-                                    _duration,
-                                    _paymentMethod,
-                                    paymentProofBytes: _proofBytes,
-                                    paymentProofName: _proofName,
-                                    preferredPaymentType: _selectedMidtransMethod,
-                                  ),
-                                );
-                              },
-                        icon: isLoading
+                        onPressed: _isInitiating ? null : _initiateManualPayment,
+                        icon: _isInitiating
                             ? const SizedBox(
                                 width: 18, height: 18,
                                 child: CircularProgressIndicator(
                                     strokeWidth: 2, color: Colors.white),
                               )
-                            : Icon(
-                                _paymentMethod == 'midtrans'
-                                    ? Icons.payment_outlined
-                                    : Icons.send_outlined,
-                                size: 18),
-                        label: Text(isLoading ? 'Memproses…' : label),
+                            : const Icon(Icons.arrow_forward, size: 18),
+                        label: Text(_isInitiating ? 'Memproses…' : 'Lanjutkan ke Upload Bukti'),
                         style: ElevatedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
-                          textStyle: const TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.w600),
+                          textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                         ),
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  ] else ...[
+                    BlocBuilder<MemberFinanceBloc, MemberFinanceState>(
+                      builder: (context, state) {
+                        final isLoading = state.status == MemberFinanceStatus.loading;
+                        final label = _selectedMidtransMethod != null
+                            ? 'Bayar dengan ${_kMidtransMethods[_selectedMidtransMethod]?.label ?? _selectedMidtransMethod!.toUpperCase()}'
+                            : 'Lanjutkan ke Pembayaran';
+                        return SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: isLoading
+                                ? null
+                                : () => context.read<MemberFinanceBloc>().add(
+                                      ExtendLeaseEvent(
+                                        widget.leaseId,
+                                        _duration,
+                                        _paymentMethod,
+                                        preferredPaymentType: _selectedMidtransMethod,
+                                      ),
+                                    ),
+                            icon: isLoading
+                                ? const SizedBox(
+                                    width: 18, height: 18,
+                                    child: CircularProgressIndicator(
+                                        strokeWidth: 2, color: Colors.white),
+                                  )
+                                : const Icon(Icons.payment_outlined, size: 18),
+                            label: Text(isLoading ? 'Memproses…' : label),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                              textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ] else ...[
+                  // ── STEP 2: Upload bukti dengan countdown ───────────────
+                  _buildCountdownBanner(context),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildStep2UploadCard(
+                    surfaceColor: surfaceColor,
+                    surfaceVariant: surfaceVariant,
+                    borderColor: borderColor,
+                    textPrimary: textPrimary,
+                    textSecondary: textSecondary,
+                    textHint: textHint,
+                    doneColor: doneColor,
+                  ),
+                  const SizedBox(height: AppSpacing.xxl),
+                  BlocBuilder<MemberFinanceBloc, MemberFinanceState>(
+                    builder: (context, state) {
+                      final isLoading = state.status == MemberFinanceStatus.loading;
+                      return SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: (isLoading || !_canSubmitStep2)
+                              ? null
+                              : () => context.read<MemberFinanceBloc>().add(
+                                    PayInvoiceEvent(
+                                      _invoiceId!,
+                                      'manual',
+                                      paymentProofBytes: _proofBytes,
+                                      paymentProofName: _proofName,
+                                    ),
+                                  ),
+                          icon: isLoading
+                              ? const SizedBox(
+                                  width: 18, height: 18,
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2, color: Colors.white),
+                                )
+                              : const Icon(Icons.send_outlined, size: 18),
+                          label: Text(isLoading ? 'Mengirim…' : 'Kirim Bukti Pembayaran'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+                            textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.xl),
               ],
             ),
@@ -499,32 +658,42 @@ class _ExtendLeasePageState extends State<ExtendLeasePage> {
 
           // ── Detail sesuai metode ──────────────────────────────────────
           if (_paymentMethod == 'manual') ...[
+            // Countdown timer
+            _buildCountdownBanner(context),
+            const SizedBox(height: AppSpacing.md),
+
             // Info rekening
-            if (widget.bankName.isNotEmpty || widget.bankAccount.isNotEmpty) ...[
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  color: surfaceVariant,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                  border: Border.all(color: borderColor),
+            if (_bankAccounts.isNotEmpty) ...[
+              Text('Transfer ke salah satu rekening berikut:',
+                  style: TextStyle(fontSize: 12, color: textSecondary)),
+              const SizedBox(height: AppSpacing.sm),
+              ..._bankAccounts.map((account) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: surfaceVariant,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                    border: Border.all(color: borderColor),
+                  ),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(account.bankName,
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: textPrimary)),
+                    const SizedBox(height: 2),
+                    Text(account.accountNumber,
+                        style: TextStyle(fontSize: 16, letterSpacing: 1.2, fontWeight: FontWeight.w700, color: textPrimary)),
+                    Text('a.n. ${account.accountHolder}',
+                        style: TextStyle(fontSize: 12, color: textHint)),
+                    if (account.paymentInstructions != null && account.paymentInstructions!.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.sm),
+                      Text(account.paymentInstructions!,
+                          style: TextStyle(fontSize: 12, color: textSecondary)),
+                    ],
+                  ]),
                 ),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Transfer ke rekening berikut:',
-                      style: TextStyle(fontSize: 12, color: textSecondary)),
-                  const SizedBox(height: AppSpacing.sm),
-                  if (widget.bankName.isNotEmpty)
-                    _BankRow(label: 'Bank', value: widget.bankName,
-                        textPrimary: textPrimary, textSecondary: textSecondary),
-                  if (widget.bankAccount.isNotEmpty)
-                    _BankRow(label: 'No. Rekening', value: widget.bankAccount,
-                        textPrimary: textPrimary, textSecondary: textSecondary),
-                  if (widget.bankHolder.isNotEmpty)
-                    _BankRow(label: 'Atas Nama', value: widget.bankHolder,
-                        textPrimary: textPrimary, textSecondary: textSecondary),
-                ]),
-              ),
-              const SizedBox(height: AppSpacing.lg),
+              )),
+              const SizedBox(height: AppSpacing.sm),
             ],
 
             // Upload bukti
@@ -665,6 +834,182 @@ class _ExtendLeasePageState extends State<ExtendLeasePage> {
               },
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStep2UploadCard({
+    required Color surfaceColor,
+    required Color surfaceVariant,
+    required Color borderColor,
+    required Color textPrimary,
+    required Color textSecondary,
+    required Color textHint,
+    required Color doneColor,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.xl),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('INFORMASI TRANSFER',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
+                  color: textHint, letterSpacing: 0.8)),
+          const SizedBox(height: AppSpacing.md),
+          if (_bankAccounts.isNotEmpty) ...[
+            Text('Transfer ke salah satu rekening berikut:',
+                style: TextStyle(fontSize: 12, color: textSecondary)),
+            const SizedBox(height: AppSpacing.sm),
+            ..._bankAccounts.map((account) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.md),
+                decoration: BoxDecoration(
+                  color: surfaceVariant,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  border: Border.all(color: borderColor),
+                ),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Text(account.bankName,
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: textPrimary)),
+                  Text(account.accountNumber,
+                      style: TextStyle(fontSize: 16, letterSpacing: 1.2, fontWeight: FontWeight.w700, color: textPrimary)),
+                  Text('a.n. ${account.accountHolder}',
+                      style: TextStyle(fontSize: 12, color: textHint)),
+                  if (account.paymentInstructions != null && account.paymentInstructions!.isNotEmpty) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    Text(account.paymentInstructions!,
+                        style: TextStyle(fontSize: 12, color: textSecondary)),
+                  ],
+                ]),
+              ),
+            )),
+            const SizedBox(height: AppSpacing.md),
+          ],
+          if (_invoiceAmount != null) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: doneColor.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(color: doneColor.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Jumlah Transfer:',
+                      style: TextStyle(fontWeight: FontWeight.w600, color: textPrimary)),
+                  Text(
+                    'Rp ${_invoiceAmount!.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d)(?=(\d{3})+(?!\d))'), (m) => '${m[1]}.')}',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: doneColor),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+          ],
+          Text('UPLOAD BUKTI TRANSFER',
+              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700,
+                  color: textHint, letterSpacing: 0.8)),
+          const SizedBox(height: AppSpacing.sm),
+          GestureDetector(
+            onTap: _timerExpired ? null : _pickFile,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              decoration: BoxDecoration(
+                color: _proofBytes != null
+                    ? doneColor.withValues(alpha: 0.08)
+                    : surfaceVariant,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                border: Border.all(
+                  color: _proofBytes != null
+                      ? doneColor.withValues(alpha: 0.5)
+                      : borderColor,
+                ),
+              ),
+              child: Row(children: [
+                Icon(
+                  _proofBytes != null ? Icons.check_circle_outline : Icons.upload_file_outlined,
+                  color: _proofBytes != null ? doneColor : textSecondary,
+                  size: 22,
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _proofBytes != null ? 'Bukti transfer dipilih' : 'Upload Bukti Transfer',
+                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600,
+                          color: _proofBytes != null ? doneColor : textPrimary),
+                    ),
+                    if (_proofName != null)
+                      Text(_proofName!,
+                          style: TextStyle(fontSize: 11, color: textSecondary),
+                          maxLines: 1, overflow: TextOverflow.ellipsis)
+                    else
+                      Text('Tap untuk memilih gambar (JPG/PNG)',
+                          style: TextStyle(fontSize: 11, color: textHint)),
+                  ],
+                )),
+                if (_proofBytes != null)
+                  Icon(Icons.edit_outlined, size: 16, color: textSecondary),
+              ]),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCountdownBanner(BuildContext context) {
+    final color = _timerColor(context);
+    final bgColor = color.withValues(alpha: 0.1);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: bgColor,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _timerExpired ? Icons.timer_off_outlined : Icons.timer_outlined,
+            color: color,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _timerExpired
+                  ? 'Waktu pembayaran habis'
+                  : 'Selesaikan dalam $_timerLabel',
+              style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                  color: color),
+            ),
+          ),
+          if (!_timerExpired)
+            Text(
+              _timerLabel,
+              style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                  color: color),
+            ),
         ],
       ),
     );

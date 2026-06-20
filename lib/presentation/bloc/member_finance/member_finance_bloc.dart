@@ -5,6 +5,7 @@ import '../../../domain/usecase/finance/get_member_payments_usecase.dart';
 import '../../../domain/usecase/finance/pay_invoice_usecase.dart';
 import '../../../domain/usecase/finance/extend_lease_usecase.dart';
 import '../../../domain/usecase/setting/get_public_settings_usecase.dart';
+import '../../../domain/usecase/setting/get_public_bank_accounts_usecase.dart';
 import 'member_finance_event.dart';
 import 'member_finance_state.dart';
 
@@ -15,6 +16,7 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
   final PayInvoiceUseCase _payInvoice;
   final ExtendLeaseUseCase _extendLease;
   final GetPublicSettingsUseCase _getSettings;
+  final GetPublicBankAccountsUseCase _getBankAccounts;
 
   MemberFinanceBloc({
     required GetMemberFinanceSummaryUseCase getSummary,
@@ -23,12 +25,14 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
     required PayInvoiceUseCase payInvoice,
     required ExtendLeaseUseCase extendLease,
     required GetPublicSettingsUseCase getSettings,
+    required GetPublicBankAccountsUseCase getBankAccounts,
   })  : _getSummary = getSummary,
         _getInvoices = getInvoices,
         _getPayments = getPayments,
         _payInvoice = payInvoice,
         _extendLease = extendLease,
         _getSettings = getSettings,
+        _getBankAccounts = getBankAccounts,
         super(const MemberFinanceState()) {
     on<FetchMemberFinanceSummary>(_onFetchSummary);
     on<FetchMemberInvoices>(_onFetchInvoices);
@@ -46,14 +50,13 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
       final summary = await _getSummary.execute();
       final settings = await _getSettings.execute();
       final isMidtrans = settings.getBool('feature_payment_midtrans');
+      final bankAccounts = await _getBankAccounts.execute();
 
       emit(state.copyWith(
         status: MemberFinanceStatus.success,
         summary: summary,
         isMidtransEnabled: isMidtrans,
-        bankName: settings.getString('bank_name') ?? '',
-        bankAccount: settings.getString('bank_account') ?? '',
-        bankHolder: settings.getString('bank_holder') ?? '',
+        bankAccounts: bankAccounts,
       ));
     } catch (e) {
       emit(state.copyWith(
@@ -119,7 +122,6 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
         snapToken: payment.snapToken,
         paymentData: payment.paymentData,
       ));
-      // Refresh invoices and summary if manual (to show pending status)
       if (event.paymentMethod == 'manual') {
         add(FetchMemberInvoices());
         add(FetchMemberPayments());

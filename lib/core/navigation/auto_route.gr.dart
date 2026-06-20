@@ -289,9 +289,6 @@ class ExtendLeaseRoute extends _i47.PageRouteInfo<ExtendLeaseRouteArgs> {
     required String roomNumber,
     required DateTime currentEndDate,
     required bool isMidtransEnabled,
-    String bankName = '',
-    String bankAccount = '',
-    String bankHolder = '',
     List<_i47.PageRouteInfo>? children,
   }) : super(
          ExtendLeaseRoute.name,
@@ -301,9 +298,6 @@ class ExtendLeaseRoute extends _i47.PageRouteInfo<ExtendLeaseRouteArgs> {
            roomNumber: roomNumber,
            currentEndDate: currentEndDate,
            isMidtransEnabled: isMidtransEnabled,
-           bankName: bankName,
-           bankAccount: bankAccount,
-           bankHolder: bankHolder,
          ),
          initialChildren: children,
        );
@@ -320,9 +314,6 @@ class ExtendLeaseRoute extends _i47.PageRouteInfo<ExtendLeaseRouteArgs> {
         roomNumber: args.roomNumber,
         currentEndDate: args.currentEndDate,
         isMidtransEnabled: args.isMidtransEnabled,
-        bankName: args.bankName,
-        bankAccount: args.bankAccount,
-        bankHolder: args.bankHolder,
       );
     },
   );
@@ -335,9 +326,6 @@ class ExtendLeaseRouteArgs {
     required this.roomNumber,
     required this.currentEndDate,
     required this.isMidtransEnabled,
-    this.bankName = '',
-    this.bankAccount = '',
-    this.bankHolder = '',
   });
 
   final _i48.Key? key;
@@ -350,15 +338,9 @@ class ExtendLeaseRouteArgs {
 
   final bool isMidtransEnabled;
 
-  final String bankName;
-
-  final String bankAccount;
-
-  final String bankHolder;
-
   @override
   String toString() {
-    return 'ExtendLeaseRouteArgs{key: $key, leaseId: $leaseId, roomNumber: $roomNumber, currentEndDate: $currentEndDate, isMidtransEnabled: $isMidtransEnabled, bankName: $bankName, bankAccount: $bankAccount, bankHolder: $bankHolder}';
+    return 'ExtendLeaseRouteArgs{key: $key, leaseId: $leaseId, roomNumber: $roomNumber, currentEndDate: $currentEndDate, isMidtransEnabled: $isMidtransEnabled}';
   }
 
   @override
@@ -369,10 +351,7 @@ class ExtendLeaseRouteArgs {
         leaseId == other.leaseId &&
         roomNumber == other.roomNumber &&
         currentEndDate == other.currentEndDate &&
-        isMidtransEnabled == other.isMidtransEnabled &&
-        bankName == other.bankName &&
-        bankAccount == other.bankAccount &&
-        bankHolder == other.bankHolder;
+        isMidtransEnabled == other.isMidtransEnabled;
   }
 
   @override
@@ -381,10 +360,7 @@ class ExtendLeaseRouteArgs {
       leaseId.hashCode ^
       roomNumber.hashCode ^
       currentEndDate.hashCode ^
-      isMidtransEnabled.hashCode ^
-      bankName.hashCode ^
-      bankAccount.hashCode ^
-      bankHolder.hashCode;
+      isMidtransEnabled.hashCode;
 }
 
 /// generated route for

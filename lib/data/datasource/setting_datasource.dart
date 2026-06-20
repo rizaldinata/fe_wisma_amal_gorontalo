@@ -1,5 +1,6 @@
 import '../../core/services/network/dio_client.dart';
 import '../../domain/entity/setting/midtrans_method_entity.dart';
+import '../model/setting/bank_account_model.dart';
 import '../model/setting/setting_model.dart';
 
 abstract class SettingDatasource {
@@ -8,6 +9,12 @@ abstract class SettingDatasource {
   Future<SettingModel> updateBulkSettings(Map<String, dynamic> settingsData);
   Future<List<MidtransMethodEntity>> getPaymentMethods();
   Future<List<MidtransMethodEntity>> updatePaymentMethods(List<String> enabledCodes);
+
+  Future<List<BankAccountModel>> getBankAccounts();
+  Future<List<BankAccountModel>> getPublicBankAccounts();
+  Future<BankAccountModel> createBankAccount(Map<String, dynamic> data);
+  Future<BankAccountModel> updateBankAccount(int id, Map<String, dynamic> data);
+  Future<void> deleteBankAccount(int id);
 }
 
 class SettingDatasourceImpl implements SettingDatasource {
@@ -80,6 +87,57 @@ class SettingDatasourceImpl implements SettingDatasource {
             label: item['label'] as String,
             enabled: item['enabled'] == true,
           )).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<BankAccountModel>> getBankAccounts() async {
+    try {
+      final response = await _dioClient.get('/v1/settings/bank-accounts');
+      final List<dynamic> data = response.data['data'] ?? [];
+      return data.map((e) => BankAccountModel.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<BankAccountModel>> getPublicBankAccounts() async {
+    try {
+      final response = await _dioClient.get('/v1/settings/bank-accounts/public');
+      final List<dynamic> data = response.data['data'] ?? [];
+      return data.map((e) => BankAccountModel.fromJson(e as Map<String, dynamic>)).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<BankAccountModel> createBankAccount(Map<String, dynamic> data) async {
+    try {
+      final response = await _dioClient.post('/v1/settings/bank-accounts', data: data);
+      return BankAccountModel.fromJson(response.data['data'] as Map<String, dynamic>);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<BankAccountModel> updateBankAccount(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dioClient.put('/v1/settings/bank-accounts/$id', data: data);
+      return BankAccountModel.fromJson(response.data['data'] as Map<String, dynamic>);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> deleteBankAccount(int id) async {
+    try {
+      await _dioClient.delete('/v1/settings/bank-accounts/$id');
     } catch (e) {
       rethrow;
     }

@@ -8,6 +8,9 @@ class InvoiceModel extends InvoiceEntity {
     required super.amount,
     required super.status,
     required super.dueDate,
+    super.paymentExpiresAt,
+    super.periodStart,
+    super.periodEnd,
     super.residentName,
     super.roomNumber,
     super.createdAt,
@@ -26,6 +29,11 @@ class InvoiceModel extends InvoiceEntity {
       dueDate: DateTime.parse(
         json['due_date'] ?? DateTime.now().toIso8601String(),
       ),
+      paymentExpiresAt: json['payment_expires_at'] != null
+          ? DateTime.tryParse(json['payment_expires_at'].toString())
+          : null,
+      periodStart: json['period_start'] as String?,
+      periodEnd: json['period_end'] as String?,
       residentName: lease?['resident_name'] as String?,
       roomNumber: lease?['room_number'] as String?,
       createdAt: json['created_at'] != null

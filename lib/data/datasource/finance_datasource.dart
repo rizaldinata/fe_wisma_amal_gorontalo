@@ -8,6 +8,7 @@ import '../model/finance/kpi_model.dart';
 import '../model/finance/revenue_model.dart';
 import '../model/finance/expense_model.dart';
 import '../model/finance/member_finance_summary_model.dart';
+import '../model/finance/midtrans_monitoring_model.dart';
 import '../model/base_response_model.dart';
 
 abstract class FinanceRemoteDatasource {
@@ -37,6 +38,7 @@ abstract class FinanceRemoteDatasource {
     String? paymentProofName,
     String? preferredPaymentType,
   });
+  Future<InvoiceModel> initiatePerpanjangManual(int leaseId, int durationMonths);
   Future<PaymentModel> extendLease(
     int leaseId,
     int durationMonths,
@@ -47,6 +49,7 @@ abstract class FinanceRemoteDatasource {
   });
   Future<String> getInvoicePrintLink(int invoiceId);
   Future<List<MidtransMethodEntity>> getAvailablePaymentMethods();
+  Future<MidtransMonitoringModel> getMidtransMonitoring();
 }
 
 class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
@@ -287,6 +290,15 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
   }
 
   @override
+  Future<InvoiceModel> initiatePerpanjangManual(int leaseId, int durationMonths) async {
+    final response = await _dioClient.post(
+      '/finance/me/leases/$leaseId/perpanjang/initiate',
+      data: {'duration_months': durationMonths},
+    );
+    return InvoiceModel.fromJson(response.data['data']);
+  }
+
+  @override
   Future<PaymentModel> extendLease(
     int leaseId,
     int durationMonths,
@@ -324,6 +336,13 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
     final response = await _dioClient.get('/finance/invoices/$invoiceId/print-link');
     final data = response.data['data'] as Map<String, dynamic>?;
     return data?['url'] as String? ?? '';
+  }
+
+  @override
+  Future<MidtransMonitoringModel> getMidtransMonitoring() async {
+    final response = await _dioClient.get('/finance/dashboard/midtrans-monitoring');
+    final data = response.data['data'] as Map<String, dynamic>? ?? {};
+    return MidtransMonitoringModel.fromJson(data);
   }
 
   @override

@@ -10,6 +10,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../bloc/finance_dashboard/finance_dashboard_bloc.dart';
 import '../../bloc/finance_dashboard/finance_dashboard_event.dart';
 import '../../bloc/finance_dashboard/finance_dashboard_state.dart';
+import '../../bloc/midtrans_monitoring/midtrans_monitoring_cubit.dart';
 import '../../widget/core/appbar/app_topbar.dart';
 import '../../widget/core/card/basic_card.dart';
 import '../../../domain/entity/finance/invoice_entity.dart';
@@ -40,6 +41,7 @@ class FinanceDashboardPage extends StatefulWidget {
 
 class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
   late final FinanceDashboardBloc _financeBloc;
+  late final MidtransMonitoringCubit _monitoringCubit;
 
   int? _selectedYear = DateTime.now().year;
   int? _selectedMonth = DateTime.now().month;
@@ -82,6 +84,14 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
     super.initState();
     _financeBloc = serviceLocator.get<FinanceDashboardBloc>();
     _applyFilter();
+    _monitoringCubit = serviceLocator.get<MidtransMonitoringCubit>();
+    _monitoringCubit.load();
+  }
+
+  @override
+  void dispose() {
+    _monitoringCubit.close();
+    super.dispose();
   }
 
   void _applyFilter() {
@@ -95,8 +105,11 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
     final isDark = AppTheme.isDark(context);
     final bgColor = isDark ? AppColorsDark.background : AppColorsLight.background;
 
-    return BlocProvider.value(
-      value: _financeBloc,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: _financeBloc),
+        BlocProvider.value(value: _monitoringCubit),
+      ],
       child: Scaffold(
         backgroundColor: bgColor,
         body: Column(
@@ -178,6 +191,160 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
                   ],
                 ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Midtrans Monitoring Card ────────────────────────────────────────────────
+
+class _MidtransMonitoringCard extends StatelessWidget {
+  const _MidtransMonitoringCard({required this.formatRupiah});
+
+  final String Function(double) formatRupiah;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<MidtransMonitoringCubit, MidtransMonitoringState>(
+      builder: (context, state) {
+        if (state is MidtransMonitoringInitial || state is MidtransMonitoringLoading) {
+          return const BasicCard(
+            padding: EdgeInsets.symmetric(vertical: 40),
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        if (state is MidtransMonitoringError) {
+          return BasicCard(
+            padding: const EdgeInsets.all(20),
+            child: Center(
+              child: Text(
+                'Gagal memuat data Midtrans: ${state.message}',
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+
+        if (state is! MidtransMonitoringLoaded) return const SizedBox.shrink();
+        final d = state.data;
+
+        final bulanNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+            'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+        final bulanLabel = d.bulan > 0 && d.bulan <= 12 ? bulanNames[d.bulan] : '';
+
+        return BasicCard(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // ── Stat Chips Row ────────────────────────────────────────────
+              Row(
+                children: [
+                  _MonitoringStatChip(
+                    label: 'Settlement',
+                    value: '${d.jumlahSettlement}×',
+                    color: _kColorRevenue,
+                  ),
+                  const SizedBox(width: 10),
+                  _MonitoringStatChip(
+                    label: 'Pending',
+                    value: '${d.jumlahPending}×',
+                    color: _kColorWarning,
+                  ),
+                  const SizedBox(width: 10),
+                  _MonitoringStatChip(
+                    label: 'Total Transaksi',
+                    value: '${d.totalTransaksi}×',
+                    color: _kColorInfo,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // ── Total Settlement ──────────────────────────────────────────
+              Row(
+                children: [
+                  Expanded(
+                    child: _KpiCard(
+                      icon: Icons.check_circle_outline_rounded,
+                      iconColor: _kColorRevenue,
+                      title: 'Total Terkumpul (Settlement)',
+                      tooltip: 'Jumlah total uang dari pembayaran Midtrans yang sudah berstatus settlement (sudah masuk rekening).',
+                      value: formatRupiah(d.totalSettlement),
+                      valueColor: _kColorRevenue,
+                    ),
+                  ),
+                  if (bulanLabel.isNotEmpty) ...[
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _KpiCard(
+                        icon: Icons.calendar_today_outlined,
+                        iconColor: _kColorMonthly,
+                        title: 'Settlement $bulanLabel ${d.tahun}',
+                        tooltip: 'Jumlah pembayaran Midtrans yang settlement pada bulan ini.',
+                        value: formatRupiah(d.settlementBulanIni),
+                        valueColor: _kColorMonthly,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+
+              // ── Refresh button ────────────────────────────────────────────
+              const SizedBox(height: 8),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton.icon(
+                  onPressed: () => context.read<MidtransMonitoringCubit>().load(),
+                  icon: const Icon(Icons.refresh_rounded, size: 16),
+                  label: const Text('Refresh', style: TextStyle(fontSize: 12)),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _MonitoringStatChip extends StatelessWidget {
+  const _MonitoringStatChip({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.10),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: color.withOpacity(0.25)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: TextStyle(fontSize: 11, color: color.withOpacity(0.8)),
             ),
           ],
         ),
@@ -372,6 +539,12 @@ class _DashboardContent extends StatelessWidget {
         _sectionTitle(context, 'Pembayaran Perlu Konfirmasi', isDark),
         const SizedBox(height: AppSpacing.lg),
         _PendingPaymentsTable(payments: pendingPayments, formatRupiah: formatRupiah),
+        const SizedBox(height: AppSpacing.xxxl),
+
+        // ── Midtrans Monitoring ───────────────────────────────────────────
+        _sectionTitle(context, 'Monitoring Pembayaran Midtrans', isDark),
+        const SizedBox(height: AppSpacing.lg),
+        _MidtransMonitoringCard(formatRupiah: formatRupiah),
         const SizedBox(height: AppSpacing.xxl),
       ],
     );
