@@ -42,6 +42,10 @@ abstract class PermissionKeys {
   static const financeExpenseCreate = 'finance-expense-create';
   static const financeExpenseUpdate = 'finance-expense-update';
   static const financeExpenseDelete = 'finance-expense-delete';
+  static const financeFixedExpenseView = 'finance-fixed-expense-view';
+  static const financeFixedExpenseCreate = 'finance-fixed-expense-create';
+  static const financeFixedExpenseUpdate = 'finance-fixed-expense-update';
+  static const financeFixedExpenseDelete = 'finance-fixed-expense-delete';
   /// Ringkasan keuangan pribadi (member & resident)
   static const financeMeSummaryView = 'finance-me-summary-view';
   static const financeMeInvoiceView = 'finance-me-invoice-view';

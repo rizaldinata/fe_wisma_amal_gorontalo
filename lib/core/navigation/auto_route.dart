@@ -134,12 +134,6 @@ class AppRouter extends RootStackRouter {
           path: RouteConstant.paymentVerificationName,
           page: PaymentVerificationRoute.page,
         ),
-        AutoRoute(
-          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
-          path: RouteConstant.paymentHistoryName,
-          page: PaymentHistoryRoute.page,
-        ),
-
         // manajemen inventaris
         AutoRoute(
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],

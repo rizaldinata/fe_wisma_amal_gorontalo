@@ -11,6 +11,11 @@ import '../../bloc/payment_verification/payment_verification_state.dart';
 import '../../widget/core/card/basic_card.dart';
 import '../../widget/core/table/table.dart';
 import '../../../domain/entity/table/tabel_colum.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_theme.dart';
+import '../../widget/core/appbar/app_topbar.dart';
+import '../../widget/core/card/summary_stat_card.dart';
 
 @RoutePage()
 class PaymentVerificationPage extends StatefulWidget {
@@ -31,6 +36,7 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
   // Search & filter — tabel bawah (semua)
   String _searchAll = '';
   String _statusFilter = 'Semua';
+  String _methodFilter = 'Semua';
   int? _filterYear;
   int? _filterMonth;
   final TextEditingController _searchAllCtrl = TextEditingController();
@@ -38,6 +44,7 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
 
   static const int _perPage = 10;
   static const _statusOptions = ['Semua', 'Menunggu', 'Disetujui', 'Ditolak', 'Refund'];
+  static const _methodOptions = ['Semua', 'Manual', 'Midtrans'];
 
   @override
   void initState() {
@@ -63,8 +70,10 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
 
   String _methodLabel(String m) => m == 'midtrans' ? 'Midtrans / QRIS' : 'Transfer Manual';
   IconData _methodIcon(String m) => m == 'midtrans' ? Icons.qr_code : Icons.account_balance;
-  Color _methodColor(String m) =>
-      m == 'midtrans' ? Colors.indigo.shade600 : Colors.teal.shade600;
+  Color _methodColor(String m, bool isDark) =>
+      m == 'midtrans'
+          ? (isDark ? AppColorsDark.primary : AppColorsLight.primary)
+          : (isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone);
 
   String _statusLabel(String s) {
     switch (s.toLowerCase()) {
@@ -78,27 +87,27 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
     }
   }
 
-  Color _statusColor(String s) {
+  Color _statusColor(String s, bool isDark) {
     switch (s.toLowerCase()) {
-      case 'pending':           return Colors.orange.shade700;
+      case 'pending':           return isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
       case 'verified':
-      case 'paid':              return Colors.green.shade700;
+      case 'paid':              return isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone;
       case 'rejected':
-      case 'failed':            return Colors.red.shade600;
-      case 'refunded':          return Colors.blue.shade600;
-      default:                  return Colors.grey.shade600;
+      case 'failed':            return isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
+      case 'refunded':          return isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess;
+      default:                  return isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
     }
   }
 
-  Color _statusBg(String s) {
+  Color _statusBg(String s, bool isDark) {
     switch (s.toLowerCase()) {
-      case 'pending':           return Colors.orange.shade50;
+      case 'pending':           return isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg;
       case 'verified':
-      case 'paid':              return Colors.green.shade50;
+      case 'paid':              return isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg;
       case 'rejected':
-      case 'failed':            return Colors.red.shade50;
-      case 'refunded':          return Colors.blue.shade50;
-      default:                  return Colors.grey.shade100;
+      case 'failed':            return isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg;
+      case 'refunded':          return isDark ? AppColorsDark.statusProcessBg : AppColorsLight.statusProcessBg;
+      default:                  return isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant;
     }
   }
 
@@ -137,6 +146,7 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
     } else if (_filterMonth != null) {
       parts.add(DateFormat('MMMM', 'id_ID').format(DateTime(0, _filterMonth!)));
     }
+    if (_methodFilter != 'Semua') parts.add(_methodFilter);
     if (_statusFilter != 'Semua') parts.add(_statusFilter);
     return parts.isEmpty ? 'Semua Pembayaran' : 'Pembayaran — ${parts.join(' · ')}';
   }
@@ -161,6 +171,11 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
           if (dt == null || dt.month != _filterMonth) return false;
         }
         if (_statusFilter != 'Semua' && _statusLabel(p.status) != _statusFilter) return false;
+        if (_methodFilter != 'Semua') {
+          final isManual = p.paymentMethod != 'midtrans';
+          if (_methodFilter == 'Manual' && !isManual) return false;
+          if (_methodFilter == 'Midtrans' && isManual) return false;
+        }
         return _matchSearch(p, _searchAll);
       }).toList();
 
@@ -175,6 +190,7 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
   // ─── Dialog Verifikasi (untuk payment pending) ────────────────────────────
   void _showVerificationDialog(PaymentEntity payment) {
     final notesCtrl = TextEditingController(text: payment.adminNotes ?? '');
+    final isDark = AppTheme.isDark(context);
 
     showDialog(
       context: context,
@@ -213,7 +229,7 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                       Text('Nominal', style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
                       Text(formatRupiah(payment.amount), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       Text(_methodLabel(payment.paymentMethod),
-                          style: TextStyle(fontSize: 12, color: _methodColor(payment.paymentMethod), fontWeight: FontWeight.w600)),
+                          style: TextStyle(fontSize: 12, color: _methodColor(payment.paymentMethod, isDark), fontWeight: FontWeight.w600)),
                     ]),
                   ]),
                   if (payment.transactionId != null) ...[
@@ -315,6 +331,7 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
 
   // ─── Dialog Detail (untuk payment yang sudah diproses) ────────────────────
   void _showDetailDialog(PaymentEntity payment) {
+    final isDark = AppTheme.isDark(context);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -322,14 +339,14 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
         title: Row(children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: _statusBg(payment.status), borderRadius: BorderRadius.circular(8)),
-            child: Icon(_statusIcon(payment.status), color: _statusColor(payment.status), size: 20),
+            decoration: BoxDecoration(color: _statusBg(payment.status, isDark), borderRadius: BorderRadius.circular(8)),
+            child: Icon(_statusIcon(payment.status), color: _statusColor(payment.status, isDark), size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Text('Detail Pembayaran', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             Text(_statusLabel(payment.status),
-                style: TextStyle(fontSize: 12, color: _statusColor(payment.status), fontWeight: FontWeight.w600)),
+                style: TextStyle(fontSize: 12, color: _statusColor(payment.status, isDark), fontWeight: FontWeight.w600)),
           ])),
         ]),
         content: SingleChildScrollView(
@@ -356,7 +373,7 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                       Text('Nominal', style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
                       Text(formatRupiah(payment.amount), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       Text(_methodLabel(payment.paymentMethod),
-                          style: TextStyle(fontSize: 12, color: _methodColor(payment.paymentMethod), fontWeight: FontWeight.w600)),
+                          style: TextStyle(fontSize: 12, color: _methodColor(payment.paymentMethod, isDark), fontWeight: FontWeight.w600)),
                     ]),
                   ]),
                   const Divider(height: 16),
@@ -486,6 +503,9 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+    final bgColor = isDark ? AppColorsDark.background : AppColorsLight.background;
+
     return BlocProvider.value(
       value: _bloc,
       child: BlocListener<PaymentVerificationBloc, PaymentVerificationState>(
@@ -497,27 +517,22 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
           }
         },
         child: Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // ── Header ──────────────────────────────────────────────
-              Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, crossAxisAlignment: CrossAxisAlignment.center, children: [
-                Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Text('Verifikasi Pembayaran', style: Theme.of(context).textTheme.headlineLarge),
-                  const SizedBox(height: 6),
-                  const Text('Tinjau, konfirmasi, dan pantau riwayat seluruh pembayaran penghuni.',
-                      style: TextStyle(fontSize: 14, color: Colors.grey)),
-                ])),
-                OutlinedButton.icon(
+          backgroundColor: bgColor,
+          body: Column(
+            children: [
+              AppTopBar(
+                title: 'Manajemen Pembayaran',
+                breadcrumb: 'Keuangan / Pembayaran',
+                action: ElevatedButton.icon(
                   onPressed: () => _bloc.add(FetchAllPayments()),
                   icon: const Icon(Icons.refresh, size: 18),
                   label: const Text('Refresh'),
-                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
                 ),
-              ]),
-              const SizedBox(height: 28),
-
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(AppSpacing.xxxl),
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               BlocBuilder<PaymentVerificationBloc, PaymentVerificationState>(
                 buildWhen: (p, c) => c is PaymentVerificationLoading || c is PaymentVerificationLoaded,
                 builder: (ctx, state) {
@@ -548,15 +563,46 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                   return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     // ── Summary cards ────────────────────────────────
                     Row(children: [
-                      Expanded(child: _summaryCard('Menunggu Verifikasi', '$pendingCount Transaksi', 'Perlu tindak lanjut', Icons.hourglass_top, Colors.orange.shade700, Colors.orange.shade50)),
-                      const SizedBox(width: 16),
-                      Expanded(child: _summaryCard('Disetujui', '$verifiedCount Transaksi', formatRupiah(totalVerified), Icons.check_circle_outline, Colors.green.shade700, Colors.green.shade50)),
-                      const SizedBox(width: 16),
-                      Expanded(child: _summaryCard('Ditolak / Gagal', '$rejectedCount Transaksi', 'Perlu perhatian', Icons.cancel_outlined, Colors.red.shade600, Colors.red.shade50)),
-                      const SizedBox(width: 16),
-                      Expanded(child: _summaryCard('Total Transaksi', '${all.length} Transaksi', 'Semua status', Icons.receipt_long, Colors.blue.shade700, Colors.blue.shade50)),
+                      Expanded(child: SummaryStatCard(
+                        label: 'Menunggu Verifikasi',
+                        value: '$pendingCount Transaksi',
+                        icon: Icons.hourglass_top,
+                        iconColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
+                        iconBg: isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg,
+                        trend: 'Perlu tindak lanjut',
+                        trendColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
+                      )),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(child: SummaryStatCard(
+                        label: 'Disetujui',
+                        value: '$verifiedCount Transaksi',
+                        icon: Icons.check_circle_outline,
+                        iconColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
+                        iconBg: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
+                        trend: formatRupiah(totalVerified),
+                        trendColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
+                      )),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(child: SummaryStatCard(
+                        label: 'Ditolak / Gagal',
+                        value: '$rejectedCount Transaksi',
+                        icon: Icons.cancel_outlined,
+                        iconColor: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled,
+                        iconBg: isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg,
+                        trend: 'Perlu perhatian',
+                        trendColor: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled,
+                      )),
+                      const SizedBox(width: AppSpacing.lg),
+                      Expanded(child: SummaryStatCard(
+                        label: 'Total Transaksi',
+                        value: '${all.length} Transaksi',
+                        icon: Icons.receipt_long,
+                        iconColor: isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess,
+                        iconBg: isDark ? AppColorsDark.statusProcessBg : AppColorsLight.statusProcessBg,
+                        trend: 'Semua status',
+                      )),
                     ]),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: AppSpacing.xxxl),
 
                     // ════════════════════════════════════════════════
                     // TABEL ATAS — Menunggu Verifikasi
@@ -592,15 +638,15 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                         TableColumn(label: 'Aksi', flex: 2, align: TextAlign.right),
                       ],
                       rows: pagedPending.map((payment) => [
-                        _colPenghuni(payment),
-                        _colMetode(payment),
+                        _colPenghuni(payment, isDark),
+                        _colMetode(payment, isDark),
                         Text(formatRupiah(payment.amount), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                        Text(formatDate(payment.paymentDate), style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                        Text(formatDate(payment.paymentDate), style: TextStyle(fontSize: 12, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary)),
                         Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                           FilledButton(
                             onPressed: () => _showVerificationDialog(payment),
                             style: FilledButton.styleFrom(
-                              backgroundColor: Colors.orange.shade600,
+                              backgroundColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                               minimumSize: const Size(90, 36),
@@ -615,7 +661,7 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                       child: Row(children: [
                         Text('Menampilkan ${pagedPending.length} dari ${filteredPending.length} transaksi pending',
-                            style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
+                            style: TextStyle(fontSize: 13, color: isDark ? AppColorsDark.textHint : AppColorsLight.textHint)),
                         const Spacer(),
                         _PaginationBar(currentPage: pagePending, totalPages: totalPagesPending, onPageChanged: (p) => setState(() => _pagePending = p)),
                       ]),
@@ -642,8 +688,8 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                                       ? IconButton(icon: const Icon(Icons.clear, size: 18), onPressed: () { _searchAllCtrl.clear(); setState(() { _searchAll = ''; _pageAll = 1; }); })
                                       : null,
                                   contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
-                                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: Colors.grey.shade300)),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight)),
+                                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight)),
                                 ),
                               ),
                             ),
@@ -669,14 +715,33 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                                 onPressed: () => setState(() { _filterYear = null; _filterMonth = null; _pageAll = 1; }),
                                 icon: const Icon(Icons.close, size: 14),
                                 label: const Text('Reset', style: TextStyle(fontSize: 12)),
-                                style: TextButton.styleFrom(foregroundColor: Colors.grey.shade600),
+                                style: TextButton.styleFrom(foregroundColor: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary),
                               ),
                             ],
                           ]),
                           const SizedBox(height: 10),
-                          // Row 2: status chips
+                          // Row 2: metode + status chips
                           Row(children: [
-                            Text('Status:', style: TextStyle(fontSize: 12, color: Colors.grey.shade600, fontWeight: FontWeight.w500)),
+                            Text('Metode:', style: TextStyle(fontSize: 12, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary, fontWeight: FontWeight.w500)),
+                            const SizedBox(width: 8),
+                            ..._methodOptions.map((opt) => Padding(
+                              padding: const EdgeInsets.only(right: 6),
+                              child: GestureDetector(
+                                onTap: () => setState(() { _methodFilter = opt; _pageAll = 1; }),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 180),
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: _methodFilter == opt ? Theme.of(context).primaryColor : (isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant),
+                                    borderRadius: BorderRadius.circular(20),
+                                    border: Border.all(color: _methodFilter == opt ? Theme.of(context).primaryColor : (isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight)),
+                                  ),
+                                  child: Text(opt, style: TextStyle(fontSize: 12, fontWeight: _methodFilter == opt ? FontWeight.w600 : FontWeight.normal, color: _methodFilter == opt ? Colors.white : (isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary))),
+                                ),
+                              ),
+                            )),
+                            const SizedBox(width: 16),
+                            Text('Status:', style: TextStyle(fontSize: 12, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary, fontWeight: FontWeight.w500)),
                             const SizedBox(width: 8),
                             ..._statusOptions.map((opt) => Padding(
                               padding: const EdgeInsets.only(right: 6),
@@ -686,11 +751,11 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                                   duration: const Duration(milliseconds: 180),
                                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                                   decoration: BoxDecoration(
-                                    color: _statusFilter == opt ? Theme.of(context).primaryColor : Colors.grey.shade100,
+                                    color: _statusFilter == opt ? Theme.of(context).primaryColor : (isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant),
                                     borderRadius: BorderRadius.circular(20),
-                                    border: Border.all(color: _statusFilter == opt ? Theme.of(context).primaryColor : Colors.grey.shade300),
+                                    border: Border.all(color: _statusFilter == opt ? Theme.of(context).primaryColor : (isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight)),
                                   ),
-                                  child: Text(opt, style: TextStyle(fontSize: 12, fontWeight: _statusFilter == opt ? FontWeight.w600 : FontWeight.normal, color: _statusFilter == opt ? Colors.white : Colors.grey.shade700)),
+                                  child: Text(opt, style: TextStyle(fontSize: 12, fontWeight: _statusFilter == opt ? FontWeight.w600 : FontWeight.normal, color: _statusFilter == opt ? Colors.white : (isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary))),
                                 ),
                               ),
                             )),
@@ -713,26 +778,26 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                         TableColumn(label: 'Aksi', flex: 2, align: TextAlign.right),
                       ],
                       rows: pagedAll.map((payment) => [
-                        _colPenghuni(payment),
-                        _colMetode(payment),
+                        _colPenghuni(payment, isDark),
+                        _colMetode(payment, isDark),
                         Text(formatRupiah(payment.amount), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                        Text(formatDate(payment.paymentDate), style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+                        Text(formatDate(payment.paymentDate), style: TextStyle(fontSize: 12, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary)),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(color: _statusBg(payment.status), borderRadius: BorderRadius.circular(20), border: Border.all(color: _statusColor(payment.status).withOpacity(0.3))),
-                          child: Text(_statusLabel(payment.status), style: TextStyle(color: _statusColor(payment.status), fontSize: 12, fontWeight: FontWeight.w600)),
+                          decoration: BoxDecoration(color: _statusBg(payment.status, isDark), borderRadius: BorderRadius.circular(20), border: Border.all(color: _statusColor(payment.status, isDark).withValues(alpha: 0.3))),
+                          child: Text(_statusLabel(payment.status), style: TextStyle(color: _statusColor(payment.status, isDark), fontSize: 12, fontWeight: FontWeight.w600)),
                         ),
                         Row(mainAxisAlignment: MainAxisAlignment.end, children: [
                           if (_isPending(payment))
                             FilledButton(
                               onPressed: () => _showVerificationDialog(payment),
-                              style: FilledButton.styleFrom(backgroundColor: Colors.orange.shade600, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), minimumSize: const Size(90, 36)),
+                              style: FilledButton.styleFrom(backgroundColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), minimumSize: const Size(90, 36)),
                               child: const Text('Verifikasi', style: TextStyle(fontSize: 12)),
                             )
                           else
                             OutlinedButton(
                               onPressed: () => _showDetailDialog(payment),
-                              style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), side: BorderSide(color: Colors.grey.shade300), minimumSize: const Size(80, 36)),
+                              style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), side: BorderSide(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight), minimumSize: const Size(80, 36)),
                               child: const Text('Detail', style: TextStyle(fontSize: 12)),
                             ),
                         ]),
@@ -743,7 +808,7 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                       child: Row(children: [
                         Text('Menampilkan ${pagedAll.length} dari ${filteredAll.length} transaksi',
-                            style: TextStyle(fontSize: 13, color: Colors.grey.shade500)),
+                            style: TextStyle(fontSize: 13, color: isDark ? AppColorsDark.textHint : AppColorsLight.textHint)),
                         const Spacer(),
                         _PaginationBar(currentPage: pageAll, totalPages: totalPagesAll, onPageChanged: (p) => setState(() => _pageAll = p)),
                       ]),
@@ -751,58 +816,48 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                   ]);
                 },
               ),
-            ]),
+              ]),
+            ),
           ),
-        ),
+        ],
       ),
+    ),
+  ),
     );
   }
 
-  Widget _colPenghuni(PaymentEntity p) => Row(children: [
+  Widget _colPenghuni(PaymentEntity p, bool isDark) => Row(children: [
     Container(
       width: 40, height: 40,
-      decoration: BoxDecoration(color: _statusBg(p.status), borderRadius: BorderRadius.circular(10)),
-      child: Icon(_statusIcon(p.status), color: _statusColor(p.status), size: 20),
+      decoration: BoxDecoration(color: _statusBg(p.status, isDark), borderRadius: BorderRadius.circular(10)),
+      child: Icon(_statusIcon(p.status), color: _statusColor(p.status, isDark), size: 20),
     ),
     const SizedBox(width: 12),
     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Text(p.residentName ?? '-', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14), overflow: TextOverflow.ellipsis),
       Row(children: [
         if (p.roomNumber != null) ...[
-          Icon(Icons.meeting_room_outlined, size: 12, color: Colors.grey.shade500),
+          Icon(Icons.meeting_room_outlined, size: 12, color: isDark ? AppColorsDark.textHint : AppColorsLight.textHint),
           const SizedBox(width: 3),
-          Text('Kamar ${p.roomNumber}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
+          Text('Kamar ${p.roomNumber}', style: TextStyle(fontSize: 12, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary)),
           const SizedBox(width: 8),
         ],
         if (p.invoiceNumber != null) ...[
-          Icon(Icons.receipt_outlined, size: 12, color: Colors.grey.shade400),
+          Icon(Icons.receipt_outlined, size: 12, color: isDark ? AppColorsDark.textHint : AppColorsLight.textHint),
           const SizedBox(width: 3),
-          Text(p.invoiceNumber!, style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+          Text(p.invoiceNumber!, style: TextStyle(fontSize: 12, color: isDark ? AppColorsDark.textHint : AppColorsLight.textHint)),
         ],
       ]),
     ])),
   ]);
 
-  Widget _colMetode(PaymentEntity p) => Row(children: [
-    Icon(_methodIcon(p.paymentMethod), size: 15, color: _methodColor(p.paymentMethod)),
+  Widget _colMetode(PaymentEntity p, bool isDark) => Row(children: [
+    Icon(_methodIcon(p.paymentMethod), size: 15, color: _methodColor(p.paymentMethod, isDark)),
     const SizedBox(width: 6),
     Flexible(child: Text(_methodLabel(p.paymentMethod),
-        style: TextStyle(fontSize: 12, color: _methodColor(p.paymentMethod), fontWeight: FontWeight.w600))),
+        style: TextStyle(fontSize: 12, color: _methodColor(p.paymentMethod, isDark), fontWeight: FontWeight.w600))),
   ]);
 
-  Widget _summaryCard(String title, String value, String sub, IconData icon, Color textColor, Color bgColor) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(color: bgColor, borderRadius: BorderRadius.circular(14), border: Border.all(color: textColor.withOpacity(0.2))),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Row(children: [Icon(icon, color: textColor, size: 20), const SizedBox(width: 8), Expanded(child: Text(title, style: TextStyle(color: textColor, fontSize: 12, fontWeight: FontWeight.w600)))]),
-        const SizedBox(height: 10),
-        Text(value, style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold)),
-        const SizedBox(height: 2),
-        Text(sub, style: TextStyle(color: textColor.withOpacity(0.65), fontSize: 11)),
-      ]),
-    );
-  }
 }
 
 // ── Year / Month Dropdown ──────────────────────────────────────────────────

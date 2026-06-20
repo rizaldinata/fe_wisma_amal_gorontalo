@@ -49,6 +49,9 @@ import 'package:frontend/domain/repository/guest_repository.dart';
 import 'package:frontend/data/datasource/notification_datasource.dart';
 import 'package:frontend/data/repository/notification_repository_impl.dart';
 import 'package:frontend/domain/repository/notification_repository.dart';
+import 'package:frontend/data/datasource/fixed_expense_datasource.dart';
+import 'package:frontend/data/repository/fixed_expense_repository_impl.dart';
+import 'package:frontend/domain/repository/fixed_expense_repository.dart';
 
 Future<void> initializeRepository() async {
   serviceLocator.registerFactory<AuthRepository>(
@@ -127,5 +130,8 @@ Future<void> initializeRepository() async {
     () => NotificationRepositoryImpl(
       datasource: serviceLocator<NotificationDatasource>(),
     ),
+  );
+  serviceLocator.registerFactory<FixedExpenseRepository>(
+    () => FixedExpenseRepositoryImpl(serviceLocator<FixedExpenseRemoteDatasource>()),
   );
 }

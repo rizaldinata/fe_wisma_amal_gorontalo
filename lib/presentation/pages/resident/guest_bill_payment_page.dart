@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/domain/entity/setting/bank_account_entity.dart';
+import 'package:frontend/domain/usecase/setting/get_public_bank_accounts_usecase.dart';
 import 'package:frontend/presentation/bloc/guest/my_guest_bloc.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
@@ -57,12 +60,86 @@ class _GuestBillPaymentView extends StatefulWidget {
 class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
   PlatformFile? _selectedFile;
   bool _isSubmitting = false;
+  List<BankAccountEntity> _bankAccounts = [];
+
+  Timer? _countdownTimer;
+  int _remainingSeconds = 900;
+  bool _timerExpired = false;
 
   final _currency = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
     decimalDigits: 0,
   );
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBankAccounts();
+    _startCountdown();
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
+  }
+
+  void _startCountdown() {
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) { timer.cancel(); return; }
+      setState(() {
+        if (_remainingSeconds > 0) {
+          _remainingSeconds--;
+        } else {
+          _timerExpired = true;
+          timer.cancel();
+          _onTimerExpired();
+        }
+      });
+    });
+  }
+
+  void _onTimerExpired() {
+    if (!mounted) return;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Waktu Habis'),
+        content: const Text(
+            'Batas waktu pembayaran (15 menit) telah habis. Silakan ulangi proses pembayaran.'),
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              context.router.pop(false);
+            },
+            child: const Text('Kembali'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String get _timerLabel {
+    final m = (_remainingSeconds ~/ 60).toString().padLeft(2, '0');
+    final s = (_remainingSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
+
+  Color _timerColor(ThemeData theme) {
+    if (_remainingSeconds <= 60) return Colors.red;
+    if (_remainingSeconds <= 120) return Colors.orange;
+    return theme.colorScheme.primary;
+  }
+
+  Future<void> _loadBankAccounts() async {
+    try {
+      final accounts = await serviceLocator.get<GetPublicBankAccountsUseCase>().execute();
+      if (mounted) setState(() => _bankAccounts = accounts);
+    } catch (_) {}
+  }
 
   Future<void> _pickFile() async {
     final result = await FilePicker.platform.pickFiles(
@@ -117,6 +194,8 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _buildCountdownBanner(theme),
+                  const SizedBox(height: 16),
                   _buildSummaryCard(theme),
                   const SizedBox(height: 20),
                   _buildBankInfoCard(theme),
@@ -125,9 +204,8 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
                   const SizedBox(height: 28),
                   SizedBox(
                     width: double.infinity,
-                    child: BasicButton(
-                      isLoading: _isSubmitting,
-                      onPressed: (_selectedFile == null || _isSubmitting)
+                    child: ElevatedButton.icon(
+                      onPressed: (_selectedFile == null || _isSubmitting || _timerExpired)
                           ? null
                           : _submit,
                       leadIcon: const Icon(Icons.send_outlined, color: Colors.white, size: 18),
@@ -139,6 +217,59 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCountdownBanner(ThemeData theme) {
+    final color = _timerColor(theme);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withAlpha(25),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withAlpha(100)),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _timerExpired ? Icons.timer_off_outlined : Icons.timer_outlined,
+            color: color,
+            size: 22,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _timerExpired ? 'Waktu pembayaran habis' : 'Batas waktu pembayaran',
+                  style: TextStyle(
+                      fontSize: 12,
+                      color: color,
+                      fontWeight: FontWeight.w500),
+                ),
+                if (!_timerExpired)
+                  Text(
+                    'Kirim bukti sebelum waktu habis',
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: color.withAlpha(180)),
+                  ),
+              ],
+            ),
+          ),
+          if (!_timerExpired)
+            Text(
+              _timerLabel,
+              style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                  color: color),
+            ),
+        ],
       ),
     );
   }
@@ -200,51 +331,77 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.bold)),
             const Divider(height: 20),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withAlpha(60),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(
-                    color: theme.colorScheme.primary.withAlpha(60)),
-              ),
-              child: Column(
-                children: [
-                  Text('Bank Syariah Indonesia (BSI)',
-                      style: theme.textTheme.bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.w600)),
-                  const SizedBox(height: 6),
-                  Text(
-                    '7123456789',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                      color: theme.colorScheme.primary,
-                    ),
+            if (_bankAccounts.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.primaryContainer.withAlpha(40),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: theme.colorScheme.outlineVariant),
+                ),
+                child: Text(
+                  'Hubungi pengelola wisma untuk informasi rekening transfer.',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                      color: theme.colorScheme.onSurfaceVariant),
+                ),
+              )
+            else
+              ..._bankAccounts.map((account) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.primaryContainer.withAlpha(60),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                        color: theme.colorScheme.primary.withAlpha(60)),
                   ),
-                  const SizedBox(height: 4),
-                  Text('a.n. Wisma Amal Gorontalo',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant)),
-                  const Divider(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Nominal Transfer: ',
-                          style: theme.textTheme.bodyMedium),
+                      Text(account.bankName,
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w600)),
+                      const SizedBox(height: 6),
                       Text(
-                        _currency.format(widget.amount),
-                        style: theme.textTheme.bodyMedium?.copyWith(
+                        account.accountNumber,
+                        style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.bold,
+                          letterSpacing: 2,
                           color: theme.colorScheme.primary,
                         ),
                       ),
+                      const SizedBox(height: 4),
+                      Text('a.n. ${account.accountHolder}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                              color: theme.colorScheme.onSurfaceVariant)),
+                      if (account.paymentInstructions != null &&
+                          account.paymentInstructions!.isNotEmpty) ...[
+                        const Divider(height: 16),
+                        Text(account.paymentInstructions!,
+                            style: theme.textTheme.bodySmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant)),
+                      ],
+                      const Divider(height: 20),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('Nominal Transfer: ',
+                              style: theme.textTheme.bodyMedium),
+                          Text(
+                            _currency.format(widget.amount),
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                ],
-              ),
-            ),
+                ),
+              )),
           ],
         ),
       ),

@@ -4,6 +4,8 @@ import 'package:equatable/equatable.dart';
 import 'package:formz/formz.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/domain/entity/reservation_entity.dart';
+import 'package:frontend/domain/entity/setting/midtrans_method_entity.dart';
+import 'package:frontend/domain/usecase/finance/get_available_payment_methods_usecase.dart';
 import 'package:frontend/domain/usecase/reservation/create_reservation_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_resident_profile_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_public_settings_usecase.dart';
@@ -16,11 +18,13 @@ class ReservationDetailFormBloc
   final GetPublicSettingsUseCase getSettingsUseCase;
   final CreateReservationUseCase createReservationUseCase;
   final GetResidentProfileUseCase getProfileUseCase;
+  final GetAvailablePaymentMethodsUseCase getAvailablePaymentMethodsUseCase;
 
   ReservationDetailFormBloc({
     required this.getSettingsUseCase,
     required this.createReservationUseCase,
     required this.getProfileUseCase,
+    required this.getAvailablePaymentMethodsUseCase,
   }) : super(const ReservationDetailFormState()) {
     on<InitReservationEvent>(_onInit);
     on<RentTypeChanged>(_onRentTypeChanged);
@@ -43,17 +47,15 @@ class ReservationDetailFormBloc
     bool isDailyEnabled = true;
     bool isMidtransEnabled = true;
     bool isProfileComplete = true;
-    List<String> midtransPaymentMethods = ['qris', 'gopay', 'shopeepay'];
+    List<MidtransMethodEntity> midtransPaymentMethods = const [];
 
     try {
       final settingEntity = await getSettingsUseCase.execute();
       isDailyEnabled = settingEntity.getBool('feature_daily_rental');
       isMidtransEnabled = settingEntity.getBool('feature_payment_midtrans');
-      final methods = settingEntity.getList('midtrans_enabled_payments');
-      if (methods.isNotEmpty) midtransPaymentMethods = methods;
-    } catch (_) {
-      // Keep default if error
-    }
+      final codes = settingEntity.getList('midtrans_enabled_payments');
+      midtransPaymentMethods = codes.map((c) => MidtransMethodEntity(code: c, label: '')).toList();
+    } catch (_) {}
 
     if (event.isLoggedIn) {
       try {
@@ -62,6 +64,9 @@ class ReservationDetailFormBloc
       } catch (_) {
         isProfileComplete = false;
       }
+      try {
+        midtransPaymentMethods = await getAvailablePaymentMethodsUseCase.execute();
+      } catch (_) {}
     }
 
     emit(

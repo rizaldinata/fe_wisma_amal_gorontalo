@@ -17,6 +17,8 @@ import 'package:frontend/main.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 import 'package:frontend/domain/entity/room_entity.dart';
+import 'package:frontend/domain/entity/setting/midtrans_method_entity.dart';
+import 'package:frontend/domain/usecase/finance/get_available_payment_methods_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_resident_profile_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_public_settings_usecase.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
@@ -34,6 +36,8 @@ class ReservationDetailFormPage extends StatelessWidget {
             getSettingsUseCase: serviceLocator.get<GetPublicSettingsUseCase>(),
             createReservationUseCase: serviceLocator.get(),
             getProfileUseCase: serviceLocator.get<GetResidentProfileUseCase>(),
+            getAvailablePaymentMethodsUseCase: serviceLocator
+                .get<GetAvailablePaymentMethodsUseCase>(),
           )..add(
             InitReservationEvent(
               room,
@@ -141,6 +145,8 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
             body: Center(child: CircularProgressIndicator()),
           );
 
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+
         return Scaffold(
           appBar: CustomAppbar(
             icon: const Icon(Icons.arrow_back),
@@ -169,10 +175,14 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                 child: Container(
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: Colors.blue.shade50,
+                                    color: isDark
+                                        ? Colors.blue.withOpacity(0.15)
+                                        : Colors.blue.shade50,
                                     borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
-                                      color: Colors.blue.shade200,
+                                      color: isDark
+                                          ? Colors.blue.shade800
+                                          : Colors.blue.shade200,
                                     ),
                                   ),
                                   child: Column(
@@ -181,13 +191,21 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                     children: [
                                       Text(
                                         room.title,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontWeight: FontWeight.bold,
+                                          color: isDark
+                                              ? Colors.white
+                                              : Colors.black87,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         'No. ${room.number} • ${room.facilities.join(', ')}',
+                                        style: TextStyle(
+                                          color: isDark
+                                              ? Colors.grey.shade300
+                                              : Colors.grey.shade800,
+                                        ),
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
@@ -369,7 +387,11 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
-                                      color: Colors.grey.shade800,
+                                      color: isDark
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.onSurface
+                                          : Colors.grey.shade800,
                                     ),
                                   ),
                                 ),
@@ -380,41 +402,169 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                     'Metode yang Anda pilih akan dibuka di halaman pembayaran Midtrans.',
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: Colors.grey.shade500,
+                                      color: isDark
+                                          ? Colors.grey.shade400
+                                          : Colors.grey.shade500,
                                     ),
                                   ),
                                 ),
                                 const SizedBox(height: 12),
-                                GridView.builder(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  gridDelegate:
-                                      const SliverGridDelegateWithFixedCrossAxisCount(
-                                        crossAxisCount: 2,
-                                        mainAxisSpacing: 8,
-                                        crossAxisSpacing: 8,
-                                        mainAxisExtent: 72,
+                                if (state.midtransPaymentMethods.isNotEmpty &&
+                                    state.midtransPaymentMethods.every(
+                                      (m) => !m.available,
+                                    )) ...[
+                                  Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: Colors.orange.shade50,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: Colors.orange.shade300,
                                       ),
-                                  itemCount:
-                                      state.midtransPaymentMethods.length,
-                                  itemBuilder: (context, index) {
-                                    final code =
-                                        state.midtransPaymentMethods[index];
-                                    final isSelected =
-                                        state.selectedMidtransMethod == code;
-                                    return _midtransMethodCard(
-                                      code: code,
-                                      selected: isSelected,
-                                      onTap: () => context
-                                          .read<ReservationDetailFormBloc>()
-                                          .add(
-                                            SelectedMidtransMethodChanged(
-                                              isSelected ? null : code,
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Icon(
+                                          Icons.build_outlined,
+                                          color: Colors.orange.shade700,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Semua metode pembayaran online sedang maintenance',
+                                                style: TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 13,
+                                                  color: Colors.orange.shade800,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                'Tidak ada metode yang tersedia saat ini. Silakan gunakan Pembayaran Manual atau coba lagi nanti.',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color: Colors.orange.shade700,
+                                                  height: 1.4,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 10),
+                                              GestureDetector(
+                                                onTap: () => context
+                                                    .read<
+                                                      ReservationDetailFormBloc
+                                                    >()
+                                                    .add(
+                                                      const PaymentMethodChanged(
+                                                        'tunai',
+                                                      ),
+                                                    ),
+                                                child: Text(
+                                                  'Beralih ke Pembayaran Manual →',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                    color:
+                                                        Colors.orange.shade800,
+                                                    decoration: TextDecoration
+                                                        .underline,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                ],
+                                if (state.midtransPaymentMethods.isEmpty) ...[
+                                  Container(
+                                    padding: const EdgeInsets.all(14),
+                                    decoration: BoxDecoration(
+                                      color: isDark
+                                          ? Theme.of(
+                                              context,
+                                            ).colorScheme.surfaceContainerLow
+                                          : Colors.grey.shade100,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: isDark
+                                            ? Colors.grey.shade800
+                                            : Colors.grey.shade300,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.info_outline,
+                                          color: isDark
+                                              ? Colors.grey.shade400
+                                              : Colors.grey.shade500,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            'Tidak ada metode pembayaran online yang aktif. Hubungi pengelola atau gunakan Pembayaran Manual.',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: isDark
+                                                  ? Colors.grey.shade300
+                                                  : Colors.grey.shade600,
+                                              height: 1.4,
                                             ),
                                           ),
-                                    );
-                                  },
-                                ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ] else
+                                  GridView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    gridDelegate:
+                                        const SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 2,
+                                          mainAxisSpacing: 8,
+                                          crossAxisSpacing: 8,
+                                          mainAxisExtent: 72,
+                                        ),
+                                    itemCount:
+                                        state.midtransPaymentMethods.length,
+                                    itemBuilder: (context, index) {
+                                      final method =
+                                          state.midtransPaymentMethods[index];
+                                      final isSelected =
+                                          state.selectedMidtransMethod ==
+                                          method.code;
+                                      return _midtransMethodCard(
+                                        method: method,
+                                        selected: isSelected,
+                                        onTap: method.available
+                                            ? () => context
+                                                  .read<
+                                                    ReservationDetailFormBloc
+                                                  >()
+                                                  .add(
+                                                    SelectedMidtransMethodChanged(
+                                                      isSelected
+                                                          ? null
+                                                          : method.code,
+                                                    ),
+                                                  )
+                                            : () {},
+                                      );
+                                    },
+                                  ),
                               ] else if (state.paymentMethod == 'tunai') ...[
                                 const SizedBox(height: 16),
                                 Container(
@@ -526,7 +676,7 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                               children: [
                                 const Text('Total Biaya'),
                                 Text(
-                                  'Rp ${state.totalPrice}',
+                                  'Rp ${NumberFormat.decimalPattern('id').format(state.totalPrice).replaceAll(',', '.')}',
                                   style: const TextStyle(
                                     color: Colors.blue,
                                     fontWeight: FontWeight.bold,
@@ -607,7 +757,20 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
       return;
     }
 
-    // 3. Pengecekan Profil
+    // 3. Pengecekan ketersediaan metode Midtrans
+    if (state.paymentMethod == 'online') {
+      final methods = state.midtransPaymentMethods;
+      if (methods.isEmpty || methods.every((m) => !m.available)) {
+        AppSnackbar.showError(
+          methods.isEmpty
+              ? 'Tidak ada metode pembayaran online yang aktif. Gunakan Pembayaran Manual.'
+              : 'Semua metode pembayaran online sedang maintenance. Gunakan Pembayaran Manual.',
+        );
+        return;
+      }
+    }
+
+    // 4. Pengecekan Profil
     if (!state.isProfileComplete) {
       AppSnackbar.showInfo(
         'Silakan lengkapi biodata Anda (NIK, nomor telepon, dan alamat KTP) sebelum melanjutkan pemesanan.',
@@ -639,7 +802,10 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
               'Mulai',
               DateFormat('dd/MM/yyyy').format(state.startDate!),
             ),
-            _infoRow('Total', 'Rp ${state.totalPrice}'),
+            _infoRow(
+              'Total',
+              'Rp ${NumberFormat.decimalPattern('id').format(state.totalPrice).replaceAll(',', '.')}',
+            ),
             _infoRow(
               'Metode',
               state.paymentMethod == 'online'
@@ -697,49 +863,70 @@ Widget _rentCard({
   required bool selected,
   required VoidCallback onTap,
 }) {
-  return HoverTapWrapper(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(12),
-    hoverColor: Colors.blue.withOpacity(0.05),
-    child: Container(
-      constraints: const BoxConstraints(minWidth: 260, maxWidth: 358),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: selected ? Colors.blue.shade50 : Colors.white,
+  return Builder(
+    builder: (context) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return HoverTapWrapper(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: selected ? Colors.blue : Colors.grey.shade300,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        hoverColor: Colors.blue.withOpacity(0.05),
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 260, maxWidth: 358),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: selected
+                ? (isDark ? Colors.blue.withOpacity(0.15) : Colors.blue.shade50)
+                : (isDark
+                      ? Theme.of(context).colorScheme.surface
+                      : Colors.white),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected
+                  ? Colors.blue
+                  : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-              Icon(
-                selected ? Icons.radio_button_checked : Icons.radio_button_off,
-                color: selected ? Colors.blue : Colors.grey,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  Icon(
+                    selected
+                        ? Icons.radio_button_checked
+                        : Icons.radio_button_off,
+                    color: selected
+                        ? Colors.blue
+                        : (isDark ? Colors.grey.shade500 : Colors.grey),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                price,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: selected ? Colors.blue : Colors.green,
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            price,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: selected ? Colors.blue : Colors.green,
-            ),
-          ),
-        ],
-      ),
-    ),
+        ),
+      );
+    },
   );
 }
 
@@ -751,60 +938,70 @@ Widget paymentMethodCard({
   required bool selected,
   required VoidCallback onTap,
 }) {
-  return HoverTapWrapper(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(12),
-    hoverColor: Colors.blue.withOpacity(0.05),
-
-    child: Container(
-      constraints: const BoxConstraints(minWidth: 260, maxWidth: 358),
-
-      padding: const EdgeInsets.all(16),
-
-      decoration: BoxDecoration(
-        color: selected ? Colors.blue.shade50 : Colors.white,
-
+  return Builder(
+    builder: (context) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return HoverTapWrapper(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(12),
-
-        border: Border.all(
-          color: selected ? Colors.blue : Colors.grey.shade300,
-        ),
-      ),
-
-      child: Row(
-        children: [
-          Icon(icon, color: selected ? Colors.blue : Colors.grey),
-
-          const SizedBox(width: 12),
-
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
-
-                const SizedBox(height: 4),
-
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
-                ),
-              ],
+        hoverColor: Colors.blue.withOpacity(0.05),
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 260, maxWidth: 358),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: selected
+                ? (isDark ? Colors.blue.withOpacity(0.15) : Colors.blue.shade50)
+                : (isDark
+                      ? Theme.of(context).colorScheme.surface
+                      : Colors.white),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected
+                  ? Colors.blue
+                  : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
             ),
           ),
-
-          Icon(
-            selected ? Icons.radio_button_checked : Icons.radio_button_off,
-
-            color: selected ? Colors.blue : Colors.grey,
+          child: Row(
+            children: [
+              Icon(
+                icon,
+                color: selected
+                    ? Colors.blue
+                    : (isDark ? Colors.grey.shade400 : Colors.grey),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isDark
+                            ? Colors.grey.shade400
+                            : Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                selected ? Icons.radio_button_checked : Icons.radio_button_off,
+                color: selected
+                    ? Colors.blue
+                    : (isDark ? Colors.grey.shade500 : Colors.grey),
+              ),
+            ],
           ),
-        ],
-      ),
-    ),
+        ),
+      );
+    },
   );
 }
 
@@ -911,111 +1108,183 @@ const Map<String, _MidtransMethodInfo> _kMidtransMethodMap = {
 };
 
 /// Subtitle dinamis berdasarkan metode yang tersedia
-String _midtransSubtitle(List<String> methods) {
-  if (methods.isEmpty) return 'QRIS, GoPay, dan lainnya';
-  final names = methods
-      .map((c) => _kMidtransMethodMap[c]?.name ?? c.toUpperCase())
+String _midtransSubtitle(List<MidtransMethodEntity> methods) {
+  if (methods.isEmpty) return 'Tidak ada metode aktif';
+  final available = methods.where((m) => !m.maintenance).toList();
+  if (available.isEmpty) return 'Semua metode sedang maintenance';
+  final names = available
+      .map(
+        (m) => m.label.isNotEmpty
+            ? m.label
+            : (_kMidtransMethodMap[m.code]?.name ?? m.code.toUpperCase()),
+      )
       .take(3)
       .join(', ');
-  return methods.length > 3 ? '$names, +${methods.length - 3} lainnya' : names;
+  return available.length > 3
+      ? '$names, +${available.length - 3} lainnya'
+      : names;
 }
 
 /// Kartu metode pembayaran Midtrans — list-tile style, tinggi tetap 72px
 Widget _midtransMethodCard({
-  required String code,
+  required MidtransMethodEntity method,
   required bool selected,
   required VoidCallback onTap,
 }) {
-  final info =
-      _kMidtransMethodMap[code] ??
-      _MidtransMethodInfo(code.toUpperCase(), 'Metode Midtrans', Icons.payment);
+  return Builder(
+    builder: (context) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final info =
+          _kMidtransMethodMap[method.code] ??
+          _MidtransMethodInfo(
+            method.code.toUpperCase(),
+            'Metode Midtrans',
+            Icons.payment,
+          );
+      final displayName = method.label.isNotEmpty ? method.label : info.name;
+      final isMaintenance = method.maintenance;
+      final isUnavailable = !method.available;
 
-  return HoverTapWrapper(
-    onTap: onTap,
-    borderRadius: BorderRadius.circular(10),
-    hoverColor: Colors.blue.withValues(alpha: 0.04),
-    child: AnimatedContainer(
-      duration: const Duration(milliseconds: 150),
-      decoration: BoxDecoration(
-        color: selected ? Colors.blue.shade50 : Colors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: selected ? Colors.blue : Colors.grey.shade300,
-          width: selected ? 1.5 : 1.0,
-        ),
-        boxShadow: selected
-            ? [
-                BoxShadow(
-                  color: Colors.blue.withValues(alpha: 0.12),
-                  blurRadius: 6,
-                  offset: const Offset(0, 2),
-                ),
-              ]
-            : null,
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // Ikon
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
+      return Opacity(
+        opacity: isUnavailable ? 0.5 : 1.0,
+        child: HoverTapWrapper(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(10),
+          hoverColor: isUnavailable
+              ? Colors.transparent
+              : Colors.blue.withValues(alpha: 0.04),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 150),
+            decoration: BoxDecoration(
+              color: selected
+                  ? (isDark
+                        ? Colors.blue.withOpacity(0.15)
+                        : Colors.blue.shade50)
+                  : (isDark
+                        ? Theme.of(context).colorScheme.surface
+                        : Colors.white),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
                 color: selected
-                    ? Colors.blue.withValues(alpha: 0.12)
-                    : Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
+                    ? Colors.blue
+                    : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                width: selected ? 1.5 : 1.0,
               ),
-              child: Icon(
-                info.icon,
-                size: 20,
-                color: selected ? Colors.blue : Colors.grey.shade500,
-              ),
+              boxShadow: selected
+                  ? [
+                      BoxShadow(
+                        color: Colors.blue.withValues(alpha: 0.12),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                  : null,
             ),
-            const SizedBox(width: 10),
-            // Nama + deskripsi
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Text(
-                    info.name,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12.5,
-                      height: 1.3,
-                      color: selected ? Colors.blue.shade800 : Colors.black87,
+                  // Ikon
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? (isDark
+                                ? Colors.blue.withOpacity(0.2)
+                                : Colors.blue.withValues(alpha: 0.12))
+                          : (isDark
+                                ? Colors.grey.shade900
+                                : Colors.grey.shade100),
+                      borderRadius: BorderRadius.circular(8),
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    info.desc,
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      height: 1.2,
-                      color: Colors.grey.shade500,
+                    child: Icon(
+                      info.icon,
+                      size: 20,
+                      color: selected
+                          ? Colors.blue
+                          : (isDark
+                                ? Colors.grey.shade400
+                                : Colors.grey.shade500),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
+                  const SizedBox(width: 10),
+                  // Nama + deskripsi
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          displayName,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12.5,
+                            height: 1.3,
+                            color: selected
+                                ? (isDark
+                                      ? Colors.blue.shade300
+                                      : Colors.blue.shade800)
+                                : (isDark
+                                      ? Theme.of(context).colorScheme.onSurface
+                                      : Colors.black87),
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 2),
+                        if (isMaintenance)
+                          Text(
+                            'Sedang Maintenance',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              height: 1.2,
+                              color: Colors.orange.shade600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          )
+                        else
+                          Text(
+                            info.desc,
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              height: 1.2,
+                              color: isDark
+                                  ? Colors.grey.shade400
+                                  : Colors.grey.shade500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  if (isMaintenance)
+                    Icon(
+                      Icons.build_outlined,
+                      size: 16,
+                      color: Colors.orange.shade400,
+                    )
+                  else
+                    Icon(
+                      selected ? Icons.check_circle : Icons.circle_outlined,
+                      size: 18,
+                      color: selected
+                          ? Colors.blue
+                          : (isDark
+                                ? Colors.grey.shade700
+                                : Colors.grey.shade300),
+                    ),
                 ],
               ),
             ),
-            const SizedBox(width: 6),
-            // Indikator pilih
-            Icon(
-              selected ? Icons.check_circle : Icons.circle_outlined,
-              size: 18,
-              color: selected ? Colors.blue : Colors.grey.shade300,
-            ),
-          ],
+          ),
         ),
-      ),
-    ),
+      );
+    },
   );
 }
