@@ -66,7 +66,8 @@ class _CustomSidebarState extends State<CustomSidebar> {
     });
   }
 
-  final SecureStorageService storage = serviceLocator.get<SecureStorageService>();
+  final SecureStorageService storage = serviceLocator
+      .get<SecureStorageService>();
 
   Future<bool> isLoggedIn() async {
     final token = await storage.get(StorageConstant.token);
@@ -102,9 +103,13 @@ class _CustomSidebarState extends State<CustomSidebar> {
   Widget build(BuildContext context) {
     var isDarkMode = context.select((AppBloc bloc) => bloc.state.isDarkMode);
     final isDark = AppTheme.isDark(context);
-    
-    final sidebarBg = isDark ? AppColorsDark.sidebarBg : AppColorsLight.sidebarBg;
-    final sidebarBorder = isDark ? AppColorsDark.borderLight : AppColorsLight.sidebarBorder;
+
+    final sidebarBg = isDark
+        ? AppColorsDark.sidebarBg
+        : AppColorsLight.sidebarBg;
+    final sidebarBorder = isDark
+        ? AppColorsDark.borderLight
+        : AppColorsLight.sidebarBorder;
 
     return BlocBuilder<AppBloc, AppState>(
       builder: (context, state) {
@@ -112,15 +117,16 @@ class _CustomSidebarState extends State<CustomSidebar> {
           width: widget.width,
           decoration: BoxDecoration(
             color: sidebarBg,
-            border: Border(
-              right: BorderSide(color: sidebarBorder),
-            ),
+            border: Border(right: BorderSide(color: sidebarBorder)),
           ),
           child: BlocBuilder<AuthBloc, AuthState>(
             builder: (context, state) {
               return SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 16,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -130,10 +136,17 @@ class _CustomSidebarState extends State<CustomSidebar> {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: isDark ? AppColorsDark.primaryLight : AppColorsLight.primaryLight,
+                              color: isDark
+                                  ? AppColorsDark.primaryLight
+                                  : AppColorsLight.primaryLight,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Icon(Icons.apartment, color: isDark ? AppColorsDark.primary : AppColorsLight.primary),
+                            child: Icon(
+                              Icons.apartment,
+                              color: isDark
+                                  ? AppColorsDark.primary
+                                  : AppColorsLight.primary,
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -142,16 +155,13 @@ class _CustomSidebarState extends State<CustomSidebar> {
                               children: [
                                 Text(
                                   'Wisma Amal',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.w700,
-                                    color: isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary,
-                                  ),
-                                ),
-                                Text(
-                                  'Operational & Maint',
-                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary,
-                                  ),
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w700,
+                                        color: isDark
+                                            ? AppColorsDark.textPrimary
+                                            : AppColorsLight.textPrimary,
+                                      ),
                                 ),
                               ],
                             ),
@@ -171,21 +181,35 @@ class _CustomSidebarState extends State<CustomSidebar> {
 
                             if (item.hasChildren) {
                               final id = item.label;
-                              final isOpen = _expanded.contains(id) || _isSelected(item);
-                              return _buildAccordionSection(context, item, isOpen, id, isDark);
+                              final isOpen =
+                                  _expanded.contains(id) || _isSelected(item);
+                              return _buildAccordionSection(
+                                context,
+                                item,
+                                isOpen,
+                                id,
+                                isDark,
+                              );
                             }
 
                             return _buildMenuTile(context, item, isDark);
                           },
                         ),
                       ),
-                      
+
                       // Dark Mode Toggle
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
-                          color: isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant,
-                          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                          color: isDark
+                              ? AppColorsDark.surfaceVariant
+                              : AppColorsLight.surfaceVariant,
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.radiusMd,
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -195,15 +219,21 @@ class _CustomSidebarState extends State<CustomSidebar> {
                               style: TextStyle(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
-                                color: isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary,
+                                color: isDark
+                                    ? AppColorsDark.textPrimary
+                                    : AppColorsLight.textPrimary,
                               ),
                             ),
                             Switch(
                               value: isDarkMode,
                               onChanged: (val) {
-                                context.read<AppBloc>().add(AppBlocChangeThemeEvent());
+                                context.read<AppBloc>().add(
+                                  AppBlocChangeThemeEvent(),
+                                );
                               },
-                              activeColor: isDark ? AppColorsDark.primary : AppColorsLight.primary,
+                              activeColor: isDark
+                                  ? AppColorsDark.primary
+                                  : AppColorsLight.primary,
                             ),
                           ],
                         ),
@@ -223,53 +253,85 @@ class _CustomSidebarState extends State<CustomSidebar> {
                         Material(
                           color: Colors.transparent,
                           child: InkWell(
-                            borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                            borderRadius: BorderRadius.circular(
+                              AppSpacing.radiusMd,
+                            ),
                             onTap: () {
-                              context.router.navigatePath('/${RouteConstant.residentProfileName}');
+                              context.router.navigatePath(
+                                '/${RouteConstant.residentProfileName}',
+                              );
                             },
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 12,
+                              ),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                                border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusMd,
+                                ),
+                                border: Border.all(
+                                  color: isDark
+                                      ? AppColorsDark.borderLight
+                                      : AppColorsLight.borderLight,
+                                ),
                               ),
                               child: BlocBuilder<AuthBloc, AuthState>(
                                 builder: (context, state) {
-                                  if (state.userInfo == null || state.userInfo?.id == null) {
-                                    context.read<AuthBloc>().add(const GetUserInfoEvent());
+                                  if (state.userInfo == null ||
+                                      state.userInfo?.id == null) {
+                                    context.read<AuthBloc>().add(
+                                      const GetUserInfoEvent(),
+                                    );
                                   }
 
                                   return Row(
                                     children: [
                                       CircleAvatar(
                                         radius: 16,
-                                        backgroundColor: isDark ? AppColorsDark.primaryLight : AppColorsLight.primaryLight,
+                                        backgroundColor: isDark
+                                            ? AppColorsDark.primaryLight
+                                            : AppColorsLight.primaryLight,
                                         child: Icon(
                                           Icons.person,
                                           size: 18,
-                                          color: isDark ? AppColorsDark.primary : AppColorsLight.primary,
+                                          color: isDark
+                                              ? AppColorsDark.primary
+                                              : AppColorsLight.primary,
                                         ),
                                       ),
                                       const SizedBox(width: 10),
                                       Expanded(
                                         child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              state.userInfo?.name ?? 'Super Admin',
+                                              state.userInfo?.name ??
+                                                  'Super Admin',
                                               style: TextStyle(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.w600,
-                                                color: isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary,
+                                                color: isDark
+                                                    ? AppColorsDark.textPrimary
+                                                    : AppColorsLight
+                                                          .textPrimary,
                                               ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                             Text(
-                                              state.userInfo?.roles.join(', ') ?? 'super-admin',
+                                              state.userInfo?.roles.join(
+                                                    ', ',
+                                                  ) ??
+                                                  'super-admin',
                                               style: TextStyle(
                                                 fontSize: 11,
-                                                color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary,
+                                                color: isDark
+                                                    ? AppColorsDark
+                                                          .textSecondary
+                                                    : AppColorsLight
+                                                          .textSecondary,
                                               ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
@@ -278,9 +340,17 @@ class _CustomSidebarState extends State<CustomSidebar> {
                                         ),
                                       ),
                                       IconButton(
-                                        icon: Icon(Icons.logout, size: 18, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary),
+                                        icon: Icon(
+                                          Icons.logout,
+                                          size: 18,
+                                          color: isDark
+                                              ? AppColorsDark.textSecondary
+                                              : AppColorsLight.textSecondary,
+                                        ),
                                         onPressed: () {
-                                          context.read<AuthBloc>().add(const LogoutEvent());
+                                          context.read<AuthBloc>().add(
+                                            const LogoutEvent(),
+                                          );
                                         },
                                         constraints: const BoxConstraints(),
                                         padding: EdgeInsets.zero,
@@ -303,9 +373,17 @@ class _CustomSidebarState extends State<CustomSidebar> {
     );
   }
 
-  Widget _buildAccordionSection(BuildContext context, SidebarItem section, bool isOpen, String id, bool isDark) {
-    final sectionColor = isDark ? AppColorsDark.sidebarSection : AppColorsLight.sidebarSection;
-    
+  Widget _buildAccordionSection(
+    BuildContext context,
+    SidebarItem section,
+    bool isOpen,
+    String id,
+    bool isDark,
+  ) {
+    final sectionColor = isDark
+        ? AppColorsDark.sidebarSection
+        : AppColorsLight.sidebarSection;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -321,7 +399,9 @@ class _CustomSidebarState extends State<CustomSidebar> {
             ),
           ),
         ),
-        ...section.children!.map((child) => _buildMenuTile(context, child, isDark)),
+        ...section.children!.map(
+          (child) => _buildMenuTile(context, child, isDark),
+        ),
       ],
     );
   }
@@ -330,12 +410,22 @@ class _CustomSidebarState extends State<CustomSidebar> {
     final isActive = _isSelected(item);
     final isHovered = _hoveredItem == item.label;
 
-    final activeBg     = isDark ? AppColorsDark.sidebarActive    : AppColorsLight.sidebarActive;
-    final hoverBg      = isDark ? AppColorsDark.sidebarHoverBg   : AppColorsLight.sidebarHoverBg;
-    final activeIcon   = isDark ? AppColorsDark.sidebarActiveIcon : Colors.white;
-    final inactiveIcon = isDark ? AppColorsDark.sidebarMuted     : AppColorsLight.sidebarMuted;
-    final activeText   = isDark ? AppColorsDark.sidebarActiveText : AppColorsLight.sidebarActiveText;
-    final inactiveText = isDark ? AppColorsDark.sidebarText      : AppColorsLight.sidebarText;
+    final activeBg = isDark
+        ? AppColorsDark.sidebarActive
+        : AppColorsLight.sidebarActive;
+    final hoverBg = isDark
+        ? AppColorsDark.sidebarHoverBg
+        : AppColorsLight.sidebarHoverBg;
+    final activeIcon = isDark ? AppColorsDark.sidebarActiveIcon : Colors.white;
+    final inactiveIcon = isDark
+        ? AppColorsDark.sidebarMuted
+        : AppColorsLight.sidebarMuted;
+    final activeText = isDark
+        ? AppColorsDark.sidebarActiveText
+        : AppColorsLight.sidebarActiveText;
+    final inactiveText = isDark
+        ? AppColorsDark.sidebarText
+        : AppColorsLight.sidebarText;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
@@ -347,18 +437,25 @@ class _CustomSidebarState extends State<CustomSidebar> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
-              color: isActive ? activeBg : (isHovered ? hoverBg : Colors.transparent),
+              color: isActive
+                  ? activeBg
+                  : (isHovered ? hoverBg : Colors.transparent),
               borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
             ),
             child: ListTile(
               dense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 0,
+              ),
               minLeadingWidth: 20,
-              leading: item.icon != null ? Icon(
-                item.icon,
-                color: isActive ? activeIcon : inactiveIcon,
-                size: 18,
-              ) : null,
+              leading: item.icon != null
+                  ? Icon(
+                      item.icon,
+                      color: isActive ? activeIcon : inactiveIcon,
+                      size: 18,
+                    )
+                  : null,
               title: Text(
                 item.label,
                 style: TextStyle(
@@ -367,11 +464,13 @@ class _CustomSidebarState extends State<CustomSidebar> {
                   fontSize: 14,
                 ),
               ),
-              trailing: item.hasChildren ? Icon(
-                Icons.chevron_right,
-                size: 16,
-                color: isActive ? activeIcon : inactiveIcon,
-              ) : null,
+              trailing: item.hasChildren
+                  ? Icon(
+                      Icons.chevron_right,
+                      size: 16,
+                      color: isActive ? activeIcon : inactiveIcon,
+                    )
+                  : null,
             ),
           ),
         ),

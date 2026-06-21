@@ -9,7 +9,7 @@ class FeatureToggleRemoteDataSource {
 
   Future<List<FeatureToggleModel>> getFeatureToggles() async {
     try {
-      final response = await _dioClient.get('/settings/feature-toggles');
+      final response = await _dioClient.get('/v1/settings/feature-toggles');
 
       if (response.data['success'] == true) {
         final List<dynamic> data = response.data['data'];
@@ -29,7 +29,7 @@ class FeatureToggleRemoteDataSource {
   Future<void> updateFeatureToggle(String key, bool isActive) async {
     try {
       final response = await _dioClient.patch(
-        '/settings/feature-toggles/$key',
+        '/v1/settings/feature-toggles/$key',
         data: {'is_active': isActive},
       );
 

@@ -9,16 +9,8 @@ import '../../bloc/setting/feature_toggle/feature_toggle_event.dart';
 import '../../bloc/setting/feature_toggle/feature_toggle_state.dart';
 
 @RoutePage()
-class FeatureTogglePage extends StatefulWidget implements AutoRouteWrapper {
+class FeatureTogglePage extends StatefulWidget {
   const FeatureTogglePage({Key? key}) : super(key: key);
-
-  @override
-  Widget wrappedRoute(BuildContext context) {
-    return BlocProvider(
-      create: (context) => serviceLocator.get<FeatureToggleBloc>()..add(FetchFeatureToggles()),
-      child: this,
-    );
-  }
 
   @override
   _FeatureTogglePageState createState() => _FeatureTogglePageState();

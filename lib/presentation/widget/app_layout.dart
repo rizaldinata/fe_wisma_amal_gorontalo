@@ -262,16 +262,6 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                       ],
                     ),
 
-                  // ─── Pengaturan (Admin) ────────────────────────────
-                  if (context.can(PermissionKeys.settingView))
-                    SidebarItem(
-                      label: 'Pengaturan',
-                      icon: Icons.settings,
-                      page: const SettingRoute(),
-                    ),
-
-
-
                   // ══════════════════════════════════════════════════
                   // Area untuk pengguna terdaftar (Member & Resident)
                   // ══════════════════════════════════════════════════
@@ -363,22 +353,34 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                       ],
                     ),
 
-                  // ─── Lengkapi Profil (member & resident yang belum lengkap) ──
-                  if ((isMember || isResident) &&
-                      context.can(PermissionKeys.completeResidentProfile))
-                    SidebarItem(
-                      label: 'Lengkapi Profil',
-                      icon: Icons.assignment_ind_outlined,
-                      page: const CompleteProfileRoute(),
-                    ),
-
-                  // ─── Profil Saya (semua pengguna yang login) ───────
-                  if (state.isLoggedIn)
-                    SidebarItem(
-                      label: 'Profil Saya',
-                      icon: Icons.person_outline,
-                      page: const ProfileRoute(),
-                    ),
+                    // ─── Sistem & Akun ────────────────────────────
+                    if (context.can(PermissionKeys.settingView) || state.isLoggedIn)
+                      SidebarItem(
+                        label: 'Sistem & Akun',
+                        icon: Icons.settings_applications,
+                        hasAccess: true,
+                        children: [
+                          if (context.can(PermissionKeys.settingView))
+                            SidebarItem(
+                              label: 'Pengaturan',
+                              icon: Icons.settings,
+                              page: const SettingRoute(),
+                            ),
+                          if ((isMember || isResident) &&
+                              context.can(PermissionKeys.completeResidentProfile))
+                            SidebarItem(
+                              label: 'Lengkapi Profil',
+                              icon: Icons.assignment_ind_outlined,
+                              page: const CompleteProfileRoute(),
+                            ),
+                          if (state.isLoggedIn)
+                            SidebarItem(
+                              label: 'Profil Saya',
+                              icon: Icons.person_outline,
+                              page: const ProfileRoute(),
+                            ),
+                        ],
+                      ),
                 ],
               ),
 
