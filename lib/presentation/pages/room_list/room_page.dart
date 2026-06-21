@@ -60,30 +60,38 @@ class _RoomViewState extends State<RoomView>
     return BlocBuilder<AuthBloc, AuthState>(
       builder: (context, authState) {
         final roles = authState.userInfo?.roles ?? [];
-        final isAdmin = roles.contains('admin') || roles.contains('super-admin');
-        
+        final isAdmin =
+            roles.contains('admin') || roles.contains('super-admin');
+
         return BlocBuilder<RoomBloc, RoomState>(
           builder: (context, state) {
             return Scaffold(
-              backgroundColor: isDark ? AppColorsDark.background : AppColorsLight.background,
+              backgroundColor: isDark
+                  ? AppColorsDark.background
+                  : AppColorsLight.background,
               body: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   AppTopBar(
                     title: isAdmin ? 'Kelola Kamar' : 'Daftar Kamar Tersedia',
                     breadcrumb: 'Kamar & Reservasi / Kelola Kamar',
-                    action: isAdmin ? ElevatedButton.icon(
-                      onPressed: () async {
-                        await context.router.navigate(const AddRoomRoute());
-                        if (mounted) {
-                          context.read<RoomBloc>().add(GetRoomsEvent());
-                        }
-                      },
-                      icon: const Icon(Icons.add, size: 18),
-                      label: const Text('Tambah Kamar'),
-                    ) : null,
+                    action: isAdmin
+                        ? ElevatedButton.icon(
+                            onPressed: () async {
+                              final result = await context.router.push(
+                                const AddRoomRoute(),
+                              );
+
+                              if (result == true && context.mounted) {
+                                context.read<RoomBloc>().add(GetRoomsEvent());
+                              }
+                            },
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('Tambah Kamar'),
+                          )
+                        : null,
                   ),
-                  
+
                   Expanded(
                     child: SingleChildScrollView(
                       padding: const EdgeInsets.all(AppSpacing.xxxl),
@@ -98,38 +106,57 @@ class _RoomViewState extends State<RoomView>
                                     label: 'Total Kamar',
                                     value: state.rooms.length.toString(),
                                     icon: Icons.bed_outlined,
-                                    iconColor: isDark ? AppColorsDark.primary : AppColorsLight.primary,
-                                    iconBg: isDark ? AppColorsDark.primaryLight : AppColorsLight.primaryLight,
+                                    iconColor: isDark
+                                        ? AppColorsDark.primary
+                                        : AppColorsLight.primary,
+                                    iconBg: isDark
+                                        ? AppColorsDark.primaryLight
+                                        : AppColorsLight.primaryLight,
                                   ),
                                 ),
                                 const SizedBox(width: AppSpacing.lg),
                                 Expanded(
                                   child: SummaryStatCard(
                                     label: 'Tersedia',
-                                    value: state.availableRooms.length.toString(),
+                                    value: state.availableRooms.length
+                                        .toString(),
                                     icon: Icons.check_circle_outline,
-                                    iconColor: isDark ? AppColorsDark.conditionGood : AppColorsLight.conditionGood,
-                                    iconBg: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
+                                    iconColor: isDark
+                                        ? AppColorsDark.conditionGood
+                                        : AppColorsLight.conditionGood,
+                                    iconBg: isDark
+                                        ? AppColorsDark.statusDoneBg
+                                        : AppColorsLight.statusDoneBg,
                                   ),
                                 ),
                                 const SizedBox(width: AppSpacing.lg),
                                 Expanded(
                                   child: SummaryStatCard(
                                     label: 'Terisi',
-                                    value: state.occupiedRooms.length.toString(),
+                                    value: state.occupiedRooms.length
+                                        .toString(),
                                     icon: Icons.person_outline,
-                                    iconColor: isDark ? AppColorsDark.conditionPoor : AppColorsLight.conditionPoor,
-                                    iconBg: isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg,
+                                    iconColor: isDark
+                                        ? AppColorsDark.conditionPoor
+                                        : AppColorsLight.conditionPoor,
+                                    iconBg: isDark
+                                        ? AppColorsDark.statusCancelledBg
+                                        : AppColorsLight.statusCancelledBg,
                                   ),
                                 ),
                                 const SizedBox(width: AppSpacing.lg),
                                 Expanded(
                                   child: SummaryStatCard(
                                     label: 'Perbaikan',
-                                    value: state.maintenanceRooms.length.toString(),
+                                    value: state.maintenanceRooms.length
+                                        .toString(),
                                     icon: Icons.build_circle_outlined,
-                                    iconColor: isDark ? AppColorsDark.conditionFair : AppColorsLight.conditionFair,
-                                    iconBg: isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg,
+                                    iconColor: isDark
+                                        ? AppColorsDark.conditionFair
+                                        : AppColorsLight.conditionFair,
+                                    iconBg: isDark
+                                        ? AppColorsDark.statusWaitingBg
+                                        : AppColorsLight.statusWaitingBg,
                                   ),
                                 ),
                               ],
@@ -140,18 +167,32 @@ class _RoomViewState extends State<RoomView>
                           /// TAB
                           Container(
                             decoration: BoxDecoration(
-                              color: isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant,
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                              border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+                              color: isDark
+                                  ? AppColorsDark.surfaceVariant
+                                  : AppColorsLight.surfaceVariant,
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
+                              border: Border.all(
+                                color: isDark
+                                    ? AppColorsDark.borderLight
+                                    : AppColorsLight.borderLight,
+                              ),
                             ),
                             child: TabBar(
                               controller: _controller,
                               indicator: BoxDecoration(
-                                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                                color: isDark ? AppColorsDark.primary : AppColorsLight.primary,
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusMd,
+                                ),
+                                color: isDark
+                                    ? AppColorsDark.primary
+                                    : AppColorsLight.primary,
                               ),
                               labelColor: Colors.white,
-                              unselectedLabelColor: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary,
+                              unselectedLabelColor: isDark
+                                  ? AppColorsDark.textSecondary
+                                  : AppColorsLight.textSecondary,
                               dividerColor: Colors.transparent,
                               indicatorSize: TabBarIndicatorSize.tab,
                               tabs: const [
@@ -185,7 +226,11 @@ class _RoomViewState extends State<RoomView>
                                 default:
                                   currentRooms = state.rooms;
                               }
-                              return _buildRoomGrid(currentRooms, state, isDark);
+                              return _buildRoomGrid(
+                                currentRooms,
+                                state,
+                                isDark,
+                              );
                             },
                           ),
                         ],
@@ -215,7 +260,11 @@ class _RoomViewState extends State<RoomView>
       return Center(
         child: Text(
           'Gagal memuat kamar: ${state.errorMessage}',
-          style: TextStyle(color: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled),
+          style: TextStyle(
+            color: isDark
+                ? AppColorsDark.statusCancelled
+                : AppColorsLight.statusCancelled,
+          ),
         ),
       );
     }
@@ -226,17 +275,32 @@ class _RoomViewState extends State<RoomView>
         decoration: BoxDecoration(
           color: isDark ? AppColorsDark.surface : AppColorsLight.surface,
           borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-          border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+          border: Border.all(
+            color: isDark
+                ? AppColorsDark.borderLight
+                : AppColorsLight.borderLight,
+          ),
         ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.bed_outlined, size: 64, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary),
+              Icon(
+                Icons.bed_outlined,
+                size: 64,
+                color: isDark
+                    ? AppColorsDark.textSecondary
+                    : AppColorsLight.textSecondary,
+              ),
               const SizedBox(height: 16),
               Text(
                 'Tidak ada kamar',
-                style: TextStyle(fontSize: 16, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary),
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDark
+                      ? AppColorsDark.textSecondary
+                      : AppColorsLight.textSecondary,
+                ),
               ),
             ],
           ),
