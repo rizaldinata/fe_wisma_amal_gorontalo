@@ -32,7 +32,7 @@ jobs:
           context: .
           file: ./Dockerfile
           build-args: |
-            BASE_URL=https://api.wismaamal.allvvnt.my.id
+            BASE_URL=https://api-wismaamal.allvvnt.my.id
           push: true
           tags: ${{ env.REGISTRY }}/alfian-code/wismaamal-frontend-web:latest
 
