@@ -269,8 +269,6 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                       ],
                     ),
 
-<<<<<<< HEAD
-=======
                   // ─── Notifikasi WhatsApp (Admin) ──────────────────
                   if (context.can(PermissionKeys.notificationLogView) ||
                       context.can(PermissionKeys.notificationSend))
@@ -289,7 +287,6 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                       page: const SettingRoute(),
                     ),
 
->>>>>>> feat/dp-payment
                   // ══════════════════════════════════════════════════
                   // Area untuk pengguna terdaftar (Member & Resident)
                   // ══════════════════════════════════════════════════
