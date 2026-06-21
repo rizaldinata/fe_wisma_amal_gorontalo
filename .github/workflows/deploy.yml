@@ -1,69 +1,57 @@
-name: Build and Deploy Frontend
+name: Deploy Frontend
 
 on:
   push:
     branches:
-      - develop
+      - staging
 
-permissions:
-  contents: read
-  packages: write
+env:
+  REGISTRY: ghcr.io
 
 jobs:
-  build-and-push:
+  build-and-push-image:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GitHub Container Registry
+      - name: Log in to the Container registry
         uses: docker/login-action@v3
         with:
-          registry: ghcr.io
+          registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PAT }}
 
-      - name: Extract metadata for Docker
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/ALFIAN-code/frontend-wisma-amal
-          tags: |
-            type=raw,value=latest
-            type=sha,format=short
-
-      - name: Build and push Docker image
+      - name: Build and push Frontend Web
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./Dockerfile
+          build-args: |
+            BASE_URL=https://api.wismaamal.allvvnt.my.id
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          no-cache: true
-#          cache-from: type=gha
-#          cache-to: type=gha,mode=max
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/wismaamal-frontend-web:latest
 
   deploy:
-    needs: build-and-push
+    needs: build-and-push-image
     runs-on: ubuntu-latest
     steps:
-      - name: Connect to Tailscale
-        uses: tailscale/github-action@v2
+      - name: Deploy to Remote Server
+        uses: appleboy/ssh-action@v1.0.3
         with:
-          authkey: ${{ secrets.TAILSCALE_AUTHKEY }}
-
-      - name: Update VPS service
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          REMOTE_USER: ${{ secrets.REMOTE_USER }}
-        run: |
-          set -x
-          mkdir -p ~/.ssh
-          cat << 'EOF' > ~/.ssh/id_rsa
-          ${{ secrets.SSH_PRIVATE_KEY }}
-          EOF
-          chmod 600 ~/.ssh/id_rsa
-          ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no "${{ secrets.REMOTE_USER }}@100.125.64.93" "cd ~/wisma-amal-deploy && docker compose pull frontend && docker compose up -d --force-recreate frontend && docker image prune -f"
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/wismaamal-deploy
+            
+            # Login to GHCR (Server needs to be authenticated to pull)
+            echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            
+            # Pull frontend image and restart
+            docker compose pull frontend-web
+            docker compose up -d frontend-web

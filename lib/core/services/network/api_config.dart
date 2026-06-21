@@ -17,8 +17,11 @@ class ApiConfig {
   static const String currentMode = DEVELOP;
 
   static const String localURl = 'http://localhost:8000';
-  // static const String localURl = 'https://api.wismaamal.com';
-  static const String productionURL = 'https://alfian.taild9066e.ts.net/be';
+  // Use String.fromEnvironment so we can pass --dart-define=BASE_URL=https://api.wismaamal.allvvnt.my.id
+  static const String productionURL = const String.fromEnvironment(
+    'BASE_URL',
+    defaultValue: 'https://api.wismaamal.allvvnt.my.id/',
+  );
 
   factory ApiConfig.getServerUrl() {
     if (kReleaseMode) {
