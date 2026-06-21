@@ -40,13 +40,26 @@ jobs:
     needs: build-and-push-image
     runs-on: ubuntu-latest
     steps:
+      - name: Install Cloudflared
+        run: |
+          wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+          sudo dpkg -i cloudflared-linux-amd64.deb
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          cat >> ~/.ssh/config <<EOF
+          Host ${{ secrets.SSH_HOST }}
+            User ${{ secrets.SSH_USERNAME }}
+            StrictHostKeyChecking no
+            ProxyCommand /usr/bin/env TUNNEL_SERVICE_AUTH_ID=${{ secrets.CF_CLIENT_ID }} TUNNEL_SERVICE_AUTH_SECRET=${{ secrets.CF_CLIENT_SECRET }} cloudflared access ssh --hostname %h
+          EOF
+
       - name: Deploy to Remote Server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
+        run: |
+          ssh ${{ secrets.SSH_HOST }} << 'EOF'
             cd ~/wismaamal-deploy
             
             # Login to GHCR (Server needs to be authenticated to pull)
@@ -55,3 +68,4 @@ jobs:
             # Pull frontend image and restart
             docker compose pull frontend-web
             docker compose up -d frontend-web
+          EOF
