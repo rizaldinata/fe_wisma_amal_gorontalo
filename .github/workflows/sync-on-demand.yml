@@ -1,8 +1,8 @@
 name: Sync Fork from Upstream
 
 on:
-  schedule:
-    - cron: '0 */6 * * *' # Every 6 hours
+  repository_dispatch:
+    types: [sync-frontend]
   workflow_dispatch:
 
 jobs:
@@ -12,7 +12,7 @@ jobs:
       - name: Checkout target repo
         uses: actions/checkout@v4
         with:
-          ref: staging
+          ref: develop
           token: ${{ secrets.GHCR_PAT }} # Use PAT so the push triggers the deploy workflow
 
       - name: Sync upstream changes
@@ -24,12 +24,12 @@ jobs:
           
           # Check if there are changes
           HEAD_HASH=$(git rev-parse HEAD)
-          UPSTREAM_HASH=$(git rev-parse upstream/staging)
+          UPSTREAM_HASH=$(git rev-parse upstream/develop)
           
           if [ "$HEAD_HASH" != "$UPSTREAM_HASH" ]; then
             echo "Changes detected, merging..."
-            git merge upstream/staging --no-edit
-            git push origin staging
+            git merge upstream/develop --no-edit
+            git push origin develop
           else
             echo "Fork is up to date."
           fi
