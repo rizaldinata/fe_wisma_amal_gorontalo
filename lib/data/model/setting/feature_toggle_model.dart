@@ -4,6 +4,7 @@ class FeatureToggleModel {
   final String key;
   final String name;
   final String? description;
+  final String? icon;
   final bool isActive;
   final bool isLocked;
   final int sortOrder;
@@ -15,6 +16,7 @@ class FeatureToggleModel {
     required this.key,
     required this.name,
     this.description,
+    this.icon,
     required this.isActive,
     required this.isLocked,
     required this.sortOrder,
@@ -28,6 +30,7 @@ class FeatureToggleModel {
       key: json['key'],
       name: json['name'],
       description: json['description'],
+      icon: json['icon'],
       isActive: json['is_active'] == 1 || json['is_active'] == true,
       isLocked: json['is_locked'] == 1 || json['is_locked'] == true,
       sortOrder: json['sort_order'] ?? 0,
@@ -45,6 +48,7 @@ class FeatureToggleModel {
     String? key,
     String? name,
     String? description,
+    String? icon,
     bool? isActive,
     bool? isLocked,
     int? sortOrder,
@@ -56,6 +60,7 @@ class FeatureToggleModel {
       key: key ?? this.key,
       name: name ?? this.name,
       description: description ?? this.description,
+      icon: icon ?? this.icon,
       isActive: isActive ?? this.isActive,
       isLocked: isLocked ?? this.isLocked,
       sortOrder: sortOrder ?? this.sortOrder,

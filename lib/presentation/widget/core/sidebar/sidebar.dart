@@ -179,6 +179,11 @@ class _CustomSidebarState extends State<CustomSidebar> {
                               return const SizedBox.shrink();
                             }
 
+                            // Sembunyikan kategori parent jika semua child-nya difilter (misal karena feature toggle mati)
+                            if (item.children != null && !item.hasChildren && item.page == null && item.onTap == null) {
+                              return const SizedBox.shrink();
+                            }
+
                             if (item.hasChildren) {
                               final id = item.label;
                               final isOpen =

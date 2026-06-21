@@ -13,6 +13,7 @@ import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/textform/textform.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:frontend/main.dart';
 
 @RoutePage()
 class LoginPage extends StatefulWidget {
@@ -199,27 +200,28 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         SizedBox(height: 30),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Belum punya akun?',
-                              style: StyleConstant.customTextStyle.copyWith(
-                                color: Theme.of(context).colorScheme.onSurface,
+                        if (context.isFeatureEnabled('auth_registration'))
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Belum punya akun?',
+                                style: StyleConstant.customTextStyle.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
                               ),
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                context.router.replace(
-                                  RegisterRoute(
-                                    pendingRoom: widget.pendingRoom,
-                                  ),
-                                );
-                              },
-                              child: Text('Daftar disini'),
-                            ),
-                          ],
-                        ),
+                              TextButton(
+                                onPressed: () {
+                                  context.router.replace(
+                                    RegisterRoute(
+                                      pendingRoom: widget.pendingRoom,
+                                    ),
+                                  );
+                                },
+                                child: Text('Daftar disini'),
+                              ),
+                            ],
+                          ),
                       ],
                     );
                   },

@@ -20,7 +20,7 @@ class _FeatureTogglePageState extends State<FeatureTogglePage> {
   @override
   void initState() {
     super.initState();
-    // context.read<FeatureToggleBloc>().add(FetchFeatureToggles()); // Sudah dipanggil di wrappedRoute
+    context.read<FeatureToggleBloc>().add(FetchFeatureToggles());
   }
 
   void _onToggleChanged(FeatureToggleModel toggle, bool value) {
@@ -136,6 +136,15 @@ class _FeatureTogglePageState extends State<FeatureTogglePage> {
                         color: module.isActive ? Colors.black87 : Colors.grey,
                       ),
                     ),
+                    subtitle: child.description != null
+                        ? Text(
+                            child.description!,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: module.isActive ? Colors.grey[600] : Colors.grey[400],
+                            ),
+                          )
+                        : null,
                     trailing: isChildUpdating
                         ? const SizedBox(
                             width: 20,

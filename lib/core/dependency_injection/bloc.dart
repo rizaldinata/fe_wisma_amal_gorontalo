@@ -459,7 +459,7 @@ Future<void> initializeBloc() async {
       generateFixedExpenses: serviceLocator.get<GenerateFixedExpensesUseCase>(),
     ),
   );
-  serviceLocator.registerFactory<FeatureToggleBloc>(
+  serviceLocator.registerLazySingleton<FeatureToggleBloc>(
     () => FeatureToggleBloc(
       repository: serviceLocator.get<FeatureToggleRepository>(),
     ),

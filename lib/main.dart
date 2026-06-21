@@ -11,6 +11,7 @@ import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 // import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:frontend/presentation/bloc/app/app_bloc.dart';
 import 'package:frontend/presentation/bloc/setting/feature_toggle/feature_toggle_bloc.dart';
+import 'package:frontend/presentation/bloc/setting/feature_toggle/feature_toggle_event.dart';
 import 'package:frontend/data/model/setting/feature_toggle_model.dart';
 import 'package:frontend/presentation/bloc/setting/feature_toggle/feature_toggle_state.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -40,7 +41,9 @@ Future<void> main(List<String> args) async {
           value: serviceLocator<AuthBloc>()..add(InitLoginStatusEvent()),
         ),
         BlocProvider(create: (context) => AppBloc()),
-        BlocProvider(create: (context) => serviceLocator<FeatureToggleBloc>()),
+        BlocProvider.value(
+          value: serviceLocator<FeatureToggleBloc>(),
+        ),
       ],
       child: MyApp(),
     ),

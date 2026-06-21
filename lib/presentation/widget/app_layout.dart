@@ -129,8 +129,8 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                   // ─── Manajemen Penghuni (Admin) ────────────────────
                   // Tampil jika memiliki salah satu permission pengelolaan penghuni/tamu
                   if (context.can(PermissionKeys.viewResident) ||
-                      context.can(PermissionKeys.viewGuest) ||
-                      context.can(PermissionKeys.viewGuestBill))
+                      (context.can(PermissionKeys.viewGuest) && context.isFeatureEnabled('guest')) ||
+                      (context.can(PermissionKeys.viewGuestBill) && context.isFeatureEnabled('guest')))
                     SidebarItem(
                       label: 'Manajemen Penghuni',
                       icon: Icons.admin_panel_settings,
@@ -142,13 +142,13 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                             icon: Icons.people,
                             page: const ResidentRoute(),
                           ),
-                        if (context.can(PermissionKeys.viewGuest))
+                        if (context.can(PermissionKeys.viewGuest) && context.isFeatureEnabled('guest'))
                           SidebarItem(
                             label: 'Daftar Tamu',
                             icon: Icons.groups,
                             page: const GuestListRoute(),
                           ),
-                        if (context.can(PermissionKeys.viewGuestBill))
+                        if (context.can(PermissionKeys.viewGuestBill) && context.isFeatureEnabled('guest'))
                           SidebarItem(
                             label: 'Tagihan Tamu',
                             icon: Icons.receipt_long_outlined,
@@ -161,27 +161,29 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                   if (!isGuest &&
                       !isResident &&
                       !isMember &&
-                      (context.can(PermissionKeys.viewRooms) ||
-                          context.can(PermissionKeys.viewLease) ||
-                          context.can(PermissionKeys.approveLease)))
+                      ((context.can(PermissionKeys.viewRooms) && context.isFeatureEnabled('room')) ||
+                          context.isFeatureEnabled('schedule') ||
+                          ((context.can(PermissionKeys.viewLease) ||
+                              context.can(PermissionKeys.approveLease)) && context.isFeatureEnabled('schedule'))))
                     SidebarItem(
                       label: 'Kamar & Reservasi',
                       icon: Icons.room,
                       hasAccess: true,
                       children: [
-                        if (context.can(PermissionKeys.viewRooms))
+                        if (context.can(PermissionKeys.viewRooms) && context.isFeatureEnabled('room'))
                           SidebarItem(
                             label: 'Kamar',
                             icon: Icons.meeting_room,
                             page: RoomRoute(),
                           ),
-                        SidebarItem(
-                          label: 'Jadwal Kamar',
-                          icon: Icons.calendar_month_outlined,
-                          page: const RoomScheduleRoute(),
-                        ),
-                        if (context.can(PermissionKeys.viewLease) ||
-                            context.can(PermissionKeys.approveLease))
+                        if (context.isFeatureEnabled('schedule'))
+                          SidebarItem(
+                            label: 'Jadwal Kamar',
+                            icon: Icons.calendar_month_outlined,
+                            page: const RoomScheduleRoute(),
+                          ),
+                        if ((context.can(PermissionKeys.viewLease) ||
+                            context.can(PermissionKeys.approveLease)) && context.isFeatureEnabled('schedule'))
                           SidebarItem(
                             label: 'Reservasi',
                             icon: Icons.book_online,
@@ -191,48 +193,41 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                     ),
 
                   // ─── Keuangan (Admin) ──────────────────────────────
-                  if (context.can(PermissionKeys.financeDashboardView) ||
-                      context.can(PermissionKeys.financeExpenseView) ||
-                      context.can(PermissionKeys.financeFixedExpenseView) ||
-                      context.can(PermissionKeys.financeInvoiceView) ||
-                      context.can(PermissionKeys.financePaymentVerify) ||
-                      context.can(PermissionKeys.financePaymentView) ||
-                      context.can(PermissionKeys.financeFineView))
+                  if (context.isFeatureEnabled('finance') &&
+                      ((context.can(PermissionKeys.financeDashboardView) && context.isFeatureEnabled('finance_dashboard')) ||
+                      ((context.can(PermissionKeys.financeExpenseView) || context.can(PermissionKeys.financeFixedExpenseView)) && (context.isFeatureEnabled('finance_expense') || context.isFeatureEnabled('finance_fixed_expense'))) ||
+                      (context.can(PermissionKeys.financeInvoiceView) && context.isFeatureEnabled('finance_invoice')) ||
+                      (context.can(PermissionKeys.financePaymentVerify) && context.isFeatureEnabled('finance_invoice')) ||
+                      (context.can(PermissionKeys.financePaymentView) && context.isFeatureEnabled('finance_invoice'))))
                     SidebarItem(
                       label: 'Keuangan',
                       icon: Icons.monetization_on,
                       hasAccess: true,
                       children: [
-                        if (context.can(PermissionKeys.financeDashboardView))
+                        if (context.can(PermissionKeys.financeDashboardView) && context.isFeatureEnabled('finance_dashboard'))
                           SidebarItem(
                             label: 'Dashboard',
                             icon: Icons.dashboard_outlined,
                             page: const FinanceDashboardRoute(),
                           ),
-                        if (context.can(PermissionKeys.financeExpenseView) ||
-                            context.can(PermissionKeys.financeFixedExpenseView))
+                        if ((context.can(PermissionKeys.financeExpenseView) ||
+                            context.can(PermissionKeys.financeFixedExpenseView)) && (context.isFeatureEnabled('finance_expense') || context.isFeatureEnabled('finance_fixed_expense')))
                           SidebarItem(
                             label: 'Pengeluaran',
                             icon: Icons.receipt_long,
                             page: const ExpenseListRoute(),
                           ),
-                        if (context.can(PermissionKeys.financeInvoiceView))
+                        if (context.can(PermissionKeys.financeInvoiceView) && context.isFeatureEnabled('finance_invoice'))
                           SidebarItem(
                             label: 'Daftar Tagihan',
                             icon: Icons.description_outlined,
                             page: const InvoiceListRoute(),
                           ),
-                        if (context.can(PermissionKeys.financePaymentVerify))
+                        if (context.can(PermissionKeys.financePaymentVerify) && context.isFeatureEnabled('finance_invoice'))
                           SidebarItem(
                             label: 'Manajemen Pembayaran',
                             icon: Icons.payments_outlined,
                             page: const PaymentVerificationRoute(),
-                          ),
-                        if (context.can(PermissionKeys.financeFineView))
-                          SidebarItem(
-                            label: 'Manajemen Denda',
-                            icon: Icons.gavel_rounded,
-                            page: const FineManagementRoute(),
                           ),
                       ],
                     ),
@@ -240,27 +235,27 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                   // ─── Inventaris & Pemeliharaan (Admin) ────────────
                   if (!isResident &&
                       !isMember &&
-                      (context.can(PermissionKeys.viewInventory) ||
-                          context.can(PermissionKeys.viewMaintenance) ||
-                          context.can(PermissionKeys.viewDamageReport)))
+                      ((context.can(PermissionKeys.viewInventory) && context.isFeatureEnabled('inventory')) ||
+                          (context.can(PermissionKeys.viewMaintenance) && context.isFeatureEnabled('maintenance_schedule')) ||
+                          (context.can(PermissionKeys.viewDamageReport) && context.isFeatureEnabled('damage_report'))))
                     SidebarItem(
                       label: 'Inventaris & Pemeliharaan',
                       icon: Icons.inventory,
                       hasAccess: true,
                       children: [
-                        if (context.can(PermissionKeys.viewInventory))
+                        if (context.can(PermissionKeys.viewInventory) && context.isFeatureEnabled('inventory'))
                           SidebarItem(
                             label: 'Inventaris',
                             icon: Icons.inventory,
                             page: const InventoryRoute(),
                           ),
-                        if (context.can(PermissionKeys.viewMaintenance))
+                        if (context.can(PermissionKeys.viewMaintenance) && context.isFeatureEnabled('maintenance_schedule'))
                           SidebarItem(
                             label: 'Pemeliharaan',
                             icon: Icons.build,
                             page: const MaintananceRoute(),
                           ),
-                        if (context.can(PermissionKeys.viewDamageReport))
+                        if (context.can(PermissionKeys.viewDamageReport) && context.isFeatureEnabled('damage_report'))
                           SidebarItem(
                             label: 'Laporan Kerusakan',
                             icon: Icons.report_problem_outlined,
@@ -269,30 +264,12 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                       ],
                     ),
 
-                  // ─── Notifikasi WhatsApp (Admin) ──────────────────
-                  if (context.can(PermissionKeys.notificationLogView) ||
-                      context.can(PermissionKeys.notificationSend))
-                    SidebarItem(
-                      label: 'Notifikasi WhatsApp',
-                      icon: Icons.chat_bubble_outline,
-                      page: const NotificationMonitoringRoute(),
-                      hasAccess: true,
-                    ),
-
-                  // ─── Pengaturan (Admin) ────────────────────────────
-                  if (context.can(PermissionKeys.settingView))
-                    SidebarItem(
-                      label: 'Pengaturan',
-                      icon: Icons.settings,
-                      page: const SettingRoute(),
-                    ),
-
                   // ══════════════════════════════════════════════════
                   // Area untuk pengguna terdaftar (Member & Resident)
                   // ══════════════════════════════════════════════════
 
                   // ─── Kamar (Member, Resident, Guest) ──────────────
-                  if (isGuest || isMember || isResident)
+                  if ((isGuest || isMember || isResident) && context.isFeatureEnabled('room'))
                     SidebarItem(
                       label: 'Kamar',
                       icon: Icons.meeting_room,
@@ -309,79 +286,75 @@ class _AppLayoutPageState extends State<AppLayoutPage>
 
                   // ─── Area Member (pengguna terdaftar, belum punya kamar) ──
                   if (isMember) ...[
-                    if (context.can(PermissionKeys.applyLease) ||
-                        context.can(PermissionKeys.viewLease))
+                    if ((context.can(PermissionKeys.applyLease) ||
+                        context.can(PermissionKeys.viewLease)) && context.isFeatureEnabled('schedule'))
                       SidebarItem(
                         label: 'Reservasi Saya',
                         icon: Icons.book_online_outlined,
                         page: const MyReservationRoute(),
                       ),
-                    if (context.can(PermissionKeys.financeMeSummaryView))
+                    if (context.can(PermissionKeys.financeMeSummaryView) && context.isFeatureEnabled('finance'))
                       SidebarItem(
                         label: 'Keuangan Saya',
                         icon: Icons.account_balance_wallet_outlined,
                         page: const MemberFinanceRoute(),
                       ),
-                    if (context.can(PermissionKeys.financeMeFineView))
+                    if (context.isFeatureEnabled('guest'))
                       SidebarItem(
-                        label: 'Denda Saya',
-                        icon: Icons.gavel_rounded,
-                        page: const MyFinesRoute(),
+                        label: 'Tamu Saya',
+                        icon: Icons.people_alt_outlined,
+                        page: const MyGuestRoute(),
                       ),
-                    SidebarItem(
-                      label: 'Tamu Saya',
-                      icon: Icons.people_alt_outlined,
-                      page: const MyGuestRoute(),
-                    ),
                   ],
 
                   // ─── Area Penghuni (resident aktif) ────────────────
-                  if (isResident)
+                  if (isResident && (
+                      (context.can(PermissionKeys.financeMeSummaryView) && context.isFeatureEnabled('finance')) ||
+                      ((context.can(PermissionKeys.applyLease) || context.can(PermissionKeys.viewLease)) && context.isFeatureEnabled('schedule')) ||
+                      ((context.can(PermissionKeys.viewMyGuest) || context.can(PermissionKeys.createGuest) || context.can(PermissionKeys.payGuestBill)) && context.isFeatureEnabled('guest')) ||
+                      (context.can(PermissionKeys.createDamageReport) && context.isFeatureEnabled('damage_report')) ||
+                      (context.can(PermissionKeys.viewMyDamageReport) && context.isFeatureEnabled('damage_report')) ||
+                      (context.can(PermissionKeys.viewMaintenance) && context.isFeatureEnabled('maintenance_schedule'))
+                  ))
                     SidebarItem(
                       label: 'Area Penghuni',
                       icon: Icons.home_work_outlined,
                       hasAccess: true,
                       children: [
-                        if (context.can(PermissionKeys.financeMeSummaryView))
+                        if (context.can(PermissionKeys.financeMeSummaryView) && context.isFeatureEnabled('finance'))
                           SidebarItem(
                             label: 'Keuangan Saya',
                             icon: Icons.account_balance_wallet_outlined,
                             page: const MemberFinanceRoute(),
                           ),
-                        if (context.can(PermissionKeys.applyLease) ||
-                            context.can(PermissionKeys.viewLease))
+                        if ((context.can(PermissionKeys.applyLease) ||
+                            context.can(PermissionKeys.viewLease)) && context.isFeatureEnabled('schedule'))
                           SidebarItem(
                             label: 'Reservasi Saya',
                             icon: Icons.book_online_outlined,
                             page: const MyReservationRoute(),
                           ),
-                        if (context.can(PermissionKeys.viewMyGuest) ||
+                        if ((context.can(PermissionKeys.viewMyGuest) ||
                             context.can(PermissionKeys.createGuest) ||
-                            context.can(PermissionKeys.payGuestBill))
+                            context.can(PermissionKeys.payGuestBill)) && context.isFeatureEnabled('guest'))
                           SidebarItem(
                             label: 'Tamu Saya',
                             icon: Icons.people_alt_outlined,
                             page: const MyGuestRoute(),
                           ),
-                        if (context.can(PermissionKeys.financeMeFineView))
-                          SidebarItem(
-                            label: 'Denda Saya',
-                            icon: Icons.gavel_rounded,
-                            page: const MyFinesRoute(),
-                          ),
-                        if (context.can(PermissionKeys.createDamageReport))
+                        if (context.can(PermissionKeys.createDamageReport) && context.isFeatureEnabled('damage_report'))
                           SidebarItem(
                             label: 'Lapor Kerusakan',
                             icon: Icons.report_problem_outlined,
                             page: const MaintenanceCreateReportRoute(),
                           ),
-                        if (context.can(PermissionKeys.viewMyDamageReport))
+                        if (context.can(PermissionKeys.viewMyDamageReport) && context.isFeatureEnabled('damage_report'))
                           SidebarItem(
                             label: 'Status Laporan',
                             icon: Icons.track_changes_outlined,
                             page: const MaintenanceReportListRoute(),
                           ),
-                        if (context.can(PermissionKeys.viewMaintenance))
+                        if (context.can(PermissionKeys.viewMaintenance) && context.isFeatureEnabled('maintenance_schedule'))
                           SidebarItem(
                             label: 'Jadwal Pemeliharaan',
                             icon: Icons.calendar_today_outlined,
