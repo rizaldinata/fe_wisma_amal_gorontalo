@@ -10,7 +10,7 @@ RUN flutter pub get
 
 # Build the app for the web with the dynamic BASE_URL
 # The build arg will be passed from docker-compose or CI
-ARG BASE_URL=https://api.wismaamal.allvvnt.my.id
+ARG BASE_URL=https://api-wismaamal.allvvnt.my.id
 RUN flutter build web --dart-define=BASE_URL=$BASE_URL --release
 
 # Stage 2: Serve the app with Nginx
