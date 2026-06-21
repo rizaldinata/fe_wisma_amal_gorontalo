@@ -14,6 +14,7 @@ class InvoiceModel extends InvoiceEntity {
     super.residentName,
     super.roomNumber,
     super.createdAt,
+    super.type,
   });
 
   factory InvoiceModel.fromJson(Map<String, dynamic> json) {
@@ -39,6 +40,7 @@ class InvoiceModel extends InvoiceEntity {
       createdAt: json['created_at'] != null
           ? DateTime.tryParse(json['created_at'].toString())
           : null,
+      type: json['type']?.toString(),
     );
   }
 }

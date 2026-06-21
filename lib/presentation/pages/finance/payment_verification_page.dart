@@ -232,6 +232,16 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                           style: TextStyle(fontSize: 12, color: _methodColor(payment.paymentMethod, isDark), fontWeight: FontWeight.w600)),
                     ]),
                   ]),
+                  if (payment.invoiceType != null) ...[
+                    const Divider(height: 16),
+                    Row(children: [
+                      Icon(Icons.label_outline, size: 13, color: Colors.grey.shade400),
+                      const SizedBox(width: 6),
+                      Text('Jenis Tagihan:', style: TextStyle(fontSize: 12, color: Colors.grey.shade500)),
+                      const SizedBox(width: 6),
+                      _invoiceTypeBadge(payment.invoiceType),
+                    ]),
+                  ],
                   if (payment.transactionId != null) ...[
                     const Divider(height: 16),
                     Row(children: [
@@ -366,7 +376,13 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                         Text('Kamar ${payment.roomNumber}', style: TextStyle(fontSize: 12, color: Colors.grey.shade600)),
                       if (payment.invoiceNumber != null) ...[
                         const SizedBox(height: 2),
-                        Text(payment.invoiceNumber!, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                        Row(children: [
+                          Text(payment.invoiceNumber!, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
+                          if (payment.invoiceType != null) ...[
+                            const SizedBox(width: 6),
+                            _invoiceTypeBadge(payment.invoiceType),
+                          ],
+                        ]),
                       ],
                     ])),
                     Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
@@ -826,6 +842,27 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
     );
   }
 
+  Widget _invoiceTypeBadge(String? type) {
+    if (type == null) return const SizedBox.shrink();
+    final (label, color) = switch (type) {
+      'dp'        => ('DP', Colors.amber.shade700),
+      'pelunasan' => ('Pelunasan', Colors.teal.shade700),
+      'sewa'      => ('Sewa Penuh', Colors.indigo.shade600),
+      'extension' => ('Perpanjangan', Colors.blue.shade700),
+      'fine'      => ('Denda', Colors.red.shade700),
+      _           => (type, Colors.grey.shade600),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
+      ),
+      child: Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: color)),
+    );
+  }
+
   Widget _colPenghuni(PaymentEntity p, bool isDark) => Row(children: [
     Container(
       width: 40, height: 40,
@@ -846,7 +883,9 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
           Icon(Icons.receipt_outlined, size: 12, color: isDark ? AppColorsDark.textHint : AppColorsLight.textHint),
           const SizedBox(width: 3),
           Text(p.invoiceNumber!, style: TextStyle(fontSize: 12, color: isDark ? AppColorsDark.textHint : AppColorsLight.textHint)),
+          const SizedBox(width: 6),
         ],
+        _invoiceTypeBadge(p.invoiceType),
       ]),
     ])),
   ]);

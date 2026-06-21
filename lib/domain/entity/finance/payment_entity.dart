@@ -17,6 +17,7 @@ class PaymentEntity {
   final String? residentName;
   final String? roomNumber;
   final String? updatedAt;
+  final String? invoiceType; // 'sewa' | 'dp' | 'pelunasan' | 'extension' | 'fine'
 
   PaymentEntity({
     required this.id,
@@ -37,5 +38,6 @@ class PaymentEntity {
     this.residentName,
     this.roomNumber,
     this.updatedAt,
+    this.invoiceType,
   }) : grossAmount = grossAmount ?? amount;
 }

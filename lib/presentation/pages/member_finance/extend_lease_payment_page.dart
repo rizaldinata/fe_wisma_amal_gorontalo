@@ -26,6 +26,7 @@ class ExtendLeasePaymentPage extends StatefulWidget {
     this.feeBearer,
     this.snapToken,
     this.paymentData,
+    this.pageTitle,
   });
 
   final int invoiceId;
@@ -36,6 +37,7 @@ class ExtendLeasePaymentPage extends StatefulWidget {
   final String? feeBearer;
   final String? snapToken;
   final Map<String, dynamic>? paymentData;
+  final String? pageTitle;
 
   @override
   State<ExtendLeasePaymentPage> createState() => _ExtendLeasePaymentPageState();
@@ -143,7 +145,7 @@ class _ExtendLeasePaymentPageState extends State<ExtendLeasePaymentPage> {
         appBar: _paymentConfirmed
             ? null
             : AppBar(
-                title: const Text('Pembayaran Perpanjangan'),
+                title: Text(widget.pageTitle ?? 'Pembayaran Perpanjangan'),
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: _isPolling ? null : () => context.router.maybePop(),

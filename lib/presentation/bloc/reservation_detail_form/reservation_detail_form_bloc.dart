@@ -1,6 +1,7 @@
 import 'package:bloc/bloc.dart';
 import 'package:dio/dio.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter/foundation.dart';
 import 'package:formz/formz.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/domain/entity/reservation_entity.dart';
@@ -38,6 +39,7 @@ class ReservationDetailFormBloc
     on<ResetConfirmFlagEvent>(
       (event, emit) => emit(state.copyWith(readyToConfirm: false)),
     );
+    on<PaymentSchemeChanged>(_onPaymentSchemeChanged);
   }
 
   Future<void> _onInit(
@@ -112,7 +114,11 @@ class ReservationDetailFormBloc
     StartDateChanged event,
     Emitter<ReservationDetailFormState> emit,
   ) {
-    emit(state.copyWith(startDate: event.date));
+    final threshold = DateTime.now().add(const Duration(days: 7));
+    final dpStillAvailable = event.date.isAfter(threshold);
+    // Jika DP aktif tapi tanggal tidak lagi memenuhi syarat, kembalikan ke full
+    final scheme = state.paymentScheme == 'dp' && !dpStillAvailable ? 'full' : state.paymentScheme;
+    emit(state.copyWith(startDate: event.date, paymentScheme: scheme));
     _calculate(emit);
   }
 
@@ -152,6 +158,15 @@ class ReservationDetailFormBloc
     emit(state.copyWith(selectedMidtransMethod: event.method));
   }
 
+  void _onPaymentSchemeChanged(
+    PaymentSchemeChanged event,
+    Emitter<ReservationDetailFormState> emit,
+  ) {
+    // Jika DP tidak lagi tersedia (start_date sudah diubah ke ≤ H+7), kembalikan ke full
+    final scheme = event.scheme == 'dp' && !state.isDpAvailable ? 'full' : event.scheme;
+    emit(state.copyWith(paymentScheme: scheme));
+  }
+
   Future<void> _onSubmit(
     SubmitReservation event,
     Emitter<ReservationDetailFormState> emit,
@@ -172,6 +187,7 @@ class ReservationDetailFormBloc
         agreedPrice: state.totalPrice,
         tenantUserId: state.tenantUserId,
         tenantName: state.tenantName,
+        paymentScheme: state.paymentScheme,
       );
 
       emit(
@@ -180,10 +196,25 @@ class ReservationDetailFormBloc
           createdReservation: reservation,
         ),
       );
-    } catch (e) {
-      String message = 'Gagal membuat reservasi';
+    } catch (e, st) {
+      debugPrint('SubmitReservation error [${e.runtimeType}]: $e\n$st');
+      String message = 'Gagal membuat reservasi. Silakan coba lagi.';
       if (e is DioException) {
-        message = e.response?.data['message'] ?? message;
+        final data = e.response?.data;
+        if (data != null) {
+          // Prioritaskan pesan error field pertama jika ada (422 validation)
+          final errors = data['errors'] as Map<String, dynamic>?;
+          if (errors != null && errors.isNotEmpty) {
+            final firstFieldErrors = errors.values.first;
+            if (firstFieldErrors is List && firstFieldErrors.isNotEmpty) {
+              message = firstFieldErrors.first.toString();
+            } else {
+              message = data['message'] ?? message;
+            }
+          } else {
+            message = data['message'] ?? message;
+          }
+        }
       }
       emit(
         state.copyWith(

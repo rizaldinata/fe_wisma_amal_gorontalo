@@ -34,6 +34,10 @@ class MyReservationRemoteDatasource {
           paymentStatus: 'unknown',
           startDate: rawStart.length >= 10 ? rawStart.substring(0, 10) : rawStart,
           endDate: rawEnd.length >= 10 ? rawEnd.substring(0, 10) : rawEnd,
+          paymentScheme: json['payment_scheme']?.toString(),
+          dpAmount: (json['dp_amount'] as num?)?.toDouble(),
+          dpPaidAt: json['dp_paid_at']?.toString(),
+          dpRefundEligible: json['dp_refund_eligible'] as bool?,
         );
       }).toList();
     } catch (e) {

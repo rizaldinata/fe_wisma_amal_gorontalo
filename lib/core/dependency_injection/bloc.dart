@@ -53,6 +53,13 @@ import 'package:frontend/domain/usecase/maintenance/create_request_usecase.dart'
 import 'package:frontend/domain/usecase/maintenance/add_update_usecase.dart';
 import 'package:frontend/domain/usecase/finance/verify_payment_usecase.dart';
 import 'package:frontend/domain/usecase/finance/refund_payment_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_my_fines_usecase.dart';
+import 'package:frontend/domain/usecase/finance/pay_fines_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_all_fines_usecase.dart';
+import 'package:frontend/domain/usecase/finance/create_fine_usecase.dart';
+import 'package:frontend/domain/usecase/finance/waive_fine_usecase.dart';
+import 'package:frontend/domain/usecase/finance/cancel_fine_usecase.dart';
+import 'package:frontend/presentation/bloc/fine/fine_cubit.dart';
 import 'package:frontend/presentation/bloc/payment_verification/payment_verification_bloc.dart';
 import 'package:frontend/presentation/bloc/resident/complete_profile/complete_profile_bloc.dart';
 import 'package:frontend/presentation/bloc/user_management/user_management_bloc.dart';
@@ -108,6 +115,11 @@ import 'package:frontend/domain/usecase/guest/get_admin_guest_bills_usecase.dart
 import 'package:frontend/domain/usecase/guest/verify_guest_bill_usecase.dart';
 import 'package:frontend/domain/usecase/notification/get_notification_logs_usecase.dart';
 import 'package:frontend/domain/usecase/notification/mark_all_notification_logs_read_usecase.dart';
+import 'package:frontend/domain/usecase/notification/get_notification_summary_usecase.dart';
+import 'package:frontend/domain/usecase/notification/resend_notification_usecase.dart';
+import 'package:frontend/domain/usecase/notification/send_custom_notification_usecase.dart';
+import 'package:frontend/domain/usecase/notification/get_notification_recipients_usecase.dart';
+import 'package:frontend/presentation/bloc/notification/notification_monitoring_cubit.dart';
 import 'package:frontend/domain/usecase/setting/create_bank_account_usecase.dart';
 import 'package:frontend/domain/usecase/setting/delete_bank_account_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_bank_accounts_usecase.dart';
@@ -347,10 +359,21 @@ Future<void> initializeBloc() async {
       getSummary: serviceLocator.get<GetMemberFinanceSummaryUseCase>(),
       getInvoices: serviceLocator.get<GetMemberInvoicesUseCase>(),
       getPayments: serviceLocator.get<GetMemberPaymentsUseCase>(),
+      getMyFines: serviceLocator.get<GetMyFinesUseCase>(),
+      payFines: serviceLocator.get<PayFinesUseCase>(),
       payInvoice: serviceLocator.get<PayInvoiceUseCase>(),
       extendLease: serviceLocator.get<ExtendLeaseUseCase>(),
       getSettings: serviceLocator.get<GetPublicSettingsUseCase>(),
       getBankAccounts: serviceLocator.get<GetPublicBankAccountsUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<FineCubit>(
+    () => FineCubit(
+      getAllFines: serviceLocator.get<GetAllFinesUseCase>(),
+      createFine: serviceLocator.get<CreateFineUseCase>(),
+      waiveFine: serviceLocator.get<WaiveFineUseCase>(),
+      cancelFine: serviceLocator.get<CancelFineUseCase>(),
     ),
   );
 
@@ -385,6 +408,16 @@ Future<void> initializeBloc() async {
           serviceLocator.get<GetNotificationLogsUseCase>(),
       markAllNotificationLogsReadUseCase:
           serviceLocator.get<MarkAllNotificationLogsReadUseCase>(),
+    ),
+  );
+
+  serviceLocator.registerFactory<NotificationMonitoringCubit>(
+    () => NotificationMonitoringCubit(
+      getSummary: serviceLocator.get<GetNotificationSummaryUseCase>(),
+      getLogs: serviceLocator.get<GetNotificationLogsUseCase>(),
+      resend: serviceLocator.get<ResendNotificationUseCase>(),
+      sendCustom: serviceLocator.get<SendCustomNotificationUseCase>(),
+      getRecipients: serviceLocator.get<GetNotificationRecipientsUseCase>(),
     ),
   );
 

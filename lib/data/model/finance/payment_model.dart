@@ -22,6 +22,7 @@ class PaymentModel extends PaymentEntity {
     super.residentName,
     super.roomNumber,
     super.updatedAt,
+    super.invoiceType,
   });
 
   static Map<String, dynamic>? _parsePaymentData(dynamic raw) {
@@ -53,6 +54,7 @@ class PaymentModel extends PaymentEntity {
       residentName: json['resident_name'] as String?,
       roomNumber: json['room_number'] as String?,
       updatedAt: json['updated_at'] as String?,
+      invoiceType: json['invoice_type'] as String?,
     );
   }
 }

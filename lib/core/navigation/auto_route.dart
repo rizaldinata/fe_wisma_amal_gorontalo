@@ -196,6 +196,21 @@ class AppRouter extends RootStackRouter {
         ),
         AutoRoute(
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.invoicePaymentName,
+          page: InvoicePaymentRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.myFinesName,
+          page: MyFinesRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.fineManagementName,
+          page: FineManagementRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: RouteConstant.myGuestName,
           page: MyGuestRoute.page,
         ),
@@ -245,6 +260,11 @@ class AppRouter extends RootStackRouter {
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: RouteConstant.changePasswordName,
           page: ChangePasswordRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.notificationMonitoringName,
+          page: NotificationMonitoringRoute.page,
         ),
       ],
     ),

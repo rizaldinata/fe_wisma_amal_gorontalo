@@ -26,7 +26,6 @@ class RegisterPage extends StatelessWidget {
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController passwordConfirmController =
       TextEditingController();
-  final TextEditingController phoneNumberController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -166,20 +165,6 @@ class RegisterPage extends StatelessWidget {
 
                             SizedBox(height: 20),
                             CustomTextForm(
-                              controller: phoneNumberController,
-                              title: 'Nomor Telepon',
-                              hintText: '08123456789',
-                              isRequired: true,
-                              keyboardType: TextInputType.phone,
-                              validator: (value) {
-                                if (value == null || value.isEmpty) {
-                                  return 'Nomor telepon tidak boleh kosong';
-                                }
-                                return null;
-                              },
-                            ),
-                            SizedBox(height: 20),
-                            CustomTextForm(
                               controller: passwordController,
                               title: 'Password',
                               hintText: '***********',
@@ -249,8 +234,6 @@ class RegisterPage extends StatelessWidget {
                                             password: passwordController.text,
                                             passwordConfirm:
                                                 passwordConfirmController.text,
-                                            phoneNumber:
-                                                phoneNumberController.text,
                                           ),
                                         );
                                       } else {
