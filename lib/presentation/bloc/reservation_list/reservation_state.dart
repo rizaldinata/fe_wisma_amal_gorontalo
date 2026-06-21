@@ -34,7 +34,12 @@ class ReservationState extends Equatable {
       reservations.where((r) => r.status == 'active').toList();
 
   List<ReservationEntity> get pendingReservations =>
-      reservations.where((r) => r.status == 'pending').toList();
+      reservations
+          .where((r) =>
+              r.status == 'pending' ||
+              r.status == 'dp_terbayar' ||
+              r.status == 'terkonfirmasi')
+          .toList();
 
   List<ReservationEntity> get cancelledReservations =>
       reservations.where((r) => r.status == 'cancelled').toList();

@@ -29,6 +29,13 @@ import 'package:frontend/domain/usecase/finance/get_revenue_chart_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_expenses_usecase.dart';
 import 'package:frontend/domain/usecase/finance/create_expense_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_midtrans_monitoring_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_my_fines_usecase.dart';
+import 'package:frontend/domain/usecase/finance/pay_fines_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_all_fines_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_fine_eligible_users_usecase.dart';
+import 'package:frontend/domain/usecase/finance/create_fine_usecase.dart';
+import 'package:frontend/domain/usecase/finance/waive_fine_usecase.dart';
+import 'package:frontend/domain/usecase/finance/cancel_fine_usecase.dart';
 import 'package:frontend/domain/usecase/finance/update_expense_usecase.dart';
 import 'package:frontend/domain/usecase/finance/delete_expense_usecase.dart';
 import 'package:frontend/domain/usecase/permission/create_permission_usecase.dart';
@@ -62,6 +69,8 @@ import 'package:frontend/domain/usecase/finance/get_available_payment_methods_us
 import 'package:frontend/domain/usecase/setting/create_bank_account_usecase.dart';
 import 'package:frontend/domain/usecase/setting/delete_bank_account_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_bank_accounts_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_midtrans_fee_config_usecase.dart';
+import 'package:frontend/domain/usecase/setting/update_midtrans_fee_config_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_payment_methods_usecase.dart';
 import 'package:frontend/domain/usecase/setting/get_public_bank_accounts_usecase.dart';
 import 'package:frontend/domain/usecase/setting/update_bank_account_usecase.dart';
@@ -100,6 +109,10 @@ import 'package:frontend/domain/usecase/guest/checkout_my_guest_usecase.dart';
 import 'package:frontend/domain/repository/notification_repository.dart';
 import 'package:frontend/domain/usecase/notification/get_notification_logs_usecase.dart';
 import 'package:frontend/domain/usecase/notification/mark_all_notification_logs_read_usecase.dart';
+import 'package:frontend/domain/usecase/notification/get_notification_summary_usecase.dart';
+import 'package:frontend/domain/usecase/notification/resend_notification_usecase.dart';
+import 'package:frontend/domain/usecase/notification/send_custom_notification_usecase.dart';
+import 'package:frontend/domain/usecase/notification/get_notification_recipients_usecase.dart';
 import 'package:frontend/domain/repository/fixed_expense_repository.dart';
 import 'package:frontend/domain/usecase/finance/get_fixed_expenses_usecase.dart';
 import 'package:frontend/domain/usecase/finance/update_fixed_expense_usecase.dart';
@@ -262,6 +275,12 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => DeleteBankAccountUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetMidtransFeeConfigUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateMidtransFeeConfigUseCase(serviceLocator.get<SettingRepository>()),
   );
 
   // Maintenance UseCases
@@ -436,6 +455,18 @@ Future<void> initializeUseCase() async {
       repository: serviceLocator<NotificationRepository>(),
     ),
   );
+  serviceLocator.registerFactory(
+    () => GetNotificationSummaryUseCase(serviceLocator<NotificationRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => ResendNotificationUseCase(serviceLocator<NotificationRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => SendCustomNotificationUseCase(serviceLocator<NotificationRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetNotificationRecipientsUseCase(serviceLocator<NotificationRepository>()),
+  );
 
   // Fixed Expense UseCases
   serviceLocator.registerFactory(
@@ -449,5 +480,28 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => GenerateFixedExpensesUseCase(serviceLocator<FixedExpenseRepository>()),
+  );
+
+  // Fine UseCases
+  serviceLocator.registerFactory(
+    () => GetMyFinesUseCase(serviceLocator<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => PayFinesUseCase(serviceLocator<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetAllFinesUseCase(serviceLocator<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateFineUseCase(serviceLocator<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => WaiveFineUseCase(serviceLocator<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CancelFineUseCase(serviceLocator<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetFineEligibleUsersUseCase(serviceLocator<FinanceRepository>()),
   );
 }

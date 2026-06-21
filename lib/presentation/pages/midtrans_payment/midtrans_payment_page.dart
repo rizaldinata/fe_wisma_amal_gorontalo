@@ -300,7 +300,7 @@ class _MidtransPaymentPageState extends State<MidtransPaymentPage> {
                                   children: [
                                     Expanded(flex: 3, child: _buildPaymentSection(state)),
                                     const SizedBox(width: 24),
-                                    Expanded(flex: 2, child: _buildSummarySection()),
+                                    Expanded(flex: 2, child: _buildSummarySection(state)),
                                   ],
                                 ),
                             ],
@@ -925,7 +925,13 @@ class _MidtransPaymentPageState extends State<MidtransPaymentPage> {
 
   // ── Summary section ───────────────────────────────────────────────────────
 
-  Widget _buildSummarySection() {
+  Widget _buildSummarySection(MemberFinanceState state) {
+    final baseAmount    = widget.reservation.invoiceAmount;
+    final grossAmount   = state.paymentGrossAmount ?? baseAmount;
+    final midtransFee   = state.paymentMidtransFee ?? 0;
+    final isCustomer    = state.paymentFeeBearer == 'customer';
+    final hasFee        = isCustomer && midtransFee > 0;
+
     return Column(children: [
       BasicCard(
         title: 'Ringkasan Pesanan',
@@ -937,18 +943,56 @@ class _MidtransPaymentPageState extends State<MidtransPaymentPage> {
           _summaryRow('Mulai', widget.reservation.startDate),
           _summaryRow('Selesai', widget.reservation.endDate),
           const Divider(height: 28),
+          if (hasFee) ...[
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Tagihan Sewa', style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                Text(baseAmount != null ? currencyFormat.format(baseAmount) : 'Rp -',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Biaya Transaksi Midtrans',
+                    style: TextStyle(fontSize: 13, color: Colors.orange.shade700)),
+                Text(currencyFormat.format(midtransFee),
+                    style: TextStyle(fontSize: 13, color: Colors.orange.shade700)),
+              ],
+            ),
+            const Divider(height: 16),
+          ],
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('Total Bayar', style: TextStyle(fontWeight: FontWeight.bold)),
               Text(
-                widget.reservation.invoiceAmount != null
-                    ? currencyFormat.format(widget.reservation.invoiceAmount!)
-                    : 'Rp -',
+                grossAmount != null ? currencyFormat.format(grossAmount) : 'Rp -',
                 style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue, fontSize: 16),
               ),
             ],
           ),
+          if (hasFee) ...[
+            const SizedBox(height: 6),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+              decoration: BoxDecoration(
+                color: Colors.orange.shade50,
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: Colors.orange.shade200),
+              ),
+              child: Row(children: [
+                Icon(Icons.info_outline, size: 13, color: Colors.orange.shade700),
+                const SizedBox(width: 5),
+                Expanded(child: Text(
+                  'Biaya transaksi Midtrans ditanggung penghuni dan sudah termasuk dalam total di atas.',
+                  style: TextStyle(fontSize: 10, color: Colors.orange.shade700, height: 1.3),
+                )),
+              ]),
+            ),
+          ],
           const SizedBox(height: 8),
           if (widget.reservation.invoiceId != null)
             Text('ID Invoice: #${widget.reservation.invoiceId}',

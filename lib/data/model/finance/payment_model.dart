@@ -13,12 +13,16 @@ class PaymentModel extends PaymentEntity {
     required super.status,
     super.adminNotes,
     required super.amount,
+    super.midtransFee,
+    super.feeBearer,
+    super.grossAmount,
     required super.paymentDate,
     super.snapToken,
     super.paymentData,
     super.residentName,
     super.roomNumber,
     super.updatedAt,
+    super.invoiceType,
   });
 
   static Map<String, dynamic>? _parsePaymentData(dynamic raw) {
@@ -41,12 +45,16 @@ class PaymentModel extends PaymentEntity {
       status: json['status'] ?? 'pending',
       adminNotes: json['admin_notes'],
       amount: (json['amount'] as num?)?.toDouble() ?? 0.0,
+      midtransFee: (json['midtrans_fee'] as num?)?.toInt() ?? 0,
+      feeBearer: json['fee_bearer'] as String?,
+      grossAmount: (json['gross_amount'] as num?)?.toDouble(),
       paymentDate: json['payment_date'] ?? json['created_at'] ?? '',
       snapToken: json['snap_token'],
       paymentData: _parsePaymentData(json['payment_data']),
       residentName: json['resident_name'] as String?,
       roomNumber: json['room_number'] as String?,
       updatedAt: json['updated_at'] as String?,
+      invoiceType: json['invoice_type'] as String?,
     );
   }
 }

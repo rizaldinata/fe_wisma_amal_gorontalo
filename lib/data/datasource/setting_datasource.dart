@@ -1,6 +1,7 @@
 import '../../core/services/network/dio_client.dart';
 import '../../domain/entity/setting/midtrans_method_entity.dart';
 import '../model/setting/bank_account_model.dart';
+import '../model/setting/midtrans_fee_config_model.dart';
 import '../model/setting/setting_model.dart';
 
 abstract class SettingDatasource {
@@ -9,6 +10,8 @@ abstract class SettingDatasource {
   Future<SettingModel> updateBulkSettings(Map<String, dynamic> settingsData);
   Future<List<MidtransMethodEntity>> getPaymentMethods();
   Future<List<MidtransMethodEntity>> updatePaymentMethods(List<String> enabledCodes);
+  Future<MidtransFeeConfigModel> getMidtransFeeConfig();
+  Future<MidtransFeeConfigModel> updateMidtransFeeConfig(Map<String, dynamic> payload);
 
   Future<List<BankAccountModel>> getBankAccounts();
   Future<List<BankAccountModel>> getPublicBankAccounts();
@@ -138,6 +141,26 @@ class SettingDatasourceImpl implements SettingDatasource {
   Future<void> deleteBankAccount(int id) async {
     try {
       await _dioClient.delete('/v1/settings/bank-accounts/$id');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<MidtransFeeConfigModel> getMidtransFeeConfig() async {
+    try {
+      final response = await _dioClient.get('/v1/settings/midtrans-fees');
+      return MidtransFeeConfigModel.fromJson(response.data['data'] as Map<String, dynamic>);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<MidtransFeeConfigModel> updateMidtransFeeConfig(Map<String, dynamic> payload) async {
+    try {
+      final response = await _dioClient.put('/v1/settings/midtrans-fees', data: payload);
+      return MidtransFeeConfigModel.fromJson(response.data['data'] as Map<String, dynamic>);
     } catch (e) {
       rethrow;
     }

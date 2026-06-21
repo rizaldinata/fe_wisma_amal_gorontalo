@@ -1,3 +1,66 @@
+class NotificationSummaryEntity {
+  final int total;
+  final int sent;
+  final int failed;
+  final int today;
+  final Map<String, int> byType;
+
+  const NotificationSummaryEntity({
+    required this.total,
+    required this.sent,
+    required this.failed,
+    required this.today,
+    required this.byType,
+  });
+
+  factory NotificationSummaryEntity.fromJson(Map<String, dynamic> json) {
+    final data = json["data"] is Map<String, dynamic>
+        ? json["data"] as Map<String, dynamic>
+        : json;
+
+    final rawByType = data["by_type"];
+    final byType = <String, int>{};
+    if (rawByType is Map) {
+      rawByType.forEach((k, v) {
+        byType[k.toString()] = (v is int) ? v : int.tryParse(v.toString()) ?? 0;
+      });
+    }
+
+    return NotificationSummaryEntity(
+      total: _parseInt(data["total"]),
+      sent: _parseInt(data["sent"]),
+      failed: _parseInt(data["failed"]),
+      today: _parseInt(data["today"]),
+      byType: byType,
+    );
+  }
+
+  static int _parseInt(dynamic value) {
+    if (value is int) return value;
+    return int.tryParse(value?.toString() ?? "") ?? 0;
+  }
+}
+
+class NotificationRecipientEntity {
+  final int id;
+  final String name;
+  final String? phone;
+
+  const NotificationRecipientEntity({
+    required this.id,
+    required this.name,
+    this.phone,
+  });
+
+  factory NotificationRecipientEntity.fromJson(Map<String, dynamic> json) {
+    return NotificationRecipientEntity(
+      id: (json["id"] is int) ? json["id"] as int : int.tryParse(json["id"].toString()) ?? 0,
+      name: json["name"]?.toString() ?? "-",
+      phone: json["phone_number"]?.toString(),
+    );
+  }
+}
+
 class NotificationLogItem {
   final int id;
   final String message;
@@ -6,6 +69,7 @@ class NotificationLogItem {
   final bool isRead;
   final String? channel;
   final String? recipient;
+  final String? errorResponse;
 
   const NotificationLogItem({
     required this.id,
@@ -15,6 +79,7 @@ class NotificationLogItem {
     required this.isRead,
     this.channel,
     this.recipient,
+    this.errorResponse,
   });
 
   String get typeLabel => _resolveTypeLabel(channel);
@@ -33,6 +98,20 @@ class NotificationLogItem {
         return 'Tamu Masuk';
       case 'guest_stay_ended':
         return 'Tamu Keluar';
+      case 'pembayaran_diterima':
+        return 'Pembayaran Diterima';
+      case 'pembayaran_dibatalkan':
+        return 'Pembayaran Batal';
+      case 'jadwal_dibuat':
+        return 'Jadwal Dibuat';
+      case 'jadwal_sewa_aktif':
+        return 'Sewa Aktif';
+      case 'jadwal_sewa_selesai':
+        return 'Sewa Selesai';
+      case 'jadwal_batal':
+        return 'Jadwal Batal';
+      case 'laporan_kerusakan':
+        return 'Kerusakan';
       default:
         return type ?? '-';
     }
@@ -54,11 +133,11 @@ class NotificationLogItem {
       channel: json['type']?.toString() ??
           json['channel']?.toString() ??
           json['provider']?.toString(),
-      // 'target_phone' dari backend
       recipient: json['target_phone']?.toString() ??
           json['recipient']?.toString() ??
           json['to']?.toString() ??
           json['target']?.toString(),
+      errorResponse: json['error_response']?.toString(),
     );
   }
 

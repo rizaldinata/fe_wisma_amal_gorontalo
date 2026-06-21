@@ -245,8 +245,81 @@ class _ReservationCard extends StatelessWidget {
               ),
             ),
 
+            // Info jika status terkonfirmasi (pembayaran lunas, menunggu tanggal masuk)
+            if (reservation.status == 'terkonfirmasi') ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.blue.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle_outline, size: 16, color: Colors.blue.shade700),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Pembayaran dikonfirmasi — Kamar siap pada tanggal masuk.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue.shade800,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
+            // Info DP jika status dp_terbayar
+            if (reservation.isDpTerbayar) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.payments_outlined, size: 16, color: Colors.orange.shade700),
+                        const SizedBox(width: 8),
+                        Text(
+                          'DP Terbayar — Menunggu Pelunasan',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                            color: Colors.orange.shade800,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (reservation.dpAmount != null) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        'DP dibayar: Rp ${_fmtNumber(reservation.dpAmount!)}',
+                        style: TextStyle(fontSize: 12, color: Colors.orange.shade700),
+                      ),
+                    ],
+                    const SizedBox(height: 4),
+                    Text(
+                      'Silakan lunasi sisa pembayaran sebelum tanggal masuk melalui halaman Tagihan.',
+                      style: TextStyle(fontSize: 11, color: Colors.orange.shade700, height: 1.4),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             // Action button (contextual berdasarkan status)
-            if (reservation.status == 'pending' || reservation.status == 'active') ...[
+            if (reservation.status == 'pending' || reservation.status == 'active' || reservation.isDpTerbayar) ...[
               const SizedBox(height: 14),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -263,6 +336,19 @@ class _ReservationCard extends StatelessWidget {
                         textStyle: const TextStyle(fontSize: 13),
                       ),
                     ),
+                  if (reservation.isDpTerbayar) ...[
+                    OutlinedButton.icon(
+                      onPressed: () => context.router.navigate(const MemberFinanceRoute()),
+                      icon: const Icon(Icons.receipt_long_outlined, size: 16),
+                      label: const Text('Bayar Pelunasan'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.orange,
+                        side: const BorderSide(color: Colors.orange),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        textStyle: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ],
                   if (reservation.status == 'pending') ...[
                     const SizedBox(width: 8),
                     OutlinedButton.icon(
@@ -318,6 +404,10 @@ class _ReservationCard extends StatelessWidget {
         return Colors.green;
       case 'pending':
         return Colors.orange;
+      case 'dp_terbayar':
+        return Colors.deepOrange;
+      case 'terkonfirmasi':
+        return Colors.blue;
       case 'finished':
         return Colors.grey;
       case 'cancelled':
@@ -332,7 +422,11 @@ class _ReservationCard extends StatelessWidget {
       case 'active':
         return 'Aktif';
       case 'pending':
-        return 'Menunggu Konfirmasi';
+        return 'Menunggu Pembayaran';
+      case 'dp_terbayar':
+        return 'DP Terbayar';
+      case 'terkonfirmasi':
+        return 'Terkonfirmasi';
       case 'finished':
         return 'Selesai';
       case 'cancelled':
@@ -340,5 +434,15 @@ class _ReservationCard extends StatelessWidget {
       default:
         return status;
     }
+  }
+
+  String _fmtNumber(double value) {
+    final parts = value.toStringAsFixed(0).split('');
+    final buffer = StringBuffer();
+    for (int i = 0; i < parts.length; i++) {
+      if (i > 0 && (parts.length - i) % 3 == 0) buffer.write('.');
+      buffer.write(parts[i]);
+    }
+    return buffer.toString();
   }
 }

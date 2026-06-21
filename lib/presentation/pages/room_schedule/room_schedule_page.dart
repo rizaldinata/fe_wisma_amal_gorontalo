@@ -205,7 +205,7 @@ class _RoomSchedulePageState extends State<RoomSchedulePage> {
           final status = schedule.status.toLowerCase();
           switch (_selectedStatus) {
             case 'Menunggu':
-              return status == 'pending';
+              return status == 'pending' || status == 'dp_terbayar' || status == 'terkonfirmasi';
             case 'Aktif':
               return status == 'active';
             case 'Selesai':
@@ -238,6 +238,8 @@ class _RoomSchedulePageState extends State<RoomSchedulePage> {
             RoomDayStatus status;
             switch (lease.status.toLowerCase()) {
               case 'pending':
+              case 'dp_terbayar':
+              case 'terkonfirmasi':
                 status = RoomDayStatus.pending;
                 break;
               case 'active':
@@ -270,7 +272,7 @@ class _RoomSchedulePageState extends State<RoomSchedulePage> {
     for (var room in rooms) {
       total += room.schedules.where((schedule) {
         final status = schedule.status.toLowerCase();
-        return status == 'pending' || status == 'active';
+        return status == 'pending' || status == 'dp_terbayar' || status == 'terkonfirmasi' || status == 'active';
       }).length;
     }
     return total;

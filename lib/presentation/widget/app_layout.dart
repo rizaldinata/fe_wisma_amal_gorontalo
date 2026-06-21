@@ -196,7 +196,8 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                       context.can(PermissionKeys.financeFixedExpenseView) ||
                       context.can(PermissionKeys.financeInvoiceView) ||
                       context.can(PermissionKeys.financePaymentVerify) ||
-                      context.can(PermissionKeys.financePaymentView))
+                      context.can(PermissionKeys.financePaymentView) ||
+                      context.can(PermissionKeys.financeFineView))
                     SidebarItem(
                       label: 'Keuangan',
                       icon: Icons.monetization_on,
@@ -226,6 +227,12 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                             label: 'Manajemen Pembayaran',
                             icon: Icons.payments_outlined,
                             page: const PaymentVerificationRoute(),
+                          ),
+                        if (context.can(PermissionKeys.financeFineView))
+                          SidebarItem(
+                            label: 'Manajemen Denda',
+                            icon: Icons.gavel_rounded,
+                            page: const FineManagementRoute(),
                           ),
                       ],
                     ),
@@ -262,6 +269,27 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                       ],
                     ),
 
+<<<<<<< HEAD
+=======
+                  // ─── Notifikasi WhatsApp (Admin) ──────────────────
+                  if (context.can(PermissionKeys.notificationLogView) ||
+                      context.can(PermissionKeys.notificationSend))
+                    SidebarItem(
+                      label: 'Notifikasi WhatsApp',
+                      icon: Icons.chat_bubble_outline,
+                      page: const NotificationMonitoringRoute(),
+                      hasAccess: true,
+                    ),
+
+                  // ─── Pengaturan (Admin) ────────────────────────────
+                  if (context.can(PermissionKeys.settingView))
+                    SidebarItem(
+                      label: 'Pengaturan',
+                      icon: Icons.settings,
+                      page: const SettingRoute(),
+                    ),
+
+>>>>>>> feat/dp-payment
                   // ══════════════════════════════════════════════════
                   // Area untuk pengguna terdaftar (Member & Resident)
                   // ══════════════════════════════════════════════════
@@ -297,6 +325,12 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                         icon: Icons.account_balance_wallet_outlined,
                         page: const MemberFinanceRoute(),
                       ),
+                    if (context.can(PermissionKeys.financeMeFineView))
+                      SidebarItem(
+                        label: 'Denda Saya',
+                        icon: Icons.gavel_rounded,
+                        page: const MyFinesRoute(),
+                      ),
                     SidebarItem(
                       label: 'Tamu Saya',
                       icon: Icons.people_alt_outlined,
@@ -331,6 +365,12 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                             label: 'Tamu Saya',
                             icon: Icons.people_alt_outlined,
                             page: const MyGuestRoute(),
+                          ),
+                        if (context.can(PermissionKeys.financeMeFineView))
+                          SidebarItem(
+                            label: 'Denda Saya',
+                            icon: Icons.gavel_rounded,
+                            page: const MyFinesRoute(),
                           ),
                         if (context.can(PermissionKeys.createDamageReport))
                           SidebarItem(

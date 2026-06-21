@@ -14,6 +14,12 @@ class ReservationEntity extends Equatable {
   final double? invoiceAmount;
   final String? paymentExpiresAt;
   final String? selectedPaymentMethod;
+  // DP fields
+  final String? paymentScheme; // 'full' | 'dp'
+  final double? dpAmount;
+  final String? dpPaidAt;
+  final bool? dpRefundEligible;
+  final String? invoiceType; // 'sewa' | 'dp' | 'pelunasan'
 
   const ReservationEntity({
     required this.id,
@@ -29,6 +35,11 @@ class ReservationEntity extends Equatable {
     this.invoiceAmount,
     this.paymentExpiresAt,
     this.selectedPaymentMethod,
+    this.paymentScheme,
+    this.dpAmount,
+    this.dpPaidAt,
+    this.dpRefundEligible,
+    this.invoiceType,
   });
 
   ReservationEntity copyWith({String? selectedPaymentMethod}) {
@@ -46,8 +57,16 @@ class ReservationEntity extends Equatable {
       invoiceAmount: invoiceAmount,
       paymentExpiresAt: paymentExpiresAt,
       selectedPaymentMethod: selectedPaymentMethod,
+      paymentScheme: paymentScheme,
+      dpAmount: dpAmount,
+      dpPaidAt: dpPaidAt,
+      dpRefundEligible: dpRefundEligible,
+      invoiceType: invoiceType,
     );
   }
+
+  bool get isDp => paymentScheme == 'dp';
+  bool get isDpTerbayar => status == 'dp_terbayar';
 
   @override
   List<Object?> get props => [
@@ -64,5 +83,10 @@ class ReservationEntity extends Equatable {
         invoiceAmount,
         paymentExpiresAt,
         selectedPaymentMethod,
+        paymentScheme,
+        dpAmount,
+        dpPaidAt,
+        dpRefundEligible,
+        invoiceType,
       ];
 }

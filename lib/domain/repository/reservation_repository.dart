@@ -10,6 +10,7 @@ abstract class ReservationRepository {
     required int agreedPrice,
     int? tenantUserId,
     String? tenantName,
+    String? paymentScheme,
   });
 
   Future<void> cancelReservation(int leaseId);

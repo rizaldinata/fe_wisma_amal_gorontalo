@@ -70,6 +70,12 @@ class RouteConstant {
   static const String memberFinanceName = 'me/finance';
   static const String extendLeaseName = 'me/finance/extend-lease';
   static const String extendLeasePaymentName = 'me/finance/extend-lease/payment';
+  static const String invoicePaymentName = 'me/finance/invoice/payment';
+  static const String myFinesName = 'me/fines';
+  static const String fineManagementName = 'finance/fines';
   static const String myGuestName = 'me/guests';
   static const String adminGuestBillName = 'admin/guest-bills';
+
+  // Notifikasi
+  static const String notificationMonitoringName = 'notification/monitoring';
 }

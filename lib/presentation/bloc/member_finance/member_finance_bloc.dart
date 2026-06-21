@@ -1,7 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../domain/usecase/finance/get_member_finance_summary_usecase.dart';
 import '../../../domain/usecase/finance/get_member_invoices_usecase.dart';
 import '../../../domain/usecase/finance/get_member_payments_usecase.dart';
+import '../../../domain/usecase/finance/get_my_fines_usecase.dart';
+import '../../../domain/usecase/finance/pay_fines_usecase.dart';
 import '../../../domain/usecase/finance/pay_invoice_usecase.dart';
 import '../../../domain/usecase/finance/extend_lease_usecase.dart';
 import '../../../domain/usecase/setting/get_public_settings_usecase.dart';
@@ -13,6 +16,8 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
   final GetMemberFinanceSummaryUseCase _getSummary;
   final GetMemberInvoicesUseCase _getInvoices;
   final GetMemberPaymentsUseCase _getPayments;
+  final GetMyFinesUseCase _getMyFines;
+  final PayFinesUseCase _payFines;
   final PayInvoiceUseCase _payInvoice;
   final ExtendLeaseUseCase _extendLease;
   final GetPublicSettingsUseCase _getSettings;
@@ -22,6 +27,8 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
     required GetMemberFinanceSummaryUseCase getSummary,
     required GetMemberInvoicesUseCase getInvoices,
     required GetMemberPaymentsUseCase getPayments,
+    required GetMyFinesUseCase getMyFines,
+    required PayFinesUseCase payFines,
     required PayInvoiceUseCase payInvoice,
     required ExtendLeaseUseCase extendLease,
     required GetPublicSettingsUseCase getSettings,
@@ -29,6 +36,8 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
   })  : _getSummary = getSummary,
         _getInvoices = getInvoices,
         _getPayments = getPayments,
+        _getMyFines = getMyFines,
+        _payFines = payFines,
         _payInvoice = payInvoice,
         _extendLease = extendLease,
         _getSettings = getSettings,
@@ -37,8 +46,25 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
     on<FetchMemberFinanceSummary>(_onFetchSummary);
     on<FetchMemberInvoices>(_onFetchInvoices);
     on<FetchMemberPayments>(_onFetchPayments);
+    on<FetchMyFines>(_onFetchMyFines);
+    on<PayFinesEvent>(_onPayFines);
     on<PayInvoiceEvent>(_onPayInvoice);
     on<ExtendLeaseEvent>(_onExtendLease);
+  }
+
+  String _extractErrorMessage(Object e, String fallback) {
+    if (e is DioException) {
+      final data = e.response?.data;
+      if (data is Map) {
+        final errors = data['errors'] as Map<String, dynamic>?;
+        if (errors != null && errors.isNotEmpty) {
+          final first = errors.values.first;
+          if (first is List && first.isNotEmpty) return first.first.toString();
+        }
+        return data['message']?.toString() ?? fallback;
+      }
+    }
+    return fallback;
   }
 
   Future<void> _onFetchSummary(
@@ -61,7 +87,7 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
     } catch (e) {
       emit(state.copyWith(
         status: MemberFinanceStatus.failure,
-        errorMessage: e.toString(),
+        errorMessage: _extractErrorMessage(e, 'Gagal memuat data keuangan.'),
       ));
     }
   }
@@ -80,7 +106,7 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
     } catch (e) {
       emit(state.copyWith(
         status: MemberFinanceStatus.failure,
-        errorMessage: e.toString(),
+        errorMessage: _extractErrorMessage(e, 'Gagal memuat daftar tagihan.'),
       ));
     }
   }
@@ -99,7 +125,55 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
     } catch (e) {
       emit(state.copyWith(
         status: MemberFinanceStatus.failure,
-        errorMessage: e.toString(),
+        errorMessage: _extractErrorMessage(e, 'Gagal memuat riwayat pembayaran.'),
+      ));
+    }
+  }
+
+  Future<void> _onFetchMyFines(
+    FetchMyFines event,
+    Emitter<MemberFinanceState> emit,
+  ) async {
+    emit(state.copyWith(status: MemberFinanceStatus.loading));
+    try {
+      final fines = await _getMyFines.execute();
+      emit(state.copyWith(status: MemberFinanceStatus.success, myFines: fines));
+    } catch (e) {
+      emit(state.copyWith(
+        status: MemberFinanceStatus.failure,
+        errorMessage: _extractErrorMessage(e, 'Gagal memuat daftar denda.'),
+      ));
+    }
+  }
+
+  Future<void> _onPayFines(
+    PayFinesEvent event,
+    Emitter<MemberFinanceState> emit,
+  ) async {
+    emit(state.copyWith(status: MemberFinanceStatus.loading));
+    try {
+      final payment = await _payFines.execute(
+        event.fineIds,
+        event.paymentMethod,
+        paymentProofBytes: event.paymentProofBytes,
+        paymentProofName: event.paymentProofName,
+        preferredPaymentType: event.preferredPaymentType,
+      );
+      emit(state.copyWith(
+        status: MemberFinanceStatus.finePaymentSuccess,
+        snapToken: payment.snapToken,
+        paymentData: payment.paymentData,
+        paymentGrossAmount: payment.grossAmount,
+        paymentMidtransFee: payment.midtransFee,
+        paymentFeeBearer: payment.feeBearer,
+      ));
+      if (event.paymentMethod == 'manual') {
+        add(FetchMyFines());
+      }
+    } catch (e) {
+      emit(state.copyWith(
+        status: MemberFinanceStatus.failure,
+        errorMessage: _extractErrorMessage(e, 'Gagal memproses pembayaran denda.'),
       ));
     }
   }
@@ -121,6 +195,9 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
         status: MemberFinanceStatus.paymentSuccess,
         snapToken: payment.snapToken,
         paymentData: payment.paymentData,
+        paymentGrossAmount: payment.grossAmount,
+        paymentMidtransFee: payment.midtransFee,
+        paymentFeeBearer: payment.feeBearer,
       ));
       if (event.paymentMethod == 'manual') {
         add(FetchMemberInvoices());
@@ -129,7 +206,7 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
     } catch (e) {
       emit(state.copyWith(
         status: MemberFinanceStatus.failure,
-        errorMessage: e.toString(),
+        errorMessage: _extractErrorMessage(e, 'Gagal memproses pembayaran.'),
       ));
     }
   }
@@ -156,6 +233,9 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
           paymentData: payment.paymentData,
           paymentInvoiceId: payment.invoiceId,
           paymentAmount: payment.amount,
+          paymentGrossAmount: payment.grossAmount,
+          paymentMidtransFee: payment.midtransFee,
+          paymentFeeBearer: payment.feeBearer,
         ));
       } else {
         emit(state.copyWith(status: MemberFinanceStatus.extensionSuccess));
@@ -164,7 +244,7 @@ class MemberFinanceBloc extends Bloc<MemberFinanceEvent, MemberFinanceState> {
     } catch (e) {
       emit(state.copyWith(
         status: MemberFinanceStatus.failure,
-        errorMessage: e.toString(),
+        errorMessage: _extractErrorMessage(e, 'Gagal memproses perpanjangan sewa.'),
       ));
     }
   }
