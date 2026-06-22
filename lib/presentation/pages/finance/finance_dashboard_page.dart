@@ -13,7 +13,10 @@ import '../../bloc/finance_dashboard/finance_dashboard_state.dart';
 import '../../bloc/midtrans_monitoring/midtrans_monitoring_cubit.dart';
 import '../../widget/core/appbar/app_topbar.dart';
 import '../../widget/core/card/basic_card.dart';
+import '../../widget/core/wrapper/empty_state_widget.dart';
 import '../../../domain/entity/finance/invoice_entity.dart';
+import 'package:shimmer/shimmer.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import '../../../domain/entity/finance/payment_entity.dart';
 import '../../../domain/entity/finance/kpi_entity.dart';
 import '../../../domain/entity/finance/revenue_entity.dart';
@@ -124,57 +127,60 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
               ),
             ),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppSpacing.xxxl),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // ── Filter ──────────────────────────────────────────────────
-                    BasicCard(
-                      padding: const EdgeInsets.all(AppSpacing.md),
-                      child: Row(children: [
-                        _DashboardFilterDropdown<int?>(
-                          hint: 'Semua Tahun',
-                          value: _selectedYear,
-                          items: [null, ...List.generate(6, (i) => DateTime.now().year - i)],
-                          labelBuilder: (v) => v == null ? 'Semua Tahun' : '$v',
-                          onChanged: (v) { setState(() { _selectedYear = v; _selectedMonth = null; }); _applyFilter(); },
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        _DashboardFilterDropdown<int?>(
-                          hint: 'Semua Bulan',
-                          value: _selectedMonth,
-                          items: [null, ...List.generate(12, (i) => i + 1)],
-                          labelBuilder: (v) => v == null ? 'Semua Bulan' : DateFormat('MMMM', 'id_ID').format(DateTime(0, v)),
-                          onChanged: (v) { setState(() => _selectedMonth = v); _applyFilter(); },
-                        ),
-                        if (_selectedYear != DateTime.now().year || _selectedMonth != DateTime.now().month) ...[
-                          const SizedBox(width: AppSpacing.sm),
-                          TextButton.icon(
-                            onPressed: () { setState(() { _selectedYear = DateTime.now().year; _selectedMonth = DateTime.now().month; }); _applyFilter(); },
-                            icon: const Icon(Icons.close, size: 14),
-                            label: const Text('Reset', style: TextStyle(fontSize: 12)),
-                            style: TextButton.styleFrom(foregroundColor: Colors.grey.shade600),
-                          ),
-                        ],
-                      ]),
-                    ),
-                    const SizedBox(height: AppSpacing.xxxl),
-
-                    // ── Body ────────────────────────────────────────────────────
-                    BlocBuilder<FinanceDashboardBloc, FinanceDashboardState>(
-                      builder: (context, state) {
-                        if (state is FinanceDashboardLoading) {
-                          return const _LoadingView();
-                        }
-                        if (state is FinanceDashboardError) {
-                          return _ErrorView(
-                            message: state.message,
-                            onRetry: _applyFilter,
-                          );
-                        }
-                        if (state is FinanceDashboardLoaded) {
-                          return _DashboardContent(
+              child: BlocBuilder<FinanceDashboardBloc, FinanceDashboardState>(
+                builder: (context, state) {
+                  if (state is FinanceDashboardLoading) {
+                    return _buildSkeleton(isDark);
+                  }
+                  if (state is FinanceDashboardError) {
+                    return EmptyStateWidget(
+                      icon: Icons.error_outline_rounded,
+                      title: 'Gagal memuat data',
+                      subtitle: state.message,
+                      action: ElevatedButton.icon(
+                        onPressed: _applyFilter,
+                        icon: const Icon(Icons.refresh_rounded, size: 18),
+                        label: const Text('Coba Lagi'),
+                      ),
+                    );
+                  }
+                  if (state is FinanceDashboardLoaded) {
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.all(AppSpacing.xxxl),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          BasicCard(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Row(children: [
+                              _DashboardFilterDropdown<int?>(
+                                hint: 'Semua Tahun',
+                                value: _selectedYear,
+                                items: [null, ...List.generate(6, (i) => DateTime.now().year - i)],
+                                labelBuilder: (v) => v == null ? 'Semua Tahun' : '$v',
+                                onChanged: (v) { setState(() { _selectedYear = v; _selectedMonth = null; }); _applyFilter(); },
+                              ),
+                              const SizedBox(width: AppSpacing.sm),
+                              _DashboardFilterDropdown<int?>(
+                                hint: 'Semua Bulan',
+                                value: _selectedMonth,
+                                items: [null, ...List.generate(12, (i) => i + 1)],
+                                labelBuilder: (v) => v == null ? 'Semua Bulan' : DateFormat('MMMM', 'id_ID').format(DateTime(0, v)),
+                                onChanged: (v) { setState(() => _selectedMonth = v); _applyFilter(); },
+                              ),
+                              if (_selectedYear != DateTime.now().year || _selectedMonth != DateTime.now().month) ...[
+                                const SizedBox(width: AppSpacing.sm),
+                                TextButton.icon(
+                                  onPressed: () { setState(() { _selectedYear = DateTime.now().year; _selectedMonth = DateTime.now().month; }); _applyFilter(); },
+                                  icon: const Icon(Icons.close, size: 14),
+                                  label: const Text('Reset', style: TextStyle(fontSize: 12)),
+                                  style: TextButton.styleFrom(foregroundColor: Colors.grey.shade600),
+                                ),
+                              ],
+                            ]),
+                          ).animate().fadeIn(duration: 300.ms),
+                          const SizedBox(height: AppSpacing.xxxl),
+                          _DashboardContent(
                             kpi: state.kpiSummary,
                             revenueChart: state.revenueChart,
                             dueInvoices: state.dueInvoices,
@@ -183,17 +189,100 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
                             formatRupiah: _formatRupiah,
                             compact: _compact,
                             dateFmt: _dateFmt,
-                          );
-                        }
-                        return const SizedBox.shrink();
-                      },
-                    ),
-                  ],
-                ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSkeleton(bool isDark) {
+    final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
+    final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xxxl),
+      child: Column(
+        children: [
+          Shimmer.fromColors(
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            child: Container(
+              height: 50,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xxxl),
+          Row(children: List.generate(4, (i) => Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(right: i < 3 ? AppSpacing.lg : 0),
+              child: Shimmer.fromColors(
+                baseColor: baseColor,
+                highlightColor: highlightColor,
+                child: Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  ),
+                ),
+              ),
+            ),
+          ))),
+          const SizedBox(height: AppSpacing.lg),
+          Row(children: List.generate(4, (i) => Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(right: i < 3 ? AppSpacing.lg : 0),
+              child: Shimmer.fromColors(
+                baseColor: baseColor,
+                highlightColor: highlightColor,
+                child: Container(
+                  height: 100,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                  ),
+                ),
+              ),
+            ),
+          ))),
+          const SizedBox(height: AppSpacing.xxxl),
+          Shimmer.fromColors(
+            baseColor: baseColor,
+            highlightColor: highlightColor,
+            child: Container(
+              height: 260,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.xxxl),
+          Expanded(
+            child: Shimmer.fromColors(
+              baseColor: baseColor,
+              highlightColor: highlightColor,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -398,63 +487,6 @@ class _DashboardFilterDropdown<T> extends StatelessWidget {
   }
 }
 
-// ─── Loading & Error views ───────────────────────────────────────────────────
-
-class _LoadingView extends StatelessWidget {
-  const _LoadingView();
-
-  @override
-  Widget build(BuildContext context) {
-    return const SizedBox(
-      height: 300,
-      child: Center(child: CircularProgressIndicator()),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message, required this.onRetry});
-
-  final String message;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return SizedBox(
-      height: 340,
-      child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.error_outline_rounded,
-              size: 56,
-              color: theme.colorScheme.error,
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text('Gagal memuat data', style: theme.textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.sm),
-            Text(
-              message,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppSpacing.xxl),
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded, size: 18),
-              label: const Text('Coba Lagi'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 // ─── Dashboard content (Loaded state) ───────────────────────────────────────
 
 class _DashboardContent extends StatelessWidget {
@@ -520,31 +552,35 @@ class _DashboardContent extends StatelessWidget {
           isProfit: isProfit,
           formatRupiah: formatRupiah,
           periodLabel: periodLabel,
-        ),
+        ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0, duration: 300.ms),
         const SizedBox(height: AppSpacing.xxxl),
 
         // ── Revenue Chart ─────────────────────────────────────────────────
         _sectionTitle(context, 'Pendapatan 6 Bulan Terakhir', isDark),
         const SizedBox(height: AppSpacing.lg),
-        _RevenueChart(chartData: revenueChart, compact: compact),
+        _RevenueChart(chartData: revenueChart, compact: compact)
+            .animate().fadeIn(delay: 100.ms, duration: 300.ms),
         const SizedBox(height: AppSpacing.xxxl),
 
         // ── Due Invoices ──────────────────────────────────────────────────
         _sectionTitle(context, 'Tagihan Jatuh Tempo', isDark),
         const SizedBox(height: AppSpacing.lg),
-        _DueInvoicesTable(invoices: dueInvoices, formatRupiah: formatRupiah, dateFmt: dateFmt),
+        _DueInvoicesTable(invoices: dueInvoices, formatRupiah: formatRupiah, dateFmt: dateFmt)
+            .animate().fadeIn(delay: 150.ms, duration: 300.ms),
         const SizedBox(height: AppSpacing.xxxl),
 
         // ── Pending Payments ──────────────────────────────────────────────
         _sectionTitle(context, 'Pembayaran Perlu Konfirmasi', isDark),
         const SizedBox(height: AppSpacing.lg),
-        _PendingPaymentsTable(payments: pendingPayments, formatRupiah: formatRupiah),
+        _PendingPaymentsTable(payments: pendingPayments, formatRupiah: formatRupiah)
+            .animate().fadeIn(delay: 200.ms, duration: 300.ms),
         const SizedBox(height: AppSpacing.xxxl),
 
         // ── Midtrans Monitoring ───────────────────────────────────────────
         _sectionTitle(context, 'Monitoring Pembayaran Midtrans', isDark),
         const SizedBox(height: AppSpacing.lg),
-        _MidtransMonitoringCard(formatRupiah: formatRupiah),
+        _MidtransMonitoringCard(formatRupiah: formatRupiah)
+            .animate().fadeIn(delay: 250.ms, duration: 300.ms),
         const SizedBox(height: AppSpacing.xxl),
       ],
     );
