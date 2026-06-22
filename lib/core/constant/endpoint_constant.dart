@@ -41,4 +41,6 @@ class EndpointConstant {
   static const String notificationRecipientsEndpoint = '/notification/recipients';
   static String resendNotificationLogEndpoint(int id) => '/notification/logs/$id/resend';
   static const String markAllNotificationLogsReadEndpoint = '/notification/logs/mark-all-read';
+  static const String adminDashboardEndpoint = '/dashboard/admin';
+  static const String residentDashboardEndpoint = '/dashboard/resident';
 }

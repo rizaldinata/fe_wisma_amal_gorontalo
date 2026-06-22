@@ -173,11 +173,23 @@ class _ResidentViewState extends State<_ResidentView> {
                 if (state is ResidentLoaded || _residentCache.isNotEmpty) {
                   final data = state is ResidentLoaded ? state.data : null;
                   final stats = data?.stats;
+                  final query = _searchController.text.trim().toLowerCase();
 
-                  // Ambil perhitungan stats dari backend
                   final activeCount = stats?.penghuniAktif ?? 0;
                   final pendingCount = stats?.kontrakPending ?? 0;
-                  final availableRooms = stats?.kamarTersedia ?? 0;
+
+                  final residentRows = _residentCache.where((row) {
+                    final matchesSearch = query.isEmpty ||
+                        row.nama.toLowerCase().contains(query) ||
+                        row.kamar.toLowerCase().contains(query) ||
+                        row.kontak.toLowerCase().contains(query);
+
+                    final matchesStatus = _selectedStatus == 'Semua' || row.status == _selectedStatus;
+                    final matchesPayment =
+                        _selectedPayment == 'Semua' || row.detailBayar == _selectedPayment;
+
+                    return matchesSearch && matchesStatus && matchesPayment;
+                  }).toList();
 
                   return SingleChildScrollView(
                     controller: _tableScrollController,

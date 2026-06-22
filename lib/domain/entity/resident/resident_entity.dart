@@ -10,12 +10,23 @@ class ResidentResponse {
   });
 
   factory ResidentResponse.fromJson(Map<String, dynamic> json) {
+    // Schedule API: {success: true, data: [...], meta: {...}, links: {...}}
+    final schedulesList = json['data'] as List<dynamic>? ?? <dynamic>[];
+    final metaMap = json['meta'] as Map<String, dynamic>? ?? <String, dynamic>{};
+
+    final items = schedulesList.map((item) => ResidentItem.fromJson(item as Map<String, dynamic>)).toList();
+
+    final statsMap = json['stats'] as Map<String, dynamic>?;
+
     return ResidentResponse(
-      residents: (json['residents'] as List)
-          .map((item) => ResidentItem.fromJson(item))
-          .toList(),
-      pagination: PaginationEntity.fromJson(json['pagination']),
-      stats: ResidentStats.fromJson(json['stats']),
+      stats: statsMap != null ? ResidentStats.fromJson(statsMap) : ResidentStats(
+        penghuniAktif: items.where((i) => i.status == 'active').length,
+        kontrakPending: items.where((i) => i.isPending).length,
+        kontrakBerakhir: 0,
+        kamarTersedia: 0,
+      ),
+      residents: items,
+      pagination: ResidentPagination.fromJson(metaMap),
     );
   }
 }
