@@ -157,7 +157,7 @@ class HeroBentoCard extends StatelessWidget {
                   value: occupancyRate,
                   strokeWidth: 12,
                   backgroundColor: colorScheme.surface.withOpacity(0.5),
-                  color: colorScheme.primary,
+                  color: colorScheme.secondary,
                   strokeCap: StrokeCap.round,
                 ),
                 Center(

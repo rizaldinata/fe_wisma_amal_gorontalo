@@ -276,7 +276,7 @@ class _DashboardViewState extends State<DashboardView> {
                                 ),
                                 const SizedBox(height: 16),
                                 QuickActionBento(
-                                  label: 'Buat Tagihan',
+                                  label: 'Daftar Tagihan',
                                   icon: Icons.request_quote_rounded,
                                   color: Colors.purple,
                                   onTap: () {
@@ -316,7 +316,7 @@ class _DashboardViewState extends State<DashboardView> {
                               const SizedBox(width: 16),
                               Expanded(
                                 child: QuickActionBento(
-                                  label: 'Buat Tagihan',
+                                  label: 'Daftar Tagihan',
                                   icon: Icons.request_quote_rounded,
                                   color: Colors.purple,
                                   onTap: () {
