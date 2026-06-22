@@ -87,11 +87,20 @@ class RegisterPage extends StatelessWidget {
                       );
                     }
                     if (state.isLoggedIn && state.errorMessage == null) {
-                      await context.router.replaceAll([const AppLayoutRoute()]);
-                      if (context.mounted && pendingRoom != null) {
-                        context.router.push(
-                          ReservationDetailFormRoute(room: pendingRoom!),
-                        );
+                      if (pendingRoom != null) {
+                        await context.router.replaceAll([
+                          AppLayoutRoute(
+                            children: [
+                              ReservationDetailFormRoute(room: pendingRoom!),
+                            ],
+                          ),
+                        ]);
+                      } else {
+                        await context.router.replaceAll([
+                          const AppLayoutRoute(
+                            children: [RoomRoute()],
+                          ),
+                        ]);
                       }
                     }
                   },

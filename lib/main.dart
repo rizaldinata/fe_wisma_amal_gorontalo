@@ -41,9 +41,7 @@ Future<void> main(List<String> args) async {
           value: serviceLocator<AuthBloc>()..add(InitLoginStatusEvent()),
         ),
         BlocProvider(create: (context) => AppBloc()),
-        BlocProvider.value(
-          value: serviceLocator<FeatureToggleBloc>(),
-        ),
+        BlocProvider.value(value: serviceLocator<FeatureToggleBloc>()),
       ],
       child: MyApp(),
     ),
@@ -106,8 +104,8 @@ extension FeatureToggleContext on BuildContext {
 extension PermissionContext on BuildContext {
   bool can(String permission) {
     final auth = watch<AuthBloc>().state;
-    print('Checking permission: $permission');
-    print('User permissions: ${auth.userInfo?.permissions?.raw}');
+    // print('Checking permission: $permission');
+    // print('User permissions: ${auth.userInfo?.permissions?.raw}');
     return auth.userInfo?.permissions?.can(permission) ?? false;
   }
 }

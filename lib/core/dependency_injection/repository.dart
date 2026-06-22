@@ -54,6 +54,9 @@ import 'package:frontend/domain/repository/notification_repository.dart';
 import 'package:frontend/data/datasource/fixed_expense_datasource.dart';
 import 'package:frontend/data/repository/fixed_expense_repository_impl.dart';
 import 'package:frontend/domain/repository/fixed_expense_repository.dart';
+import 'package:frontend/data/repository/dashboard_repository_impl.dart';
+import 'package:frontend/domain/repository/dashboard_repository.dart';
+import 'package:frontend/data/datasource/dashboard_datasource.dart';
 
 Future<void> initializeRepository() async {
   serviceLocator.registerFactory<AuthRepository>(
@@ -138,5 +141,8 @@ Future<void> initializeRepository() async {
   );
   serviceLocator.registerFactory<FeatureToggleRepository>(
     () => FeatureToggleRepository(serviceLocator<FeatureToggleRemoteDataSource>()),
+  );
+  serviceLocator.registerFactory<DashboardRepository>(
+    () => DashboardRepositoryImpl(remoteDataSource: serviceLocator<DashboardDatasource>()),
   );
 }

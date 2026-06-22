@@ -154,12 +154,8 @@ class _ResidentViewState extends State<_ResidentView> {
                   final stats = data?.stats;
                   final query = _searchController.text.trim().toLowerCase();
 
-                  final activeCount = _residentCache
-                      .where((row) => row.status.toLowerCase() == 'active')
-                      .length;
-                  final pendingCount = _residentCache
-                      .where((row) => row.status.toLowerCase() == 'pending')
-                      .length;
+                  final activeCount = stats?.penghuniAktif ?? 0;
+                  final pendingCount = stats?.kontrakPending ?? 0;
 
                   final residentRows = _residentCache.where((row) {
                     final matchesSearch = query.isEmpty ||

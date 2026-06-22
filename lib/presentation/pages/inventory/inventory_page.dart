@@ -14,7 +14,6 @@ import 'package:frontend/presentation/widget/core/card/summary_stat_card.dart';
 import 'package:frontend/presentation/widget/core/table/app_data_table.dart';
 import 'package:frontend/presentation/widget/core/wrapper/empty_state_widget.dart';
 import 'package:frontend/presentation/widget/core/textform/textform.dart';
-import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
@@ -207,10 +206,10 @@ class _InventoryViewState extends State<InventoryView> {
                   final allItems = state.inventories;
                   
                   // Stats calc
-                  final totalBarang = allItems.length;
+                  final totalBarang = allItems.fold<int>(0, (sum, item) => sum + item.jumlah);
                   final totalNilai = allItems.fold<double>(0, (sum, item) => sum + ((item.purchasePrice ?? 0) * item.jumlah));
-                  final kondisiBaik = allItems.where((i) => i.kondisi == InventoryCondition.baik).length;
-                  final perluPerhatian = allItems.where((i) => i.kondisi != InventoryCondition.baik).length;
+                  final kondisiBaik = allItems.where((i) => i.kondisi == InventoryCondition.baik).fold<int>(0, (sum, item) => sum + item.jumlah);
+                  final perluPerhatian = allItems.where((i) => i.kondisi != InventoryCondition.baik).fold<int>(0, (sum, item) => sum + item.jumlah);
 
                   // Filtering
                   var filteredItems = allItems.where((item) {

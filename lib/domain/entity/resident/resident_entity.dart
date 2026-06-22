@@ -16,8 +16,10 @@ class ResidentResponse {
 
     final items = schedulesList.map((item) => ResidentItem.fromJson(item as Map<String, dynamic>)).toList();
 
+    final statsMap = json['stats'] as Map<String, dynamic>?;
+
     return ResidentResponse(
-      stats: ResidentStats(
+      stats: statsMap != null ? ResidentStats.fromJson(statsMap) : ResidentStats(
         penghuniAktif: items.where((i) => i.status == 'active').length,
         kontrakPending: items.where((i) => i.isPending).length,
         kontrakBerakhir: 0,

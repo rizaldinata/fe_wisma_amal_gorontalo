@@ -26,6 +26,11 @@ class AppRouter extends RootStackRouter {
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
         ),
         AutoRoute(
+          path: 'resident-dashboard',
+          page: ResidentDashboardRoute.page,
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+        ),
+        AutoRoute(
           path: RouteConstant.permissionName,
           page: PermissionRoute.page,
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],

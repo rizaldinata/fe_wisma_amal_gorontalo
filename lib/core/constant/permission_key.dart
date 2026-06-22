@@ -1,6 +1,7 @@
 abstract class PermissionKeys {
   // ─── Dashboard ──────────────────────────────────────────────────────
   static const viewDashboard = 'view-dashboard';
+  static const viewResidentDashboard = 'view-resident-dashboard';
 
   // ─── Permission Management ───────────────────────────────────────────
   static const viewPermission = 'view-permission';

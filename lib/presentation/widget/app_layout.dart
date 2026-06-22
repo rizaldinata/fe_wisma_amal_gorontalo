@@ -69,9 +69,19 @@ class _AppLayoutPageState extends State<AppLayoutPage>
     return Scaffold(
       backgroundColor: StyleConstant.backgroundColor,
 
-      body: BlocBuilder<AuthBloc, AuthState>(
-        builder: (context, state) {
-          final isGuest = !state.isLoggedIn;
+      body: BlocListener<AuthBloc, AuthState>(
+        listenWhen: (previous, current) => previous.isLoggedIn == true && current.isLoggedIn == false,
+        listener: (context, state) {
+          // Ketika logout, pastikan kembali ke root publik (RoomRoute)
+          context.router.replaceAll([
+            const AppLayoutRoute(
+              children: [RoomRoute()],
+            ),
+          ]);
+        },
+        child: BlocBuilder<AuthBloc, AuthState>(
+          builder: (context, state) {
+            final isGuest = !state.isLoggedIn;
 
           final roles = state.userInfo?.roles ?? [];
 
@@ -88,9 +98,17 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                   // ─── Dashboard ─────────────────────────────────────
                   if (context.can(PermissionKeys.viewDashboard))
                     SidebarItem(
-                      label: 'Dashboard',
+                      label: 'Dashboard Admin',
                       icon: Icons.dashboard,
                       page: DashboardRoute(),
+                      hasAccess: true,
+                    ),
+
+                  if (context.can(PermissionKeys.viewResidentDashboard))
+                    SidebarItem(
+                      label: 'Dashboard Penghuni',
+                      icon: Icons.dashboard_customize_outlined,
+                      page: const ResidentDashboardRoute(),
                       hasAccess: true,
                     ),
 
@@ -399,6 +417,7 @@ class _AppLayoutPageState extends State<AppLayoutPage>
           );
         },
       ),
+    ),
     );
   }
 }

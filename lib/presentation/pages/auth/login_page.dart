@@ -106,11 +106,38 @@ class _LoginPageState extends State<LoginPage> {
                     }
 
                     if (state.status.isSuccess && state.isLoggedIn) {
-                      await context.router.replaceAll([const AppLayoutRoute()]);
-                      if (context.mounted && widget.pendingRoom != null) {
-                        context.router.push(
-                          ReservationDetailFormRoute(room: widget.pendingRoom!),
-                        );
+                      if (widget.pendingRoom != null) {
+                        await context.router.replaceAll([
+                          AppLayoutRoute(
+                            children: [
+                              ReservationDetailFormRoute(
+                                room: widget.pendingRoom!,
+                              ),
+                            ],
+                          ),
+                        ]);
+                      } else {
+                        final perms = state.userInfo?.permissions;
+                        if (perms?.can('view-dashboard') ?? false) {
+                          await context.router.replaceAll([
+                            const AppLayoutRoute(
+                              children: [DashboardRoute()],
+                            ),
+                          ]);
+                        } else if (perms?.can('view-resident-dashboard') ??
+                            false) {
+                          await context.router.replaceAll([
+                            const AppLayoutRoute(
+                              children: [ResidentDashboardRoute()],
+                            ),
+                          ]);
+                        } else {
+                          await context.router.replaceAll([
+                            const AppLayoutRoute(
+                              children: [RoomRoute()],
+                            ),
+                          ]);
+                        }
                       }
                     }
                   },

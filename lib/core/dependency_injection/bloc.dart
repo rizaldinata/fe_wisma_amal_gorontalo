@@ -143,6 +143,8 @@ import 'package:frontend/domain/usecase/finance/update_fixed_expense_usecase.dar
 import 'package:frontend/domain/usecase/finance/get_fixed_expense_status_usecase.dart';
 import 'package:frontend/domain/usecase/finance/generate_fixed_expenses_usecase.dart';
 import 'package:frontend/presentation/bloc/fixed_expense/fixed_expense_bloc.dart';
+import 'package:frontend/domain/repository/dashboard_repository.dart';
+import 'package:frontend/presentation/bloc/dashboard/dashboard_bloc.dart';
 
 Future<void> initializeBloc() async {
   serviceLocator.registerLazySingleton<AuthBloc>(
@@ -232,7 +234,8 @@ Future<void> initializeBloc() async {
 
   serviceLocator.registerLazySingleton<PaymentVerificationBloc>(
     () => PaymentVerificationBloc(
-      getPendingPaymentsUseCase: serviceLocator.get<GetPendingPaymentsUseCase>(),
+      getPendingPaymentsUseCase: serviceLocator
+          .get<GetPendingPaymentsUseCase>(),
       getAllPaymentsUseCase: serviceLocator.get<GetAllPaymentsUseCase>(),
       verifyPaymentUseCase: serviceLocator.get<VerifyPaymentUseCase>(),
       refundPaymentUseCase: serviceLocator.get<RefundPaymentUseCase>(),
@@ -386,7 +389,8 @@ Future<void> initializeBloc() async {
     () => GuestBloc(
       getAdminGuestsUseCase: serviceLocator.get<GetAdminGuestsUseCase>(),
       createAdminGuestUseCase: serviceLocator.get<CreateAdminGuestUseCase>(),
-      checkoutAdminGuestUseCase: serviceLocator.get<CheckoutAdminGuestUseCase>(),
+      checkoutAdminGuestUseCase: serviceLocator
+          .get<CheckoutAdminGuestUseCase>(),
     ),
   );
 
@@ -402,17 +406,18 @@ Future<void> initializeBloc() async {
 
   serviceLocator.registerFactory<GuestBillBloc>(
     () => GuestBillBloc(
-      getAdminGuestBillsUseCase: serviceLocator.get<GetAdminGuestBillsUseCase>(),
+      getAdminGuestBillsUseCase: serviceLocator
+          .get<GetAdminGuestBillsUseCase>(),
       verifyGuestBillUseCase: serviceLocator.get<VerifyGuestBillUseCase>(),
     ),
   );
 
   serviceLocator.registerFactory<NotificationLogBloc>(
     () => NotificationLogBloc(
-      getNotificationLogsUseCase:
-          serviceLocator.get<GetNotificationLogsUseCase>(),
-      markAllNotificationLogsReadUseCase:
-          serviceLocator.get<MarkAllNotificationLogsReadUseCase>(),
+      getNotificationLogsUseCase: serviceLocator
+          .get<GetNotificationLogsUseCase>(),
+      markAllNotificationLogsReadUseCase: serviceLocator
+          .get<MarkAllNotificationLogsReadUseCase>(),
     ),
   );
 
@@ -463,5 +468,8 @@ Future<void> initializeBloc() async {
     () => FeatureToggleBloc(
       repository: serviceLocator.get<FeatureToggleRepository>(),
     ),
+  );
+  serviceLocator.registerLazySingleton<DashboardBloc>(
+    () => DashboardBloc(repository: serviceLocator.get<DashboardRepository>()),
   );
 }
