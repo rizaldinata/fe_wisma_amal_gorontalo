@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -41,6 +42,8 @@ class _ResidentView extends StatefulWidget {
 class _ResidentViewState extends State<_ResidentView> {
   final TextEditingController _searchController = TextEditingController();
   final ScrollController _tableScrollController = ScrollController();
+  Timer? _debounce;
+
   String _selectedStatus = 'Semua';
   String _selectedPayment = 'Semua';
   int _currentPage = 1;
@@ -58,15 +61,39 @@ class _ResidentViewState extends State<_ResidentView> {
 
   @override
   void dispose() {
+    _debounce?.cancel();
     _searchController.dispose();
     _tableScrollController.dispose();
     super.dispose();
   }
 
-  void _fetchResidents() {
+  void _fetchResidents({bool isRefresh = false}) {
+    if (isRefresh) {
+      setState(() {
+        _currentPage = 1;
+        _residentCache.clear();
+        _hasMore = true;
+      });
+    }
+
+    final query = _searchController.text.trim();
+
     context.read<ResidentBloc>().add(
-          FetchResidents(page: _currentPage, perPage: _perPage),
+          FetchResidents(
+            page: _currentPage,
+            perPage: _perPage,
+            search: query.isEmpty ? null : query,
+            status: _selectedStatus == 'Semua' ? null : _selectedStatus,
+            payment: _selectedPayment == 'Semua' ? null : _selectedPayment,
+          ),
         );
+  }
+
+  void _onSearchChanged(String value) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      _fetchResidents(isRefresh: true);
+    });
   }
 
   void _onTableScroll() {
@@ -115,8 +142,7 @@ class _ResidentViewState extends State<_ResidentView> {
                     } else {
                       _residentCache.addAll(state.data.residents);
                     }
-                    _hasMore =
-                        state.data.pagination.currentPage < state.data.pagination.lastPage;
+                    _hasMore = state.data.pagination.currentPage < state.data.pagination.lastPage;
                     _isLoadingMore = false;
                   });
                 }
@@ -138,13 +164,7 @@ class _ResidentViewState extends State<_ResidentView> {
                     title: 'Gagal Memuat Data',
                     subtitle: state.message,
                     action: BasicButton(
-                      onPressed: () {
-                        setState(() {
-                          _currentPage = 1;
-                          _residentCache = [];
-                        });
-                        _fetchResidents();
-                      },
+                      onPressed: () => _fetchResidents(isRefresh: true),
                       label: 'Coba Lagi',
                     ),
                   );
@@ -153,27 +173,11 @@ class _ResidentViewState extends State<_ResidentView> {
                 if (state is ResidentLoaded || _residentCache.isNotEmpty) {
                   final data = state is ResidentLoaded ? state.data : null;
                   final stats = data?.stats;
-                  final query = _searchController.text.trim().toLowerCase();
 
-                  final activeCount = _residentCache
-                      .where((row) => row.status.toLowerCase() == 'active')
-                      .length;
-                  final pendingCount = _residentCache
-                      .where((row) => row.status.toLowerCase() == 'pending')
-                      .length;
-
-                  final residentRows = _residentCache.where((row) {
-                    final matchesSearch = query.isEmpty ||
-                        row.nama.toLowerCase().contains(query) ||
-                        row.kamar.toLowerCase().contains(query) ||
-                        row.kontak.toLowerCase().contains(query);
-
-                    final matchesStatus = _selectedStatus == 'Semua' || row.status == _selectedStatus;
-                    final matchesPayment =
-                        _selectedPayment == 'Semua' || row.detailBayar == _selectedPayment;
-
-                    return matchesSearch && matchesStatus && matchesPayment;
-                  }).toList();
+                  // Ambil perhitungan stats dari backend
+                  final activeCount = stats?.penghuniAktif ?? 0;
+                  final pendingCount = stats?.kontrakPending ?? 0;
+                  final availableRooms = stats?.kamarTersedia ?? 0;
 
                   return SingleChildScrollView(
                     controller: _tableScrollController,
@@ -207,7 +211,7 @@ class _ResidentViewState extends State<_ResidentView> {
                             Expanded(
                               child: SummaryStatCard(
                                 label: 'Kamar Tersedia',
-                                value: stats?.kamarTersedia.toString() ?? '0',
+                                value: availableRooms.toString(),
                                 icon: Icons.bedroom_parent_outlined,
                                 iconColor: isDark ? AppColorsDark.primary : AppColorsLight.primary,
                                 iconBg: isDark ? AppColorsDark.primaryLight : AppColorsLight.primaryLight,
@@ -222,7 +226,7 @@ class _ResidentViewState extends State<_ResidentView> {
                         SearchAndFilterBar(
                           searchController: _searchController,
                           searchHint: 'Cari nama, kamar, kontak...',
-                          onSearchChanged: (_) => setState(() {}),
+                          onSearchChanged: _onSearchChanged,
                           dropdownFilter: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -232,7 +236,10 @@ class _ResidentViewState extends State<_ResidentView> {
                                 items: const ['Semua', 'Aktif', 'Pending'],
                                 icon: Icons.filter_list,
                                 label: 'Status',
-                                onChanged: (value) => setState(() => _selectedStatus = value),
+                                onChanged: (value) {
+                                  setState(() => _selectedStatus = value);
+                                  _fetchResidents(isRefresh: true);
+                                },
                               ),
                               const SizedBox(width: AppSpacing.md),
                               _buildDropdownFilter(
@@ -241,7 +248,10 @@ class _ResidentViewState extends State<_ResidentView> {
                                 items: const ['Semua', 'Lunas', 'Belum Lunas'],
                                 icon: Icons.receipt_long_outlined,
                                 label: 'Detil Bayar',
-                                onChanged: (value) => setState(() => _selectedPayment = value),
+                                onChanged: (value) {
+                                  setState(() => _selectedPayment = value);
+                                  _fetchResidents(isRefresh: true);
+                                },
                               ),
                             ],
                           ),
@@ -250,7 +260,7 @@ class _ResidentViewState extends State<_ResidentView> {
                         const SizedBox(height: AppSpacing.lg),
 
                         // Table or Empty State
-                        if (residentRows.isEmpty)
+                        if (_residentCache.isEmpty)
                           const Padding(
                             padding: EdgeInsets.only(top: AppSpacing.xxxl),
                             child: EmptyStateWidget(
@@ -270,7 +280,7 @@ class _ResidentViewState extends State<_ResidentView> {
                               DataColumn(label: Text('STATUS')),
                               DataColumn(label: Text('KONTRAK')),
                             ],
-                            rows: residentRows.asMap().entries.map((entry) {
+                            rows: _residentCache.asMap().entries.map((entry) {
                               final index = entry.key + 1;
                               final row = entry.value;
                               return DataRow(

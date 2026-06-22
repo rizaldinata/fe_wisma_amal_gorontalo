@@ -208,8 +208,8 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
                       onPressed: (_selectedFile == null || _isSubmitting || _timerExpired)
                           ? null
                           : _submit,
-                      leadIcon: const Icon(Icons.send_outlined, color: Colors.white, size: 18),
-                      label: _isSubmitting ? 'Mengirim...' : 'Kirim Bukti Pembayaran',
+                      icon: const Icon(Icons.send_outlined, color: Colors.white, size: 18),
+                      label: Text(_isSubmitting ? 'Mengirim...' : 'Kirim Bukti Pembayaran'),
                     ),
                   ),
                 ],

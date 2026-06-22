@@ -4,21 +4,35 @@ import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dar
 
 // --- EVENTS ---
 abstract class ResidentEvent {}
+
 class FetchResidents extends ResidentEvent {
   final int page;
   final int perPage;
+  final String? search;
+  final String? status;
+  final String? payment;
 
-  FetchResidents({this.page = 1, this.perPage = 10});
+  FetchResidents({
+    this.page = 1,
+    this.perPage = 10,
+    this.search,
+    this.status,
+    this.payment,
+  });
 }
 
 // --- STATES ---
 abstract class ResidentState {}
+
 class ResidentInitial extends ResidentState {}
+
 class ResidentLoading extends ResidentState {}
+
 class ResidentLoaded extends ResidentState {
   final ResidentResponse data;
   ResidentLoaded(this.data);
 }
+
 class ResidentError extends ResidentState {
   final String message;
   ResidentError(this.message);
@@ -37,6 +51,9 @@ class ResidentBloc extends Bloc<ResidentEvent, ResidentState> {
         final response = await getAdminResidentsUseCase(
           page: event.page,
           perPage: event.perPage,
+          search: event.search,
+          status: event.status,
+          payment: event.payment,
         );
         emit(ResidentLoaded(response));
       } catch (e) {
