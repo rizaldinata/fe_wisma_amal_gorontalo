@@ -1,4 +1,5 @@
 import '../../domain/entity/setting/bank_account_entity.dart';
+import '../../domain/entity/setting/midtrans_fee_config_entity.dart';
 import '../../domain/entity/setting/midtrans_method_entity.dart';
 import '../../domain/entity/setting/setting_entity.dart';
 import '../../domain/repository/setting_repository.dart';
@@ -97,6 +98,26 @@ class SettingRepositoryImpl implements SettingRepository {
   Future<void> deleteBankAccount(int id) async {
     try {
       await remoteDatasource.deleteBankAccount(id);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<MidtransFeeConfigEntity> getMidtransFeeConfig() async {
+    try {
+      final model = await remoteDatasource.getMidtransFeeConfig();
+      return model.toEntity();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<MidtransFeeConfigEntity> updateMidtransFeeConfig(MidtransFeeConfigEntity config) async {
+    try {
+      final model = await remoteDatasource.updateMidtransFeeConfig(config.toUpdatePayload());
+      return model.toEntity();
     } catch (e) {
       rethrow;
     }

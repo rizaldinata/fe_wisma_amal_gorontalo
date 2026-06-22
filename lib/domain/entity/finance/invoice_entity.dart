@@ -11,6 +11,7 @@ class InvoiceEntity {
   final String? residentName;
   final String? roomNumber;
   final DateTime? createdAt;
+  final String? type; // 'sewa' | 'dp' | 'pelunasan' | 'extension' | 'fine'
 
   InvoiceEntity({
     required this.id,
@@ -25,5 +26,9 @@ class InvoiceEntity {
     this.residentName,
     this.roomNumber,
     this.createdAt,
+    this.type,
   });
+
+  bool get isDp => type == 'dp';
+  bool get isPelunasan => type == 'pelunasan';
 }

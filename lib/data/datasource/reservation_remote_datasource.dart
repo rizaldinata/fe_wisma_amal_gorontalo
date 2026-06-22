@@ -23,6 +23,7 @@ class ReservationRemoteDatasource {
     required int agreedPrice,
     int? tenantUserId,
     String? tenantName,
+    String? paymentScheme,
   }) async {
     // Step 1: buat schedule di Schedule module
     final scheduleResponse = await dioClient.post(
@@ -35,6 +36,7 @@ class ReservationRemoteDatasource {
         'agreed_price': agreedPrice,
         if (tenantUserId != null) 'tenant_user_id': tenantUserId,
         if (tenantName != null) 'tenant_name': tenantName,
+        if (paymentScheme != null) 'payment_scheme': paymentScheme,
       },
     );
 
@@ -44,6 +46,8 @@ class ReservationRemoteDatasource {
     // Step 2: ambil invoice yang dibuat otomatis oleh Finance module
     int? invoiceId;
     double? invoiceAmount;
+    String? invoiceType;
+    String? paymentExpiresAt;
     try {
       final invoiceResponse = await dioClient.get(
         '/finance/me/invoices',
@@ -54,12 +58,15 @@ class ReservationRemoteDatasource {
         final inv = invoiceData.first as Map<String, dynamic>;
         invoiceId = inv['id'] as int?;
         invoiceAmount = (inv['amount'] as num?)?.toDouble();
+        invoiceType = inv['type']?.toString();
+        paymentExpiresAt = inv['payment_expires_at']?.toString();
       }
     } catch (_) {
       // Invoice mungkin belum tersedia — lanjutkan tanpa invoice
     }
 
     final roomJson = scheduleJson['room'] as Map<String, dynamic>? ?? {};
+    final scheme = scheduleJson['payment_scheme']?.toString() ?? 'full';
 
     return ReservationEntity(
       id: scheduleId,
@@ -73,7 +80,14 @@ class ReservationRemoteDatasource {
       endDate: scheduleJson['end_date']?.toString() ?? endDate,
       invoiceId: invoiceId,
       invoiceAmount: invoiceAmount,
-      paymentExpiresAt: null,
+      paymentExpiresAt: paymentExpiresAt,
+      paymentScheme: scheme,
+      dpAmount: scheduleJson['dp_amount'] != null
+          ? double.tryParse(scheduleJson['dp_amount'].toString())
+          : null,
+      dpPaidAt: scheduleJson['dp_paid_at']?.toString(),
+      dpRefundEligible: scheduleJson['dp_refund_eligible'] as bool?,
+      invoiceType: invoiceType,
     );
   }
 
@@ -101,6 +115,12 @@ class ReservationRemoteDatasource {
       invoiceId: null,
       invoiceAmount: null,
       paymentExpiresAt: null,
+      paymentScheme: json['payment_scheme']?.toString(),
+      dpAmount: json['dp_amount'] != null
+          ? double.tryParse(json['dp_amount'].toString())
+          : null,
+      dpPaidAt: json['dp_paid_at']?.toString(),
+      dpRefundEligible: json['dp_refund_eligible'] as bool?,
     );
   }
 }

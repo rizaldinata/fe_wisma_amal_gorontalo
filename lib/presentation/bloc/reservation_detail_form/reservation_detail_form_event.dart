@@ -88,3 +88,12 @@ class RefreshProfileStatusEvent extends ReservationDetailFormEvent {
 class ResetConfirmFlagEvent extends ReservationDetailFormEvent {
   const ResetConfirmFlagEvent();
 }
+
+class PaymentSchemeChanged extends ReservationDetailFormEvent {
+  final String scheme; // 'full' | 'dp'
+
+  const PaymentSchemeChanged(this.scheme);
+
+  @override
+  List<Object?> get props => [scheme];
+}

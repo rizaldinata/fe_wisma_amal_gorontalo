@@ -36,6 +36,9 @@ class EndpointConstant {
       '/admin/guest-bills/$billId/verify';
 
   static const String notificationLogsEndpoint = '/notification/logs';
+  static const String notificationSummaryEndpoint = '/notification/logs/summary';
+  static const String notificationSendEndpoint = '/notification/send';
+  static const String notificationRecipientsEndpoint = '/notification/recipients';
   static String resendNotificationLogEndpoint(int id) => '/notification/logs/$id/resend';
   static const String markAllNotificationLogsReadEndpoint = '/notification/logs/mark-all-read';
 }

@@ -1,21 +1,26 @@
-# Stage 1: Build stage
-FROM ghcr.io/cirruslabs/flutter:stable as build
+FROM ghcr.io/cirruslabs/flutter:stable AS builder
 
 WORKDIR /app
+
+# Copy the app files to the container
 COPY . .
 
-# Run flutter build web
+# Get App Dependencies
 RUN flutter pub get
-RUN flutter build web --release
 
-# Stage 2: Production stage
+# Build the app for the web with the dynamic BASE_URL
+# The build arg will be passed from docker-compose or CI
+ARG BASE_URL=https://api-wismaamal.allvvnt.my.id
+RUN flutter build web --dart-define=BASE_URL=$BASE_URL --release
+
+# Stage 2: Serve the app with Nginx
 FROM nginx:alpine
 
-# Copy the built files from the build stage
-COPY --from=build /app/build/web /usr/share/nginx/html
+# Copy the build output to replace the default nginx contents
+COPY --from=builder /app/build/web /usr/share/nginx/html
 
-# Copy custom nginx configuration for SPA routing
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx config
+COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]

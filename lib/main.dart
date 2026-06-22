@@ -3,15 +3,17 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
-import 'package:frontend/presentation/bloc/auth/auth_state.dart';
-import 'package:flutter_web_plugins/flutter_web_plugins.dart';
+// import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 import 'package:frontend/presentation/bloc/app/app_bloc.dart';
+import 'package:frontend/presentation/bloc/setting/feature_toggle/feature_toggle_bloc.dart';
+import 'package:frontend/presentation/bloc/setting/feature_toggle/feature_toggle_event.dart';
+import 'package:frontend/data/model/setting/feature_toggle_model.dart';
+import 'package:frontend/presentation/bloc/setting/feature_toggle/feature_toggle_state.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
 final GlobalKey<ScaffoldMessengerState> rootScaffoldMessengerKey =
@@ -21,7 +23,7 @@ Future<void> main(List<String> args) async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeDateFormatting('id_ID', null);
   await initializeDependencies();
-  usePathUrlStrategy();
+  // usePathUrlStrategy();
 
   if (!kIsWeb) {
     const storage = FlutterSecureStorage();
@@ -39,6 +41,9 @@ Future<void> main(List<String> args) async {
           value: serviceLocator<AuthBloc>()..add(InitLoginStatusEvent()),
         ),
         BlocProvider(create: (context) => AppBloc()),
+        BlocProvider.value(
+          value: serviceLocator<FeatureToggleBloc>(),
+        ),
       ],
       child: MyApp(),
     ),
@@ -64,8 +69,37 @@ class MyApp extends StatelessWidget {
       // },
       darkTheme: AppTheme.darkTheme,
       themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
-      routerConfig: router.config(navigatorObservers: () => [AutoRouteObserver()]),
+      routerConfig: router.config(
+        navigatorObservers: () => [AutoRouteObserver()],
+      ),
     );
+  }
+}
+
+extension FeatureToggleContext on BuildContext {
+  bool isFeatureEnabled(String key) {
+    try {
+      final state = watch<FeatureToggleBloc>().state;
+      if (state is FeatureToggleLoaded) {
+        bool? checkRecursive(
+          List<FeatureToggleModel> toggles,
+          String searchKey,
+        ) {
+          for (var toggle in toggles) {
+            if (toggle.key == searchKey) return toggle.isActive;
+            if (toggle.children.isNotEmpty) {
+              final result = checkRecursive(toggle.children, searchKey);
+              if (result != null) return result;
+            }
+          }
+          return null;
+        }
+
+        final isActive = checkRecursive(state.toggles, key);
+        return isActive ?? true;
+      }
+    } catch (_) {}
+    return true;
   }
 }
 

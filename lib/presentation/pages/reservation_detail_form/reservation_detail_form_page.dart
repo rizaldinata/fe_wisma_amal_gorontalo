@@ -75,11 +75,12 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
     TextEditingController controller,
     Function(DateTime) onDateSelected,
   ) async {
+    final now = DateTime.now();
     final date = await showDatePicker(
       context: context,
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2100),
-      initialDate: DateTime.now(),
+      firstDate: now,
+      lastDate: now.add(const Duration(days: 30)),
+      initialDate: now,
     );
 
     if (date != null) {
@@ -338,6 +339,73 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                         ),
 
                         const SizedBox(height: 24),
+
+                        /// SKEMA PEMBAYARAN (DP / FULL) — hanya muncul jika start_date > H+7
+                        if (state.isDpAvailable) ...[
+                          BasicCard(
+                            title: 'Skema Pembayaran',
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Tanggal mulai lebih dari 7 hari ke depan. Anda bisa memilih membayar DP (uang muka 50%) sekarang dan melunasi sisa sebelum tanggal masuk.',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                                    height: 1.5,
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                Wrap(
+                                  spacing: 16,
+                                  runSpacing: 16,
+                                  children: [
+                                    _paymentSchemeCard(
+                                      title: 'Bayar Penuh',
+                                      subtitle: 'Lunasi semua biaya sekarang',
+                                      amount: 'Rp ${NumberFormat.decimalPattern('id').format(state.totalPrice).replaceAll(',', '.')}',
+                                      selected: state.paymentScheme == 'full',
+                                      onTap: () => context.read<ReservationDetailFormBloc>().add(const PaymentSchemeChanged('full')),
+                                    ),
+                                    _paymentSchemeCard(
+                                      title: 'DP (Uang Muka)',
+                                      subtitle: 'Bayar 50% sekarang, lunasi sebelum tanggal masuk',
+                                      amount: 'Rp ${NumberFormat.decimalPattern('id').format(state.dpAmount.toInt()).replaceAll(',', '.')}',
+                                      selected: state.paymentScheme == 'dp',
+                                      isHighlighted: true,
+                                      onTap: () => context.read<ReservationDetailFormBloc>().add(const PaymentSchemeChanged('dp')),
+                                    ),
+                                  ],
+                                ),
+                                if (state.paymentScheme == 'dp') ...[
+                                  const SizedBox(height: 12),
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? Colors.amber.withOpacity(0.1) : Colors.amber.shade50,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: Colors.amber.shade300),
+                                    ),
+                                    child: Row(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Icon(Icons.info_outline, size: 18, color: Colors.amber.shade700),
+                                        const SizedBox(width: 10),
+                                        Expanded(
+                                          child: Text(
+                                            'DP harus dibayar dalam 15 menit setelah pemesanan. Sisa pembayaran wajib dilunasi sebelum tanggal masuk.',
+                                            style: TextStyle(fontSize: 12, color: Colors.amber.shade800, height: 1.4),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
 
                         /// METODE PEMBAYARAN
                         BasicCard(
@@ -684,6 +752,40 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                 ),
                               ],
                             ),
+
+                            if (state.paymentScheme == 'dp') ...[
+                              const Divider(),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Bayar Sekarang (DP)',
+                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    'Rp ${NumberFormat.decimalPattern('id').format(state.dpAmount.toInt()).replaceAll(',', '.')}',
+                                    style: const TextStyle(
+                                      color: Colors.orange,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Pelunasan (sebelum tanggal masuk)',
+                                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                  ),
+                                  Text(
+                                    'Rp ${NumberFormat.decimalPattern('id').format(state.dpAmount.toInt()).replaceAll(',', '.')}',
+                                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ],
                         ),
                       ),
@@ -806,6 +908,17 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
               'Total',
               'Rp ${NumberFormat.decimalPattern('id').format(state.totalPrice).replaceAll(',', '.')}',
             ),
+            if (state.paymentScheme == 'dp') ...[
+              _infoRow(
+                'Skema',
+                'DP (Uang Muka 50%)',
+              ),
+              _infoRow(
+                'Bayar Sekarang',
+                'Rp ${NumberFormat.decimalPattern('id').format(state.dpAmount.toInt()).replaceAll(',', '.')}',
+              ),
+            ] else
+              _infoRow('Skema', 'Bayar Penuh'),
             _infoRow(
               'Metode',
               state.paymentMethod == 'online'
@@ -814,6 +927,21 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                         : 'Online (Midtrans)')
                   : 'Manual',
             ),
+            if (state.paymentScheme == 'dp') ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.amber.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.amber.shade300),
+                ),
+                child: Text(
+                  'DP harus dibayar dalam 15 menit. Sisa pembayaran wajib dilunasi sebelum tanggal masuk.',
+                  style: TextStyle(fontSize: 11, color: Colors.amber.shade800, height: 1.4),
+                ),
+              ),
+            ],
           ],
         ),
         actions: [
@@ -828,7 +956,7 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                 const SubmitReservation(),
               );
             },
-            child: const Text('Ya, Pesan Sekarang'),
+            child: Text(state.paymentScheme == 'dp' ? 'Ya, Bayar DP Sekarang' : 'Ya, Pesan Sekarang'),
           ),
         ],
       ),
@@ -920,6 +1048,77 @@ Widget _rentCard({
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   color: selected ? Colors.blue : Colors.green,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+/// PAYMENT SCHEME CARD (Full / DP)
+Widget _paymentSchemeCard({
+  required String title,
+  required String subtitle,
+  required String amount,
+  required bool selected,
+  required VoidCallback onTap,
+  bool isHighlighted = false,
+}) {
+  return Builder(
+    builder: (context) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final Color accentColor = isHighlighted ? Colors.orange : Colors.blue;
+      final Color accentShade50 = isHighlighted ? Colors.orange.shade50 : Colors.blue.shade50;
+      return HoverTapWrapper(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        hoverColor: accentColor.withOpacity(0.05),
+        child: Container(
+          constraints: const BoxConstraints(minWidth: 220, maxWidth: 320),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: selected
+                ? (isDark ? accentColor.withOpacity(0.15) : accentShade50)
+                : (isDark ? Theme.of(context).colorScheme.surface : Colors.white),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected
+                  ? accentColor
+                  : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+              width: selected ? 1.5 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Icon(
+                    selected ? Icons.radio_button_checked : Icons.radio_button_off,
+                    color: selected ? accentColor : (isDark ? Colors.grey.shade500 : Colors.grey),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
+                  height: 1.4,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                amount,
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: selected ? accentColor : Colors.green,
                 ),
               ),
             ],

@@ -412,7 +412,7 @@ class _MemberFinancePageState extends State<MemberFinancePage> {
                 ],
               ),
               // Kolom Jenis
-              _buildInvoiceTypeBadge(context, invoice.invoiceNumber),
+              _buildInvoiceTypeBadge(context, invoice.invoiceNumber, invoiceType: invoice.type),
               // Kolom Jatuh Tempo (invoice due date) atau Batas Bayar Midtrans
               if (pendingMidtrans != null && expiryDt != null)
                 Column(
@@ -473,7 +473,14 @@ class _MemberFinancePageState extends State<MemberFinancePage> {
                     : hasPendingManual
                         ? _buildPaymentStatusBadge(context, 'pending')
                         : ElevatedButton(
-                            onPressed: () => _showPaymentMethodDialog(context, invoice.id),
+                            onPressed: () => context.router.push(InvoicePaymentRoute(
+                              invoiceId: invoice.id,
+                              invoiceNumber: invoice.invoiceNumber,
+                              amount: invoice.amount,
+                              roomNumber: invoice.roomNumber,
+                              invoiceType: invoice.type,
+                              dueDate: invoice.dueDate,
+                            )),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: payBtnColor,
                               foregroundColor: Colors.white,
@@ -590,15 +597,29 @@ class _MemberFinancePageState extends State<MemberFinancePage> {
     );
   }
 
-  Widget _buildInvoiceTypeBadge(BuildContext context, String invoiceNumber) {
+  Widget _buildInvoiceTypeBadge(BuildContext context, String invoiceNumber, {String? invoiceType}) {
     final isDark = AppTheme.isDark(context);
-    final bool isExtension = invoiceNumber.startsWith('EXT');
+    final bool isExtension = invoiceNumber.startsWith('EXT') || invoiceType == 'extension';
+    final bool isDp = invoiceType == 'dp' || invoiceNumber.startsWith('DP-');
+    final bool isPelunasan = invoiceType == 'pelunasan' || invoiceNumber.startsWith('PLN-');
 
     final Color color, bg, border;
     final String label;
     final IconData icon;
 
-    if (isExtension) {
+    if (isDp) {
+      color = Colors.orange.shade700;
+      bg = Colors.orange.shade50;
+      border = Colors.orange.shade200;
+      label = 'Uang Muka (DP)';
+      icon = Icons.payments_outlined;
+    } else if (isPelunasan) {
+      color = Colors.teal.shade700;
+      bg = Colors.teal.shade50;
+      border = Colors.teal.shade200;
+      label = 'Pelunasan';
+      icon = Icons.task_alt_outlined;
+    } else if (isExtension) {
       color = isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess;
       bg = isDark ? AppColorsDark.statusProcessBg : AppColorsLight.statusProcessBg;
       border = isDark ? AppColorsDark.statusProcessBorder : AppColorsLight.statusProcessBorder;
@@ -696,65 +717,6 @@ class _MemberFinancePageState extends State<MemberFinancePage> {
   }
 
   // ── Dialogs ───────────────────────────────────────────────────────────────
-
-  void _showPaymentMethodDialog(BuildContext context, int invoiceId) {
-    final state = context.read<MemberFinanceBloc>().state;
-    if (!state.isMidtransEnabled) {
-      _showManualPaymentDialog(context, invoiceId);
-      return;
-    }
-
-    final isDark = AppTheme.isDark(context);
-    final processColor = isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess;
-    final doneColor = isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
-        title: const Text('Pilih Metode Pembayaran'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
-              leading: Icon(Icons.qr_code, color: processColor),
-              title: const Text('Pembayaran Online (Midtrans)'),
-              subtitle: const Text('Otomatis & Cepat'),
-              onTap: () {
-                Navigator.pop(ctx);
-                context.read<MemberFinanceBloc>().add(PayInvoiceEvent(invoiceId, 'midtrans'));
-              },
-            ),
-            const Divider(),
-            ListTile(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
-              leading: Icon(Icons.account_balance, color: doneColor),
-              title: const Text('Transfer Manual'),
-              subtitle: const Text('Upload bukti transfer'),
-              onTap: () {
-                Navigator.pop(ctx);
-                _showManualPaymentDialog(context, invoiceId);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showManualPaymentDialog(BuildContext context, int invoiceId) {
-    final bankAccounts = context.read<MemberFinanceBloc>().state.bankAccounts;
-    showDialog(
-      context: context,
-      builder: (ctx) => _ManualPaymentDialog(
-        invoiceId: invoiceId,
-        bankAccounts: bankAccounts,
-        isDark: AppTheme.isDark(context),
-        bloc: context.read<MemberFinanceBloc>(),
-      ),
-    );
-  }
 
   void _showPaymentDetailDialog(BuildContext context, dynamic payment) {
     final isDark = AppTheme.isDark(context);

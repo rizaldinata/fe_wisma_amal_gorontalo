@@ -9,7 +9,16 @@ class GetNotificationLogsUseCase {
   Future<NotificationLogResponse> call({
     int page = 1,
     int perPage = 15,
+    String? status,
+    String? type,
+    String? search,
   }) {
-    return _repository.getNotificationLogs(page: page, perPage: perPage);
+    return _repository.getNotificationLogs(
+      page: page,
+      perPage: perPage,
+      status: status,
+      type: type,
+      search: search,
+    );
   }
 }

@@ -58,13 +58,13 @@ class _CreateReportViewState extends State<_CreateReportView> {
         // Prevent duplicates by checking name
         final newFiles = result.files;
         final currentNames = _selectedImages.map((f) => f.name).toSet();
-        
+
         for (var file in newFiles) {
           if (!currentNames.contains(file.name)) {
             _selectedImages.add(file);
           }
         }
-        
+
         if (_selectedImages.length > 6) {
           _selectedImages = _selectedImages.sublist(0, 6);
         }
@@ -114,7 +114,8 @@ class _CreateReportViewState extends State<_CreateReportView> {
                     onPressed: () => context.router.maybePop(),
                     icon: const Icon(Icons.arrow_back_rounded),
                     style: IconButton.styleFrom(
-                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -225,10 +226,12 @@ class _CreateReportViewState extends State<_CreateReportView> {
                                     '${_selectedImages.length}/6',
                                     style: theme.textTheme.labelMedium
                                         ?.copyWith(
-                                      color: _selectedImages.length >= 6
-                                          ? theme.colorScheme.error
-                                          : theme.colorScheme.onSurfaceVariant,
-                                    ),
+                                          color: _selectedImages.length >= 6
+                                              ? theme.colorScheme.error
+                                              : theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                        ),
                                   ),
                                 ],
                               ),
@@ -289,8 +292,10 @@ class _CreateReportViewState extends State<_CreateReportView> {
                         const SizedBox(height: 24),
 
                         // Action buttons
-                        BlocBuilder<MaintenanceActionBloc,
-                            MaintenanceActionState>(
+                        BlocBuilder<
+                          MaintenanceActionBloc,
+                          MaintenanceActionState
+                        >(
                           builder: (context, state) {
                             final isLoading =
                                 state is MaintenanceActionSubmitting;
@@ -310,7 +315,7 @@ class _CreateReportViewState extends State<_CreateReportView> {
                                 ),
                                 const SizedBox(width: 12),
                                 SizedBox(
-                                  width: 160,
+                                  width: 170,
                                   height: 44,
                                   child: BasicButton(
                                     label: 'Kirim Laporan',

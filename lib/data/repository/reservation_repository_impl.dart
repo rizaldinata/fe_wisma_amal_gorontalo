@@ -20,6 +20,7 @@ class ReservationRepositoryImpl implements ReservationRepository {
     required int agreedPrice,
     int? tenantUserId,
     String? tenantName,
+    String? paymentScheme,
   }) async {
     return await remoteDatasource.createReservation(
       roomId: roomId,
@@ -28,6 +29,7 @@ class ReservationRepositoryImpl implements ReservationRepository {
       agreedPrice: agreedPrice,
       tenantUserId: tenantUserId,
       tenantName: tenantName,
+      paymentScheme: paymentScheme,
     );
   }
 

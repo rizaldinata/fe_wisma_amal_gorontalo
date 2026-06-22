@@ -2,6 +2,8 @@ import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import '../../core/services/network/dio_client.dart';
 import '../../domain/entity/setting/midtrans_method_entity.dart';
+import '../model/finance/fine_eligible_user_model.dart';
+import '../model/finance/fine_model.dart';
 import '../model/finance/invoice_model.dart';
 import '../model/finance/payment_model.dart';
 import '../model/finance/kpi_model.dart';
@@ -9,7 +11,6 @@ import '../model/finance/revenue_model.dart';
 import '../model/finance/expense_model.dart';
 import '../model/finance/member_finance_summary_model.dart';
 import '../model/finance/midtrans_monitoring_model.dart';
-import '../model/base_response_model.dart';
 
 abstract class FinanceRemoteDatasource {
   Future<List<InvoiceModel>> getDueInvoices();
@@ -50,6 +51,21 @@ abstract class FinanceRemoteDatasource {
   Future<String> getInvoicePrintLink(int invoiceId);
   Future<List<MidtransMethodEntity>> getAvailablePaymentMethods();
   Future<MidtransMonitoringModel> getMidtransMonitoring();
+
+  // Fine (Denda)
+  Future<List<FineModel>> getMyFines({String? status});
+  Future<PaymentModel> payFines(
+    List<int> fineIds,
+    String paymentMethod, {
+    Uint8List? paymentProofBytes,
+    String? paymentProofName,
+    String? preferredPaymentType,
+  });
+  Future<List<FineModel>> getAllFines({String? status, int? tenantUserId});
+  Future<FineModel> createFine({required int tenantUserId, required double amount, required String reason});
+  Future<FineModel> waiveFine(int fineId, String waiveReason);
+  Future<FineModel> cancelFine(int fineId);
+  Future<List<FineEligibleUserModel>> getFineEligibleUsers();
 }
 
 class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
@@ -356,5 +372,92 @@ class FinanceRemoteDatasourceImpl implements FinanceRemoteDatasource {
           available: item['available'] == true,
           maintenance: item['maintenance'] == true,
         )).toList();
+  }
+
+  @override
+  Future<List<FineModel>> getMyFines({String? status}) async {
+    final response = await _dioClient.get(
+      '/finance/me/fines',
+      queryParams: status != null ? {'status': status} : null,
+    );
+    final List<dynamic> data = response.data['data'] ?? [];
+    return data.map((json) => FineModel.fromJson(json)).toList();
+  }
+
+  @override
+  Future<PaymentModel> payFines(
+    List<int> fineIds,
+    String paymentMethod, {
+    Uint8List? paymentProofBytes,
+    String? paymentProofName,
+    String? preferredPaymentType,
+  }) async {
+    dynamic data;
+    if (paymentMethod == 'manual' && paymentProofBytes != null) {
+      final formData = FormData.fromMap({
+        'payment_method': paymentMethod,
+      });
+      for (final id in fineIds) {
+        formData.fields.add(MapEntry('fine_ids[]', id.toString()));
+      }
+      formData.files.add(MapEntry(
+        'payment_proof',
+        MultipartFile.fromBytes(paymentProofBytes, filename: paymentProofName ?? 'payment_proof.jpg'),
+      ));
+      data = formData;
+    } else {
+      data = {
+        'fine_ids': fineIds,
+        'payment_method': paymentMethod,
+        if (preferredPaymentType != null) 'preferred_payment_type': preferredPaymentType,
+      };
+    }
+    final response = await _dioClient.post('/finance/me/fines/bayar', data: data);
+    return PaymentModel.fromJson(response.data['data']);
+  }
+
+  @override
+  Future<List<FineModel>> getAllFines({String? status, int? tenantUserId}) async {
+    final response = await _dioClient.get(
+      '/finance/fines',
+      queryParams: {
+        if (status != null) 'status': status,
+        if (tenantUserId != null) 'tenant_user_id': tenantUserId,
+        'per_page': 100,
+      },
+    );
+    final List<dynamic> data = response.data['data'] ?? [];
+    return data.map((json) => FineModel.fromJson(json)).toList();
+  }
+
+  @override
+  Future<FineModel> createFine({required int tenantUserId, required double amount, required String reason}) async {
+    final response = await _dioClient.post('/finance/fines', data: {
+      'tenant_user_id': tenantUserId,
+      'amount': amount,
+      'reason': reason,
+    });
+    return FineModel.fromJson(response.data['data']);
+  }
+
+  @override
+  Future<FineModel> waiveFine(int fineId, String waiveReason) async {
+    final response = await _dioClient.post('/finance/fines/$fineId/waive', data: {
+      'waive_reason': waiveReason,
+    });
+    return FineModel.fromJson(response.data['data']);
+  }
+
+  @override
+  Future<FineModel> cancelFine(int fineId) async {
+    final response = await _dioClient.post('/finance/fines/$fineId/cancel');
+    return FineModel.fromJson(response.data['data']);
+  }
+
+  @override
+  Future<List<FineEligibleUserModel>> getFineEligibleUsers() async {
+    final response = await _dioClient.get('/finance/fines/eligible-users');
+    final List<dynamic> data = response.data['data'] ?? [];
+    return data.map((json) => FineEligibleUserModel.fromJson(json)).toList();
   }
 }

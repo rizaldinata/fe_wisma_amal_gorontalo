@@ -13,6 +13,7 @@ class CreateReservationUseCase {
     required int agreedPrice,
     int? tenantUserId,
     String? tenantName,
+    String? paymentScheme,
   }) async {
     return await repository.createReservation(
       roomId: roomId,
@@ -21,6 +22,7 @@ class CreateReservationUseCase {
       agreedPrice: agreedPrice,
       tenantUserId: tenantUserId,
       tenantName: tenantName,
+      paymentScheme: paymentScheme,
     );
   }
 }

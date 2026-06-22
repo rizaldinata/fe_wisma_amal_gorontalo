@@ -22,6 +22,7 @@ class ReservationDetailFormState extends Equatable {
     this.readyToConfirm = false,
     this.tenantUserId,
     this.tenantName,
+    this.paymentScheme = 'full',
   });
 
   final String rentType;
@@ -44,6 +45,17 @@ class ReservationDetailFormState extends Equatable {
   final bool readyToConfirm;
   final int? tenantUserId;
   final String? tenantName;
+  final String paymentScheme; // 'full' | 'dp'
+
+  /// DP hanya tersedia jika start_date > H+7 dari hari ini
+  bool get isDpAvailable {
+    if (startDate == null) return false;
+    final threshold = DateTime.now().add(const Duration(days: 7));
+    return startDate!.isAfter(threshold);
+  }
+
+  /// Jumlah DP yang harus dibayar (50% dari total)
+  double get dpAmount => totalPrice * 0.5;
 
   ReservationDetailFormState copyWith({
     String? rentType,
@@ -66,6 +78,7 @@ class ReservationDetailFormState extends Equatable {
     bool? readyToConfirm,
     int? tenantUserId,
     String? tenantName,
+    String? paymentScheme,
   }) {
     return ReservationDetailFormState(
       rentType: rentType ?? this.rentType,
@@ -88,6 +101,7 @@ class ReservationDetailFormState extends Equatable {
       readyToConfirm: readyToConfirm ?? this.readyToConfirm,
       tenantUserId: tenantUserId ?? this.tenantUserId,
       tenantName: tenantName ?? this.tenantName,
+      paymentScheme: paymentScheme ?? this.paymentScheme,
     );
   }
 
@@ -113,5 +127,6 @@ class ReservationDetailFormState extends Equatable {
         readyToConfirm,
         tenantUserId,
         tenantName,
+        paymentScheme,
       ];
 }

@@ -18,6 +18,9 @@ import 'package:frontend/domain/entity/permission_entity.dart';
 import 'package:frontend/domain/entity/user_entity.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend/presentation/bloc/setting/feature_toggle/feature_toggle_bloc.dart';
+import 'package:frontend/presentation/bloc/setting/feature_toggle/feature_toggle_event.dart';
+import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 class AuthStateNotifier extends ChangeNotifier {
@@ -162,6 +165,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         roles: role ?? [],
         permissions: permissions,
       );
+      serviceLocator<FeatureToggleBloc>().add(FetchFeatureToggles());
       emit(state.copyWith(isLoggedIn: status, userInfo: userInfo));
     } else {
       final permissions = Permissions(storage.getPermissions()?.toSet() ?? {});
@@ -193,6 +197,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       if (isLoggedIn) {
         add(const GetUserInfoEvent());
+        serviceLocator<FeatureToggleBloc>().add(FetchFeatureToggles());
         emit(
           state.copyWith(
             isLoggedIn: true,
@@ -237,7 +242,6 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           password: event.password,
           username: event.username,
           passwordConfirmation: event.passwordConfirm,
-          phoneNumber: event.phoneNumber,
         ),
       );
 
@@ -245,6 +249,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       if (isLoggedIn) {
         add(const GetUserInfoEvent());
+        serviceLocator<FeatureToggleBloc>().add(FetchFeatureToggles());
         emit(
           state.copyWith(
             isLoggedIn: true,

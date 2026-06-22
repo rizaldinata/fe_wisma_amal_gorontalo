@@ -21,15 +21,23 @@ class ExtendLeasePaymentPage extends StatefulWidget {
     required this.invoiceId,
     required this.roomNumber,
     required this.amount,
+    this.baseAmount,
+    this.midtransFee = 0,
+    this.feeBearer,
     this.snapToken,
     this.paymentData,
+    this.pageTitle,
   });
 
   final int invoiceId;
   final String roomNumber;
   final double amount;
+  final double? baseAmount;
+  final int midtransFee;
+  final String? feeBearer;
   final String? snapToken;
   final Map<String, dynamic>? paymentData;
+  final String? pageTitle;
 
   @override
   State<ExtendLeasePaymentPage> createState() => _ExtendLeasePaymentPageState();
@@ -137,7 +145,7 @@ class _ExtendLeasePaymentPageState extends State<ExtendLeasePaymentPage> {
         appBar: _paymentConfirmed
             ? null
             : AppBar(
-                title: const Text('Pembayaran Perpanjangan'),
+                title: Text(widget.pageTitle ?? 'Pembayaran Perpanjangan'),
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back),
                   onPressed: _isPolling ? null : () => context.router.maybePop(),
@@ -509,6 +517,27 @@ class _ExtendLeasePaymentPageState extends State<ExtendLeasePaymentPage> {
             _summaryRow('Kamar', widget.roomNumber),
             _summaryRow('No. Invoice', '#${widget.invoiceId}'),
             const Divider(height: 28),
+            if (widget.feeBearer == 'customer' && widget.midtransFee > 0) ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Tagihan Sewa', style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                  Text(_currencyFormat.format(widget.baseAmount ?? widget.amount),
+                      style: TextStyle(fontSize: 13, color: Colors.grey.shade600)),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('Biaya Transaksi Midtrans',
+                      style: TextStyle(fontSize: 13, color: Colors.orange.shade700)),
+                  Text(_currencyFormat.format(widget.midtransFee),
+                      style: TextStyle(fontSize: 13, color: Colors.orange.shade700)),
+                ],
+              ),
+              const Divider(height: 16),
+            ],
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -523,6 +552,25 @@ class _ExtendLeasePaymentPageState extends State<ExtendLeasePaymentPage> {
                 ),
               ],
             ),
+            if (widget.feeBearer == 'customer' && widget.midtransFee > 0) ...[
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Row(children: [
+                  Icon(Icons.info_outline, size: 13, color: Colors.orange.shade700),
+                  const SizedBox(width: 5),
+                  Expanded(child: Text(
+                    'Biaya transaksi Midtrans ditanggung penghuni dan sudah termasuk dalam total di atas.',
+                    style: TextStyle(fontSize: 10, color: Colors.orange.shade700, height: 1.3),
+                  )),
+                ]),
+              ),
+            ],
           ],
         ),
       ),

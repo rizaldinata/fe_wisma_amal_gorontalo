@@ -51,6 +51,13 @@ abstract class PermissionKeys {
   static const financeMeInvoiceView = 'finance-me-invoice-view';
   static const financeMePaymentView = 'finance-me-payment-view';
 
+  // ─── Fine / Denda ─────────────────────────────────────────────────────
+  static const financeFineView = 'finance-fine-view';
+  static const financeFineCreate = 'finance-fine-create';
+  static const financeFineWaive = 'finance-fine-waive';
+  /// Member/resident melihat denda milik sendiri
+  static const financeMeFineView = 'finance-me-fine-view';
+
   // ─── Inventory ───────────────────────────────────────────────────────
   static const viewInventory = 'view-inventory';
   static const createInventory = 'create-inventory';
@@ -96,6 +103,10 @@ abstract class PermissionKeys {
   static const verifyGuestBill = 'verify-guest-bill';
   /// Admin melihat semua tagihan tamu
   static const viewGuestBill = 'view-guest-bill';
+
+  // ─── Notification ────────────────────────────────────────────────────
+  static const notificationLogView = 'notification-log-view';
+  static const notificationSend = 'notification-send';
 
   // ─── Setting ─────────────────────────────────────────────────────────
   static const settingView = 'setting-view';
