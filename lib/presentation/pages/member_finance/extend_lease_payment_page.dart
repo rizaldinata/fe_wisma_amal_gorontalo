@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:auto_route/auto_route.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -229,21 +230,11 @@ class _ExtendLeasePaymentPageState extends State<ExtendLeasePaymentPage> {
   }
 
   bool _hasQrCode(Map<String, dynamic> data) {
+    if (data['qr_string'] is String && (data['qr_string'] as String).isNotEmpty) return true;
     final actions = data['actions'] as List?;
     if (actions == null) return false;
     return actions.any((a) =>
         a is Map && (a['name'] == 'generate-qr-code' || a['name'] == 'get-qr-code'));
-  }
-
-  String? _getQrUrl(Map<String, dynamic> data) {
-    final actions = data['actions'] as List?;
-    if (actions == null) return null;
-    for (final a in actions) {
-      if (a is Map && (a['name'] == 'generate-qr-code' || a['name'] == 'get-qr-code')) {
-        return a['url'] as String?;
-      }
-    }
-    return null;
   }
 
   String? _getDeeplinkUrl(Map<String, dynamic> data) {
@@ -258,7 +249,7 @@ class _ExtendLeasePaymentPageState extends State<ExtendLeasePaymentPage> {
   }
 
   Widget _buildQrCodeUI(Map<String, dynamic> data, String paymentType) {
-    final qrUrl = _getQrUrl(data);
+    final qrString = data['qr_string'] as String?;
     final deeplinkUrl = _getDeeplinkUrl(data);
     final expiryTime = data['expiry_time'] as String?;
     final methodLabel = _paymentTypeLabel(paymentType);
@@ -272,29 +263,52 @@ class _ExtendLeasePaymentPageState extends State<ExtendLeasePaymentPage> {
           text: 'Scan QR Code berikut menggunakan aplikasi $methodLabel atau kamera ponsel Anda.',
         ),
         const SizedBox(height: 20),
-        if (qrUrl != null)
+        if (qrString != null && qrString.isNotEmpty)
           Center(
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
+                color: Colors.white,
                 border: Border.all(color: Colors.grey.shade300),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Image.network(
-                qrUrl,
-                width: 220,
-                height: 220,
-                fit: BoxFit.contain,
-                loadingBuilder: (_, child, progress) => progress == null
-                    ? child
-                    : const SizedBox(
-                        width: 220, height: 220,
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                errorBuilder: (_, __, ___) => const SizedBox(
-                  width: 220, height: 220,
-                  child: Center(child: Text('Gagal memuat QR Code')),
+              child: QrImageView(
+                data: qrString,
+                version: QrVersions.auto,
+                size: 220,
+                gapless: false,
+                errorCorrectionLevel: QrErrorCorrectLevel.M,
+                eyeStyle: const QrEyeStyle(
+                  eyeShape: QrEyeShape.square,
+                  color: Colors.black,
                 ),
+                dataModuleStyle: const QrDataModuleStyle(
+                  dataModuleShape: QrDataModuleShape.square,
+                  color: Colors.black,
+                ),
+              ),
+            ),
+          )
+        else
+          Container(
+            width: 220,
+            height: 220,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.grey.shade300),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.qr_code_2, size: 40, color: Colors.grey.shade400),
+                  const SizedBox(height: 8),
+                  Text(
+                    'QR Code tidak tersedia',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
           ),
