@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:file_picker/file_picker.dart';
 import '../../../core/dependency_injection/dependency_injection.dart';
@@ -14,12 +16,13 @@ import '../../../core/navigation/auto_route.gr.dart';
 import '../../../domain/entity/finance/invoice_entity.dart';
 import '../../../domain/entity/finance/payment_entity.dart';
 import '../../../domain/entity/setting/bank_account_entity.dart';
-import '../../../domain/entity/table/tabel_colum.dart';
 import '../../bloc/member_finance/member_finance_bloc.dart';
 import '../../bloc/member_finance/member_finance_event.dart';
 import '../../bloc/member_finance/member_finance_state.dart';
+import '../../widget/core/appbar/app_topbar.dart';
 import '../../widget/core/card/summary_stat_card.dart';
-import '../../widget/core/table/table.dart';
+import '../../widget/core/table/app_data_table.dart';
+import '../../widget/core/wrapper/empty_state_widget.dart';
 
 @RoutePage()
 class MemberFinancePage extends StatefulWidget {
@@ -30,11 +33,28 @@ class MemberFinancePage extends StatefulWidget {
 }
 
 class _MemberFinancePageState extends State<MemberFinancePage> {
+  late final MemberFinanceBloc _bloc;
+
   final currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
     decimalDigits: 0,
   );
+
+  @override
+  void initState() {
+    super.initState();
+    _bloc = serviceLocator.get<MemberFinanceBloc>()
+      ..add(FetchMemberFinanceSummary())
+      ..add(FetchMemberInvoices())
+      ..add(FetchMemberPayments());
+  }
+
+  @override
+  void dispose() {
+    _bloc.close();
+    super.dispose();
+  }
 
   Future<void> _launchMidtrans(String token) async {
     final url = Uri.parse('https://app.sandbox.midtrans.com/snap/v2/vtweb/$token');
@@ -53,11 +73,8 @@ class _MemberFinancePageState extends State<MemberFinancePage> {
     final doneColor = isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone;
     final cancelColor = isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
 
-    return BlocProvider(
-      create: (context) => serviceLocator.get<MemberFinanceBloc>()
-        ..add(FetchMemberFinanceSummary())
-        ..add(FetchMemberInvoices())
-        ..add(FetchMemberPayments()),
+    return BlocProvider.value(
+      value: _bloc,
       child: BlocListener<MemberFinanceBloc, MemberFinanceState>(
         listener: (context, state) {
           if (state.status == MemberFinanceStatus.paymentSuccess) {
@@ -108,114 +125,301 @@ class _MemberFinancePageState extends State<MemberFinancePage> {
           }
         },
         child: Scaffold(
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.xxl),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          body: Column(
+            children: [
+              AppTopBar(
+                title: 'Keuangan Saya',
+                breadcrumb: 'Keuangan / Ringkasan',
+                action: Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'Keuangan Saya',
-                      style: Theme.of(context).textTheme.headlineLarge,
+                    BlocBuilder<MemberFinanceBloc, MemberFinanceState>(
+                      builder: (ctx, state) {
+                        final leases = state.summary?.activeLeases ?? [];
+                        if (leases.length != 1) return const SizedBox.shrink();
+                        return Padding(
+                          padding: const EdgeInsets.only(right: AppSpacing.sm),
+                          child: ElevatedButton.icon(
+                            onPressed: () => ctx.router.push(ExtendLeaseRoute(
+                              leaseId: leases.first.id,
+                              roomNumber: leases.first.roomNumber,
+                              currentEndDate: leases.first.endDate,
+                              isMidtransEnabled: state.isMidtransEnabled,
+                            )),
+                            icon: const Icon(Icons.add_circle_outline, size: 18),
+                            label: const Text('Perpanjang Sewa'),
+                          ),
+                        );
+                      },
                     ),
-                    _buildExtendButton(),
+                    IconButton(
+                      onPressed: () {
+                        _bloc.add(FetchMemberFinanceSummary());
+                        _bloc.add(FetchMemberInvoices());
+                        _bloc.add(FetchMemberPayments());
+                      },
+                      icon: const Icon(Icons.refresh_outlined),
+                      tooltip: 'Refresh',
+                    ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.xxl),
-                _buildSummaryCards(),
-                const SizedBox(height: AppSpacing.xxxl),
-                _buildInvoiceList(),
-                const SizedBox(height: AppSpacing.xxl),
-                _buildPaymentHistory(),
-              ],
-            ),
+              ),
+              Expanded(
+                child: BlocBuilder<MemberFinanceBloc, MemberFinanceState>(
+                  builder: (context, state) {
+                    final isInitialLoading = state.status == MemberFinanceStatus.initial ||
+                        (state.status == MemberFinanceStatus.loading && state.summary == null);
+
+                    if (isInitialLoading) return _buildSkeleton(isDark);
+
+                    if (state.status == MemberFinanceStatus.failure && state.summary == null) {
+                      return EmptyStateWidget(
+                        icon: Icons.error_outline,
+                        title: 'Gagal Memuat Data',
+                        subtitle: state.errorMessage ?? 'Terjadi kesalahan',
+                        action: ElevatedButton(
+                          onPressed: () {
+                            _bloc.add(FetchMemberFinanceSummary());
+                            _bloc.add(FetchMemberInvoices());
+                            _bloc.add(FetchMemberPayments());
+                          },
+                          child: const Text('Coba Lagi'),
+                        ),
+                      );
+                    }
+
+                    final now = DateTime.now();
+                    final overdueInvoices = state.invoices
+                        .where((i) => i.status.toLowerCase() == 'unpaid' && i.dueDate.isBefore(now))
+                        .toList();
+                    final overdueTotal = overdueInvoices.fold(0.0, (s, i) => s + i.amount);
+                    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+
+                    final isRefreshing = state.status == MemberFinanceStatus.loading && state.summary != null;
+                    return Stack(children: [
+                      SingleChildScrollView(
+                      padding: const EdgeInsets.all(AppSpacing.xxl),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (state.summary?.residentName != null) ...[
+                            Text(
+                              'Halo, ${state.summary!.residentName}',
+                              style: TextStyle(fontSize: 14, color: textSecondary),
+                            ).animate().fadeIn(duration: 300.ms),
+                            const SizedBox(height: AppSpacing.xxl),
+                          ],
+
+                          _buildSummaryCards(context, state, isDark)
+                              .animate()
+                              .fadeIn(duration: 300.ms)
+                              .slideY(begin: 0.1, end: 0, duration: 300.ms),
+
+                          if (overdueInvoices.isNotEmpty) ...[
+                            const SizedBox(height: AppSpacing.lg),
+                            _buildOverdueAlert(overdueInvoices.length, overdueTotal, isDark)
+                                .animate()
+                                .fadeIn(delay: 80.ms, duration: 300.ms),
+                          ],
+                          const SizedBox(height: AppSpacing.xxxl),
+
+                          _buildInvoiceList(context, state, isDark)
+                              .animate()
+                              .fadeIn(delay: 100.ms, duration: 300.ms),
+                          const SizedBox(height: AppSpacing.xxl),
+
+                          _buildPaymentHistory(context, state, isDark)
+                              .animate()
+                              .fadeIn(delay: 150.ms, duration: 300.ms),
+                        ],
+                      ),
+                      ),
+                      if (isRefreshing) const LinearProgressIndicator(),
+                    ]);
+                  },
+                ),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  // ── Summary section ───────────────────────────────────────────────────────
+  Widget _buildSkeleton(bool isDark) {
+    final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
+    final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
 
-  Widget _buildExtendButton() {
-    return BlocBuilder<MemberFinanceBloc, MemberFinanceState>(
-      builder: (context, state) {
-        final leases = state.summary?.activeLeases ?? [];
-        if (leases.length != 1) return const SizedBox.shrink();
-        return ElevatedButton.icon(
-          onPressed: () => context.router.push(ExtendLeaseRoute(
-            leaseId: leases.first.id,
-            roomNumber: leases.first.roomNumber,
-            currentEndDate: leases.first.endDate,
-            isMidtransEnabled: state.isMidtransEnabled,
-          )),
-          icon: const Icon(Icons.add_circle_outline, size: 18),
-          label: const Text('Perpanjang Sewa'),
+    shimmer(double height, {double? width, double radius = 8}) => Shimmer.fromColors(
+          baseColor: baseColor,
+          highlightColor: highlightColor,
+          child: Container(
+            height: height,
+            width: width,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(radius),
+            ),
+          ),
         );
-      },
+
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xxl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          shimmer(16, width: 160),
+          const SizedBox(height: AppSpacing.xxl),
+          Row(children: List.generate(3, (i) => Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(right: i < 2 ? AppSpacing.lg : 0),
+              child: shimmer(100, radius: AppSpacing.radiusLg),
+            ),
+          ))),
+          const SizedBox(height: AppSpacing.xxxl),
+          shimmer(220, radius: AppSpacing.radiusMd),
+          const SizedBox(height: AppSpacing.xxl),
+          shimmer(180, radius: AppSpacing.radiusMd),
+        ],
+      ),
     );
   }
 
-  Widget _buildSummaryCards() {
-    return BlocBuilder<MemberFinanceBloc, MemberFinanceState>(
-      builder: (context, state) {
-        final isDark = AppTheme.isDark(context);
-        final leases = state.summary?.activeLeases ?? [];
-        final unpaid = state.summary?.totalUnpaid ?? 0.0;
-        final unpaidCount = state.summary?.unpaidCount ?? 0;
+  // ── Table with inline empty state ─────────────────────────────────────────
 
-        final billIconColor = unpaid > 0
-            ? (isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting)
-            : (isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone);
-        final billIconBg = unpaid > 0
-            ? (isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg)
-            : (isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg);
-        final billTrend = unpaidCount > 0
-            ? '$unpaidCount tagihan belum dibayar'
-            : 'Semua tagihan lunas';
-        final billTrendColor = unpaid > 0
-            ? (isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting)
-            : (isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone);
+  Widget _buildTableWithEmptyState({
+    required bool isEmpty,
+    required List<DataColumn> columns,
+    required List<DataRow> rows,
+    required bool isDark,
+    required IconData emptyIcon,
+    required String emptyTitle,
+    String emptySubtitle = '',
+    double minRowHeight = 56,
+  }) {
+    if (!isEmpty) {
+      return AppDataTable(columns: columns, rows: rows, dataRowMinHeight: minRowHeight);
+    }
 
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            if (leases.isEmpty) ...[
-              Expanded(
-                child: SummaryStatCard(
-                  label: 'KAMAR AKTIF',
-                  value: '—',
-                  icon: Icons.home_outlined,
-                  iconColor: isDark ? AppColorsDark.textHint : AppColorsLight.textHint,
-                  iconBg: isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant,
-                  trend: 'Belum ada sewa berjalan',
-                  trendColor: isDark ? AppColorsDark.textHint : AppColorsLight.textHint,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.lg),
-            ] else
-              ...leases.expand(
-                (lease) => [
-                  Expanded(child: _buildLeaseCard(context, lease, state)),
-                  const SizedBox(width: AppSpacing.lg),
-                ],
-              ),
-            Expanded(
-              child: SummaryStatCard(
-                label: 'TOTAL TAGIHAN',
-                value: currencyFormat.format(unpaid),
-                icon: Icons.account_balance_wallet_outlined,
-                iconColor: billIconColor,
-                iconBg: billIconBg,
-                trend: billTrend,
-                trendColor: billTrendColor,
-              ),
+    final borderColor = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+    final surfaceColor = isDark ? AppColorsDark.surface : AppColorsLight.surface;
+    final surfaceVariantColor = isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant;
+    final textSecondaryColor = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final textHintColor = isDark ? AppColorsDark.textHint : AppColorsLight.textHint;
+
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: borderColor),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            height: 48,
+            color: surfaceVariantColor,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: columns.map((col) {
+                final label = col.label is Text
+                    ? ((col.label as Text).data ?? '').toUpperCase()
+                    : '';
+                return Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(label, style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: textSecondaryColor,
+                      letterSpacing: 0.5,
+                    )),
+                  ),
+                );
+              }).toList(),
             ),
-          ],
-        );
-      },
+          ),
+          Divider(height: 1, thickness: 1, color: borderColor),
+          Container(
+            color: surfaceColor,
+            padding: const EdgeInsets.symmetric(vertical: 40),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(emptyIcon, size: 36, color: textHintColor),
+                const SizedBox(height: 8),
+                Text(emptyTitle, style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: textSecondaryColor,
+                )),
+                if (emptySubtitle.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(emptySubtitle, style: TextStyle(fontSize: 12, color: textHintColor)),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Summary section ───────────────────────────────────────────────────────
+
+  Widget _buildSummaryCards(BuildContext context, MemberFinanceState state, bool isDark) {
+    final leases = state.summary?.activeLeases ?? [];
+    final unpaid = state.summary?.totalUnpaid ?? 0.0;
+    final unpaidCount = state.summary?.unpaidCount ?? 0;
+
+    final billIconColor = unpaid > 0
+        ? (isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting)
+        : (isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone);
+    final billIconBg = unpaid > 0
+        ? (isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg)
+        : (isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg);
+    final billTrend = unpaidCount > 0
+        ? '$unpaidCount tagihan belum dibayar'
+        : 'Semua tagihan lunas';
+    final billTrendColor = unpaid > 0
+        ? (isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting)
+        : (isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (leases.isEmpty) ...[
+          Expanded(
+            child: SummaryStatCard(
+              label: 'KAMAR AKTIF',
+              value: '—',
+              icon: Icons.home_outlined,
+              iconColor: isDark ? AppColorsDark.textHint : AppColorsLight.textHint,
+              iconBg: isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant,
+              trend: 'Belum ada sewa berjalan',
+              trendColor: isDark ? AppColorsDark.textHint : AppColorsLight.textHint,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.lg),
+        ] else
+          ...leases.expand(
+            (lease) => [
+              Expanded(child: _buildLeaseCard(context, lease, state)),
+              const SizedBox(width: AppSpacing.lg),
+            ],
+          ),
+        Expanded(
+          child: SummaryStatCard(
+            label: 'Tagihan Belum Dibayar',
+            value: unpaid > 0 ? currencyFormat.format(unpaid) : 'Lunas',
+            icon: Icons.account_balance_wallet_outlined,
+            iconColor: billIconColor,
+            iconBg: billIconBg,
+            trend: billTrend,
+            trendColor: billTrendColor,
+          ),
+        ),
+      ],
     );
   }
 
@@ -229,28 +433,23 @@ class _MemberFinancePageState extends State<MemberFinancePage> {
     final Color iconColor;
     final Color iconBg;
     final Color trendColor;
-    final String daysLabel;
 
     if (daysLeft < 0) {
       iconColor = isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
       iconBg = isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg;
       trendColor = iconColor;
-      daysLabel = 'Masa sewa telah berakhir';
     } else if (daysLeft <= 7) {
       iconColor = isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
       iconBg = isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg;
       trendColor = iconColor;
-      daysLabel = 'Berakhir $daysLeft hari lagi';
     } else if (daysLeft <= 30) {
       iconColor = isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
       iconBg = isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg;
       trendColor = iconColor;
-      daysLabel = 'Berakhir $daysLeft hari lagi';
     } else {
       iconColor = isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone;
       iconBg = isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg;
       trendColor = iconColor;
-      daysLabel = 'Sisa $daysLeft hari';
     }
 
     final surfaceColor = isDark ? AppColorsDark.surface : AppColorsLight.surface;
@@ -269,282 +468,353 @@ class _MemberFinancePageState extends State<MemberFinancePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Row 1: icon + kamar + perpanjang
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.sm),
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+              Row(mainAxisSize: MainAxisSize.min, children: [
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.sm),
+                  decoration: BoxDecoration(color: iconBg, borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+                  child: Icon(Icons.meeting_room_outlined, color: iconColor, size: 18),
                 ),
-                child: Icon(Icons.meeting_room_outlined, color: iconColor, size: 20),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'KAMAR NO. ${lease.roomNumber}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: textSecondaryColor,
-                      letterSpacing: 0.5,
-                    ),
+                const SizedBox(width: AppSpacing.sm),
+                Text(
+                  'Kamar ${lease.roomNumber}',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: textPrimaryColor),
+                ),
+              ]),
+              Row(mainAxisSize: MainAxisSize.min, children: [
+                // Rental type badge
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: iconColor.withValues(alpha: 0.35)),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  Tooltip(
-                    message: 'Perpanjang Sewa',
-                    child: GestureDetector(
-                      onTap: () => context.router.push(ExtendLeaseRoute(
-                        leaseId: lease.id as int,
-                        roomNumber: lease.roomNumber as String,
-                        currentEndDate: lease.endDate as DateTime,
-                        isMidtransEnabled: state.isMidtransEnabled,
-                      )),
-                      child: Icon(Icons.add_circle_outline, color: textSecondaryColor, size: 18),
-                    ),
+                  child: Text(
+                    _rentalTypeLabel(lease.rentalType as String),
+                    style: TextStyle(fontSize: 10, color: iconColor, fontWeight: FontWeight.w700, letterSpacing: 0.3),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(width: AppSpacing.sm),
+                Tooltip(
+                  message: 'Perpanjang Sewa',
+                  child: GestureDetector(
+                    onTap: () => context.router.push(ExtendLeaseRoute(
+                      leaseId: lease.id as int,
+                      roomNumber: lease.roomNumber as String,
+                      currentEndDate: lease.endDate as DateTime,
+                      isMidtransEnabled: state.isMidtransEnabled,
+                    )),
+                    child: Icon(Icons.add_circle_outline, color: textSecondaryColor, size: 18),
+                  ),
+                ),
+              ]),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
-          Text(
-            'AKTIF',
-            style: TextStyle(
-              fontSize: 26,
-              fontWeight: FontWeight.w700,
-              color: textPrimaryColor,
-            ),
+          // Days remaining — ditampilkan besar
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                daysLeft < 0 ? '${-daysLeft}' : '$daysLeft',
+                style: TextStyle(fontSize: 34, fontWeight: FontWeight.w800, color: trendColor, height: 1),
+              ),
+              const SizedBox(width: 5),
+              Text(
+                daysLeft < 0 ? 'hari terlambat' : 'hari tersisa',
+                style: TextStyle(fontSize: 13, color: trendColor, fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
           const SizedBox(height: AppSpacing.xs),
           Text(
-            'Berakhir: $endDateStr · $daysLabel',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: trendColor),
+            'Berakhir: $endDateStr',
+            style: TextStyle(fontSize: 12, color: textSecondaryColor),
           ),
         ],
       ),
     );
   }
 
-  // ── Invoice & Payment tables ──────────────────────────────────────────────
+  String _rentalTypeLabel(String type) {
+    switch (type.toLowerCase()) {
+      case 'monthly':  return 'Bulanan';
+      case 'semester': return 'Per Semester';
+      case 'annual':   return 'Tahunan';
+      default:         return type;
+    }
+  }
 
-  Widget _buildInvoiceList() {
-    return BlocBuilder<MemberFinanceBloc, MemberFinanceState>(
-      builder: (context, state) {
-        final isDark = AppTheme.isDark(context);
-        final overdueColor = isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
-        final waitingColor = isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
-        final payBtnColor = isDark ? AppColorsDark.primary : AppColorsLight.primary;
-        final now = DateTime.now();
+  // ── Overdue alert ─────────────────────────────────────────────────────────
 
-        // Invoice dengan payment failed tidak ditampilkan — user retry lewat tombol Perpanjang Sewa
-        final failedPaymentInvoiceIds = state.payments
-            .where((p) => p.status.toLowerCase() == 'failed')
-            .map((p) => p.invoiceId)
-            .toSet();
+  Widget _buildOverdueAlert(int count, double total, bool isDark) {
+    final color = isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
+    final bg = isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg;
+    final border = isDark ? AppColorsDark.statusCancelledBorder : AppColorsLight.statusCancelledBorder;
 
-        final unpaidInvoices = state.invoices
-            .where((i) =>
-                i.status.toLowerCase() == 'unpaid' &&
-                !failedPaymentInvoiceIds.contains(i.id))
-            .toList();
-
-        // Hanya Midtrans pending yang BELUM expired yang bisa dilanjutkan
-        final pendingMidtransMap = Map.fromEntries(
-          state.payments
-              .where((p) {
-                if (p.status.toLowerCase() != 'pending') return false;
-                if (p.paymentMethod.toLowerCase() != 'midtrans') return false;
-                final rawExpiry = p.paymentData?['expiry_time'] as String?;
-                final expiryDt = rawExpiry != null ? DateTime.tryParse(rawExpiry) : null;
-                return expiryDt == null || expiryDt.isAfter(now);
-              })
-              .map((p) => MapEntry(p.invoiceId, p)),
-        );
-
-        // Pending manual → tampilkan badge "Menunggu Verifikasi"
-        final pendingManualIds = state.payments
-            .where((p) =>
-                p.status.toLowerCase() == 'pending' &&
-                p.paymentMethod.toLowerCase() == 'manual')
-            .map((p) => p.invoiceId)
-            .toSet();
-
-        final textPrimary = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
-        final textHint = isDark ? AppColorsDark.textHint : AppColorsLight.textHint;
-
-        return TableCard(
-          title: 'Tagihan Belum Dibayar',
-          columns: const [
-            TableColumn(label: 'No. Invoice / Kamar', flex: 3),
-            TableColumn(label: 'Jenis', flex: 2),
-            TableColumn(label: 'Jatuh Tempo', flex: 3),
-            TableColumn(label: 'Jumlah', flex: 2),
-            TableColumn(label: 'Aksi', flex: 2, align: TextAlign.right),
-          ],
-          rows: unpaidInvoices.map((invoice) {
-            final pendingMidtrans = pendingMidtransMap[invoice.id];
-            final hasPendingManual = pendingManualIds.contains(invoice.id);
-            final hasPendingPayment = pendingMidtrans != null || hasPendingManual;
-            final isOverdue = invoice.dueDate.isBefore(now);
-            final daysOverdue = now.difference(invoice.dueDate).inDays;
-
-            // Midtrans expiry untuk ditampilkan di kolom jatuh tempo
-            final rawExpiry = pendingMidtrans?.paymentData?['expiry_time'] as String?;
-            final expiryDt = rawExpiry != null ? DateTime.tryParse(rawExpiry) : null;
-
-            return [
-              // Kolom No. Invoice / Kamar
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    invoice.invoiceNumber,
-                    style: TextStyle(fontWeight: FontWeight.w600, color: textPrimary),
-                  ),
-                  Text(
-                    invoice.roomNumber != null ? 'Kamar ${invoice.roomNumber}' : '—',
-                    style: TextStyle(fontSize: 11, color: textHint),
-                  ),
-                ],
-              ),
-              // Kolom Jenis
-              _buildInvoiceTypeBadge(context, invoice.invoiceNumber, invoiceType: invoice.type),
-              // Kolom Jatuh Tempo (invoice due date) atau Batas Bayar Midtrans
-              if (pendingMidtrans != null && expiryDt != null)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.timer_outlined, size: 11, color: waitingColor),
-                        const SizedBox(width: 3),
-                        Text(
-                          'Batas bayar',
-                          style: TextStyle(fontSize: 11, color: waitingColor),
-                        ),
-                      ],
-                    ),
-                    Text(
-                      DateFormat('dd MMM yyyy, HH:mm').format(expiryDt),
-                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: waitingColor),
-                    ),
-                  ],
-                )
-              else
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      DateFormat('dd MMM yyyy').format(invoice.dueDate),
-                      style: TextStyle(
-                        color: isOverdue && !hasPendingPayment ? overdueColor : null,
-                        fontWeight: isOverdue && !hasPendingPayment ? FontWeight.w600 : null,
-                      ),
-                    ),
-                    Text(
-                      DateFormat('HH:mm').format(invoice.dueDate),
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: isOverdue && !hasPendingPayment ? overdueColor : textHint,
-                        fontWeight: isOverdue && !hasPendingPayment ? FontWeight.w600 : null,
-                      ),
-                    ),
-                    if (isOverdue && !hasPendingPayment)
-                      Text(
-                        'Terlambat $daysOverdue hari',
-                        style: TextStyle(fontSize: 11, color: overdueColor),
-                      ),
-                  ],
-                ),
-              // Kolom Jumlah
-              Text(currencyFormat.format(invoice.amount), style: const TextStyle(fontWeight: FontWeight.w600)),
-              // Kolom Aksi
-              Align(
-                alignment: Alignment.centerRight,
-                child: pendingMidtrans != null
-                    ? _buildResumeMidtransButton(context, invoice, pendingMidtrans)
-                    : hasPendingManual
-                        ? _buildPaymentStatusBadge(context, 'pending')
-                        : ElevatedButton(
-                            onPressed: () => context.router.push(InvoicePaymentRoute(
-                              invoiceId: invoice.id,
-                              invoiceNumber: invoice.invoiceNumber,
-                              amount: invoice.amount,
-                              roomNumber: invoice.roomNumber,
-                              invoiceType: invoice.type,
-                              dueDate: invoice.dueDate,
-                            )),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: payBtnColor,
-                              foregroundColor: Colors.white,
-                              elevation: 0,
-                              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
-                              minimumSize: const Size(0, 36),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
-                              textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-                            ),
-                            child: const Text('Bayar'),
-                          ),
-              ),
-            ];
-          }).toList(),
-          emptyMessage: 'Semua tagihan Anda sudah lunas. Luar biasa!',
-        );
-      },
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.md),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        border: Border.all(color: border),
+      ),
+      child: Row(children: [
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.sm),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.15),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(Icons.warning_amber_rounded, color: color, size: 20),
+        ),
+        const SizedBox(width: AppSpacing.md),
+        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(
+            '$count Tagihan Telah Jatuh Tempo',
+            style: TextStyle(fontWeight: FontWeight.w700, color: color, fontSize: 14),
+          ),
+          Text(
+            'Total: ${currencyFormat.format(total)} — Harap segera lakukan pembayaran',
+            style: TextStyle(fontSize: 12, color: color.withValues(alpha: 0.85)),
+          ),
+        ])),
+      ]),
     );
   }
 
-  Widget _buildPaymentHistory() {
-    return BlocBuilder<MemberFinanceBloc, MemberFinanceState>(
-      builder: (context, state) {
-        final isDark = AppTheme.isDark(context);
-        final borderColor = isDark ? AppColorsDark.borderMedium : AppColorsLight.borderMedium;
-        final textSecondary = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+  // ── Invoice & Payment tables ──────────────────────────────────────────────
 
-        final textPrimary = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
-        final textHint = isDark ? AppColorsDark.textHint : AppColorsLight.textHint;
+  Widget _buildInvoiceList(BuildContext context, MemberFinanceState state, bool isDark) {
+    final overdueColor = isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled;
+    final waitingColor = isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
+    final payBtnColor = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+    final primaryColor = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+    final textHint = isDark ? AppColorsDark.textHint : AppColorsLight.textHint;
+    final now = DateTime.now();
 
-        return TableCard(
-          title: 'Riwayat Pembayaran',
+    final failedPaymentInvoiceIds = state.payments
+        .where((p) => p.status.toLowerCase() == 'failed')
+        .map((p) => p.invoiceId)
+        .toSet();
+
+    final unpaidInvoices = state.invoices
+        .where((i) =>
+            i.status.toLowerCase() == 'unpaid' &&
+            !failedPaymentInvoiceIds.contains(i.id))
+        .toList();
+
+    final pendingMidtransMap = Map.fromEntries(
+      state.payments
+          .where((p) {
+            if (p.status.toLowerCase() != 'pending') return false;
+            if (p.paymentMethod.toLowerCase() != 'midtrans') return false;
+            final rawExpiry = p.paymentData?['expiry_time'] as String?;
+            final expiryDt = rawExpiry != null ? DateTime.tryParse(rawExpiry) : null;
+            return expiryDt == null || expiryDt.isAfter(now);
+          })
+          .map((p) => MapEntry(p.invoiceId, p)),
+    );
+
+    final pendingManualIds = state.payments
+        .where((p) =>
+            p.status.toLowerCase() == 'pending' &&
+            p.paymentMethod.toLowerCase() == 'manual')
+        .map((p) => p.invoiceId)
+        .toSet();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section heading
+        Row(children: [
+          Container(
+            width: 3, height: 18,
+            decoration: BoxDecoration(color: primaryColor, borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            unpaidInvoices.isEmpty
+                ? 'Tagihan Belum Dibayar'
+                : 'Tagihan Belum Dibayar (${unpaidInvoices.length})',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: textPrimary),
+          ),
+        ]),
+        const SizedBox(height: AppSpacing.md),
+
+        _buildTableWithEmptyState(
+          isEmpty: unpaidInvoices.isEmpty,
+          isDark: isDark,
+          emptyIcon: Icons.check_circle_outline,
+          emptyTitle: 'Semua Tagihan Lunas',
+          emptySubtitle: 'Tidak ada tagihan yang perlu dibayar saat ini.',
+          minRowHeight: 64,
           columns: const [
-            TableColumn(label: 'No. Invoice', flex: 3),
-            TableColumn(label: 'Kamar', flex: 2),
-            TableColumn(label: 'Jumlah', flex: 2),
-            TableColumn(label: 'Status', flex: 2),
-            TableColumn(label: 'Aksi', flex: 1, align: TextAlign.right),
+            DataColumn(label: Text('No. Invoice / Kamar')),
+            DataColumn(label: Text('Jenis')),
+            DataColumn(label: Text('Jatuh Tempo')),
+            DataColumn(label: Text('Jumlah')),
+            DataColumn(label: Text('Aksi')),
+          ],
+          rows: unpaidInvoices.map((invoice) {
+              final pendingMidtrans = pendingMidtransMap[invoice.id];
+              final hasPendingManual = pendingManualIds.contains(invoice.id);
+              final hasPendingPayment = pendingMidtrans != null || hasPendingManual;
+              final isOverdue = invoice.dueDate.isBefore(now);
+              final daysOverdue = now.difference(invoice.dueDate).inDays;
+              final rawExpiry = pendingMidtrans?.paymentData?['expiry_time'] as String?;
+              final expiryDt = rawExpiry != null ? DateTime.tryParse(rawExpiry) : null;
+
+              return DataRow(cells: [
+                DataCell(Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(invoice.invoiceNumber, style: TextStyle(fontWeight: FontWeight.w600, color: textPrimary)),
+                    Text(
+                      invoice.roomNumber != null ? 'Kamar ${invoice.roomNumber}' : '—',
+                      style: TextStyle(fontSize: 11, color: textHint),
+                    ),
+                  ],
+                )),
+                DataCell(_buildInvoiceTypeBadge(context, invoice.invoiceNumber, invoiceType: invoice.type)),
+                DataCell(
+                  pendingMidtrans != null && expiryDt != null
+                      ? Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Row(mainAxisSize: MainAxisSize.min, children: [
+                              Icon(Icons.timer_outlined, size: 11, color: waitingColor),
+                              const SizedBox(width: 3),
+                              Text('Batas bayar', style: TextStyle(fontSize: 11, color: waitingColor)),
+                            ]),
+                            Text(
+                              DateFormat('dd MMM yyyy, HH:mm').format(expiryDt),
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: waitingColor),
+                            ),
+                          ],
+                        )
+                      : Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              DateFormat('dd MMM yyyy').format(invoice.dueDate),
+                              style: TextStyle(
+                                color: isOverdue && !hasPendingPayment ? overdueColor : null,
+                                fontWeight: isOverdue && !hasPendingPayment ? FontWeight.w600 : null,
+                              ),
+                            ),
+                            Text(
+                              DateFormat('HH:mm').format(invoice.dueDate),
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: isOverdue && !hasPendingPayment ? overdueColor : textHint,
+                              ),
+                            ),
+                            if (isOverdue && !hasPendingPayment)
+                              Text('Terlambat $daysOverdue hari', style: TextStyle(fontSize: 11, color: overdueColor)),
+                          ],
+                        ),
+                ),
+                DataCell(Text(currencyFormat.format(invoice.amount), style: const TextStyle(fontWeight: FontWeight.w600))),
+                DataCell(
+                  pendingMidtrans != null
+                      ? _buildResumeMidtransButton(context, invoice, pendingMidtrans)
+                      : hasPendingManual
+                          ? _buildPaymentStatusBadge(context, 'pending')
+                          : ElevatedButton(
+                              onPressed: () => context.router.push(InvoicePaymentRoute(
+                                invoiceId: invoice.id,
+                                invoiceNumber: invoice.invoiceNumber,
+                                amount: invoice.amount,
+                                roomNumber: invoice.roomNumber,
+                                invoiceType: invoice.type,
+                                dueDate: invoice.dueDate,
+                              )),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: payBtnColor,
+                                foregroundColor: Colors.white,
+                                elevation: 0,
+                                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
+                                minimumSize: const Size(0, 36),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusMd)),
+                                textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                              ),
+                              child: const Text('Bayar'),
+                            ),
+                ),
+              ]);
+            }).toList(),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildPaymentHistory(BuildContext context, MemberFinanceState state, bool isDark) {
+    final borderColor = isDark ? AppColorsDark.borderMedium : AppColorsLight.borderMedium;
+    final textSecondary = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final textPrimary = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+    final textHint = isDark ? AppColorsDark.textHint : AppColorsLight.textHint;
+    final primaryColor = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section heading
+        Row(children: [
+          Container(
+            width: 3, height: 18,
+            decoration: BoxDecoration(color: primaryColor, borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            state.payments.isEmpty
+                ? 'Riwayat Pembayaran'
+                : 'Riwayat Pembayaran (${state.payments.length})',
+            style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: textPrimary),
+          ),
+        ]),
+        const SizedBox(height: AppSpacing.md),
+
+        _buildTableWithEmptyState(
+          isEmpty: state.payments.isEmpty,
+          isDark: isDark,
+          emptyIcon: Icons.history_outlined,
+          emptyTitle: 'Belum Ada Riwayat',
+          emptySubtitle: 'Riwayat pembayaran Anda akan muncul di sini.',
+          minRowHeight: 60,
+          columns: const [
+            DataColumn(label: Text('No. Invoice')),
+            DataColumn(label: Text('Kamar')),
+            DataColumn(label: Text('Jumlah')),
+            DataColumn(label: Text('Status')),
+            DataColumn(label: Text('Aksi')),
           ],
           rows: state.payments.map((payment) {
-            final dateStr = DateFormat('dd MMM yyyy').format(DateTime.parse(payment.paymentDate));
-            final methodLabel = payment.paymentMethod == 'midtrans' ? 'Midtrans' : 'Transfer Manual';
+              final dateStr = DateFormat('dd MMM yyyy').format(DateTime.parse(payment.paymentDate));
+              final methodLabel = payment.paymentMethod == 'midtrans' ? 'Midtrans' : 'Transfer Manual';
 
-            return [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    payment.invoiceNumber ?? '—',
-                    style: TextStyle(fontWeight: FontWeight.w600, color: textPrimary),
-                  ),
-                  Text(
-                    '$dateStr · $methodLabel',
-                    style: TextStyle(fontSize: 11, color: textHint),
-                  ),
-                ],
-              ),
-              Text(payment.roomNumber ?? '—'),
-              Text(currencyFormat.format(payment.amount)),
-              _buildPaymentStatusBadge(context, payment.status),
-              Align(
-                alignment: Alignment.centerRight,
-                child: OutlinedButton(
+              return DataRow(cells: [
+                DataCell(Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(payment.invoiceNumber ?? '—', style: TextStyle(fontWeight: FontWeight.w600, color: textPrimary)),
+                    Text('$dateStr · $methodLabel', style: TextStyle(fontSize: 11, color: textHint)),
+                  ],
+                )),
+                DataCell(Text(payment.roomNumber ?? '—')),
+                DataCell(Text(currencyFormat.format(payment.amount), style: const TextStyle(fontWeight: FontWeight.w600))),
+                DataCell(_buildPaymentStatusBadge(context, payment.status)),
+                DataCell(OutlinedButton(
                   onPressed: () => _showPaymentDetailDialog(context, payment),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg, vertical: AppSpacing.sm),
@@ -555,13 +825,11 @@ class _MemberFinancePageState extends State<MemberFinancePage> {
                     textStyle: const TextStyle(fontSize: 13),
                   ),
                   child: const Text('Detail'),
-                ),
-              ),
-            ];
-          }).toList(),
-          emptyMessage: 'Belum ada riwayat pembayaran.',
-        );
-      },
+                )),
+              ]);
+            }).toList(),
+          ),
+      ],
     );
   }
 

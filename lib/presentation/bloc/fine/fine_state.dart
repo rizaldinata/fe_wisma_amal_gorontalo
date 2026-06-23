@@ -11,6 +11,13 @@ class FineInitial extends FineState {}
 
 class FineLoading extends FineState {}
 
+class FineRefreshing extends FineState {
+  final List<FineEntity> currentFines;
+  const FineRefreshing(this.currentFines);
+  @override
+  List<Object?> get props => [currentFines];
+}
+
 class FineLoaded extends FineState {
   final List<FineEntity> fines;
   const FineLoaded(this.fines);

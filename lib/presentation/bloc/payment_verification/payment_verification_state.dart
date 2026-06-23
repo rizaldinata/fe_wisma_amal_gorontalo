@@ -9,6 +9,13 @@ abstract class PaymentVerificationState extends Equatable {
 class PaymentVerificationInitial extends PaymentVerificationState {}
 class PaymentVerificationLoading extends PaymentVerificationState {}
 
+class PaymentVerificationRefreshing extends PaymentVerificationState {
+  final List<PaymentEntity> currentPayments;
+  PaymentVerificationRefreshing(this.currentPayments);
+  @override
+  List<Object?> get props => [currentPayments];
+}
+
 class PaymentVerificationLoaded extends PaymentVerificationState {
   final List<PaymentEntity> payments;
 

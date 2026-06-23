@@ -19,7 +19,8 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     required this.deleteExpenseUseCase,
   }) : super(ExpenseInitial()) {
     on<FetchExpenses>((event, emit) async {
-      emit(ExpenseLoading());
+      final current = state is ExpenseLoaded ? (state as ExpenseLoaded).expenses : null;
+      emit(current != null ? ExpenseRefreshing(current) : ExpenseLoading());
       try {
         final expenses = await getExpensesUseCase.execute();
         emit(ExpenseLoaded(expenses));

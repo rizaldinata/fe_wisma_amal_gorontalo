@@ -23,7 +23,12 @@ class FineCubit extends Cubit<FineState> {
         super(FineInitial());
 
   Future<void> loadFines({String? status}) async {
-    emit(FineLoading());
+    final current = state is FineLoaded
+        ? (state as FineLoaded).fines
+        : state is FineOperationSuccess
+            ? (state as FineOperationSuccess).fines
+            : null;
+    emit(current != null ? FineRefreshing(current) : FineLoading());
     try {
       final fines = await _getAllFines.execute(status: status);
       emit(FineLoaded(fines));

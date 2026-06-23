@@ -6,6 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
+import 'package:frontend/main.dart';
+
 import '../../../core/dependency_injection/dependency_injection.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/theme/app_spacing.dart';
@@ -110,7 +112,11 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
     _expenseBloc = serviceLocator.get<ExpenseBloc>();
     _fixedExpenseBloc = serviceLocator.get<FixedExpenseBloc>();
     _expenseBloc.add(FetchExpenses());
-    _fixedExpenseBloc.add(FetchFixedExpenses());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && context.isFeatureEnabled('finance_fixed_expense')) {
+        _fixedExpenseBloc.add(FetchFixedExpenses());
+      }
+    });
   }
 
   @override
@@ -642,15 +648,17 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
               Expanded(
                 child: BlocBuilder<FixedExpenseBloc, FixedExpenseState>(
                   builder: (context, fixedState) {
+                    final isFixedEnabled = context.isFeatureEnabled('finance_fixed_expense');
                     return BlocBuilder<ExpenseBloc, ExpenseState>(
                       builder: (context, expenseState) {
-                        final isLoading =
-                            fixedState is FixedExpenseLoading ||
-                            fixedState is FixedExpenseInitial ||
+                        final isFirstLoad =
+                            (isFixedEnabled && (fixedState is FixedExpenseLoading ||
+                            fixedState is FixedExpenseInitial)) ||
                             expenseState is ExpenseLoading ||
                             expenseState is ExpenseInitial;
+                        final isRefreshing = expenseState is ExpenseRefreshing;
 
-                        if (isLoading) return _buildSkeleton(isDark);
+                        if (isFirstLoad) return _buildSkeleton(isDark);
 
                         if (expenseState is ExpenseError) {
                           return EmptyStateWidget(
@@ -660,24 +668,29 @@ class _ExpenseListPageState extends State<ExpenseListPage> {
                             action: ElevatedButton(
                               onPressed: () {
                                 _expenseBloc.add(FetchExpenses());
-                                _fixedExpenseBloc.add(FetchFixedExpenses());
+                                if (isFixedEnabled) _fixedExpenseBloc.add(FetchFixedExpenses());
                               },
                               child: const Text('Coba Lagi'),
                             ),
                           );
                         }
 
-                        final fixedEntries = fixedState is FixedExpenseLoaded
+                        final fixedEntries = (isFixedEnabled && fixedState is FixedExpenseLoaded)
                             ? fixedState.entries
                             : <FixedExpenseEntryEntity>[];
-                        final fixedStatus = fixedState is FixedExpenseLoaded
+                        final fixedStatus = (isFixedEnabled && fixedState is FixedExpenseLoaded)
                             ? fixedState.status
                             : null;
                         final expenses = expenseState is ExpenseLoaded
                             ? expenseState.expenses
-                            : <ExpenseEntity>[];
+                            : expenseState is ExpenseRefreshing
+                                ? expenseState.currentExpenses
+                                : <ExpenseEntity>[];
 
-                        return _buildContent(fixedEntries, fixedStatus, expenses, isDark);
+                        return Stack(children: [
+                          _buildContent(fixedEntries, fixedStatus, expenses, isDark),
+                          if (isRefreshing) const LinearProgressIndicator(),
+                        ]);
                       },
                     );
                   },

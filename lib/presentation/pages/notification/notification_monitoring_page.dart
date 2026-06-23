@@ -104,7 +104,10 @@ class _NotificationMonitoringPageState extends State<NotificationMonitoringPage>
               Expanded(
                 child: isLoading && state.logs.isEmpty
                     ? _buildSkeleton(isDark)
-                    : _buildContent(state, isDark),
+                    : Stack(children: [
+                        _buildContent(state, isDark),
+                        if (isLoading) const LinearProgressIndicator(),
+                      ]),
               ),
             ]),
           );
