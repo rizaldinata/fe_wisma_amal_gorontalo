@@ -15,6 +15,7 @@ import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend/presentation/bloc/app/app_bloc.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/botton/icon_button.dart';
+import 'package:frontend/domain/usecase/setting/get_public_settings_usecase.dart';
 
 class SidebarItem {
   final String label;
@@ -55,6 +56,24 @@ class CustomSidebar extends StatefulWidget {
 class _CustomSidebarState extends State<CustomSidebar> {
   final Set<String> _expanded = {};
   String? _hoveredItem;
+  String _wismaName = 'Wisma Amal';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final settings = await serviceLocator.get<GetPublicSettingsUseCase>().execute();
+      if (mounted) {
+        setState(() {
+          _wismaName = settings.getString('wisma_name') ?? 'Wisma Amal';
+        });
+      }
+    } catch (_) {}
+  }
 
   void _toggleExpanded(String id) {
     setState(() {
@@ -154,7 +173,7 @@ class _CustomSidebarState extends State<CustomSidebar> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Wisma Amal',
+                                  _wismaName,
                                   style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(
                                         fontWeight: FontWeight.w700,

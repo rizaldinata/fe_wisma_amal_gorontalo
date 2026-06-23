@@ -469,7 +469,7 @@ Future<void> initializeBloc() async {
       repository: serviceLocator.get<FeatureToggleRepository>(),
     ),
   );
-  serviceLocator.registerLazySingleton<DashboardBloc>(
+  serviceLocator.registerFactory<DashboardBloc>(
     () => DashboardBloc(repository: serviceLocator.get<DashboardRepository>()),
   );
 }

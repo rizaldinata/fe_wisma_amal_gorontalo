@@ -36,6 +36,9 @@ class _SettingPageState extends State<SettingPage> {
   late MidtransFeeCubit _midtransFeeCubit;
 
   final _wismaNameController = TextEditingController();
+  final _wismaAddressController = TextEditingController();
+  final _wismaPhoneController = TextEditingController();
+  final _wismaOperationalHoursController = TextEditingController();
   bool _featureDailyRental = false;
   bool _featureWhatsappReceipt = false;
   bool _featureWhatsappPdfLink = false;
@@ -71,6 +74,9 @@ class _SettingPageState extends State<SettingPage> {
 
   void _populateData(Map<String, dynamic> settings) {
     _wismaNameController.text = settings['wisma_name']?.toString() ?? 'Wisma Amal Gorontalo';
+    _wismaAddressController.text = settings['wisma_address']?.toString() ?? 'Jl. Wisma Amal No. 1, Gorontalo';
+    _wismaPhoneController.text = settings['wisma_phone']?.toString() ?? '0811-4300-XXX';
+    _wismaOperationalHoursController.text = settings['wisma_operational_hours']?.toString() ?? 'Senin - Sabtu, 08.00 - 17.00 WITA';
     _featureDailyRental         = settings['feature_daily_rental'] == true || settings['feature_daily_rental']?.toString() == 'true';
     _featureWhatsappReceipt   = settings['feature_whatsapp_receipt'] == true || settings['feature_whatsapp_receipt']?.toString() == 'true';
     _featureWhatsappPdfLink   = settings['feature_whatsapp_pdf_link'] == true || settings['feature_whatsapp_pdf_link']?.toString() == 'true';
@@ -108,6 +114,9 @@ class _SettingPageState extends State<SettingPage> {
     }
     final payload = {
       'wisma_name': _wismaNameController.text.trim(),
+      'wisma_address': _wismaAddressController.text.trim(),
+      'wisma_phone': _wismaPhoneController.text.trim(),
+      'wisma_operational_hours': _wismaOperationalHoursController.text.trim(),
       'feature_daily_rental': _featureDailyRental,
       'feature_whatsapp_receipt': _featureWhatsappReceipt,
       'feature_whatsapp_pdf_link': _featureWhatsappPdfLink,
@@ -220,7 +229,7 @@ class _SettingPageState extends State<SettingPage> {
                           accentColor: isDark ? AppColorsDark.primary : AppColorsLight.primary,
                           title: 'Informasi Wisma',
                           subtitle: 'Data identitas wisma yang ditampilkan pada invoice dan notifikasi.',
-                          child: _buildWismaNameField(isDark),
+                          child: _buildWismaInfoFields(isDark),
                         ),
                         const SizedBox(height: AppSpacing.xl),
 
@@ -290,40 +299,55 @@ class _SettingPageState extends State<SettingPage> {
     );
   }
 
-  Widget _buildWismaNameField(bool isDark) {
+  Widget _buildWismaInfoFields(bool isDark) {
     final borderColor = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
     final borderMedColor = isDark ? AppColorsDark.borderMedium : AppColorsLight.borderMedium;
     final textSecColor = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
 
+    Widget _buildField(String label, String hint, IconData icon, TextEditingController controller) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textSecColor),
+          ),
+          const SizedBox(height: AppSpacing.sm),
+          TextField(
+            controller: controller,
+            onChanged: (_) => _markChanged(),
+            decoration: InputDecoration(
+              hintText: hint,
+              prefixIcon: Icon(icon, size: 20),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                borderSide: BorderSide(color: borderColor),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                borderSide: BorderSide(color: borderColor),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                borderSide: BorderSide(color: borderMedColor),
+              ),
+              contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Nama Wisma / Kos',
-          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: textSecColor),
-        ),
-        const SizedBox(height: AppSpacing.sm),
-        TextField(
-          controller: _wismaNameController,
-          onChanged: (_) => _markChanged(),
-          decoration: InputDecoration(
-            hintText: 'Contoh: Wisma Amal Gorontalo',
-            prefixIcon: const Icon(Icons.apartment_outlined, size: 20),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              borderSide: BorderSide(color: borderColor),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              borderSide: BorderSide(color: borderColor),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-              borderSide: BorderSide(color: borderMedColor),
-            ),
-            contentPadding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.md),
-          ),
-        ),
+        _buildField('Nama Wisma / Kos', 'Contoh: Wisma Amal Gorontalo', Icons.apartment_outlined, _wismaNameController),
+        const SizedBox(height: AppSpacing.md),
+        _buildField('Alamat Wisma', 'Contoh: Jl. Wisma Amal No. 1, Gorontalo', Icons.location_on_outlined, _wismaAddressController),
+        const SizedBox(height: AppSpacing.md),
+        _buildField('Kontak / No. Telepon', 'Contoh: 0811-4300-XXX', Icons.phone_outlined, _wismaPhoneController),
+        const SizedBox(height: AppSpacing.md),
+        _buildField('Jam Operasional', 'Contoh: Senin - Sabtu, 08.00 - 17.00 WITA', Icons.access_time_outlined, _wismaOperationalHoursController),
       ],
     );
   }
