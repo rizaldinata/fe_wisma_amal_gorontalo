@@ -7,7 +7,11 @@ abstract class ResidentRepository {
   Future<ResidentResponse> getAdminResidents({
     int page = 1,
     int perPage = 10,
+    String? search,
+    String? status,
+    String? payment,
   });
+
   Future<ResidentDetailEntity> getAdminResidentDetail(String id);
   Future<ResidentProfileEntity> getProfile();
   Future<ResidentProfileEntity> completeProfile({

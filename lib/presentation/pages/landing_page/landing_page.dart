@@ -1,8 +1,15 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
-import 'package:frontend/presentation/widget/core/botton/button.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/core/theme/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+Color _shade(Color c, [double t = 0.12]) =>
+    Color.alphaBlend(Colors.black.withValues(alpha: t), c);
 
 @RoutePage()
 class LandingPage extends StatefulWidget {
@@ -17,6 +24,7 @@ class _LandingPageState extends State<LandingPage> {
   final GlobalKey _facilityKey = GlobalKey();
   final GlobalKey _roomKey = GlobalKey();
   final GlobalKey _testimonialKey = GlobalKey();
+  bool _isDarkMode = false;
 
   @override
   void dispose() {
@@ -25,279 +33,546 @@ class _LandingPageState extends State<LandingPage> {
   }
 
   Future<void> _scrollTo(GlobalKey key) async {
-    final context = key.currentContext;
-    if (context == null) {
-      return;
-    }
-
+    final ctx = key.currentContext;
+    if (ctx == null) return;
     await Scrollable.ensureVisible(
-      context,
+      ctx,
       duration: const Duration(milliseconds: 450),
       curve: Curves.easeInOutCubic,
       alignment: 0.08,
     );
   }
 
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: LandingPalette.surface,
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final isWide = constraints.maxWidth >= 1000;
+  void _toggleTheme() => setState(() => _isDarkMode = !_isDarkMode);
 
-          return SingleChildScrollView(
-            controller: _scrollController,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _HeroSection(
-                  isWide: isWide,
-                  onFacilityTap: () => _scrollTo(_facilityKey),
-                  onRoomTap: () => _scrollTo(_roomKey),
-                  onTestimonialTap: () => _scrollTo(_testimonialKey),
-                ),
-                const _ValueSection(),
-                _RoomSection(key: _roomKey),
-                _FeatureSection(key: _facilityKey, isWide: isWide),
-                _TestimonialSection(key: _testimonialKey),
-                const _FooterSection(),
-              ],
-            ),
-          );
-        },
-      ),
+  @override
+  Widget build(BuildContext context) {
+    final themeData = _isDarkMode ? AppTheme.darkTheme : AppTheme.lightTheme;
+
+    return Theme(
+      data: themeData,
+      child: Builder(builder: (context) {
+        final isDark = _isDarkMode;
+        return Scaffold(
+          backgroundColor:
+              isDark ? AppColorsDark.background : AppColorsLight.background,
+          body: LayoutBuilder(builder: (context, box) {
+            final isWide = box.maxWidth >= 1000;
+            return SingleChildScrollView(
+              controller: _scrollController,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _HeroSection(
+                    isWide: isWide,
+                    isDark: isDark,
+                    onFacilityTap: () => _scrollTo(_facilityKey),
+                    onRoomTap: () => _scrollTo(_roomKey),
+                    onTestimonialTap: () => _scrollTo(_testimonialKey),
+                    onToggleTheme: _toggleTheme,
+                  ),
+                  _StatsStrip(isDark: isDark),
+                  _ValueSection(isDark: isDark),
+                  _RoomSection(key: _roomKey, isDark: isDark),
+                  _FeatureSection(
+                      key: _facilityKey, isWide: isWide, isDark: isDark),
+                  _TestimonialSection(key: _testimonialKey, isDark: isDark),
+                  _FooterSection(isDark: isDark),
+                ],
+              ),
+            );
+          }),
+        );
+      }),
     );
   }
 }
 
 void _goToReservation(BuildContext context) {
   context.router.navigate(
-    const AppLayoutRoute(
-      children: [RoomRoute()],
-    ),
+    const AppLayoutRoute(children: [RoomRoute()]),
   );
 }
 
-class LandingPalette {
-  static const Color surface = Color(0xFFF6F7F3);
-  static const Color primary = Color(0xFF2E7D32);
-  static const Color primaryDark = Color(0xFF1B5E20);
-  static const Color accent = Color(0xFF9CCC65);
-  static const Color ink = Color(0xFF1F2A1F);
-  static const Color muted = Color(0xFF5C6A5E);
-  static const Color card = Color(0xFFFFFFFF);
-  static const Color border = Color(0xFFE2E8E2);
-  static const Color heroGlow = Color(0xFFE9F2DF);
-  static const Color banner = Color(0xFF0F2C1A);
+// ─── Reusable Widgets ────────────────────────────────────────────────────────
+
+class _GradientPillButton extends StatefulWidget {
+  const _GradientPillButton({
+    required this.label,
+    required this.onPressed,
+    this.icon,
+  });
+  final String label;
+  final VoidCallback onPressed;
+  final IconData? icon;
+
+  @override
+  State<_GradientPillButton> createState() => _GradientPillButtonState();
 }
+
+class _GradientPillButtonState extends State<_GradientPillButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+    final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onPressed,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          transform: Matrix4.translationValues(0.0, _hovered ? -2.0 : 0.0, 0.0),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
+          decoration: BoxDecoration(
+            color: primary,
+            borderRadius: BorderRadius.circular(50),
+            boxShadow: [
+              BoxShadow(
+                color: primary.withValues(alpha: _hovered ? 0.45 : 0.25),
+                blurRadius: _hovered ? 24 : 12,
+                offset: Offset(0, _hovered ? 8 : 4),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.icon != null) ...[
+                Icon(widget.icon, color: Colors.white, size: 20),
+                const SizedBox(width: 10),
+              ],
+              Text(
+                widget.label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OutlinePillButton extends StatefulWidget {
+  const _OutlinePillButton({
+    required this.label,
+    required this.onPressed,
+    this.icon,
+  });
+  final String label;
+  final VoidCallback onPressed;
+  final IconData? icon;
+
+  @override
+  State<_OutlinePillButton> createState() => _OutlinePillButtonState();
+}
+
+class _OutlinePillButtonState extends State<_OutlinePillButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+    final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+    final border = isDark ? AppColorsDark.borderMedium : AppColorsLight.borderMedium;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onPressed,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOutCubic,
+          transform: Matrix4.translationValues(0.0, _hovered ? -2.0 : 0.0, 0.0),
+          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 15),
+          decoration: BoxDecoration(
+            color: _hovered ? primary.withValues(alpha: 0.06) : Colors.transparent,
+            borderRadius: BorderRadius.circular(50),
+            border: Border.all(
+              color: _hovered ? primary : border,
+              width: 1.5,
+            ),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.icon != null) ...[
+                Icon(widget.icon, color: primary, size: 20),
+                const SizedBox(width: 10),
+              ],
+              Text(
+                widget.label,
+                style: TextStyle(
+                  color: primary,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 15,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HoverLiftCard extends StatefulWidget {
+  const _HoverLiftCard({required this.child, this.color});
+  final Widget child;
+  final Color? color;
+
+  @override
+  State<_HoverLiftCard> createState() => _HoverLiftCardState();
+}
+
+class _HoverLiftCardState extends State<_HoverLiftCard> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+    final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+    final surface = widget.color ??
+        (isDark ? AppColorsDark.surface : AppColorsLight.surface);
+    final border = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      cursor: MouseCursor.defer,
+      child: GestureDetector(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 280),
+          curve: Curves.easeOutCubic,
+          transform: Matrix4.translationValues(0.0, _hovered ? -6.0 : 0.0, 0.0),
+          decoration: BoxDecoration(
+            color: surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: _hovered ? primary.withValues(alpha: 0.35) : border,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: _hovered
+                    ? primary.withValues(alpha: 0.12)
+                    : Colors.black.withValues(alpha: 0.04),
+                blurRadius: _hovered ? 28 : 8,
+                offset: Offset(0, _hovered ? 12 : 2),
+              ),
+            ],
+          ),
+          child: widget.child,
+        ),
+      ),
+    );
+  }
+}
+
+class _StatusPill extends StatelessWidget {
+  const _StatusPill({required this.label, required this.color});
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 7),
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionShell extends StatelessWidget {
+  const _SectionShell({required this.color, required this.child});
+  final Color color;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: color,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl, vertical: 72),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1180),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class _Eyebrow extends StatelessWidget {
+  const _Eyebrow(this.text);
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppTheme.isDark(context);
+    final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+      decoration: BoxDecoration(
+        color: primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(50),
+      ),
+      child: Text(
+        text.toUpperCase(),
+        style: TextStyle(
+          color: primary,
+          fontSize: 11,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.4,
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Hero ─────────────────────────────────────────────────────────────────────
 
 class _HeroSection extends StatelessWidget {
   const _HeroSection({
     required this.isWide,
+    required this.isDark,
     required this.onFacilityTap,
     required this.onRoomTap,
     required this.onTestimonialTap,
+    required this.onToggleTheme,
   });
 
   final bool isWide;
+  final bool isDark;
   final VoidCallback onFacilityTap;
   final VoidCallback onRoomTap;
   final VoidCallback onTestimonialTap;
+  final VoidCallback onToggleTheme;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-
-    final heroContent = Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 8,
-          ),
-          decoration: BoxDecoration(
-            color: LandingPalette.card,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: LandingPalette.border),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(Icons.check_circle, size: 16),
-              SizedBox(width: 8),
-              Text('Reservasi online tanpa ribet'),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-        Text(
-          'Temukan Kenyamanan Tinggal di Wisma Amal Gorontalo',
-          style: textTheme.displayLarge?.copyWith(
-            color: LandingPalette.ink,
-            fontSize: isWide ? 40 : 30,
-            height: 1.15,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          'Mengecek ketersediaan kamar, melihat fasilitas, dan melakukan reservasi secara cepat.',
-          style: textTheme.bodyLarge?.copyWith(
-            color: LandingPalette.muted,
-            fontSize: 16,
-            height: 1.6,
-          ),
-        ),
-        const SizedBox(height: 28),
-        Wrap(
-          spacing: 12,
-          runSpacing: 12,
-          children: [
-            SizedBox(
-              height: 48,
-              child: BasicButton(
-                onPressed: onRoomTap,
-                label: 'Cek Ketersediaan',
-                leadIcon: const Icon(
-                  Icons.search,
-                  color: Colors.white,
-                  size: 18,
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 48,
-              child: BasicButton(
-                type: ButtonType.secondary,
-                onPressed: onFacilityTap,
-                label: 'Lihat Fasilitas',
-                leadIcon: const Icon(
-                  Icons.star_border,
-                  size: 18,
-                  color: LandingPalette.primary,
-                ),
-                foregroundColor: LandingPalette.primary,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 32),
-        Wrap(
-          spacing: 24,
-          runSpacing: 12,
-          children: const [
-            _HeroStat(label: '30+ Kamar', value: 'Tersedia'),
-            _HeroStat(label: '4.8/5', value: 'Rating'),
-            _HeroStat(label: '24/7', value: 'Layanan'),
-          ],
-        ),
-      ],
-    );
+    final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+    final surface = isDark ? AppColorsDark.surface : AppColorsLight.surface;
+    final bg = isDark ? AppColorsDark.background : AppColorsLight.background;
+    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final borderCol = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
 
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Color(0xFFE9F2DF), Color(0xFFF6F7F3)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [surface, bg],
         ),
       ),
       child: Stack(
         children: [
+          // Decorative gradient orb
           Positioned(
-            right: -120,
+            right: -140,
             top: -80,
             child: Container(
-              height: 260,
-              width: 260,
-              decoration: const BoxDecoration(
-                color: LandingPalette.accent,
+              height: 420,
+              width: 420,
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    primary.withValues(alpha: 0.07),
+                    primary.withValues(alpha: 0.0),
+                  ],
+                ),
               ),
             ),
           ),
           Positioned(
-            left: -160,
-            bottom: -120,
+            left: -200,
+            bottom: -100,
             child: Container(
-              height: 320,
-              width: 320,
+              height: 360,
+              width: 360,
               decoration: BoxDecoration(
-                color: LandingPalette.primary.withOpacity(0.12),
                 shape: BoxShape.circle,
+                gradient: RadialGradient(
+                  colors: [
+                    primary.withValues(alpha: 0.05),
+                    primary.withValues(alpha: 0.0),
+                  ],
+                ),
               ),
             ),
           ),
+
+          // Content
           Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: isWide ? 72 : 24,
-              vertical: isWide ? 56 : 40,
+              horizontal: isWide ? 72 : AppSpacing.xxl,
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _BrandMark(isWide: isWide),
-                    if (isWide)
-                      Row(
-                        children: [
-                          TextButton(
-                            onPressed: onFacilityTap,
-                            child: const Text('Fasilitas'),
-                          ),
-                          const SizedBox(width: 16),
-                          TextButton(
-                            onPressed: onRoomTap,
-                            child: const Text('Tipe Kamar'),
-                          ),
-                          const SizedBox(width: 16),
-                          TextButton(
-                            onPressed: onTestimonialTap,
-                            child: const Text('Testimoni'),
-                          ),
-                          const SizedBox(width: 16),
-                          SizedBox(
-                            height: 44,
-                            child: BasicButton(
-                              onPressed: () => _goToReservation(context),
-                              label: 'Reservasi Sekarang',
-                              leadIcon: const Icon(
-                                Icons.calendar_month,
-                                color: Colors.white,
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ],
+                // ── Navbar ──
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  child: Row(
+                    children: [
+                      // Brand
+                      Container(
+                        height: 38,
+                        width: 38,
+                        decoration: BoxDecoration(
+                          color: primary,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(Icons.home_work_rounded,
+                            color: Colors.white, size: 20),
                       ),
-                  ],
+                      const SizedBox(width: 12),
+                      Text(
+                        'Wisma Amal',
+                        style: TextStyle(
+                          color: textPri,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 17,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (isWide) ...[
+                        _NavLink('Fasilitas', onFacilityTap, isDark),
+                        const SizedBox(width: 8),
+                        _NavLink('Tipe Kamar', onRoomTap, isDark),
+                        const SizedBox(width: 8),
+                        _NavLink('Testimoni', onTestimonialTap, isDark),
+                        const SizedBox(width: 20),
+                      ],
+                      // Theme toggle
+                      _ThemeToggle(isDark: isDark, onToggle: onToggleTheme),
+                      if (isWide) ...[
+                        const SizedBox(width: 16),
+                        _GradientPillButton(
+                          label: 'Reservasi Sekarang',
+                          icon: Icons.calendar_month_rounded,
+                          onPressed: () => _goToReservation(context),
+                        ),
+                      ],
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 48),
-                isWide
-                    ? Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 6,
-                            child: heroContent,
+
+                Divider(height: 1, thickness: 1, color: borderCol),
+
+                // ── Hero Content (centered) ──
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    vertical: isWide ? 80 : 48,
+                  ),
+                  child: Column(
+                    children: [
+                      const _Eyebrow('Reservasi online tanpa ribet'),
+                      const SizedBox(height: 28),
+                      Text(
+                        'Temukan Kenyamanan\nTinggal di Wisma Amal Gorontalo',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: textPri,
+                          fontSize: isWide ? 52 : 32,
+                          fontWeight: FontWeight.w800,
+                          height: 1.15,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 560),
+                        child: Text(
+                          'Mengecek ketersediaan kamar, melihat fasilitas, dan melakukan reservasi secara cepat.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: textSec,
+                            fontSize: 16,
+                            height: 1.7,
                           ),
-                          const SizedBox(width: 32),
-                          Expanded(
-                            flex: 5,
-                            child: _HeroImage(isWide: isWide),
-                          ),
-                        ],
-                      )
-                    : Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        ),
+                      ),
+                      const SizedBox(height: 36),
+                      Wrap(
+                        spacing: 14,
+                        runSpacing: 14,
+                        alignment: WrapAlignment.center,
                         children: [
-                          heroContent,
-                          const SizedBox(height: 32),
-                          _HeroImage(isWide: isWide),
+                          _GradientPillButton(
+                            label: 'Cek Ketersediaan',
+                            icon: Icons.search_rounded,
+                            onPressed: onRoomTap,
+                          ),
+                          _OutlinePillButton(
+                            label: 'Lihat Fasilitas',
+                            icon: Icons.star_border_rounded,
+                            onPressed: onFacilityTap,
+                          ),
                         ],
                       ),
+                      const SizedBox(height: 44),
+                      // Feature highlights
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          _FeatureHighlight(
+                            icon: Icons.wifi_rounded,
+                            label: 'WiFi 100 Mbps',
+                            isDark: isDark,
+                          ),
+                          _FeatureHighlight(
+                            icon: Icons.verified_user_outlined,
+                            label: 'Keamanan 24 Jam',
+                            isDark: isDark,
+                          ),
+                          _FeatureHighlight(
+                            icon: Icons.place_outlined,
+                            label: 'Dekat Kampus & Pusat Kota',
+                            isDark: isDark,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -307,200 +582,284 @@ class _HeroSection extends StatelessWidget {
   }
 }
 
-class _BrandMark extends StatelessWidget {
-  const _BrandMark({required this.isWide});
-
-  final bool isWide;
+class _NavLink extends StatefulWidget {
+  const _NavLink(this.label, this.onTap, this.isDark);
+  final String label;
+  final VoidCallback onTap;
+  final bool isDark;
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          height: 44,
-          width: 44,
-          decoration: BoxDecoration(
-            color: LandingPalette.primary,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: const Icon(Icons.home_work, color: Colors.white),
-        ),
-        const SizedBox(width: 12),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Wisma Amal',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: LandingPalette.ink,
-                    fontWeight: FontWeight.w700,
-                  ),
-            ),
-            Text(
-              'Kenyamanan tinggal di Gorontalo',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: LandingPalette.muted,
-                  ),
-            ),
-          ],
-        ),
-        if (!isWide)
-          const SizedBox(
-            width: 0,
-          ),
-      ],
-    );
-  }
+  State<_NavLink> createState() => _NavLinkState();
 }
 
-class _HeroImage extends StatelessWidget {
-  const _HeroImage({required this.isWide});
-
-  final bool isWide;
+class _NavLinkState extends State<_NavLink> {
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: isWide ? 420 : 280,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: LandingPalette.card,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: LandingPalette.border),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A0F2C1A),
-            blurRadius: 24,
-            offset: Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: LandingPalette.heroGlow,
-                borderRadius: BorderRadius.circular(20),
+    final primary =
+        widget.isDark ? AppColorsDark.primary : AppColorsLight.primary;
+    final textSec = widget.isDark
+        ? AppColorsDark.textSecondary
+        : AppColorsLight.textSecondary;
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      cursor: SystemMouseCursors.click,
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                widget.label,
+                style: TextStyle(
+                  color: _hovered ? primary : textSec,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                ),
               ),
-              child: const Icon(
-                Icons.apartment,
-                size: 120,
-                color: LandingPalette.primaryDark,
+              const SizedBox(height: 3),
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                height: 2,
+                width: _hovered ? 20 : 0,
+                decoration: BoxDecoration(
+                  color: primary,
+                  borderRadius: BorderRadius.circular(1),
+                ),
               ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
-              _Badge(label: 'WiFi 100 Mbps'),
-              _Badge(label: 'Keamanan 24 Jam'),
             ],
           ),
-          const SizedBox(height: 10),
-          const _Badge(label: 'Dekat Kampus & Pusat Kota'),
+        ),
+      ),
+    );
+  }
+}
+
+class _ThemeToggle extends StatelessWidget {
+  const _ThemeToggle({required this.isDark, required this.onToggle});
+  final bool isDark;
+  final VoidCallback onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    final textSec =
+        isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    return GestureDetector(
+      onTap: onToggle,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          padding: const EdgeInsets.all(9),
+          decoration: BoxDecoration(
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.07)
+                : Colors.black.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            transitionBuilder: (child, anim) =>
+                RotationTransition(turns: anim, child: child),
+            child: Icon(
+              isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+              key: ValueKey(isDark),
+              color: textSec,
+              size: 20,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _FeatureHighlight extends StatelessWidget {
+  const _FeatureHighlight({
+    required this.icon,
+    required this.label,
+    required this.isDark,
+  });
+  final IconData icon;
+  final String label;
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final border =
+        isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+    final textSec =
+        isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(50),
+        border: Border.all(color: border),
+        color: isDark
+            ? Colors.white.withValues(alpha: 0.03)
+            : Colors.white.withValues(alpha: 0.6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: primary),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              color: textSec,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-class _HeroStat extends StatelessWidget {
-  const _HeroStat({required this.label, required this.value});
+// ─── Stats Strip ─────────────────────────────────────────────────────────────
 
-  final String label;
+class _StatsStrip extends StatelessWidget {
+  const _StatsStrip({required this.isDark});
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: primary,
+        boxShadow: [
+          BoxShadow(
+            color: primary.withValues(alpha: 0.3),
+            blurRadius: 32,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: AppSpacing.xxl),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 800),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _StatItem(value: '30+', label: 'Kamar Tersedia'),
+              Container(height: 40, width: 1, color: Colors.white24),
+              _StatItem(value: '4.8/5', label: 'Rating'),
+              Container(height: 40, width: 1, color: Colors.white24),
+              _StatItem(value: '24/7', label: 'Layanan'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StatItem extends StatelessWidget {
+  const _StatItem({required this.value, required this.label});
   final String value;
+  final String label;
 
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          label,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: LandingPalette.muted,
-              ),
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 26,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
-          value,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: LandingPalette.ink,
-                fontWeight: FontWeight.w700,
-              ),
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.7),
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );
   }
 }
 
-class _Badge extends StatelessWidget {
-  const _Badge({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: LandingPalette.card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: LandingPalette.border),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: LandingPalette.primaryDark,
-            ),
-      ),
-    );
-  }
-}
+// ─── Value Section ───────────────────────────────────────────────────────────
 
 class _ValueSection extends StatelessWidget {
-  const _ValueSection();
+  const _ValueSection({required this.isDark});
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    return _SectionContainer(
-      background: LandingPalette.surface,
+    final bg = isDark ? AppColorsDark.background : AppColorsLight.background;
+    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+
+    return _SectionShell(
+      color: bg,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionHeader(
-            eyebrow: 'Mengapa memilih kami',
-            title: 'Nilai utama Wisma Amal Gorontalo',
-            description:
-                'Pengalaman tinggal yang rapi, aman, dan serba mudah untuk penghuni baru maupun lama.',
+          _Eyebrow('Mengapa memilih kami'),
+          const SizedBox(height: 16),
+          Text(
+            'Nilai utama Wisma Amal Gorontalo',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: textPri,
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 10),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 540),
+            child: Text(
+              'Pengalaman tinggal yang rapi, aman, dan serba mudah untuk penghuni baru maupun lama.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: textSec, fontSize: 15, height: 1.6),
+            ),
+          ),
+          const SizedBox(height: 48),
           Wrap(
             spacing: 20,
             runSpacing: 20,
+            alignment: WrapAlignment.center,
             children: const [
               _ValueCard(
-                icon: Icons.location_on,
+                icon: Icons.location_on_outlined,
                 title: 'Lokasi Strategis',
-                description: 'Dekat kampus, pusat kuliner, dan akses transportasi.',
+                desc: 'Dekat kampus, pusat kuliner, dan akses transportasi.',
               ),
               _ValueCard(
-                icon: Icons.security,
+                icon: Icons.shield_outlined,
                 title: 'Keamanan Terjamin',
-                description: 'CCTV dan penjagaan untuk kenyamanan penghuni 24 jam.',
+                desc: 'CCTV dan penjagaan untuk kenyamanan penghuni 24 jam.',
               ),
               _ValueCard(
-                icon: Icons.clean_hands,
+                icon: Icons.auto_awesome_outlined,
                 title: 'Fasilitas Lengkap',
-                description: 'Kamar bersih, area komunal, laundry, dan parkir aman.',
+                desc: 'Kamar bersih, area komunal, laundry, dan parkir aman.',
               ),
               _ValueCard(
-                icon: Icons.app_registration,
+                icon: Icons.phone_android_outlined,
                 title: 'Aplikasi Mandiri',
-                description:
+                desc:
                     'Reservasi, pembayaran, hingga laporan keluhan dalam satu portal.',
               ),
             ],
@@ -515,100 +874,128 @@ class _ValueCard extends StatelessWidget {
   const _ValueCard({
     required this.icon,
     required this.title,
-    required this.description,
+    required this.desc,
   });
-
   final IconData icon;
   final String title;
-  final String description;
+  final String desc;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 250,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: LandingPalette.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: LandingPalette.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 40,
-            width: 40,
-            decoration: BoxDecoration(
-              color: LandingPalette.heroGlow,
-              borderRadius: BorderRadius.circular(12),
+    final isDark = AppTheme.isDark(context);
+    final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+
+    return _HoverLiftCard(
+      child: Container(
+        width: 265,
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              height: 52,
+              width: 52,
+              decoration: BoxDecoration(
+                color: primary,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: Colors.white, size: 24),
             ),
-            child: Icon(icon, color: LandingPalette.primaryDark),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: LandingPalette.ink,
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            description,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: LandingPalette.muted,
-                ),
-          ),
-        ],
+            const SizedBox(height: 22),
+            Text(
+              title,
+              style: TextStyle(
+                color: textPri,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              desc,
+              style: TextStyle(color: textSec, fontSize: 14, height: 1.5),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
+// ─── Room Section ────────────────────────────────────────────────────────────
+
 class _RoomSection extends StatelessWidget {
-  const _RoomSection({super.key});
+  const _RoomSection({super.key, required this.isDark});
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    return _SectionContainer(
-      background: LandingPalette.heroGlow,
+    final surface = isDark ? AppColorsDark.surface : AppColorsLight.surface;
+    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+
+    return _SectionShell(
+      color: surface,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionHeader(
-            eyebrow: 'Tipe kamar',
-            title: 'Pilih kamar sesuai kebutuhan anda',
-            description:
-                'Status ketersediaan diperbarui secara real-time untuk memudahkan reservasi.',
+          _Eyebrow('Tipe kamar'),
+          const SizedBox(height: 16),
+          Text(
+            'Pilih kamar sesuai kebutuhan anda',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: textPri,
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 10),
+          Text(
+            'Status ketersediaan diperbarui secara real-time untuk memudahkan reservasi.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: textSec, fontSize: 15, height: 1.6),
+          ),
+          const SizedBox(height: 48),
           Wrap(
-            spacing: 20,
-            runSpacing: 20,
-            children: const [
+            spacing: 24,
+            runSpacing: 24,
+            alignment: WrapAlignment.center,
+            children: [
               _RoomCard(
                 title: 'Standard',
-                price: 'Mulai Rp 800.000 / bulan',
+                price: 'Rp 800.000',
+                period: '/ bulan',
                 status: 'Tersedia',
-                statusColor: LandingPalette.primary,
+                statusColor: isDark
+                    ? AppColorsDark.statusDone
+                    : AppColorsLight.statusDone,
                 detail: 'Kamar nyaman dengan meja belajar dan lemari.',
-                roomIcon: Icons.bed,
+                icon: Icons.bed_outlined,
               ),
               _RoomCard(
                 title: 'Premium',
-                price: 'Mulai Rp 1.200.000 / bulan',
+                price: 'Rp 1.200.000',
+                period: '/ bulan',
                 status: 'Sisa 2 kamar',
-                statusColor: Color(0xFFF9A825),
+                statusColor: isDark
+                    ? AppColorsDark.statusWaiting
+                    : AppColorsLight.statusWaiting,
                 detail: 'Ruang lebih luas, kamar mandi dalam, AC.',
-                roomIcon: Icons.hotel,
+                icon: Icons.hotel_outlined,
               ),
               _RoomCard(
                 title: 'VIP',
-                price: 'Mulai Rp 1.600.000 / bulan',
+                price: 'Rp 1.600.000',
+                period: '/ bulan',
                 status: 'Penuh',
-                statusColor: Color(0xFFE53935),
+                statusColor: isDark
+                    ? AppColorsDark.statusCancelled
+                    : AppColorsLight.statusCancelled,
                 detail: 'Fasilitas lengkap dengan balkon pribadi.',
-                roomIcon: Icons.apartment,
+                icon: Icons.apartment_outlined,
               ),
             ],
           ),
@@ -622,254 +1009,256 @@ class _RoomCard extends StatelessWidget {
   const _RoomCard({
     required this.title,
     required this.price,
+    required this.period,
     required this.status,
     required this.statusColor,
     required this.detail,
-    this.roomImage,
-    this.roomIcon,
+    required this.icon,
   });
 
   final String title;
   final String price;
+  final String period;
   final String status;
   final Color statusColor;
   final String detail;
-  final String? roomImage;
-  final IconData? roomIcon;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 280,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: LandingPalette.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: LandingPalette.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            height: 140,
-            decoration: BoxDecoration(
-              color: LandingPalette.surface,
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Center(
-              child: roomImage != null
-                  ? Image.asset(
-                      roomImage!,
-                      fit: BoxFit.cover,
-                    )
-                  : Icon(
-                      roomIcon ?? Icons.bed,
-                      size: 52,
-                      color: LandingPalette.primary,
-                    ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: LandingPalette.ink,
+    final isDark = AppTheme.isDark(context);
+    final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+
+    return _HoverLiftCard(
+      child: SizedBox(
+        width: 300,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Gradient header
+            Container(
+              height: 140,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [primary, _shade(primary, 0.25)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            price,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: LandingPalette.muted,
-                ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            detail,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: LandingPalette.muted,
-                ),
-          ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.12),
-              borderRadius: BorderRadius.circular(12),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Center(
+                child: Icon(icon, size: 56, color: Colors.white),
+              ),
             ),
-            child: Text(
-              status,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: statusColor,
+            Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        title,
+                        style: TextStyle(
+                          color: textPri,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      _StatusPill(label: status, color: statusColor),
+                    ],
                   ),
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        price,
+                        style: TextStyle(
+                          color: primary,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 2),
+                        child: Text(
+                          period,
+                          style: TextStyle(color: textSec, fontSize: 13),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    detail,
+                    style: TextStyle(
+                      color: textSec,
+                      fontSize: 14,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    width: double.infinity,
+                    child: _OutlinePillButton(
+                      label: 'Lihat Detail',
+                      onPressed: () => _goToReservation(context),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton(
-              onPressed: () => _goToReservation(context),
-              child: const Text('Lihat Detail'),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
 
-class _FeatureSection extends StatelessWidget {
-  const _FeatureSection({super.key, required this.isWide});
+// ─── Feature Section ─────────────────────────────────────────────────────────
 
+class _FeatureSection extends StatelessWidget {
+  const _FeatureSection({
+    super.key,
+    required this.isWide,
+    required this.isDark,
+  });
   final bool isWide;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    final featuresList = Column(
-      children: const [
-        _FeatureCard(
-          icon: Icons.calendar_today,
-          title: 'Reservasi online',
-          description: 'Pilih kamar, tanggal, dan bayar langsung dari aplikasi.',
-        ),
-        SizedBox(height: 16),
-        _FeatureCard(
-          icon: Icons.receipt_long,
-          title: 'Manajemen tagihan',
-          description:
-              'Cek tagihan bulanan, riwayat pembayaran, dan bukti transaksi.',
-        ),
-        SizedBox(height: 16),
-        _FeatureCard(
-          icon: Icons.report_problem,
-          title: 'Laporan keluhan',
-          description:
-              'Laporkan kerusakan kamar dan pantau status perbaikannya.',
-        ),
-      ],
-    );
+    final bg = isDark ? AppColorsDark.background : AppColorsLight.background;
+    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+    final primaryLight =
+        isDark ? AppColorsDark.primaryLight : AppColorsLight.primaryLight;
 
-    final featuresImage = Container(
-      height: 360,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: LandingPalette.card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: LandingPalette.border),
-      ),
+    return _SectionShell(
+      color: bg,
       child: Column(
         children: [
-          Container(
-            height: 220,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: LandingPalette.heroGlow,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: const Icon(
-              Icons.apartment,
-              size: 120,
-              color: LandingPalette.primaryDark,
-            ),
-          ),
-          const SizedBox(height: 18),
+          _Eyebrow('Fitur aplikasi'),
+          const SizedBox(height: 16),
           Text(
-            'Akses informasi kamar, tagihan, dan bantuan dalam satu aplikasi.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: LandingPalette.muted,
-                ),
+            'Semua kebutuhan penghuni ada di genggaman',
             textAlign: TextAlign.center,
+            style: TextStyle(
+              color: textPri,
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
           ),
-        ],
-      ),
-    );
+          const SizedBox(height: 10),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: Text(
+              'Mulai reservasi sampai pelaporan masalah, semuanya tercatat rapi melalui aplikasi penghuni.',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: textSec, fontSize: 15, height: 1.6),
+            ),
+          ),
+          const SizedBox(height: 52),
 
-    return _SectionContainer(
-      background: LandingPalette.surface,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _SectionHeader(
-            eyebrow: 'Fitur aplikasi',
-            title: 'Semua kebutuhan penghuni ada di genggaman',
-            description:
-                'Mulai reservasi sampai pelaporan masalah, semuanya tercatat rapi melalui aplikasi penghuni.',
-          ),
-          const SizedBox(height: 28),
+          // Steps
           isWide
               ? Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(child: featuresList),
-                    const SizedBox(width: 24),
-                    Expanded(child: featuresImage),
+                  children: const [
+                    Expanded(
+                      child: _FeatureStep(
+                        number: '01',
+                        icon: Icons.calendar_today_outlined,
+                        title: 'Reservasi online',
+                        desc:
+                            'Pilih kamar, tanggal, dan bayar langsung dari aplikasi.',
+                      ),
+                    ),
+                    SizedBox(width: 24),
+                    Expanded(
+                      child: _FeatureStep(
+                        number: '02',
+                        icon: Icons.receipt_long_outlined,
+                        title: 'Manajemen tagihan',
+                        desc:
+                            'Cek tagihan bulanan, riwayat pembayaran, dan bukti transaksi.',
+                      ),
+                    ),
+                    SizedBox(width: 24),
+                    Expanded(
+                      child: _FeatureStep(
+                        number: '03',
+                        icon: Icons.report_problem_outlined,
+                        title: 'Laporan keluhan',
+                        desc:
+                            'Laporkan kerusakan kamar dan pantau status perbaikannya.',
+                      ),
+                    ),
                   ],
                 )
               : Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    featuresList,
-                    const SizedBox(height: 24),
-                    featuresImage,
+                  children: const [
+                    _FeatureStep(
+                      number: '01',
+                      icon: Icons.calendar_today_outlined,
+                      title: 'Reservasi online',
+                      desc:
+                          'Pilih kamar, tanggal, dan bayar langsung dari aplikasi.',
+                    ),
+                    SizedBox(height: 24),
+                    _FeatureStep(
+                      number: '02',
+                      icon: Icons.receipt_long_outlined,
+                      title: 'Manajemen tagihan',
+                      desc:
+                          'Cek tagihan bulanan, riwayat pembayaran, dan bukti transaksi.',
+                    ),
+                    SizedBox(height: 24),
+                    _FeatureStep(
+                      number: '03',
+                      icon: Icons.report_problem_outlined,
+                      title: 'Laporan keluhan',
+                      desc:
+                          'Laporkan kerusakan kamar dan pantau status perbaikannya.',
+                    ),
                   ],
                 ),
-        ],
-      ),
-    );
-  }
-}
 
-class _FeatureCard extends StatelessWidget {
-  const _FeatureCard({
-    required this.icon,
-    required this.title,
-    required this.description,
-  });
+          const SizedBox(height: 48),
 
-  final IconData icon;
-  final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: LandingPalette.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: LandingPalette.border),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+          // Bottom highlight (preserves illustration text)
           Container(
-            height: 44,
-            width: 44,
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
             decoration: BoxDecoration(
-              color: LandingPalette.heroGlow,
-              borderRadius: BorderRadius.circular(14),
+              color: primaryLight,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: primary.withValues(alpha: 0.15),
+              ),
             ),
-            child: Icon(icon, color: LandingPalette.primaryDark),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: LandingPalette.ink,
-                      ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  description,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: LandingPalette.muted,
-                      ),
+                Icon(Icons.smartphone_outlined, color: primary, size: 28),
+                const SizedBox(width: 14),
+                Flexible(
+                  child: Text(
+                    'Akses informasi kamar, tagihan, dan bantuan dalam satu aplikasi.',
+                    style: TextStyle(
+                      color: textPri,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -880,26 +1269,113 @@ class _FeatureCard extends StatelessWidget {
   }
 }
 
-class _TestimonialSection extends StatelessWidget {
-  const _TestimonialSection({super.key});
+class _FeatureStep extends StatelessWidget {
+  const _FeatureStep({
+    required this.number,
+    required this.icon,
+    required this.title,
+    required this.desc,
+  });
+  final String number;
+  final IconData icon;
+  final String title;
+  final String desc;
 
   @override
   Widget build(BuildContext context) {
-    return _SectionContainer(
-      background: LandingPalette.heroGlow,
+    final isDark = AppTheme.isDark(context);
+    final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+
+    return _HoverLiftCard(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          children: [
+            // Number circle
+            Container(
+              height: 52,
+              width: 52,
+              decoration: BoxDecoration(
+                color: primary,
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: Text(
+                  number,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Icon(icon, color: primary, size: 28),
+            const SizedBox(height: 14),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: textPri,
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              desc,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: textSec, fontSize: 14, height: 1.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Testimonial Section ─────────────────────────────────────────────────────
+
+class _TestimonialSection extends StatelessWidget {
+  const _TestimonialSection({super.key, required this.isDark});
+  final bool isDark;
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = isDark ? AppColorsDark.surface : AppColorsLight.surface;
+    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+
+    return _SectionShell(
+      color: surface,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionHeader(
-            eyebrow: 'Testimoni penghuni',
-            title: 'Pengalaman nyata dari penghuni Wisma Amal',
-            description:
-                'Cerita singkat yang membuat calon penghuni lebih yakin sebelum reservasi.',
+          _Eyebrow('Testimoni penghuni'),
+          const SizedBox(height: 16),
+          Text(
+            'Pengalaman nyata dari penghuni Wisma Amal',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: textPri,
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+              height: 1.2,
+            ),
           ),
-          const SizedBox(height: 28),
+          const SizedBox(height: 10),
+          Text(
+            'Cerita singkat yang membuat calon penghuni lebih yakin sebelum reservasi.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: textSec, fontSize: 15, height: 1.6),
+          ),
+          const SizedBox(height: 48),
           Wrap(
-            spacing: 20,
-            runSpacing: 20,
+            spacing: 24,
+            runSpacing: 24,
+            alignment: WrapAlignment.center,
             children: const [
               _TestimonialCard(
                 name: 'Ayu Lestari',
@@ -933,153 +1409,243 @@ class _TestimonialCard extends StatelessWidget {
     required this.role,
     required this.quote,
   });
-
   final String name;
   final String role;
   final String quote;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 260,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: LandingPalette.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: LandingPalette.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: LandingPalette.heroGlow,
-                child: Text(
-                  name.substring(0, 1),
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: LandingPalette.primaryDark,
+    final isDark = AppTheme.isDark(context);
+    final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final borderCol =
+        isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+    final bg = isDark ? AppColorsDark.background : AppColorsLight.background;
+
+    return _HoverLiftCard(
+      color: bg,
+      child: Container(
+        width: 300,
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Stars
+            Row(
+              children: List.generate(
+                5,
+                (_) => const Padding(
+                  padding: EdgeInsets.only(right: 3),
+                  child: Icon(Icons.star_rounded, color: Color(0xFFFBBF24), size: 18),
+                ),
+              ),
+            ),
+            const SizedBox(height: 18),
+            // Quote
+            Text(
+              '"$quote"',
+              style: TextStyle(
+                color: textPri,
+                fontSize: 15,
+                height: 1.65,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            const SizedBox(height: 22),
+            Divider(color: borderCol),
+            const SizedBox(height: 16),
+            // Author
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: primary.withValues(alpha: 0.12),
+                  child: Text(
+                    name.substring(0, 1),
+                    style: TextStyle(
+                      color: primary,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: TextStyle(
+                        color: textPri,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 14,
                       ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      role,
+                      style: TextStyle(color: textSec, fontSize: 13),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    name,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: LandingPalette.ink,
-                        ),
-                  ),
-                  Text(
-                    role,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: LandingPalette.muted,
-                        ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Text(
-            quote,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: LandingPalette.muted,
-                  height: 1.5,
-                ),
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _FooterSection extends StatelessWidget {
-  const _FooterSection();
+// ─── Footer ──────────────────────────────────────────────────────────────────
 
-  static final Uri _gorontaloCenterMap =
+class _FooterSection extends StatelessWidget {
+  const _FooterSection({required this.isDark});
+  final bool isDark;
+
+  static final Uri _mapUri =
       Uri.parse('https://www.google.com/maps?q=0.543,123.059');
 
   @override
   Widget build(BuildContext context) {
+    const bg = Color(0xFF0F1221);
+    const textPri = AppColorsDark.textPrimary;
+    const textSec = AppColorsDark.textSecondary;
+    const textHint = AppColorsDark.textHint;
+    const border = AppColorsDark.borderLight;
+    final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
+
     return Container(
-      color: LandingPalette.banner,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Wisma Amal Gorontalo',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
+      color: bg,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl, vertical: 56),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1180),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top row: brand + contact
+              Wrap(
+                spacing: 64,
+                runSpacing: 32,
+                children: [
+                  // Brand column
+                  SizedBox(
+                    width: 320,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              height: 36,
+                              width: 36,
+                              decoration: BoxDecoration(
+                                color: primary,
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: const Icon(Icons.home_work_rounded,
+                                  color: Colors.white, size: 18),
+                            ),
+                            const SizedBox(width: 12),
+                            const Text(
+                              'Wisma Amal Gorontalo',
+                              style: TextStyle(
+                                color: textPri,
+                                fontWeight: FontWeight.w700,
+                                fontSize: 17,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'Jalan Palma No. 24, Kota Gorontalo',
+                          style: TextStyle(color: textSec, fontSize: 14, height: 1.5),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Contact column
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: const [
+                      Text(
+                        'KONTAK',
+                        style: TextStyle(
+                          color: textSec,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      _FooterLink(
+                          icon: Icons.phone_outlined,
+                          label: '+62 812-0000-0000'),
+                      SizedBox(height: 10),
+                      _FooterLink(
+                          icon: Icons.email_outlined,
+                          label: 'wismaamal@email.com'),
+                      SizedBox(height: 10),
+                      _FooterLink(
+                          icon: Icons.map_outlined,
+                          label: 'Lihat di Google Maps'),
+                    ],
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 40),
+
+              // Map placeholder
+              InkWell(
+                onTap: () => launchUrl(_mapUri,
+                    mode: LaunchMode.externalApplication),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  height: 110,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1A1D34),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: border),
+                  ),
+                  child: const Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.map_outlined, color: textSec, size: 26),
+                        SizedBox(height: 8),
+                        Text(
+                          'Buka peta pusat Kota Gorontalo',
+                          style: TextStyle(color: textSec, fontSize: 13),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Jalan Palma No. 24, Kota Gorontalo',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white70,
-                ),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 24,
-            runSpacing: 8,
-            children: const [
-              _FooterItem(icon: Icons.phone, label: '+62 812-0000-0000'),
-              _FooterItem(icon: Icons.email, label: 'wismaamal@email.com'),
-              _FooterItem(icon: Icons.map, label: 'Lihat di Google Maps'),
+              ),
+
+              const SizedBox(height: 40),
+              const Divider(color: border),
+              const SizedBox(height: 20),
+              const Text(
+                'Kebijakan Privasi  •  Syarat & Ketentuan  •  Portal Penghuni',
+                style: TextStyle(color: textHint, fontSize: 13),
+              ),
             ],
           ),
-          const SizedBox(height: 20),
-          InkWell(
-            onTap: () => launchUrl(
-              _gorontaloCenterMap,
-              mode: LaunchMode.externalApplication,
-            ),
-            borderRadius: BorderRadius.circular(16),
-            child: Container(
-              height: 140,
-              decoration: BoxDecoration(
-                color: Colors.white10,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: const [
-                    Icon(Icons.map_outlined, color: Colors.white70, size: 28),
-                    SizedBox(height: 8),
-                    Text(
-                      'Buka peta pusat Kota Gorontalo',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Kebijakan Privasi  •  Syarat & Ketentuan  •  Portal Penghuni',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white70,
-                ),
-          ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _FooterItem extends StatelessWidget {
-  const _FooterItem({required this.icon, required this.label});
-
+class _FooterLink extends StatelessWidget {
+  const _FooterLink({required this.icon, required this.label});
   final IconData icon;
   final String label;
 
@@ -1088,81 +1654,16 @@ class _FooterItem extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, color: Colors.white70, size: 18),
-        const SizedBox(width: 8),
+        Icon(icon, color: AppColorsDark.textSecondary, size: 17),
+        const SizedBox(width: 10),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.white70,
-              ),
+          style: const TextStyle(
+            color: AppColorsDark.textSecondary,
+            fontSize: 14,
+          ),
         ),
       ],
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.eyebrow,
-    required this.title,
-    required this.description,
-  });
-
-  final String eyebrow;
-  final String title;
-  final String description;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          eyebrow.toUpperCase(),
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: LandingPalette.primaryDark,
-                letterSpacing: 1.2,
-                fontWeight: FontWeight.w700,
-              ),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                color: LandingPalette.ink,
-                fontWeight: FontWeight.w700,
-              ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          description,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: LandingPalette.muted,
-                height: 1.6,
-              ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SectionContainer extends StatelessWidget {
-  const _SectionContainer({required this.background, required this.child});
-
-  final Color background;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: background,
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 56),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 1180),
-          child: child,
-        ),
-      ),
     );
   }
 }

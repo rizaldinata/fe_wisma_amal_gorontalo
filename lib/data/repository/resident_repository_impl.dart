@@ -14,11 +14,17 @@ class ResidentRepositoryImpl implements ResidentRepository {
   Future<ResidentResponse> getAdminResidents({
     int page = 1,
     int perPage = 10,
+    String? search,
+    String? status,
+    String? payment,
   }) async {
     try {
       final response = await datasource.getAdminResidents(
         page: page,
         perPage: perPage,
+        search: search,
+        status: status,
+        payment: payment,
       );
       return response;
     } catch (e) {
@@ -40,7 +46,7 @@ class ResidentRepositoryImpl implements ResidentRepository {
   Future<ResidentProfileEntity> getProfile() async {
     try {
       final response = await datasource.getProfile();
-      return response.data;
+      return response;
     } catch (e) {
       rethrow;
     }
@@ -68,7 +74,7 @@ class ResidentRepositoryImpl implements ResidentRepository {
         emergencyContactPhone: emergencyContactPhone,
         ktpPhoto: ktpPhoto,
       );
-      return response.data;
+      return response;
     } catch (e) {
       rethrow;
     }

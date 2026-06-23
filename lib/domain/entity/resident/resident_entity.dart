@@ -1,12 +1,12 @@
 class ResidentResponse {
-  final ResidentStats stats;
   final List<ResidentItem> residents;
-  final ResidentPagination pagination;
+  final PaginationEntity pagination;
+  final ResidentStats stats;
 
   ResidentResponse({
-    required this.stats,
     required this.residents,
     required this.pagination,
+    required this.stats,
   });
 
   factory ResidentResponse.fromJson(Map<String, dynamic> json) {
@@ -31,25 +31,31 @@ class ResidentResponse {
   }
 }
 
-class ResidentPagination {
-  final int currentPage;
-  final int lastPage;
-  final int perPage;
-  final int total;
+class ResidentItem {
+  final String id;
+  final String nama;
+  final String kamar;
+  final String kontak;
+  final String detailBayar;
+  final String status;
 
-  const ResidentPagination({
-    required this.currentPage,
-    required this.lastPage,
-    required this.perPage,
-    required this.total,
+  ResidentItem({
+    required this.id,
+    required this.nama,
+    required this.kamar,
+    required this.kontak,
+    required this.detailBayar,
+    required this.status,
   });
 
-  factory ResidentPagination.fromJson(Map<String, dynamic> json) {
-    return ResidentPagination(
-      currentPage: json['current_page'] ?? 1,
-      lastPage: json['last_page'] ?? 1,
-      perPage: json['per_page'] ?? 10,
-      total: json['total'] ?? 0,
+  factory ResidentItem.fromJson(Map<String, dynamic> json) {
+    return ResidentItem(
+      id: json['id'].toString(),
+      nama: json['nama'] ?? '-',
+      kamar: json['kamar'] ?? '-',
+      kontak: json['kontak'] ?? '-',
+      detailBayar: json['detailBayar'] ?? 'Belum Lunas',
+      status: json['status'] ?? 'Pending',
     );
   }
 }
@@ -57,56 +63,42 @@ class ResidentPagination {
 class ResidentStats {
   final int penghuniAktif;
   final int kontrakPending;
-  final int kontrakBerakhir;
   final int kamarTersedia;
 
   ResidentStats({
     required this.penghuniAktif,
     required this.kontrakPending,
-    required this.kontrakBerakhir,
     required this.kamarTersedia,
   });
 
   factory ResidentStats.fromJson(Map<String, dynamic> json) {
     return ResidentStats(
-      penghuniAktif: json['penghuni_aktif'] ?? 0,
-      kontrakPending: json['kontrak_pending'] ?? 0,
-      kontrakBerakhir: json['kontrak_akan_berakhir'] ?? 0,
-      kamarTersedia: json['kamar_tersedia'] ?? 0,
+      penghuniAktif: json['penghuniAktif'] ?? 0,
+      kontrakPending: json['kontrakPending'] ?? 0,
+      kamarTersedia: json['kamarTersedia'] ?? 0,
     );
   }
 }
 
-class ResidentItem {
-  final String id;
-  final String nama;
-  final String kamar;
-  final String kontak;
-  final String detailBayar;
-  final bool isBelumLunas;
-  final String status;
-  final bool isPending;
+class PaginationEntity {
+  final int currentPage;
+  final int lastPage;
+  final int perPage;
+  final int total;
 
-  ResidentItem({
-    required this.id, required this.nama, required this.kamar,
-    required this.kontak, required this.detailBayar, required this.isBelumLunas,
-    required this.status, required this.isPending,
+  PaginationEntity({
+    required this.currentPage,
+    required this.lastPage,
+    required this.perPage,
+    required this.total,
   });
 
-  factory ResidentItem.fromJson(Map<String, dynamic> json) {
-    final tenantJson = json['tenant'] as Map<String, dynamic>? ?? <String, dynamic>{};
-    final roomJson = json['room'] as Map<String, dynamic>? ?? <String, dynamic>{};
-    final status = json['status']?.toString() ?? '-';
-
-    return ResidentItem(
-      id: json['id'].toString(),
-      nama: tenantJson['name']?.toString() ?? '-',
-      kamar: roomJson['number']?.toString() ?? '-',
-      kontak: tenantJson['phone']?.toString() ?? '-',
-      detailBayar: '-',
-      isBelumLunas: false,
-      status: status,
-      isPending: status == 'pending',
+  factory PaginationEntity.fromJson(Map<String, dynamic> json) {
+    return PaginationEntity(
+      currentPage: json['currentPage'] ?? 1,
+      lastPage: json['lastPage'] ?? 1,
+      perPage: json['perPage'] ?? 10,
+      total: json['total'] ?? 0,
     );
   }
 }

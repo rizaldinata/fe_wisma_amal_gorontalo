@@ -9,7 +9,16 @@ class GetAdminResidentsUseCase {
   Future<ResidentResponse> call({
     int page = 1,
     int perPage = 10,
+    String? search,
+    String? status,
+    String? payment,
   }) async {
-    return await _repository.getAdminResidents(page: page, perPage: perPage);
+    return await _repository.getAdminResidents(
+      page: page,
+      perPage: perPage,
+      search: search,
+      status: status,
+      payment: payment,
+    );
   }
 }

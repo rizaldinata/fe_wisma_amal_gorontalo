@@ -13,6 +13,8 @@ import 'package:frontend/presentation/widget/core/appbar/app_topbar.dart';
 import 'package:frontend/presentation/widget/core/wrapper/empty_state_widget.dart';
 import 'package:frontend/presentation/widget/core/dialog/app_dialog.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
+import 'package:frontend/presentation/widget/core/botton/button.dart';
+import 'package:frontend/presentation/widget/core/textform/textfield.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -62,10 +64,10 @@ class _MyGuestView extends StatelessWidget {
             AppTopBar(
               title: 'Tamu Saya',
               breadcrumb: 'Penghuni / Tamu Saya',
-              action: ElevatedButton.icon(
+              action: BasicButton(
                 onPressed: () => _showAddGuestDialog(context),
-                icon: const Icon(Icons.add_rounded, size: 18),
-                label: const Text('Tambah Tamu'),
+                leadIcon: const Icon(Icons.add_rounded, size: 18, color: Colors.white),
+                label: 'Tambah Tamu',
               ),
             ),
             Expanded(
@@ -89,10 +91,10 @@ class _MyGuestView extends StatelessWidget {
                           icon: Icons.people_outline,
                           title: 'Belum ada tamu',
                           subtitle: 'Tambahkan tamu pertama Anda dengan menekan tombol di atas.',
-                          action: ElevatedButton.icon(
+                          action: BasicButton(
                             onPressed: () => _showAddGuestDialog(context),
-                            icon: const Icon(Icons.add_rounded, size: 18),
-                            label: const Text('Tambah Tamu'),
+                            leadIcon: const Icon(Icons.add_rounded, size: 18, color: Colors.white),
+                            label: 'Tambah Tamu',
                           ),
                         );
                       }
@@ -277,18 +279,19 @@ class _PaymentMethodDialogState extends State<_PaymentMethodDialog> {
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: BasicButton(
+                    type: ButtonType.secondary,
                     onPressed: () => Navigator.of(context).pop(null),
-                    child: const Text('Batal'),
+                    label: 'Batal',
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: ElevatedButton(
+                  child: BasicButton(
                     onPressed: () => Navigator.of(context).pop(_method),
-                    child: Text(_method == 'midtrans'
+                    label: _method == 'midtrans'
                         ? 'Lanjut ke Midtrans'
-                        : 'Lanjut ke Pembayaran'),
+                        : 'Lanjut ke Pembayaran',
                   ),
                 ),
               ],
@@ -559,33 +562,24 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
                   ),
                 ),
 
-              TextFormField(
+              CustomTextField(
                 controller: _residentController,
-                readOnly: true,
-                decoration: const InputDecoration(
-                  labelText: 'Nama Penghuni',
-                  border: OutlineInputBorder(),
-                ),
+                enabled: false,
+                hintText: 'Nama Penghuni',
               ),
               const SizedBox(height: 16),
 
-              TextFormField(
+              CustomTextField(
                 controller: _roomController,
-                readOnly: true,
-                decoration: const InputDecoration(
-                  labelText: 'Nomor Kamar',
-                  border: OutlineInputBorder(),
-                ),
+                enabled: false,
+                hintText: 'Nomor Kamar',
               ),
               const SizedBox(height: 16),
 
               // Nama
-              TextFormField(
+              CustomTextField(
                 controller: _nameController,
-                decoration: const InputDecoration(
-                  labelText: 'Nama Tamu',
-                  border: OutlineInputBorder(),
-                ),
+                hintText: 'Nama Tamu',
                 validator: (v) =>
                     (v == null || v.trim().isEmpty) ? 'Nama tidak boleh kosong' : null,
               ),
@@ -627,18 +621,20 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
               Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
+                    child: BasicButton(
+                      type: ButtonType.secondary,
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Batal'),
+                      label: 'Batal',
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton(
+                    child: BasicButton(
+                      isLoading: _isSubmitting,
                       onPressed: (_isSubmitting || _isLoadingResident || !_hasActiveLease)
                           ? null
                           : _submit,
-                      child: const Text('Simpan'),
+                      label: 'Simpan',
                     ),
                   ),
                 ],
@@ -882,16 +878,10 @@ class _GuestCard extends StatelessWidget {
                   ),
                   if (canPay) ...[
                     const SizedBox(width: 10),
-                    ElevatedButton.icon(
+                    BasicButton(
                       onPressed: onPay,
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 10),
-                        textStyle: const TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w600),
-                      ),
-                      icon: const Icon(Icons.payment_outlined, size: 18),
-                      label: const Text('Bayar'),
+                      leadIcon: const Icon(Icons.payment_outlined, size: 18, color: Colors.white),
+                      label: 'Bayar',
                     ),
                   ],
                 ],
@@ -903,21 +893,10 @@ class _GuestCard extends StatelessWidget {
             if (item.stayCompletedNotifiedAt == null)
               SizedBox(
                 width: double.infinity,
-                child: ElevatedButton.icon(
+                child: BasicButton(
                   onPressed: onCheckout,
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 20, vertical: 14),
-                    textStyle: const TextStyle(
-                        fontSize: 15, fontWeight: FontWeight.w600),
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: theme.colorScheme.onPrimary,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  icon: const Icon(Icons.check_circle_outline, size: 20),
-                  label: const Text('Tamu Telah Keluar'),
+                  leadIcon: const Icon(Icons.check_circle_outline, size: 20, color: Colors.white),
+                  label: 'Tamu Telah Keluar',
                 ),
               )
             else
@@ -1036,10 +1015,10 @@ class _EmptyView extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
-          ElevatedButton.icon(
+          BasicButton(
             onPressed: onAdd,
-            icon: const Icon(Icons.add_rounded, size: 18),
-            label: const Text('Tambah Tamu'),
+            leadIcon: const Icon(Icons.add_rounded, size: 18, color: Colors.white),
+            label: 'Tambah Tamu',
           ),
         ],
       ),
@@ -1072,10 +1051,10 @@ class _ErrorView extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 24),
-          ElevatedButton.icon(
+          BasicButton(
             onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Coba Lagi'),
+            leadIcon: const Icon(Icons.refresh_rounded, size: 18, color: Colors.white),
+            label: 'Coba Lagi',
           ),
         ],
       ),

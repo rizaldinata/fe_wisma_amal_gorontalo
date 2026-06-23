@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 // --- Core Widget Imports ---
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
+import 'package:frontend/presentation/widget/core/botton/button.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
@@ -22,7 +23,7 @@ class ProfileUserPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F4F6), // Sesuai warna background mockup
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: MultiBlocProvider(
         providers: [
           BlocProvider(
@@ -114,38 +115,39 @@ class ProfileUserPage extends StatelessWidget {
                           fontSize: 32, // Disesuaikan proporsinya
                           fontWeight: FontWeight.w700,
                           height: 1,
-                          color: const Color(0xFF121212),
+                          color: Theme.of(context).colorScheme.onSurface,
                         ),
                   ),
                   const SizedBox(height: 16),
 
-                  if (isTenant && !isAdmin && completeProfileState is! CompleteProfileLoaded)
-                    BasicCard(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(14),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 14,
-                      ),
+                    if (isTenant && !isAdmin && completeProfileState is! CompleteProfileLoaded)
+                      BasicCard(
+                        color: Theme.of(context).colorScheme.surface,
+                        borderRadius: BorderRadius.circular(14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 14,
+                        ),
                       child: Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.info_outline,
                             size: 18,
-                            color: Color(0xFF111827),
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               'Data profil belum lengkap. Lengkapi untuk melanjutkan sebagai penyewa.',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                    color: const Color(0xFF374151),
+                                    color: Theme.of(context).colorScheme.onSurface,
                                     fontWeight: FontWeight.w600,
                                   ),
                             ),
                           ),
                           const SizedBox(width: 10),
-                          OutlinedButton(
+                          BasicButton(
+                            type: ButtonType.secondary,
                             onPressed: () async {
                               await context.router.push(
                                 const CompleteProfileRoute(),
@@ -157,16 +159,7 @@ class ProfileUserPage extends StatelessWidget {
                                     );
                               }
                             },
-                            style: OutlinedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            child: const Text('Lengkapi'),
+                            label: 'Lengkapi',
                           ),
                         ],
                       ),
@@ -182,7 +175,7 @@ class ProfileUserPage extends StatelessWidget {
                         height: 84,
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: const Color(0xFF141414),
+                            color: Theme.of(context).colorScheme.primary,
                             width: 2.5,
                           ),
                           shape: BoxShape.circle,
@@ -193,17 +186,17 @@ class ProfileUserPage extends StatelessWidget {
                                 child: Image.network(
                                   ktpPhotoUrl,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => const Icon(
+                                  errorBuilder: (_, __, ___) => Icon(
                                     Icons.person_outline,
                                     size: 48,
-                                    color: Color(0xFF141414),
+                                    color: Theme.of(context).colorScheme.onSurface,
                                   ),
                                 ),
                               )
-                            : const Icon(
+                            : Icon(
                                 Icons.person_outline,
                                 size: 48,
-                                color: Color(0xFF141414),
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                       ),
                       const SizedBox(width: 20),
@@ -224,7 +217,7 @@ class ProfileUserPage extends StatelessWidget {
                             roomNumber,
                             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                                   fontSize: 15,
-                                  color: const Color(0xFF6B7280),
+                                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7) ?? Colors.grey,
                                   fontWeight: FontWeight.w500,
                                 ),
                           ),
@@ -306,7 +299,7 @@ class _InfoSectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BasicCard(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(16),
       padding: const EdgeInsets.all(32), // Padding diperlebar sesuai mockup
       child: Column(
@@ -319,7 +312,7 @@ class _InfoSectionCard extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
-                      color: const Color(0xFF111827),
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
               ),
               const Spacer(),
@@ -335,24 +328,24 @@ class _InfoSectionCard extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFFD1D5DB)),
+                        border: Border.all(color: Theme.of(context).dividerColor),
                         borderRadius: BorderRadius.circular(99),
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surface,
                       ),
                       child: Row(
                         children: [
                           Text(
                             'Edit',
                             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                  color: const Color(0xFF374151),
+                                  color: Theme.of(context).colorScheme.onSurface,
                                   fontWeight: FontWeight.w600,
                                 ),
                           ),
                           const SizedBox(width: 6),
-                          const Icon(
+                          Icon(
                             Icons.edit_outlined,
                             size: 14,
-                            color: Color(0xFF374151),
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ],
                       ),
@@ -387,7 +380,7 @@ class _InfoItem extends StatelessWidget {
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
                   fontSize: 12,
-                  color: const Color(0xFF9CA3AF),
+                  color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.6) ?? Colors.grey,
                   fontWeight: FontWeight.w600,
                 ),
           ),
@@ -396,7 +389,7 @@ class _InfoItem extends StatelessWidget {
             value,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                   fontSize: 15,
-                  color: const Color(0xFF111827),
+                  color: Theme.of(context).colorScheme.onSurface,
                   fontWeight: FontWeight.w600,
                 ),
           ),

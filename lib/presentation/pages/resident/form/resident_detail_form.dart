@@ -4,6 +4,7 @@ import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/domain/entity/resident/resident_detail_entity.dart';
 import 'package:frontend/presentation/bloc/resident_detail/resident_detail_bloc.dart';
 import 'package:frontend/presentation/widget/core/image/image_network.dart';
+import 'package:frontend/presentation/widget/core/botton/button.dart';
 
 class ResidentDetailForm extends StatelessWidget {
   const ResidentDetailForm({super.key, required this.residentId});
@@ -36,7 +37,7 @@ class _ResidentDetailBody extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             child: Text(
               state.message,
-              style: const TextStyle(color: Colors.red),
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
             ),
           );
         }
@@ -128,9 +129,10 @@ class _ResidentDetailContent extends StatelessWidget {
               const SizedBox(height: 24),
               Align(
                 alignment: Alignment.centerRight,
-                child: TextButton(
+                child: BasicButton(
+                  type: ButtonType.secondary,
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Tutup'),
+                  label: 'Tutup',
                 ),
               ),
             ],
@@ -178,7 +180,7 @@ class _DetailRow extends StatelessWidget {
             child: Text(
               label,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF6B7280),
+                    color: Theme.of(context).textTheme.bodySmall?.color?.withOpacity(0.7) ?? Colors.grey,
                     fontWeight: FontWeight.w600,
                   ),
             ),
@@ -187,7 +189,7 @@ class _DetailRow extends StatelessWidget {
             child: Text(
               value,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF111827),
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.w600,
                   ),
             ),
