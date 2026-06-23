@@ -18,6 +18,7 @@ class RouteConstant {
   static const String roleName = 'roles';
   static const String settingName = 'setting';
   static const String featureToggleName = 'setting/feature-toggles';
+  static const String landingCmsName = 'setting/landing-cms';
   static const String userManagementName = 'users';
   static const String profileName = 'profile';
   static const String editProfileName = 'edit-profile';
@@ -69,7 +70,8 @@ class RouteConstant {
   static const String paymentHistoryName = 'finance/payment-history';
   static const String memberFinanceName = 'me/finance';
   static const String extendLeaseName = 'me/finance/extend-lease';
-  static const String extendLeasePaymentName = 'me/finance/extend-lease/payment';
+  static const String extendLeasePaymentName =
+      'me/finance/extend-lease/payment';
   static const String invoicePaymentName = 'me/finance/invoice/payment';
   static const String myFinesName = 'me/fines';
   static const String fineManagementName = 'finance/fines';

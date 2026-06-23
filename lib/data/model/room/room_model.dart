@@ -14,6 +14,7 @@ class RoomModel {
   final String? description;
   final List<String> facilities;
   final List<RoomImageModel> images;
+  final bool isHighlighted;
 
   RoomModel({
     required this.id,
@@ -28,6 +29,7 @@ class RoomModel {
     this.description,
     required this.facilities,
     required this.images,
+    this.isHighlighted = false,
   });
 
   factory RoomModel.fromJson(Map<String, dynamic> json) {
@@ -54,6 +56,7 @@ class RoomModel {
                ?.map((e) => RoomImageModel.fromJson(e))
                .toList() ??
           const [],
+      isHighlighted: json['is_highlighted'] == true || json['is_highlighted'] == 1 || json['is_highlighted'] == '1',
     );
   }
 
@@ -66,6 +69,7 @@ class RoomModel {
       'status': statusCode,
       'facilities': facilities,
       'description': description,
+      'is_highlighted': isHighlighted,
     };
   }
 
@@ -83,6 +87,7 @@ class RoomModel {
       priceDailyFormatted: priceDailyFormatted ?? '',
       imageUrl: images,
       facilities: facilities,
+      isHighlighted: isHighlighted,
     );
   }
 
@@ -100,6 +105,7 @@ class RoomModel {
       images: entity.imageUrl,
       priceFormatted: entity.priceFormatted,
       priceDailyFormatted: entity.priceDailyFormatted,
+      isHighlighted: entity.isHighlighted,
     );
   }
 }

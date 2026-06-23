@@ -12,9 +12,9 @@ class RoomRepositoryImpl implements RoomRepository {
   RoomRepositoryImpl({required this.datasource});
 
   @override
-  Future<List<RoomEntity>> getRooms() async {
+  Future<List<RoomEntity>> getRooms({bool? isHighlighted}) async {
     try {
-      final response = await datasource.getRooms();
+      final response = await datasource.getRooms(isHighlighted: isHighlighted);
       return response.data.map((e) => e.toEntity()).toList();
     } catch (e) {
       rethrow;

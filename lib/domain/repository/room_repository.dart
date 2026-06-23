@@ -3,7 +3,7 @@ import 'package:frontend/domain/entity/room/room_schedule_entity.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
 
 abstract class RoomRepository {
-  Future<List<RoomEntity>> getRooms();
+  Future<List<RoomEntity>> getRooms({bool? isHighlighted});
   Future<List<RoomScheduleEntity>> getRoomSchedules();
   Future<RoomEntity> createRoom(RoomEntity room);
   Future<RoomEntity> getRoomById(int id);

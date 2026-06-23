@@ -23,12 +23,14 @@ class RoomImageModel {
   }
 
   get fullImageUrl {
+    if (url.startsWith('http')) return url;
     var fullUrl = '${ApiConfig.getServerUrl().baseUrl}$url';
     print(fullUrl);
     return fullUrl;
   }
 
   get fullThumbnailUrl {
+    if (thumbnail.startsWith('http')) return thumbnail;
     var fullUrl = '${ApiConfig.getServerUrl().baseUrl}$thumbnail';
     print(fullUrl);
     return fullUrl;

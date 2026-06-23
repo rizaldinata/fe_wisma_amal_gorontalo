@@ -5,6 +5,16 @@ import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/core/theme/app_theme.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:formz/formz.dart';
+import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/presentation/bloc/room_list/room_bloc.dart';
+import 'package:frontend/presentation/bloc/room_list/room_event.dart';
+import 'package:frontend/presentation/bloc/room_list/room_state.dart';
+import 'package:frontend/domain/usecase/setting/get_public_settings_usecase.dart';
+import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend/core/constant/permission_key.dart';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -25,6 +35,51 @@ class _LandingPageState extends State<LandingPage> {
   final GlobalKey _roomKey = GlobalKey();
   final GlobalKey _testimonialKey = GlobalKey();
   bool _isDarkMode = false;
+  String _headerTitle = 'Temukan Kenyamanan\nTinggal di Wisma Amal Gorontalo';
+  String _headerSubtitle =
+      'Mengecek ketersediaan kamar, melihat fasilitas, dan melakukan reservasi secara cepat.';
+  List<String> _facilities = [];
+
+  String _wismaName = 'Wisma Amal Gorontalo';
+  String _wismaAddress = 'Jalan Palma No. 24, Kota Gorontalo';
+  String _wismaPhone = '+62 812-0000-0000';
+  String _wismaEmail = 'wismaamal@email.com';
+  String _wismaMapsLink = 'https://maps.google.com';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    try {
+      final settings = await serviceLocator
+          .get<GetPublicSettingsUseCase>()
+          .execute();
+      if (mounted) {
+        setState(() {
+          _headerTitle =
+              settings.getString('landing_header_title') ?? _headerTitle;
+          _headerSubtitle =
+              settings.getString('landing_header_subtitle') ?? _headerSubtitle;
+          _wismaName = settings.getString('wisma_name') ?? _wismaName;
+          _wismaAddress = settings.getString('wisma_address') ?? _wismaAddress;
+          _wismaPhone = settings.getString('wisma_phone') ?? _wismaPhone;
+          _wismaEmail = settings.getString('wisma_email') ?? _wismaEmail;
+          _wismaMapsLink = settings.getString('wisma_maps_link') ?? _wismaMapsLink;
+
+          final facilitiesStr = settings.getString('landing_facilities') ?? '';
+          if (facilitiesStr.isNotEmpty) {
+            _facilities = facilitiesStr
+                .split(',')
+                .map((e) => e.trim())
+                .toList();
+          }
+        });
+      }
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -49,49 +104,128 @@ class _LandingPageState extends State<LandingPage> {
   Widget build(BuildContext context) {
     final themeData = _isDarkMode ? AppTheme.darkTheme : AppTheme.lightTheme;
 
-    return Theme(
-      data: themeData,
-      child: Builder(builder: (context) {
-        final isDark = _isDarkMode;
-        return Scaffold(
-          backgroundColor:
-              isDark ? AppColorsDark.background : AppColorsLight.background,
-          body: LayoutBuilder(builder: (context, box) {
-            final isWide = box.maxWidth >= 1000;
-            return SingleChildScrollView(
-              controller: _scrollController,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+    return BlocProvider(
+      create: (context) =>
+          serviceLocator<RoomBloc>()
+            ..add(const GetRoomsEvent(isHighlighted: true)),
+      child: Theme(
+        data: themeData,
+        child: Builder(
+          builder: (context) {
+            final isDark = _isDarkMode;
+            return Scaffold(
+              backgroundColor: isDark
+                  ? AppColorsDark.background
+                  : AppColorsLight.background,
+              body: Column(
                 children: [
-                  _HeroSection(
-                    isWide: isWide,
-                    isDark: isDark,
-                    onFacilityTap: () => _scrollTo(_facilityKey),
-                    onRoomTap: () => _scrollTo(_roomKey),
-                    onTestimonialTap: () => _scrollTo(_testimonialKey),
-                    onToggleTheme: _toggleTheme,
+                  BlocBuilder<AuthBloc, AuthState>(
+                    builder: (context, state) {
+                      if (state.isLoggedIn &&
+                          (state.userInfo?.permissions?.can(
+                                PermissionKeys.settingUpdate,
+                              ) ??
+                              false)) {
+                        return Container(
+                          width: double.infinity,
+                          color: isDark
+                              ? AppColorsDark.surfaceVariant
+                              : AppColorsLight.surfaceVariant,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.xl,
+                            vertical: AppSpacing.sm,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Anda sedang melihat Landing Page sebagai Admin.',
+                                style: TextStyle(
+                                  color: isDark
+                                      ? AppColorsDark.textPrimary
+                                      : AppColorsLight.textPrimary,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              TextButton.icon(
+                                onPressed: () => context.router.navigate(
+                                  const AppLayoutRoute(children: [LandingCmsRoute()]),
+                                ),
+                                icon: const Icon(Icons.edit, size: 16),
+                                label: const Text('Edit Landing Page'),
+                                style: TextButton.styleFrom(
+                                  foregroundColor: isDark
+                                      ? AppColorsDark.primary
+                                      : AppColorsLight.primary,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      return const SizedBox.shrink();
+                    },
                   ),
-                  _StatsStrip(isDark: isDark),
-                  _ValueSection(isDark: isDark),
-                  _RoomSection(key: _roomKey, isDark: isDark),
-                  _FeatureSection(
-                      key: _facilityKey, isWide: isWide, isDark: isDark),
-                  _TestimonialSection(key: _testimonialKey, isDark: isDark),
-                  _FooterSection(isDark: isDark),
+                  Expanded(
+                    child: LayoutBuilder(
+                      builder: (context, box) {
+                        final isWide = box.maxWidth >= 1000;
+                        return SingleChildScrollView(
+                          controller: _scrollController,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              _HeroSection(
+                                isWide: isWide,
+                                isDark: isDark,
+                                title: _headerTitle,
+                                subtitle: _headerSubtitle,
+                                facilities: _facilities,
+                                onFacilityTap: () => _scrollTo(_facilityKey),
+                                onRoomTap: () => _scrollTo(_roomKey),
+                                onTestimonialTap: () =>
+                                    _scrollTo(_testimonialKey),
+                                onToggleTheme: _toggleTheme,
+                              ),
+                              _StatsStrip(isDark: isDark),
+                              _ValueSection(isDark: isDark),
+                              _RoomSection(key: _roomKey, isDark: isDark),
+                              _FeatureSection(
+                                key: _facilityKey,
+                                isWide: isWide,
+                                isDark: isDark,
+                              ),
+                              _TestimonialSection(
+                                key: _testimonialKey,
+                                isDark: isDark,
+                              ),
+                              _FooterSection(
+                                isDark: isDark,
+                                wismaName: _wismaName,
+                                wismaAddress: _wismaAddress,
+                                wismaPhone: _wismaPhone,
+                                wismaEmail: _wismaEmail,
+                                wismaMapsLink: _wismaMapsLink,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
             );
-          }),
-        );
-      }),
+          },
+        ),
+      ),
     );
   }
 }
 
 void _goToReservation(BuildContext context) {
-  context.router.navigate(
-    const AppLayoutRoute(children: [RoomRoute()]),
-  );
+  context.router.navigate(const AppLayoutRoute(children: [RoomRoute()]));
 }
 
 // ─── Reusable Widgets ────────────────────────────────────────────────────────
@@ -184,7 +318,9 @@ class _OutlinePillButtonState extends State<_OutlinePillButton> {
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
     final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
-    final border = isDark ? AppColorsDark.borderMedium : AppColorsLight.borderMedium;
+    final border = isDark
+        ? AppColorsDark.borderMedium
+        : AppColorsLight.borderMedium;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -198,12 +334,11 @@ class _OutlinePillButtonState extends State<_OutlinePillButton> {
           transform: Matrix4.translationValues(0.0, _hovered ? -2.0 : 0.0, 0.0),
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 15),
           decoration: BoxDecoration(
-            color: _hovered ? primary.withValues(alpha: 0.06) : Colors.transparent,
+            color: _hovered
+                ? primary.withValues(alpha: 0.06)
+                : Colors.transparent,
             borderRadius: BorderRadius.circular(50),
-            border: Border.all(
-              color: _hovered ? primary : border,
-              width: 1.5,
-            ),
+            border: Border.all(color: _hovered ? primary : border, width: 1.5),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -244,9 +379,12 @@ class _HoverLiftCardState extends State<_HoverLiftCard> {
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
     final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
-    final surface = widget.color ??
+    final surface =
+        widget.color ??
         (isDark ? AppColorsDark.surface : AppColorsLight.surface);
-    final border = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+    final border = isDark
+        ? AppColorsDark.borderLight
+        : AppColorsLight.borderLight;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -280,42 +418,6 @@ class _HoverLiftCardState extends State<_HoverLiftCard> {
   }
 }
 
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.label, required this.color});
-  final String label;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(50),
-        border: Border.all(color: color.withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: 7),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _SectionShell extends StatelessWidget {
   const _SectionShell({required this.color, required this.child});
@@ -326,7 +428,10 @@ class _SectionShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       color: color,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl, vertical: 72),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xxl,
+        vertical: 72,
+      ),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1180),
@@ -370,6 +475,9 @@ class _HeroSection extends StatelessWidget {
   const _HeroSection({
     required this.isWide,
     required this.isDark,
+    required this.title,
+    required this.subtitle,
+    required this.facilities,
     required this.onFacilityTap,
     required this.onRoomTap,
     required this.onTestimonialTap,
@@ -378,6 +486,9 @@ class _HeroSection extends StatelessWidget {
 
   final bool isWide;
   final bool isDark;
+  final String title;
+  final String subtitle;
+  final List<String> facilities;
   final VoidCallback onFacilityTap;
   final VoidCallback onRoomTap;
   final VoidCallback onTestimonialTap;
@@ -388,9 +499,15 @@ class _HeroSection extends StatelessWidget {
     final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
     final surface = isDark ? AppColorsDark.surface : AppColorsLight.surface;
     final bg = isDark ? AppColorsDark.background : AppColorsLight.background;
-    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
-    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
-    final borderCol = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+    final textPri = isDark
+        ? AppColorsDark.textPrimary
+        : AppColorsLight.textPrimary;
+    final textSec = isDark
+        ? AppColorsDark.textSecondary
+        : AppColorsLight.textSecondary;
+    final borderCol = isDark
+        ? AppColorsDark.borderLight
+        : AppColorsLight.borderLight;
 
     return Container(
       decoration: BoxDecoration(
@@ -458,8 +575,11 @@ class _HeroSection extends StatelessWidget {
                           color: primary,
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.home_work_rounded,
-                            color: Colors.white, size: 20),
+                        child: const Icon(
+                          Icons.home_work_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Text(
@@ -497,15 +617,13 @@ class _HeroSection extends StatelessWidget {
 
                 // ── Hero Content (centered) ──
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: isWide ? 80 : 48,
-                  ),
+                  padding: EdgeInsets.symmetric(vertical: isWide ? 80 : 48),
                   child: Column(
                     children: [
                       const _Eyebrow('Reservasi online tanpa ribet'),
                       const SizedBox(height: 28),
                       Text(
-                        'Temukan Kenyamanan\nTinggal di Wisma Amal Gorontalo',
+                        title.replaceAll('\\n', '\n'),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: textPri,
@@ -519,7 +637,7 @@ class _HeroSection extends StatelessWidget {
                       ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 560),
                         child: Text(
-                          'Mengecek ketersediaan kamar, melihat fasilitas, dan melakukan reservasi secara cepat.',
+                          subtitle,
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: textSec,
@@ -552,23 +670,45 @@ class _HeroSection extends StatelessWidget {
                         spacing: 12,
                         runSpacing: 12,
                         alignment: WrapAlignment.center,
-                        children: [
-                          _FeatureHighlight(
-                            icon: Icons.wifi_rounded,
-                            label: 'WiFi 100 Mbps',
-                            isDark: isDark,
-                          ),
-                          _FeatureHighlight(
-                            icon: Icons.verified_user_outlined,
-                            label: 'Keamanan 24 Jam',
-                            isDark: isDark,
-                          ),
-                          _FeatureHighlight(
-                            icon: Icons.place_outlined,
-                            label: 'Dekat Kampus & Pusat Kota',
-                            isDark: isDark,
-                          ),
-                        ],
+                        children: facilities.isNotEmpty
+                            ? facilities.take(5).map((f) {
+                                IconData icon = Icons.check_circle_outline;
+                                final lower = f.toLowerCase();
+                                if (lower.contains('wifi'))
+                                  icon = Icons.wifi_rounded;
+                                if (lower.contains('aman') ||
+                                    lower.contains('security'))
+                                  icon = Icons.verified_user_outlined;
+                                if (lower.contains('parkir'))
+                                  icon = Icons.local_parking_rounded;
+                                if (lower.contains('ac'))
+                                  icon = Icons.ac_unit_rounded;
+                                if (lower.contains('kampus') ||
+                                    lower.contains('kota'))
+                                  icon = Icons.place_outlined;
+                                return _FeatureHighlight(
+                                  icon: icon,
+                                  label: f,
+                                  isDark: isDark,
+                                );
+                              }).toList()
+                            : [
+                                _FeatureHighlight(
+                                  icon: Icons.wifi_rounded,
+                                  label: 'WiFi 100 Mbps',
+                                  isDark: isDark,
+                                ),
+                                _FeatureHighlight(
+                                  icon: Icons.verified_user_outlined,
+                                  label: 'Keamanan 24 Jam',
+                                  isDark: isDark,
+                                ),
+                                _FeatureHighlight(
+                                  icon: Icons.place_outlined,
+                                  label: 'Dekat Kampus & Pusat Kota',
+                                  isDark: isDark,
+                                ),
+                              ],
                       ),
                     ],
                   ),
@@ -597,8 +737,9 @@ class _NavLinkState extends State<_NavLink> {
 
   @override
   Widget build(BuildContext context) {
-    final primary =
-        widget.isDark ? AppColorsDark.primary : AppColorsLight.primary;
+    final primary = widget.isDark
+        ? AppColorsDark.primary
+        : AppColorsLight.primary;
     final textSec = widget.isDark
         ? AppColorsDark.textSecondary
         : AppColorsLight.textSecondary;
@@ -647,8 +788,9 @@ class _ThemeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textSec =
-        isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final textSec = isDark
+        ? AppColorsDark.textSecondary
+        : AppColorsLight.textSecondary;
     return GestureDetector(
       onTap: onToggle,
       child: MouseRegion(
@@ -691,10 +833,12 @@ class _FeatureHighlight extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final border =
-        isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
-    final textSec =
-        isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final border = isDark
+        ? AppColorsDark.borderLight
+        : AppColorsLight.borderLight;
+    final textSec = isDark
+        ? AppColorsDark.textSecondary
+        : AppColorsLight.textSecondary;
     final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
 
     return Container(
@@ -746,7 +890,10 @@ class _StatsStrip extends StatelessWidget {
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(vertical: 36, horizontal: AppSpacing.xxl),
+      padding: const EdgeInsets.symmetric(
+        vertical: 36,
+        horizontal: AppSpacing.xxl,
+      ),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
@@ -807,8 +954,12 @@ class _ValueSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = isDark ? AppColorsDark.background : AppColorsLight.background;
-    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
-    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final textPri = isDark
+        ? AppColorsDark.textPrimary
+        : AppColorsLight.textPrimary;
+    final textSec = isDark
+        ? AppColorsDark.textSecondary
+        : AppColorsLight.textSecondary;
 
     return _SectionShell(
       color: bg,
@@ -884,8 +1035,12 @@ class _ValueCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
     final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
-    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
-    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final textPri = isDark
+        ? AppColorsDark.textPrimary
+        : AppColorsLight.textPrimary;
+    final textSec = isDark
+        ? AppColorsDark.textSecondary
+        : AppColorsLight.textSecondary;
 
     return _HoverLiftCard(
       child: Container(
@@ -897,10 +1052,7 @@ class _ValueCard extends StatelessWidget {
             Container(
               height: 52,
               width: 52,
-              decoration: BoxDecoration(
-                color: primary,
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: primary, shape: BoxShape.circle),
               child: Icon(icon, color: Colors.white, size: 24),
             ),
             const SizedBox(height: 22),
@@ -933,8 +1085,12 @@ class _RoomSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final surface = isDark ? AppColorsDark.surface : AppColorsLight.surface;
-    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
-    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final textPri = isDark
+        ? AppColorsDark.textPrimary
+        : AppColorsLight.textPrimary;
+    final textSec = isDark
+        ? AppColorsDark.textSecondary
+        : AppColorsLight.textSecondary;
 
     return _SectionShell(
       color: surface,
@@ -958,46 +1114,64 @@ class _RoomSection extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(color: textSec, fontSize: 15, height: 1.6),
           ),
-          const SizedBox(height: 48),
-          Wrap(
-            spacing: 24,
-            runSpacing: 24,
-            alignment: WrapAlignment.center,
-            children: [
-              _RoomCard(
-                title: 'Standard',
-                price: 'Rp 800.000',
-                period: '/ bulan',
-                status: 'Tersedia',
-                statusColor: isDark
-                    ? AppColorsDark.statusDone
-                    : AppColorsLight.statusDone,
-                detail: 'Kamar nyaman dengan meja belajar dan lemari.',
-                icon: Icons.bed_outlined,
-              ),
-              _RoomCard(
-                title: 'Premium',
-                price: 'Rp 1.200.000',
-                period: '/ bulan',
-                status: 'Sisa 2 kamar',
-                statusColor: isDark
-                    ? AppColorsDark.statusWaiting
-                    : AppColorsLight.statusWaiting,
-                detail: 'Ruang lebih luas, kamar mandi dalam, AC.',
-                icon: Icons.hotel_outlined,
-              ),
-              _RoomCard(
-                title: 'VIP',
-                price: 'Rp 1.600.000',
-                period: '/ bulan',
-                status: 'Penuh',
-                statusColor: isDark
-                    ? AppColorsDark.statusCancelled
-                    : AppColorsLight.statusCancelled,
-                detail: 'Fasilitas lengkap dengan balkon pribadi.',
-                icon: Icons.apartment_outlined,
-              ),
-            ],
+          BlocBuilder<RoomBloc, RoomState>(
+            builder: (context, state) {
+              if (state.status == FormzSubmissionStatus.inProgress) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
+              }
+              if (state.status == FormzSubmissionStatus.failure) {
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32.0),
+                    child: Text('Gagal memuat kamar: ${state.errorMessage}'),
+                  ),
+                );
+              }
+              if (state.rooms.isEmpty) {
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: Text('Belum ada data kamar.'),
+                  ),
+                );
+              }
+
+              return Padding(
+                padding: const EdgeInsets.symmetric(vertical: 30),
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 24), // padding for the scrollable area
+                  child: Row(
+                    children: state.rooms.map((room) {
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 24),
+                        child: SizedBox(
+                          height: 550,
+                          child: _RoomCard(
+                            title: room.title,
+                            price: room.priceFormatted,
+                            period: '/ bulan',
+                            status: room.status.displayName,
+                            statusColor: room.status.getColor,
+                            detail: room.description.isNotEmpty
+                                ? room.description
+                                : (room.facilities.isNotEmpty
+                                    ? 'Fasilitas: ${room.facilities.take(3).join(", ")}'
+                                    : 'Kamar nyaman dan strategis.'),
+                            icon: Icons.bed_outlined,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -1028,8 +1202,12 @@ class _RoomCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
     final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
-    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
-    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final textPri = isDark
+        ? AppColorsDark.textPrimary
+        : AppColorsLight.textPrimary;
+    final textSec = isDark
+        ? AppColorsDark.textSecondary
+        : AppColorsLight.textSecondary;
 
     return _HoverLiftCard(
       child: SizedBox(
@@ -1046,72 +1224,82 @@ class _RoomCard extends StatelessWidget {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
               ),
-              child: Center(
-                child: Icon(icon, size: 56, color: Colors.white),
-              ),
+              child: Center(child: Icon(icon, size: 56, color: Colors.white)),
             ),
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          color: textPri,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        SizedBox(
+                          width: 180,
+                          child: Text(
+                            title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: textPri,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
-                      ),
-                      _StatusPill(label: status, color: statusColor),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        price,
-                        style: TextStyle(
-                          color: primary,
-                          fontSize: 22,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 2),
-                        child: Text(
-                          period,
-                          style: TextStyle(color: textSec, fontSize: 13),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  Text(
-                    detail,
-                    style: TextStyle(
-                      color: textSec,
-                      fontSize: 14,
-                      height: 1.5,
+                        // _StatusPill(label: status, color: statusColor),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    child: _OutlinePillButton(
-                      label: 'Lihat Detail',
-                      onPressed: () => _goToReservation(context),
+                    const SizedBox(height: 12),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          price,
+                          style: TextStyle(
+                            color: primary,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(width: 4),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 2),
+                          child: Text(
+                            period,
+                            style: TextStyle(color: textSec, fontSize: 13),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 14),
+                    Expanded(
+                      child: Text(
+                        detail,
+                        maxLines: 8,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: textSec,
+                          fontSize: 14,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      width: double.infinity,
+                      child: _OutlinePillButton(
+                        label: 'Lihat Detail',
+                        onPressed: () => _goToReservation(context),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ],
@@ -1135,11 +1323,16 @@ class _FeatureSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final bg = isDark ? AppColorsDark.background : AppColorsLight.background;
-    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
-    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final textPri = isDark
+        ? AppColorsDark.textPrimary
+        : AppColorsLight.textPrimary;
+    final textSec = isDark
+        ? AppColorsDark.textSecondary
+        : AppColorsLight.textSecondary;
     final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
-    final primaryLight =
-        isDark ? AppColorsDark.primaryLight : AppColorsLight.primaryLight;
+    final primaryLight = isDark
+        ? AppColorsDark.primaryLight
+        : AppColorsLight.primaryLight;
 
     return _SectionShell(
       color: bg,
@@ -1207,7 +1400,7 @@ class _FeatureSection extends StatelessWidget {
               : Column(
                   children: const [
                     _FeatureStep(
-                      number: '01',
+                      number: '',
                       icon: Icons.calendar_today_outlined,
                       title: 'Reservasi online',
                       desc:
@@ -1241,9 +1434,7 @@ class _FeatureSection extends StatelessWidget {
             decoration: BoxDecoration(
               color: primaryLight,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: primary.withValues(alpha: 0.15),
-              ),
+              border: Border.all(color: primary.withValues(alpha: 0.15)),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -1285,34 +1476,18 @@ class _FeatureStep extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
     final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
-    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
-    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final textPri = isDark
+        ? AppColorsDark.textPrimary
+        : AppColorsLight.textPrimary;
+    final textSec = isDark
+        ? AppColorsDark.textSecondary
+        : AppColorsLight.textSecondary;
 
     return _HoverLiftCard(
       child: Padding(
         padding: const EdgeInsets.all(28),
         child: Column(
           children: [
-            // Number circle
-            Container(
-              height: 52,
-              width: 52,
-              decoration: BoxDecoration(
-                color: primary,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: Text(
-                  number,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
             Icon(icon, color: primary, size: 28),
             const SizedBox(height: 14),
             Text(
@@ -1346,8 +1521,12 @@ class _TestimonialSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final surface = isDark ? AppColorsDark.surface : AppColorsLight.surface;
-    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
-    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+    final textPri = isDark
+        ? AppColorsDark.textPrimary
+        : AppColorsLight.textPrimary;
+    final textSec = isDark
+        ? AppColorsDark.textSecondary
+        : AppColorsLight.textSecondary;
 
     return _SectionShell(
       color: surface,
@@ -1417,10 +1596,15 @@ class _TestimonialCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
     final primary = isDark ? AppColorsDark.primary : AppColorsLight.primary;
-    final textPri = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
-    final textSec = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
-    final borderCol =
-        isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+    final textPri = isDark
+        ? AppColorsDark.textPrimary
+        : AppColorsLight.textPrimary;
+    final textSec = isDark
+        ? AppColorsDark.textSecondary
+        : AppColorsLight.textSecondary;
+    final borderCol = isDark
+        ? AppColorsDark.borderLight
+        : AppColorsLight.borderLight;
     final bg = isDark ? AppColorsDark.background : AppColorsLight.background;
 
     return _HoverLiftCard(
@@ -1437,7 +1621,11 @@ class _TestimonialCard extends StatelessWidget {
                 5,
                 (_) => const Padding(
                   padding: EdgeInsets.only(right: 3),
-                  child: Icon(Icons.star_rounded, color: Color(0xFFFBBF24), size: 18),
+                  child: Icon(
+                    Icons.star_rounded,
+                    color: Color(0xFFFBBF24),
+                    size: 18,
+                  ),
                 ),
               ),
             ),
@@ -1483,10 +1671,7 @@ class _TestimonialCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Text(
-                      role,
-                      style: TextStyle(color: textSec, fontSize: 13),
-                    ),
+                    Text(role, style: TextStyle(color: textSec, fontSize: 13)),
                   ],
                 ),
               ],
@@ -1501,11 +1686,20 @@ class _TestimonialCard extends StatelessWidget {
 // ─── Footer ──────────────────────────────────────────────────────────────────
 
 class _FooterSection extends StatelessWidget {
-  const _FooterSection({required this.isDark});
+  const _FooterSection({
+    required this.isDark,
+    required this.wismaName,
+    required this.wismaAddress,
+    required this.wismaPhone,
+    required this.wismaEmail,
+    required this.wismaMapsLink,
+  });
   final bool isDark;
-
-  static final Uri _mapUri =
-      Uri.parse('https://www.google.com/maps?q=0.543,123.059');
+  final String wismaName;
+  final String wismaAddress;
+  final String wismaPhone;
+  final String wismaEmail;
+  final String wismaMapsLink;
 
   @override
   Widget build(BuildContext context) {
@@ -1518,7 +1712,10 @@ class _FooterSection extends StatelessWidget {
 
     return Container(
       color: bg,
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxl, vertical: 56),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.xxl,
+        vertical: 56,
+      ),
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 1180),
@@ -1546,13 +1743,16 @@ class _FooterSection extends StatelessWidget {
                                 color: primary,
                                 borderRadius: BorderRadius.circular(10),
                               ),
-                              child: const Icon(Icons.home_work_rounded,
-                                  color: Colors.white, size: 18),
+                              child: const Icon(
+                                Icons.home_work_rounded,
+                                color: Colors.white,
+                                size: 18,
+                              ),
                             ),
                             const SizedBox(width: 12),
-                            const Text(
-                              'Wisma Amal Gorontalo',
-                              style: TextStyle(
+                            Text(
+                              wismaName,
+                              style: const TextStyle(
                                 color: textPri,
                                 fontWeight: FontWeight.w700,
                                 fontSize: 17,
@@ -1561,9 +1761,13 @@ class _FooterSection extends StatelessWidget {
                           ],
                         ),
                         const SizedBox(height: 12),
-                        const Text(
-                          'Jalan Palma No. 24, Kota Gorontalo',
-                          style: TextStyle(color: textSec, fontSize: 14, height: 1.5),
+                        Text(
+                          wismaAddress,
+                          style: const TextStyle(
+                            color: textSec,
+                            fontSize: 14,
+                            height: 1.5,
+                          ),
                         ),
                       ],
                     ),
@@ -1572,8 +1776,8 @@ class _FooterSection extends StatelessWidget {
                   // Contact column
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                    children: const [
-                      Text(
+                    children: [
+                      const Text(
                         'KONTAK',
                         style: TextStyle(
                           color: textSec,
@@ -1582,18 +1786,29 @@ class _FooterSection extends StatelessWidget {
                           letterSpacing: 1.2,
                         ),
                       ),
-                      SizedBox(height: 16),
+                      const SizedBox(height: 16),
                       _FooterLink(
-                          icon: Icons.phone_outlined,
-                          label: '+62 812-0000-0000'),
-                      SizedBox(height: 10),
+                        icon: Icons.phone_outlined,
+                        label: wismaPhone,
+                      ),
+                      const SizedBox(height: 10),
                       _FooterLink(
-                          icon: Icons.email_outlined,
-                          label: 'wismaamal@email.com'),
-                      SizedBox(height: 10),
-                      _FooterLink(
+                        icon: Icons.email_outlined,
+                        label: wismaEmail,
+                      ),
+                      const SizedBox(height: 10),
+                      InkWell(
+                        onTap: () {
+                          final uri = Uri.tryParse(wismaMapsLink);
+                          if (uri != null) {
+                            launchUrl(uri, mode: LaunchMode.externalApplication);
+                          }
+                        },
+                        child: const _FooterLink(
                           icon: Icons.map_outlined,
-                          label: 'Lihat di Google Maps'),
+                          label: 'Lihat di Google Maps',
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -1603,8 +1818,12 @@ class _FooterSection extends StatelessWidget {
 
               // Map placeholder
               InkWell(
-                onTap: () => launchUrl(_mapUri,
-                    mode: LaunchMode.externalApplication),
+                onTap: () {
+                  final uri = Uri.tryParse(wismaMapsLink);
+                  if (uri != null) {
+                    launchUrl(uri, mode: LaunchMode.externalApplication);
+                  }
+                },
                 borderRadius: BorderRadius.circular(14),
                 child: Container(
                   height: 110,

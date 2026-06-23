@@ -8,7 +8,13 @@ abstract class RoomEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class GetRoomsEvent extends RoomEvent {}
+class GetRoomsEvent extends RoomEvent {
+  final bool? isHighlighted;
+  const GetRoomsEvent({this.isHighlighted});
+  
+  @override
+  List<Object> get props => [if (isHighlighted != null) isHighlighted!];
+}
 
 class SelectRoomEvent extends RoomEvent {
   final RoomEntity room;

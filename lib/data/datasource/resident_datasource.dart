@@ -45,7 +45,7 @@ class ResidentDatasource {
   Future<ResidentDetailEntity> getAdminResidentDetail(String id) async {
     try {
       // Sesuaikan URL ini jika endpoint detail di backend berbeda
-      final response = await dioClient.get('/v1/room-schedules/$id');
+      final response = await dioClient.get('/room-schedules/$id');
       return ResidentDetailModel.fromJson(response.data['data']);
     } catch (e) {
       rethrow;
@@ -56,7 +56,7 @@ class ResidentDatasource {
   Future<ResidentProfileEntity> getProfile() async {
     try {
       // Diambil dari endpoint Auth Module backend yang sudah Anda miliki
-      final response = await dioClient.get('/v1/resident/profile');
+      final response = await dioClient.get('/resident/profile');
       return ResidentProfileModel.fromJson(response.data['data']);
     } catch (e) {
       rethrow;
@@ -89,20 +89,29 @@ class ResidentDatasource {
       });
 
       // Menyisipkan file KTP jika user memilih file
-      if (ktpPhoto != null && ktpPhoto.path != null) {
-        formData.files.add(
-          MapEntry(
-            'ktp_photo',
-            await MultipartFile.fromFile(
-              ktpPhoto.path!,
-              filename: ktpPhoto.name,
+      if (ktpPhoto != null) {
+        if (ktpPhoto.bytes != null) {
+          formData.files.add(
+            MapEntry(
+              'ktp_photo',
+              MultipartFile.fromBytes(ktpPhoto.bytes!, filename: ktpPhoto.name),
             ),
-          ),
-        );
+          );
+        } else if (ktpPhoto.path != null) {
+          formData.files.add(
+            MapEntry(
+              'ktp_photo',
+              await MultipartFile.fromFile(
+                ktpPhoto.path!,
+                filename: ktpPhoto.name,
+              ),
+            ),
+          );
+        }
       }
 
       final response = await dioClient.post(
-        '/v1/resident/profile',
+        '/resident/profile',
         data: formData,
       );
       return ResidentProfileModel.fromJson(response.data['data']);

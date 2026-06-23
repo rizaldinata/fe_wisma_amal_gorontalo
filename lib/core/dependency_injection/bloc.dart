@@ -170,7 +170,7 @@ Future<void> initializeBloc() async {
     ),
   );
 
-  serviceLocator.registerLazySingleton<RoomBloc>(
+  serviceLocator.registerFactory<RoomBloc>(
     () => RoomBloc(
       getRoomsUseCase: serviceLocator.get<GetRoomsUseCase>(),
       createRoomUseCase: serviceLocator.get<CreateRoomUseCase>(),

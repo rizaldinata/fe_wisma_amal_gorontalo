@@ -79,6 +79,7 @@ class RoomEntity {
   final String description;
   final List<RoomImageModel> imageUrl;
   final List<String> facilities;
+  final bool isHighlighted;
 
   const RoomEntity({
     required this.id,
@@ -93,6 +94,7 @@ class RoomEntity {
     required this.imageUrl,
     required this.facilities,
     required this.statusCode,
+    this.isHighlighted = false,
   });
 
   copyWith({
@@ -108,6 +110,7 @@ class RoomEntity {
     List<RoomImageModel>? imageUrl,
     List<String>? facilities,
     String? statusCode,
+    bool? isHighlighted,
   }) {
     return RoomEntity(
       id: id ?? this.id,
@@ -122,6 +125,7 @@ class RoomEntity {
       imageUrl: imageUrl ?? this.imageUrl,
       facilities: facilities ?? this.facilities,
       statusCode: statusCode ?? this.statusCode,
+      isHighlighted: isHighlighted ?? this.isHighlighted,
     );
   }
 
@@ -139,5 +143,6 @@ class RoomEntity {
         imageUrl: const [],
         facilities: const [],
         statusCode: '',
+        isHighlighted: false,
       );
 }

@@ -34,7 +34,7 @@ class RoomBloc extends Bloc<RoomEvent, RoomState> {
   Future<void> _onGetRooms(GetRoomsEvent event, Emitter<RoomState> emit) async {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
     try {
-      final rooms = await getRoomsUseCase(NoParams());
+      final rooms = await getRoomsUseCase(event.isHighlighted);
       emit(
         state.copyWith(
           status: FormzSubmissionStatus.success,

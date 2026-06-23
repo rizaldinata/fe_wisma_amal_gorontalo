@@ -30,6 +30,8 @@ class _SettingPageState extends State<SettingPage> {
   final _wismaNameController = TextEditingController();
   final _wismaAddressController = TextEditingController();
   final _wismaPhoneController = TextEditingController();
+  final _wismaEmailController = TextEditingController();
+  final _wismaMapsLinkController = TextEditingController();
   final _wismaOperationalHoursController = TextEditingController();
   bool _featureDailyRental = false;
   bool _featureWhatsappReceipt = false;
@@ -51,6 +53,11 @@ class _SettingPageState extends State<SettingPage> {
   @override
   void dispose() {
     _wismaNameController.dispose();
+    _wismaAddressController.dispose();
+    _wismaPhoneController.dispose();
+    _wismaEmailController.dispose();
+    _wismaMapsLinkController.dispose();
+    _wismaOperationalHoursController.dispose();
     _bankAccountCubit.close();
     super.dispose();
   }
@@ -59,6 +66,8 @@ class _SettingPageState extends State<SettingPage> {
     _wismaNameController.text = settings['wisma_name']?.toString() ?? 'Wisma Amal Gorontalo';
     _wismaAddressController.text = settings['wisma_address']?.toString() ?? 'Jl. Wisma Amal No. 1, Gorontalo';
     _wismaPhoneController.text = settings['wisma_phone']?.toString() ?? '0811-4300-XXX';
+    _wismaEmailController.text = settings['wisma_email']?.toString() ?? 'wismaamal@email.com';
+    _wismaMapsLinkController.text = settings['wisma_maps_link']?.toString() ?? 'https://maps.google.com';
     _wismaOperationalHoursController.text = settings['wisma_operational_hours']?.toString() ?? 'Senin - Sabtu, 08.00 - 17.00 WITA';
     _featureDailyRental         = settings['feature_daily_rental'] == true || settings['feature_daily_rental']?.toString() == 'true';
     _featureWhatsappReceipt   = settings['feature_whatsapp_receipt'] == true || settings['feature_whatsapp_receipt']?.toString() == 'true';
@@ -80,6 +89,8 @@ class _SettingPageState extends State<SettingPage> {
       'wisma_name': _wismaNameController.text.trim(),
       'wisma_address': _wismaAddressController.text.trim(),
       'wisma_phone': _wismaPhoneController.text.trim(),
+      'wisma_email': _wismaEmailController.text.trim(),
+      'wisma_maps_link': _wismaMapsLinkController.text.trim(),
       'wisma_operational_hours': _wismaOperationalHoursController.text.trim(),
       'feature_daily_rental': _featureDailyRental,
       'feature_whatsapp_receipt': _featureWhatsappReceipt,
@@ -259,6 +270,10 @@ class _SettingPageState extends State<SettingPage> {
         _buildField('Alamat Wisma', 'Contoh: Jl. Wisma Amal No. 1, Gorontalo', Icons.location_on_outlined, _wismaAddressController),
         const SizedBox(height: AppSpacing.md),
         _buildField('Kontak / No. Telepon', 'Contoh: 0811-4300-XXX', Icons.phone_outlined, _wismaPhoneController),
+        const SizedBox(height: AppSpacing.md),
+        _buildField('Alamat Email', 'Contoh: wismaamal@email.com', Icons.email_outlined, _wismaEmailController),
+        const SizedBox(height: AppSpacing.md),
+        _buildField('Link Google Maps', 'Contoh: https://maps.google.com/...', Icons.map_outlined, _wismaMapsLinkController),
         const SizedBox(height: AppSpacing.md),
         _buildField('Jam Operasional', 'Contoh: Senin - Sabtu, 08.00 - 17.00 WITA', Icons.access_time_outlined, _wismaOperationalHoursController),
       ],

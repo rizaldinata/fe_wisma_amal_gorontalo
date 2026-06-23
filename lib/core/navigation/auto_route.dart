@@ -148,9 +148,7 @@ class AppRouter extends RootStackRouter {
           page: FinanceDashboardRoute.page,
         ),
         AutoRoute(
-          guards: [
-            AuthGuard(serviceLocator.get<AuthRepository>()),
-          ],
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: RouteConstant.financeExpenseName,
           page: ExpenseListRoute.page,
         ),
@@ -333,6 +331,11 @@ class AppRouter extends RootStackRouter {
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
           path: RouteConstant.settingName,
           page: SettingRoute.page,
+        ),
+        AutoRoute(
+          guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
+          path: RouteConstant.landingCmsName,
+          page: LandingCmsRoute.page,
         ),
         AutoRoute(
           guards: [AuthGuard(serviceLocator.get<AuthRepository>())],
