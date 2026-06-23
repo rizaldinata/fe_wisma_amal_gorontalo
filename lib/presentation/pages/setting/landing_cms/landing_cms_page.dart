@@ -168,6 +168,7 @@ class _LandingCmsPageState extends State<LandingCmsPage> {
     required String title,
     required String subtitle,
     required Widget child,
+    bool expandChild = false,
   }) {
     final c = AppTheme.colors(context);
     return Container(
@@ -215,7 +216,17 @@ class _LandingCmsPageState extends State<LandingCmsPage> {
             ),
           ),
           Divider(color: c.borderLight, height: 1),
-          Padding(padding: const EdgeInsets.all(AppSpacing.lg), child: child),
+          expandChild
+              ? Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: child,
+                  ),
+                )
+              : Padding(
+                  padding: const EdgeInsets.all(AppSpacing.lg),
+                  child: child,
+                ),
         ],
       ),
     );
@@ -643,6 +654,7 @@ class _LandingCmsPageState extends State<LandingCmsPage> {
                             title: 'Kamar Unggulan',
                             subtitle:
                                 'Pilih kamar yang ditampilkan di halaman depan.',
+                            expandChild: isWide,
                             child: BlocBuilder<RoomBloc, RoomState>(
                               builder: (context, roomState) {
                                 if (roomState.status ==
@@ -741,10 +753,12 @@ class _LandingCmsPageState extends State<LandingCmsPage> {
                                         ),
                                       )
                                     else
-                                      GridView.builder(
-                                        shrinkWrap: true,
-                                        physics:
-                                            const NeverScrollableScrollPhysics(),
+                                      isWide
+                                          ? Expanded(
+                                              child: GridView.builder(
+                                                shrinkWrap: false,
+                                                physics:
+                                                    const AlwaysScrollableScrollPhysics(),
                                         gridDelegate:
                                             const SliverGridDelegateWithFixedCrossAxisCount(
                                               crossAxisCount: 3,
@@ -776,7 +790,44 @@ class _LandingCmsPageState extends State<LandingCmsPage> {
                                                 });
                                               },
                                             ),
-                                      ),
+                                              ),
+                                            )
+                                          : GridView.builder(
+                                              shrinkWrap: true,
+                                              physics:
+                                                  const NeverScrollableScrollPhysics(),
+                                              gridDelegate:
+                                                  const SliverGridDelegateWithFixedCrossAxisCount(
+                                                    crossAxisCount: 3,
+                                                    childAspectRatio: 0.85,
+                                                    crossAxisSpacing: AppSpacing.sm,
+                                                    mainAxisSpacing: AppSpacing.sm,
+                                                  ),
+                                              itemCount: filteredKamar.length,
+                                              itemBuilder: (ctx, i) =>
+                                                  _buildKamarCard(
+                                                    filteredKamar[i],
+                                                    _selectedRoomIds.contains(
+                                                      filteredKamar[i].id,
+                                                    ),
+                                                    () {
+                                                      setState(() {
+                                                        if (_selectedRoomIds.contains(
+                                                          filteredKamar[i].id,
+                                                        )) {
+                                                          _selectedRoomIds.remove(
+                                                            filteredKamar[i].id,
+                                                          );
+                                                        } else {
+                                                          _selectedRoomIds.add(
+                                                            filteredKamar[i].id,
+                                                          );
+                                                        }
+                                                        _checkChanges();
+                                                      });
+                                                    },
+                                                  ),
+                                            ),
                                     const SizedBox(height: AppSpacing.md),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
@@ -832,23 +883,28 @@ class _LandingCmsPageState extends State<LandingCmsPage> {
                           );
 
                           if (isWide) {
-                            return SingleChildScrollView(
+                            return Padding(
                               padding: const EdgeInsets.all(AppSpacing.xl),
                               child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   Expanded(
                                     flex: 55,
-                                    child: Column(
-                                      children: [
-                                        heroSection,
-                                        const SizedBox(height: AppSpacing.lg),
-                                        fasilitasSection,
-                                      ],
+                                    child: SingleChildScrollView(
+                                      child: Column(
+                                        children: [
+                                          heroSection,
+                                          const SizedBox(height: AppSpacing.lg),
+                                          fasilitasSection,
+                                        ],
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: AppSpacing.lg),
-                                  Expanded(flex: 45, child: kamarSection),
+                                  Expanded(
+                                    flex: 45,
+                                    child: kamarSection,
+                                  ),
                                 ],
                               ),
                             );
