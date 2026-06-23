@@ -12,21 +12,26 @@ class ResidentResponse {
   factory ResidentResponse.fromJson(Map<String, dynamic> json) {
     // Schedule API: {success: true, data: [...], meta: {...}, links: {...}}
     final schedulesList = json['data'] as List<dynamic>? ?? <dynamic>[];
-    final metaMap = json['meta'] as Map<String, dynamic>? ?? <String, dynamic>{};
+    final metaMap =
+        json['meta'] as Map<String, dynamic>? ?? <String, dynamic>{};
 
-    final items = schedulesList.map((item) => ResidentItem.fromJson(item as Map<String, dynamic>)).toList();
+    final items = schedulesList
+        .map((item) => ResidentItem.fromJson(item as Map<String, dynamic>))
+        .toList();
 
     final statsMap = json['stats'] as Map<String, dynamic>?;
 
     return ResidentResponse(
-      stats: statsMap != null ? ResidentStats.fromJson(statsMap) : ResidentStats(
-        penghuniAktif: items.where((i) => i.status == 'active').length,
-        kontrakPending: items.where((i) => i.isPending).length,
-        kontrakBerakhir: 0,
-        kamarTersedia: 0,
-      ),
+      stats: statsMap != null
+          ? ResidentStats.fromJson(statsMap)
+          : ResidentStats(
+              penghuniAktif: items.where((i) => i.status == 'active').length,
+              kontrakPending: items.where((i) => i.status == 'pending').length,
+              // kontrakBerakhir: 0,
+              kamarTersedia: 0,
+            ),
       residents: items,
-      pagination: ResidentPagination.fromJson(metaMap),
+      pagination: PaginationEntity.fromJson(metaMap),
     );
   }
 }
@@ -49,12 +54,15 @@ class ResidentItem {
   });
 
   factory ResidentItem.fromJson(Map<String, dynamic> json) {
+    final tenant = json['tenant'] as Map<String, dynamic>?;
+    final room = json['room'] as Map<String, dynamic>?;
+
     return ResidentItem(
-      id: json['id'].toString(),
-      nama: json['nama'] ?? '-',
-      kamar: json['kamar'] ?? '-',
-      kontak: json['kontak'] ?? '-',
-      detailBayar: json['detailBayar'] ?? 'Belum Lunas',
+      id: json['id']?.toString() ?? '',
+      nama: tenant?['name'] ?? '-',
+      kamar: room?['number'] ?? '-',
+      kontak: tenant?['phone'] ?? '-',
+      detailBayar: json['payment_status'] ?? 'Belum Lunas',
       status: json['status'] ?? 'Pending',
     );
   }
@@ -73,9 +81,9 @@ class ResidentStats {
 
   factory ResidentStats.fromJson(Map<String, dynamic> json) {
     return ResidentStats(
-      penghuniAktif: json['penghuniAktif'] ?? 0,
-      kontrakPending: json['kontrakPending'] ?? 0,
-      kamarTersedia: json['kamarTersedia'] ?? 0,
+      penghuniAktif: json['penghuni_aktif'] ?? 0,
+      kontrakPending: json['kontrak_pending'] ?? 0,
+      kamarTersedia: json['kamar_tersedia'] ?? 0,
     );
   }
 }

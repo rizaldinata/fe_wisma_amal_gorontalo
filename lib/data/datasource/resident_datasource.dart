@@ -30,9 +30,12 @@ class ResidentDatasource {
       if (status != null) queryParams['status'] = status;
       if (payment != null) queryParams['payment'] = payment;
 
-      final response = await dioClient.get('/v1/admin/residents', queryParams: queryParams);
+      final response = await dioClient.get(
+        '/v1/room-schedules',
+        queryParams: queryParams,
+      );
 
-      return ResidentResponse.fromJson(response.data['data']);
+      return ResidentResponse.fromJson(response.data);
     } catch (e) {
       rethrow;
     }
@@ -42,7 +45,7 @@ class ResidentDatasource {
   Future<ResidentDetailEntity> getAdminResidentDetail(String id) async {
     try {
       // Sesuaikan URL ini jika endpoint detail di backend berbeda
-      final response = await dioClient.get('/v1/room-schedules/$id'); 
+      final response = await dioClient.get('/v1/room-schedules/$id');
       return ResidentDetailModel.fromJson(response.data['data']);
     } catch (e) {
       rethrow;
@@ -79,19 +82,29 @@ class ResidentDatasource {
         'gender': gender,
         'address_ktp': addressKtp,
         if (job != null) 'job': job,
-        if (emergencyContactName != null) 'emergency_contact_name': emergencyContactName,
-        if (emergencyContactPhone != null) 'emergency_contact_phone': emergencyContactPhone,
+        if (emergencyContactName != null)
+          'emergency_contact_name': emergencyContactName,
+        if (emergencyContactPhone != null)
+          'emergency_contact_phone': emergencyContactPhone,
       });
 
       // Menyisipkan file KTP jika user memilih file
       if (ktpPhoto != null && ktpPhoto.path != null) {
-        formData.files.add(MapEntry(
-          'ktp_photo',
-          await MultipartFile.fromFile(ktpPhoto.path!, filename: ktpPhoto.name),
-        ));
+        formData.files.add(
+          MapEntry(
+            'ktp_photo',
+            await MultipartFile.fromFile(
+              ktpPhoto.path!,
+              filename: ktpPhoto.name,
+            ),
+          ),
+        );
       }
 
-      final response = await dioClient.post('/v1/resident/profile', data: formData);
+      final response = await dioClient.post(
+        '/v1/resident/profile',
+        data: formData,
+      );
       return ResidentProfileModel.fromJson(response.data['data']);
     } catch (e) {
       rethrow;

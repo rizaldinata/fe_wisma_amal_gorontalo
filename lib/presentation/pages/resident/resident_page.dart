@@ -79,14 +79,14 @@ class _ResidentViewState extends State<_ResidentView> {
     final query = _searchController.text.trim();
 
     context.read<ResidentBloc>().add(
-          FetchResidents(
-            page: _currentPage,
-            perPage: _perPage,
-            search: query.isEmpty ? null : query,
-            status: _selectedStatus == 'Semua' ? null : _selectedStatus,
-            payment: _selectedPayment == 'Semua' ? null : _selectedPayment,
-          ),
-        );
+      FetchResidents(
+        page: _currentPage,
+        perPage: _perPage,
+        search: query.isEmpty ? null : query,
+        status: _selectedStatus == 'Semua' ? null : _selectedStatus,
+        payment: _selectedPayment == 'Semua' ? null : _selectedPayment,
+      ),
+    );
   }
 
   void _onSearchChanged(String value) {
@@ -113,7 +113,9 @@ class _ResidentViewState extends State<_ResidentView> {
       context: context,
       builder: (context) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: ResidentDetailForm(residentId: resident.id),
         );
       },
@@ -125,7 +127,9 @@ class _ResidentViewState extends State<_ResidentView> {
     final isDark = AppTheme.isDark(context);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColorsDark.background : AppColorsLight.background,
+      backgroundColor: isDark
+          ? AppColorsDark.background
+          : AppColorsLight.background,
       body: Column(
         children: [
           AppTopBar(
@@ -138,11 +142,15 @@ class _ResidentViewState extends State<_ResidentView> {
                 if (state is ResidentLoaded) {
                   setState(() {
                     if (_currentPage == 1) {
-                      _residentCache = List<ResidentItem>.from(state.data.residents);
+                      _residentCache = List<ResidentItem>.from(
+                        state.data.residents,
+                      );
                     } else {
                       _residentCache.addAll(state.data.residents);
                     }
-                    _hasMore = state.data.pagination.currentPage < state.data.pagination.lastPage;
+                    _hasMore =
+                        state.data.pagination.currentPage <
+                        state.data.pagination.lastPage;
                     _isLoadingMore = false;
                   });
                 }
@@ -177,16 +185,21 @@ class _ResidentViewState extends State<_ResidentView> {
 
                   final activeCount = stats?.penghuniAktif ?? 0;
                   final pendingCount = stats?.kontrakPending ?? 0;
+                  final availableRooms = stats?.kamarTersedia ?? 0;
 
                   final residentRows = _residentCache.where((row) {
-                    final matchesSearch = query.isEmpty ||
+                    final matchesSearch =
+                        query.isEmpty ||
                         row.nama.toLowerCase().contains(query) ||
                         row.kamar.toLowerCase().contains(query) ||
                         row.kontak.toLowerCase().contains(query);
 
-                    final matchesStatus = _selectedStatus == 'Semua' || row.status == _selectedStatus;
+                    final matchesStatus =
+                        _selectedStatus == 'Semua' ||
+                        row.status == _selectedStatus;
                     final matchesPayment =
-                        _selectedPayment == 'Semua' || row.detailBayar == _selectedPayment;
+                        _selectedPayment == 'Semua' ||
+                        row.detailBayar == _selectedPayment;
 
                     return matchesSearch && matchesStatus && matchesPayment;
                   }).toList();
@@ -199,38 +212,53 @@ class _ResidentViewState extends State<_ResidentView> {
                       children: [
                         // Summary Cards
                         Row(
-                          children: [
-                            Expanded(
-                              child: SummaryStatCard(
-                                label: 'Penghuni Aktif',
-                                value: activeCount.toString(),
-                                icon: Icons.person_outline,
-                                iconColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
-                                iconBg: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.lg),
-                            Expanded(
-                              child: SummaryStatCard(
-                                label: 'Kontrak Pending',
-                                value: pendingCount.toString(),
-                                icon: Icons.note_add_outlined,
-                                iconColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
-                                iconBg: isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.lg),
-                            Expanded(
-                              child: SummaryStatCard(
-                                label: 'Kamar Tersedia',
-                                value: availableRooms.toString(),
-                                icon: Icons.bedroom_parent_outlined,
-                                iconColor: isDark ? AppColorsDark.primary : AppColorsLight.primary,
-                                iconBg: isDark ? AppColorsDark.primaryLight : AppColorsLight.primaryLight,
-                              ),
-                            ),
-                          ],
-                        ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0, duration: 300.ms),
+                              children: [
+                                Expanded(
+                                  child: SummaryStatCard(
+                                    label: 'Penghuni Aktif',
+                                    value: activeCount.toString(),
+                                    icon: Icons.person_outline,
+                                    iconColor: isDark
+                                        ? AppColorsDark.statusDone
+                                        : AppColorsLight.statusDone,
+                                    iconBg: isDark
+                                        ? AppColorsDark.statusDoneBg
+                                        : AppColorsLight.statusDoneBg,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.lg),
+                                Expanded(
+                                  child: SummaryStatCard(
+                                    label: 'Kontrak Pending',
+                                    value: pendingCount.toString(),
+                                    icon: Icons.note_add_outlined,
+                                    iconColor: isDark
+                                        ? AppColorsDark.statusWaiting
+                                        : AppColorsLight.statusWaiting,
+                                    iconBg: isDark
+                                        ? AppColorsDark.statusWaitingBg
+                                        : AppColorsLight.statusWaitingBg,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.lg),
+                                Expanded(
+                                  child: SummaryStatCard(
+                                    label: 'Kamar Tersedia',
+                                    value: availableRooms.toString(),
+                                    icon: Icons.bedroom_parent_outlined,
+                                    iconColor: isDark
+                                        ? AppColorsDark.primary
+                                        : AppColorsLight.primary,
+                                    iconBg: isDark
+                                        ? AppColorsDark.primaryLight
+                                        : AppColorsLight.primaryLight,
+                                  ),
+                                ),
+                              ],
+                            )
+                            .animate()
+                            .fadeIn(duration: 300.ms)
+                            .slideY(begin: 0.1, end: 0, duration: 300.ms),
 
                         const SizedBox(height: AppSpacing.xxxl),
 
@@ -278,7 +306,8 @@ class _ResidentViewState extends State<_ResidentView> {
                             child: EmptyStateWidget(
                               icon: Icons.group_off_outlined,
                               title: 'Tidak Ada Penghuni',
-                              subtitle: 'Belum ada data penghuni yang terdaftar atau sesuai filter saat ini.',
+                              subtitle:
+                                  'Belum ada data penghuni yang terdaftar atau sesuai filter saat ini.',
                             ),
                           )
                         else
@@ -298,14 +327,24 @@ class _ResidentViewState extends State<_ResidentView> {
                               return DataRow(
                                 cells: [
                                   DataCell(Text('$index')),
-                                  DataCell(Text(row.nama, style: const TextStyle(fontWeight: FontWeight.w600))),
+                                  DataCell(
+                                    Text(
+                                      row.nama,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
                                   DataCell(Text(row.kamar)),
                                   DataCell(Text(row.kontak)),
-                                  DataCell(StatusBadge(status: row.detailBayar)),
+                                  DataCell(
+                                    StatusBadge(status: row.detailBayar),
+                                  ),
                                   DataCell(StatusBadge(status: row.status)),
                                   DataCell(
                                     TextButton(
-                                      onPressed: () => _showResidentDetail(context, row),
+                                      onPressed: () =>
+                                          _showResidentDetail(context, row),
                                       child: const Text('Detail'),
                                     ),
                                   ),
@@ -322,7 +361,9 @@ class _ResidentViewState extends State<_ResidentView> {
                               child: SizedBox(
                                 height: 22,
                                 width: 22,
-                                child: CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               ),
                             ),
                           ),
@@ -353,16 +394,22 @@ class _ResidentViewState extends State<_ResidentView> {
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+        border: Border.all(
+          color: isDark
+              ? AppColorsDark.borderLight
+              : AppColorsLight.borderLight,
+        ),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
           items: items
-              .map((e) => DropdownMenuItem(
-                    value: e,
-                    child: Text(e, style: const TextStyle(fontSize: 14)),
-                  ))
+              .map(
+                (e) => DropdownMenuItem(
+                  value: e,
+                  child: Text(e, style: const TextStyle(fontSize: 14)),
+                ),
+              )
               .toList(),
           onChanged: (v) {
             if (v != null) onChanged(v);
@@ -382,22 +429,29 @@ class _ResidentViewState extends State<_ResidentView> {
       child: Column(
         children: [
           Row(
-            children: List.generate(3, (index) => Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(right: index < 2 ? AppSpacing.lg : 0),
-                child: Shimmer.fromColors(
-                  baseColor: baseColor,
-                  highlightColor: highlightColor,
-                  child: Container(
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            children: List.generate(
+              3,
+              (index) => Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    right: index < 2 ? AppSpacing.lg : 0,
+                  ),
+                  child: Shimmer.fromColors(
+                    baseColor: baseColor,
+                    highlightColor: highlightColor,
+                    child: Container(
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusLg,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            )),
+            ),
           ),
           const SizedBox(height: AppSpacing.xxxl),
           Expanded(
