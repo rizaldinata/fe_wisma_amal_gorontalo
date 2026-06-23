@@ -45,7 +45,7 @@ class ResidentDatasource {
   Future<ResidentDetailEntity> getAdminResidentDetail(String id) async {
     try {
       // Sesuaikan URL ini jika endpoint detail di backend berbeda
-      final response = await dioClient.get('/room-schedules/$id');
+      final response = await dioClient.get('/v1/room-schedules/$id');
       return ResidentDetailModel.fromJson(response.data['data']);
     } catch (e) {
       rethrow;
