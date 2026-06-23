@@ -21,12 +21,13 @@ class ResidentResponse {
 
     // Membaca key yang benar dari response backend: 'residents', 'pagination', 'stats'
     final residentsList = json['residents'] as List<dynamic>? ?? <dynamic>[];
-    final paginationMap = json['pagination'] as Map<String, dynamic>? ?? <String, dynamic>{};
+    // final paginationMap =
+    //     json['pagination'] as Map<String, dynamic>? ?? <String, dynamic>{};
     final statsMap = json['stats'] as Map<String, dynamic>?;
 
-    final items = residentsList
-        .map((item) => ResidentItem.fromJson(item as Map<String, dynamic>))
-        .toList();
+    // final resident = residentsList
+    //     .map((item) => ResidentItem.fromJson(item as Map<String, dynamic>))
+    //     .toList();
 
     return ResidentResponse(
       stats: statsMap != null
@@ -37,16 +38,16 @@ class ResidentResponse {
               // kontrakBerakhir: 0,
               kamarTersedia: 0,
             ),
-      stats: statsMap != null 
-          ? ResidentStats.fromJson(statsMap) 
-          : ResidentStats(
-              penghuniAktif: items.where((i) => i.status == 'Active').length,
-              kontrakPending: items.where((i) => i.status == 'Pending').length,
-              kamarTersedia: 0,
-            ),
+      // stats: statsMap != null
+      //     ? ResidentStats.fromJson(statsMap)
+      //     : ResidentStats(
+      //         penghuniAktif: items.where((i) => i.status == 'Active').length,
+      //         kontrakPending: items.where((i) => i.status == 'Pending').length,
+      //         kamarTersedia: 0,
+      //       ),
       residents: items,
       pagination: PaginationEntity.fromJson(metaMap),
-      pagination: PaginationEntity.fromJson(paginationMap),
+      // pagination: PaginationEntity.fromJson(paginationMap),
     );
   }
 }
