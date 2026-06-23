@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/domain/entity/guest/guest_entity.dart';
 import 'package:frontend/domain/usecase/guest/create_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/delete_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/extend_my_guest_usecase.dart'; // <-- Pastikan class ini dibuat
 import 'package:frontend/domain/usecase/guest/get_my_guests_usecase.dart';
 import 'package:frontend/domain/usecase/guest/pay_guest_bill_usecase.dart';
 import 'package:frontend/domain/usecase/guest/checkout_my_guest_usecase.dart';
@@ -53,6 +54,13 @@ class CheckoutMyGuest extends MyGuestEvent {
   CheckoutMyGuest(this.id);
 }
 
+class ExtendMyGuest extends MyGuestEvent {
+  final int id;
+  final String newCheckOutAt;
+
+  ExtendMyGuest({required this.id, required this.newCheckOutAt});
+}
+
 // ─── States ───────────────────────────────────────────────────────────────────
 
 abstract class MyGuestState {}
@@ -95,6 +103,7 @@ class MyGuestBloc extends Bloc<MyGuestEvent, MyGuestState> {
   final DeleteGuestUseCase deleteGuestUseCase;
   final PayGuestBillUseCase payGuestBillUseCase;
   final CheckoutMyGuestUseCase checkoutMyGuestUseCase;
+  final ExtendMyGuestUseCase extendMyGuestUseCase; // <-- Use Case Baru
 
   MyGuestBloc({
     required this.getMyGuestsUseCase,
@@ -102,6 +111,7 @@ class MyGuestBloc extends Bloc<MyGuestEvent, MyGuestState> {
     required this.deleteGuestUseCase,
     required this.payGuestBillUseCase,
     required this.checkoutMyGuestUseCase,
+    required this.extendMyGuestUseCase,
   }) : super(MyGuestInitial()) {
     on<FetchMyGuests>(_onFetch);
     on<CreateMyGuest>(_onCreate);
@@ -109,6 +119,18 @@ class MyGuestBloc extends Bloc<MyGuestEvent, MyGuestState> {
     on<PayGuestBillManual>(_onPayManual);
     on<PayGuestBillMidtrans>(_onPayMidtrans);
     on<CheckoutMyGuest>(_onCheckout);
+    on<ExtendMyGuest>(_onExtend);
+  }
+
+  Future<void> _onExtend(ExtendMyGuest event, Emitter<MyGuestState> emit) async {
+    try {
+      await extendMyGuestUseCase(event.id, event.newCheckOutAt);
+      emit(MyGuestActionSuccess('Masa inap tamu berhasil diperpanjang.'));
+      final guests = await getMyGuestsUseCase();
+      emit(MyGuestLoaded(guests));
+    } catch (e) {
+      emit(MyGuestActionError(e.toString()));
+    }
   }
 
   Future<void> _onCheckout(CheckoutMyGuest event, Emitter<MyGuestState> emit) async {

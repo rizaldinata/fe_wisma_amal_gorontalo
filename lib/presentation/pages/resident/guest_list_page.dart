@@ -523,16 +523,16 @@ class _AdminGuestDialogState extends State<_AdminGuestDialog> {
       return;
     }
 
-    final leaseId = int.tryParse(_selectedResident!.id);
-    if (leaseId == null) {
-      AppSnackbar.showError('ID sewa tidak valid.');
+    final scheduleId = int.tryParse(_selectedResident!.id);
+    if (scheduleId == null) {
+      AppSnackbar.showError('ID jadwal tidak valid.');
       return;
     }
 
     setState(() => _isSubmitting = true);
 
     context.read<GuestBloc>().add(CreateAdminGuest(
-          leaseId: leaseId,
+          scheduleId: scheduleId,
           name: _nameController.text.trim(),
           checkInAt: _checkIn!.toIso8601String(),
           checkOutAt: _checkOut!.toIso8601String(),

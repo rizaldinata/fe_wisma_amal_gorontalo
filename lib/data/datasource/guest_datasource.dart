@@ -70,7 +70,7 @@ class GuestDatasource {
   }
 
   Future<GuestItem> createAdminGuest({
-    required int leaseId,
+    required int scheduleId,
     required String name,
     required String checkInAt,
     required String checkOutAt,
@@ -80,7 +80,7 @@ class GuestDatasource {
       final response = await dioClient.post(
         EndpointConstant.adminGuestsEndpoint,
         data: {
-          'lease_id': leaseId,
+          'schedule_id': scheduleId,
           'name': name,
           'check_in_at': checkInAt,
           'check_out_at': checkOutAt,
@@ -120,6 +120,28 @@ class GuestDatasource {
       final payload = response.data['data'];
       return MyGuestItem.fromJson(
           payload is Map<String, dynamic> ? payload : <String, dynamic>{});
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> extendAdminGuest(int id, String newCheckOutAt) async {
+    try {
+      await dioClient.put(
+        EndpointConstant.extendAdminGuestEndpoint(id),
+        data: {'check_out_at': newCheckOutAt},
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<void> extendMyGuest(int id, String newCheckOutAt) async {
+    try {
+      await dioClient.put(
+        EndpointConstant.extendMyGuestEndpoint(id),
+        data: {'check_out_at': newCheckOutAt},
+      );
     } catch (e) {
       rethrow;
     }

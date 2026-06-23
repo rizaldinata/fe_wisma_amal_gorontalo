@@ -7,14 +7,14 @@ class CreateAdminGuestUseCase {
   CreateAdminGuestUseCase(this._repository);
 
   Future<GuestItem> call({
-    required int leaseId,
+    required int scheduleId,
     required String name,
     required String checkInAt,
     required String checkOutAt,
     required String relationship,
   }) {
     return _repository.createAdminGuest(
-      leaseId: leaseId,
+      scheduleId: scheduleId,
       name: name,
       checkInAt: checkInAt,
       checkOutAt: checkOutAt,

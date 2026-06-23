@@ -52,7 +52,7 @@ class GuestRepositoryImpl implements GuestRepository {
 
   @override
   Future<GuestItem> createAdminGuest({
-    required int leaseId,
+    required int scheduleId,
     required String name,
     required String checkInAt,
     required String checkOutAt,
@@ -60,7 +60,7 @@ class GuestRepositoryImpl implements GuestRepository {
   }) async {
     try {
       return await datasource.createAdminGuest(
-        leaseId: leaseId,
+        scheduleId: scheduleId,
         name: name,
         checkInAt: checkInAt,
         checkOutAt: checkOutAt,
@@ -93,6 +93,24 @@ class GuestRepositoryImpl implements GuestRepository {
   Future<MyGuestItem> checkoutMyGuest(int id) async {
     try {
       return await datasource.checkoutMyGuest(id);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> extendAdminGuest(int id, String newCheckOutAt) async {
+    try {
+      await datasource.extendAdminGuest(id, newCheckOutAt);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> extendMyGuest(int id, String newCheckOutAt) async {
+    try {
+      await datasource.extendMyGuest(id, newCheckOutAt);
     } catch (e) {
       rethrow;
     }

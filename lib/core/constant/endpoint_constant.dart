@@ -27,6 +27,8 @@ class EndpointConstant {
   static String checkoutAdminGuestEndpoint(int id) => '/admin/guests/$id/checkout';
   static const String myGuestsEndpoint = '/guests';
   static String checkoutMyGuestEndpoint(int id) => '/guests/$id/checkout';
+  static String extendAdminGuestEndpoint(int id) => '/admin/guests/$id/extend';
+  static String extendMyGuestEndpoint(int id) => '/guests/$id/extend';
   static String deleteGuestEndpoint(int id) => '/guests/$id';
   static String guestBillEndpoint(int guestId) => '/guests/$guestId/bill';
   static String payGuestBillEndpoint(int guestId) =>

@@ -115,6 +115,8 @@ import 'package:frontend/domain/usecase/guest/create_admin_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/checkout_admin_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/delete_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/checkout_my_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/extend_admin_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/extend_my_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/pay_guest_bill_usecase.dart';
 import 'package:frontend/domain/usecase/guest/get_admin_guest_bills_usecase.dart';
 import 'package:frontend/domain/usecase/guest/verify_guest_bill_usecase.dart';
@@ -391,6 +393,7 @@ Future<void> initializeBloc() async {
       createAdminGuestUseCase: serviceLocator.get<CreateAdminGuestUseCase>(),
       checkoutAdminGuestUseCase: serviceLocator
           .get<CheckoutAdminGuestUseCase>(),
+      extendAdminGuestUseCase: serviceLocator.get<ExtendAdminGuestUseCase>(),
     ),
   );
 
@@ -401,6 +404,7 @@ Future<void> initializeBloc() async {
       deleteGuestUseCase: serviceLocator.get<DeleteGuestUseCase>(),
       payGuestBillUseCase: serviceLocator.get<PayGuestBillUseCase>(),
       checkoutMyGuestUseCase: serviceLocator.get<CheckoutMyGuestUseCase>(),
+      extendMyGuestUseCase: serviceLocator.get<ExtendMyGuestUseCase>(),
     ),
   );
 

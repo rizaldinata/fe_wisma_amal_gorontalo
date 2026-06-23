@@ -106,6 +106,8 @@ import 'package:frontend/domain/usecase/guest/get_admin_guest_bills_usecase.dart
 import 'package:frontend/domain/usecase/guest/verify_guest_bill_usecase.dart';
 import 'package:frontend/domain/usecase/guest/checkout_admin_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/checkout_my_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/extend_admin_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/extend_my_guest_usecase.dart';
 import 'package:frontend/domain/repository/notification_repository.dart';
 import 'package:frontend/domain/usecase/notification/get_notification_logs_usecase.dart';
 import 'package:frontend/domain/usecase/notification/mark_all_notification_logs_read_usecase.dart';
@@ -443,6 +445,12 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => CheckoutMyGuestUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => ExtendAdminGuestUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => ExtendMyGuestUseCase(serviceLocator<GuestRepository>()),
   );
 
   serviceLocator.registerFactory(

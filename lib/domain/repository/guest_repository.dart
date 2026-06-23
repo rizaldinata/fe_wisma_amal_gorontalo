@@ -19,7 +19,7 @@ abstract class GuestRepository {
   });
 
   Future<GuestItem> createAdminGuest({
-    required int leaseId,
+    required int scheduleId,
     required String name,
     required String checkInAt,
     required String checkOutAt,
@@ -29,6 +29,8 @@ abstract class GuestRepository {
   Future<void> deleteGuest(int id);
   Future<GuestItem> checkoutAdminGuest(int id);
   Future<MyGuestItem> checkoutMyGuest(int id);
+  Future<void> extendAdminGuest(int id, String newCheckOutAt);
+  Future<void> extendMyGuest(int id, String newCheckOutAt);
 
   // ─── Billing ─────────────────────────────────────────────────────────────
 

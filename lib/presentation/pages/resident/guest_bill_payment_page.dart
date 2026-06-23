@@ -292,7 +292,8 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
             const Divider(height: 20),
             _summaryRow(theme, 'Tamu', widget.guestName),
             if (widget.billNumber != null)
-              _summaryRow(theme, 'No. Tagihan', widget.billNumber!),
+              _summaryRow(theme, 'No. Tagihan', widget.billNumber!, 
+                  valueColor: theme.colorScheme.primary, boldValue: true),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -478,7 +479,7 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
     );
   }
 
-  Widget _summaryRow(ThemeData theme, String label, String value) {
+  Widget _summaryRow(ThemeData theme, String label, String value, {Color? valueColor, bool boldValue = false}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Row(
@@ -488,8 +489,10 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
               style: theme.textTheme.bodyMedium
                   ?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
           Text(value,
-              style: theme.textTheme.bodyMedium
-                  ?.copyWith(fontWeight: FontWeight.w600)),
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: boldValue ? FontWeight.w700 : FontWeight.w600,
+                color: valueColor ?? theme.colorScheme.onSurface,
+              )),
         ],
       ),
     );

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -115,6 +117,8 @@ class _MyGuestView extends StatelessWidget {
                                   context, state.guests[index]),
                               onCheckout: () => _confirmCheckout(
                                   context, state.guests[index]),
+                              onExtend: () => _showExtendDialog(
+                                  context, state.guests[index]),
                             );
                           },
                         ),
@@ -170,6 +174,16 @@ class _MyGuestView extends StatelessWidget {
     );
   }
 
+  void _showExtendDialog(BuildContext context, MyGuestItem item) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => BlocProvider.value(
+        value: context.read<MyGuestBloc>(),
+        child: _ExtendGuestDialog(item: item),
+      ),
+    );
+  }
+
   Future<void> _showPaymentDialog(BuildContext context, MyGuestItem item) async {
     final method = await showDialog<String>(
       context: context,
@@ -180,7 +194,9 @@ class _MyGuestView extends StatelessWidget {
     if (method == 'midtrans') {
       context.read<MyGuestBloc>().add(PayGuestBillMidtrans(item.id));
     } else {
-      final amount = item.bill?.amount ?? item.chargeAmount;
+      final amount = item.bill != null && (item.bill!.amount < item.chargeAmount)
+          ? item.chargeAmount - item.bill!.amount
+          : (item.bill?.amount ?? item.chargeAmount);
       final result = await context.router.push<bool>(
         GuestBillPaymentRoute(
           guestId: item.id,
@@ -196,8 +212,135 @@ class _MyGuestView extends StatelessWidget {
   }
 }
 
-// ─── Payment Method Dialog ────────────────────────────────────────────────────
+// ─── Extend Guest Dialog ───────────────────────────────────────────────
+class _ExtendGuestDialog extends StatefulWidget {
+  const _ExtendGuestDialog({required this.item});
+  final MyGuestItem item;
 
+  @override
+  State<_ExtendGuestDialog> createState() => _ExtendGuestDialogState();
+}
+
+class _ExtendGuestDialogState extends State<_ExtendGuestDialog> {
+  DateTime? _checkOut;
+  bool _isSubmitting = false;
+
+  Future<void> _pickDateTime() async {
+    final oldCheckOut = DateTime.tryParse(widget.item.checkOutAt) ?? DateTime.now();
+    final initial = _checkOut ?? oldCheckOut;
+    
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime.now(),
+      lastDate: DateTime(2030),
+    );
+    if (date == null || !mounted) return;
+
+    final time = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(initial),
+    );
+    if (time == null || !mounted) return;
+
+    setState(() {
+      _checkOut = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+    });
+  }
+
+  void _submit() {
+    if (_checkOut == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pilih tanggal & jam perpanjangan terlebih dahulu')),
+      );
+      return;
+    }
+
+    final oldCheckOut = DateTime.tryParse(widget.item.checkOutAt) ?? DateTime.now();
+    if (!_checkOut!.isAfter(oldCheckOut)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Tanggal keluar baru harus setelah tanggal keluar sebelumnya')),
+      );
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    context.read<MyGuestBloc>().add(ExtendMyGuest(
+          id: widget.item.id,
+          newCheckOutAt: _checkOut!.toIso8601String(),
+        ));
+
+    Navigator.of(context).pop();
+  }
+
+  String _formatDateTime(DateTime dt) {
+    final day = dt.day.toString().padLeft(2, '0');
+    final month = dt.month.toString().padLeft(2, '0');
+    final year = dt.year;
+    final hour = dt.hour.toString().padLeft(2, '0');
+    final minute = dt.minute.toString().padLeft(2, '0');
+    return '$day/$month/$year $hour:$minute';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Dialog(
+      backgroundColor: theme.colorScheme.surfaceContainerLow,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Perpanjang Masa Inap',
+              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Pilih tanggal keluar yang baru untuk tamu ${widget.item.name}. '
+              'Biaya sewa tambahan (jika ada) akan dihitung secara otomatis.',
+              style: theme.textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 16),
+            _DateTimeTile(
+              label: 'Pilih Tanggal Keluar Baru',
+              value: _checkOut != null ? _formatDateTime(_checkOut!) : null,
+              onTap: _pickDateTime,
+            ),
+            const SizedBox(height: 28),
+            Row(
+              children: [
+                Expanded(
+                  child: BasicButton(
+                    type: ButtonType.secondary,
+                    onPressed: () => Navigator.of(context).pop(),
+                    label: 'Batal',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: BasicButton(
+                    isLoading: _isSubmitting,
+                    onPressed: _isSubmitting ? null : _submit,
+                    label: 'Perpanjang',
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Payment Method Dialog ────────────────────────────────────────────────────
 class _PaymentMethodDialog extends StatefulWidget {
   const _PaymentMethodDialog({required this.item});
   final MyGuestItem item;
@@ -219,7 +362,10 @@ class _PaymentMethodDialogState extends State<_PaymentMethodDialog> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final bill = widget.item.bill;
-    final amount = bill?.amount ?? widget.item.chargeAmount;
+    final isExtensionBill = bill != null && (bill.amount < widget.item.chargeAmount);
+    final amount = isExtensionBill
+        ? widget.item.chargeAmount - bill.amount
+        : (bill?.amount ?? widget.item.chargeAmount);
 
     return Dialog(
       backgroundColor: theme.colorScheme.surfaceContainerLow,
@@ -364,7 +510,6 @@ class _MethodOption extends StatelessWidget {
 }
 
 // ─── Add Guest Dialog ─────────────────────────────────────────────────────────
-
 class _AddGuestDialog extends StatefulWidget {
   const _AddGuestDialog();
 
@@ -693,7 +838,6 @@ class _DateTimeTile extends StatelessWidget {
 }
 
 // ─── Guest Card ───────────────────────────────────────────────────────────────
-
 class _GuestCard extends StatelessWidget {
   const _GuestCard({
     required this.item,
@@ -701,6 +845,7 @@ class _GuestCard extends StatelessWidget {
     required this.onDelete,
     required this.onPay,
     required this.onCheckout,
+    required this.onExtend, 
   });
 
   final MyGuestItem item;
@@ -708,6 +853,7 @@ class _GuestCard extends StatelessWidget {
   final VoidCallback onDelete;
   final VoidCallback onPay;
   final VoidCallback onCheckout;
+  final VoidCallback onExtend; 
 
   String _formatDateTime(String raw) {
     try {
@@ -745,7 +891,11 @@ class _GuestCard extends StatelessWidget {
     final theme = Theme.of(context);
     final bill = item.bill;
     final hasBill = bill != null;
-    final canPay = hasBill && bill.canPay;
+
+    // Logika perhitungan selisih tagihan (Hanya ditampilkan jika nominal bill < chargeAmount)
+    final isExtensionBill = hasBill && (bill.amount < item.chargeAmount);
+
+    final canPay = (hasBill && bill.canPay) || isExtensionBill;
 
     return Card(
       elevation: 2,
@@ -840,7 +990,7 @@ class _GuestCard extends StatelessWidget {
                 icon: Icons.nights_stay_outlined,
                 label: 'Durasi',
                 value: '${item.totalDays} hari'
-                    '${item.billableDays > 0 ? ' (${item.billableDays} hari dikenakan biaya)' : ''}',
+                    '${item.billableDays > 0 ? ' (${item.billableDays} hari berbayar)' : ''}',
                 color: theme.colorScheme.onSurfaceVariant,
               ),
             ],
@@ -848,10 +998,31 @@ class _GuestCard extends StatelessWidget {
               const SizedBox(height: 8),
               _InfoRow(
                 icon: Icons.receipt_outlined,
-                label: 'Biaya Tamu',
+                // Ubah nama label jika ada selisih tagihan
+                label: isExtensionBill ? 'Total Biaya Keseluruhan' : 'Total Biaya Tamu',
                 value: currency.format(item.chargeAmount),
-                color: theme.colorScheme.error,
-                bold: true,
+                color: isExtensionBill ? theme.colorScheme.onSurfaceVariant : theme.colorScheme.error,
+                bold: !isExtensionBill, // Jika ada selisih, bold-nya dilepas agar tidak membingungkan
+              ),
+            ],
+
+            // Tampilkan baris khusus ini HANYA jika nominal tagihan baru < total keseluruhan
+            if (isExtensionBill) ...[
+              const SizedBox(height: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.errorContainer.withAlpha(50),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: theme.colorScheme.errorContainer),
+                ),
+                child: _InfoRow(
+                  icon: Icons.account_balance_wallet_outlined,
+                  label: 'Tagihan Baru (Selisih Extend)',
+                  value: currency.format(item.chargeAmount - bill.amount),
+                  color: theme.colorScheme.error,
+                  bold: true,
+                ),
               ),
             ],
 
@@ -888,16 +1059,28 @@ class _GuestCard extends StatelessWidget {
               ),
             ],
 
-            // ── Tombol / status checkout ──
-            const SizedBox(height: 12),
+            // ── Tombol Perpanjang / status checkout ──
+            const SizedBox(height: 16),
             if (item.stayCompletedNotifiedAt == null)
-              SizedBox(
-                width: double.infinity,
-                child: BasicButton(
-                  onPressed: onCheckout,
-                  leadIcon: const Icon(Icons.check_circle_outline, size: 20, color: Colors.white),
-                  label: 'Tamu Telah Keluar',
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: BasicButton(
+                      type: ButtonType.secondary,
+                      onPressed: onExtend,
+                      leadIcon: const Icon(Icons.update, size: 20),
+                      label: 'Perpanjang',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: BasicButton(
+                      onPressed: onCheckout,
+                      leadIcon: const Icon(Icons.check_circle_outline, size: 20, color: Colors.white),
+                      label: 'Telah Keluar',
+                    ),
+                  ),
+                ],
               )
             else
               Container(
@@ -984,7 +1167,6 @@ class _InfoRow extends StatelessWidget {
 }
 
 // ─── Helper Views ─────────────────────────────────────────────────────────────
-
 class _EmptyView extends StatelessWidget {
   const _EmptyView({required this.onAdd});
   final VoidCallback onAdd;

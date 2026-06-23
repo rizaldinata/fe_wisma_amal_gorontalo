@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/domain/entity/guest/guest_entity.dart';
 import 'package:frontend/domain/usecase/guest/checkout_admin_guest_usecase.dart';
 import 'package:frontend/domain/usecase/guest/create_admin_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/extend_admin_guest_usecase.dart'; // <-- Pastikan class ini dibuat
 import 'package:frontend/domain/usecase/guest/get_admin_guests_usecase.dart';
 
 // --- EVENTS ---
@@ -16,14 +17,14 @@ class FetchAdminGuests extends GuestEvent {
 }
 
 class CreateAdminGuest extends GuestEvent {
-  final int leaseId;
+  final int scheduleId; // <-- Diganti menjadi scheduleId (dari sebelumnya leaseId)
   final String name;
   final String checkInAt;
   final String checkOutAt;
   final String relationship;
 
   CreateAdminGuest({
-    required this.leaseId,
+    required this.scheduleId,
     required this.name,
     required this.checkInAt,
     required this.checkOutAt,
@@ -34,6 +35,13 @@ class CreateAdminGuest extends GuestEvent {
 class CheckoutAdminGuest extends GuestEvent {
   final int id;
   CheckoutAdminGuest(this.id);
+}
+
+class ExtendAdminGuest extends GuestEvent {
+  final int id;
+  final String newCheckOutAt;
+
+  ExtendAdminGuest({required this.id, required this.newCheckOutAt});
 }
 
 // --- STATES ---
@@ -68,11 +76,13 @@ class GuestBloc extends Bloc<GuestEvent, GuestState> {
   final GetAdminGuestsUseCase getAdminGuestsUseCase;
   final CreateAdminGuestUseCase createAdminGuestUseCase;
   final CheckoutAdminGuestUseCase checkoutAdminGuestUseCase;
+  final ExtendAdminGuestUseCase extendAdminGuestUseCase; // <-- Use Case Baru
 
   GuestBloc({
     required this.getAdminGuestsUseCase,
     required this.createAdminGuestUseCase,
     required this.checkoutAdminGuestUseCase,
+    required this.extendAdminGuestUseCase,
   }) : super(GuestInitial()) {
     on<FetchAdminGuests>((event, emit) async {
       if (event.page == 1) {
@@ -93,7 +103,7 @@ class GuestBloc extends Bloc<GuestEvent, GuestState> {
     on<CreateAdminGuest>((event, emit) async {
       try {
         await createAdminGuestUseCase(
-          leaseId: event.leaseId,
+          scheduleId: event.scheduleId,
           name: event.name,
           checkInAt: event.checkInAt,
           checkOutAt: event.checkOutAt,
@@ -109,7 +119,15 @@ class GuestBloc extends Bloc<GuestEvent, GuestState> {
       try {
         await checkoutAdminGuestUseCase(event.id);
         emit(GuestActionSuccess('Tamu berhasil ditandai keluar.'));
-        // We'll let the UI dispatch FetchAdminGuests again or we can do it here if we know the page
+      } catch (e) {
+        emit(GuestActionError(e.toString()));
+      }
+    });
+
+    on<ExtendAdminGuest>((event, emit) async {
+      try {
+        await extendAdminGuestUseCase(event.id, event.newCheckOutAt);
+        emit(GuestActionSuccess('Waktu menginap tamu berhasil diperpanjang.'));
       } catch (e) {
         emit(GuestActionError(e.toString()));
       }

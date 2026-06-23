@@ -16,7 +16,7 @@ import 'package:frontend/presentation/widget/core/table/app_data_table.dart';
 import 'package:frontend/presentation/widget/core/wrapper/empty_state_widget.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:frontend/presentation/widget/core/botton/button.dart';
+import 'package:frontend/presentation/widget/core/botton/button.dart'; // Catatan: Sepertinya ada typo 'botton', sesuaikan dengan path asli Anda jika error
 import 'form/resident_detail_form.dart';
 
 @RoutePage()
@@ -173,23 +173,10 @@ class _ResidentViewState extends State<_ResidentView> {
                 if (state is ResidentLoaded || _residentCache.isNotEmpty) {
                   final data = state is ResidentLoaded ? state.data : null;
                   final stats = data?.stats;
-                  final query = _searchController.text.trim().toLowerCase();
 
                   final activeCount = stats?.penghuniAktif ?? 0;
                   final pendingCount = stats?.kontrakPending ?? 0;
-
-                  final residentRows = _residentCache.where((row) {
-                    final matchesSearch = query.isEmpty ||
-                        row.nama.toLowerCase().contains(query) ||
-                        row.kamar.toLowerCase().contains(query) ||
-                        row.kontak.toLowerCase().contains(query);
-
-                    final matchesStatus = _selectedStatus == 'Semua' || row.status == _selectedStatus;
-                    final matchesPayment =
-                        _selectedPayment == 'Semua' || row.detailBayar == _selectedPayment;
-
-                    return matchesSearch && matchesStatus && matchesPayment;
-                  }).toList();
+                  final availableRooms = stats?.kamarTersedia ?? 0;
 
                   return SingleChildScrollView(
                     controller: _tableScrollController,
