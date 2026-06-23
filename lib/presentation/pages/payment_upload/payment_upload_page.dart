@@ -12,6 +12,7 @@ import '../../../domain/entity/reservation_entity.dart';
 import '../../../domain/entity/setting/bank_account_entity.dart';
 import '../../../domain/usecase/reservation/cancel_reservation_usecase.dart';
 import '../../../domain/usecase/setting/get_public_bank_accounts_usecase.dart';
+import '../../../domain/usecase/setting/get_public_settings_usecase.dart';
 import '../../bloc/member_finance/member_finance_bloc.dart';
 import '../../bloc/member_finance/member_finance_event.dart';
 import '../../bloc/member_finance/member_finance_state.dart';
@@ -36,6 +37,9 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
   int _remainingSeconds = 900; // 15 menit default
   Timer? _countdownTimer;
   List<BankAccountEntity> _bankAccounts = [];
+  String _wismaAddress = 'Jl. Wisma Amal No. 1, Gorontalo';
+  String _wismaHours = 'Senin – Sabtu, 08.00 – 17.00 WITA';
+  String _wismaPhone = '0811-4300-XXX';
 
   final currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
@@ -47,13 +51,23 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
   void initState() {
     super.initState();
     _initTimer();
-    _loadBankAccounts();
+    _loadData();
   }
 
-  Future<void> _loadBankAccounts() async {
+  Future<void> _loadData() async {
     try {
       final accounts = await serviceLocator.get<GetPublicBankAccountsUseCase>().execute();
       if (mounted) setState(() => _bankAccounts = accounts);
+    } catch (_) {}
+    try {
+      final settings = await serviceLocator.get<GetPublicSettingsUseCase>().execute();
+      if (mounted) {
+        setState(() {
+          _wismaAddress = settings.getString('wisma_address') ?? _wismaAddress;
+          _wismaHours = settings.getString('wisma_operational_hours') ?? _wismaHours;
+          _wismaPhone = settings.getString('wisma_phone') ?? _wismaPhone;
+        });
+      }
     } catch (_) {}
   }
 
@@ -500,9 +514,9 @@ class _PaymentUploadPageState extends State<PaymentUploadPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _bankInfoRow('Alamat', 'Jl. Wisma Amal No. 1, Gorontalo'),
-                    _bankInfoRow('Jam Operasional', 'Senin – Sabtu, 08.00 – 17.00 WITA'),
-                    _bankInfoRow('Kontak', '0811-4300-XXX'),
+                    _bankInfoRow('Alamat', _wismaAddress),
+                    _bankInfoRow('Jam Operasional', _wismaHours),
+                    _bankInfoRow('Kontak', _wismaPhone),
                   ],
                 ),
               ),

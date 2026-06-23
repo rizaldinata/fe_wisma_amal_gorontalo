@@ -150,7 +150,6 @@ class AppRouter extends RootStackRouter {
         AutoRoute(
           guards: [
             AuthGuard(serviceLocator.get<AuthRepository>()),
-            FeatureToggleGuard('finance_expense'),
           ],
           path: RouteConstant.financeExpenseName,
           page: ExpenseListRoute.page,

@@ -12,6 +12,7 @@ class SummaryStatCard extends StatelessWidget {
   final Color iconBg;
   final String? trend;
   final Color? trendColor;
+  final Color? valueColor;
 
   const SummaryStatCard({
     super.key,
@@ -22,6 +23,7 @@ class SummaryStatCard extends StatelessWidget {
     required this.iconBg,
     this.trend,
     this.trendColor,
+    this.valueColor,
   });
 
   @override
@@ -76,7 +78,7 @@ class SummaryStatCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w700,
-              color: primaryTextColor,
+              color: valueColor ?? primaryTextColor,
             ),
           ),
           if (trend != null) ...[
