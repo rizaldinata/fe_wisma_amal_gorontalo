@@ -30,7 +30,10 @@ class PaymentVerificationBloc extends Bloc<PaymentVerificationEvent, PaymentVeri
     });
 
     on<FetchAllPayments>((event, emit) async {
-      emit(PaymentVerificationLoading());
+      final current = state is PaymentVerificationLoaded
+          ? (state as PaymentVerificationLoaded).payments
+          : null;
+      emit(current != null ? PaymentVerificationRefreshing(current) : PaymentVerificationLoading());
       try {
         final payments = await getAllPaymentsUseCase.call();
         emit(PaymentVerificationLoaded(payments));

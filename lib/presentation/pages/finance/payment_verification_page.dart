@@ -6,18 +6,17 @@ import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 
 import '../../../core/dependency_injection/dependency_injection.dart';
+import '../../../core/theme/app_colors.dart';
+import '../../../core/theme/app_spacing.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../domain/entity/finance/payment_entity.dart';
 import '../../bloc/payment_verification/payment_verification_bloc.dart';
 import '../../bloc/payment_verification/payment_verification_event.dart';
 import '../../bloc/payment_verification/payment_verification_state.dart';
-import '../../widget/core/table/table.dart';
-import '../../../domain/entity/table/tabel_colum.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_spacing.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../widget/core/appbar/app_topbar.dart';
-import '../../widget/core/appbar/search_and_filter_bar.dart';
 import '../../widget/core/card/summary_stat_card.dart';
+import '../../widget/core/chip/status_badge.dart';
+import '../../widget/core/table/app_data_table.dart';
 import '../../widget/core/wrapper/empty_state_widget.dart';
 
 @RoutePage()
@@ -31,12 +30,12 @@ class PaymentVerificationPage extends StatefulWidget {
 class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
   late PaymentVerificationBloc _bloc;
 
-  // Search & filter — tabel atas (pending)
+  // Filter — tabel pending
   String _searchPending = '';
   final TextEditingController _searchPendingCtrl = TextEditingController();
   int _pagePending = 1;
 
-  // Search & filter — tabel bawah (semua)
+  // Filter — tabel semua pembayaran
   String _searchAll = '';
   String _statusFilter = 'Semua';
   String _methodFilter = 'Semua';
@@ -49,34 +48,22 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
   static const _statusOptions = ['Semua', 'Menunggu', 'Disetujui', 'Ditolak', 'Refund'];
   static const _methodOptions = ['Semua', 'Manual', 'Midtrans'];
 
-  @override
-  void initState() {
-    super.initState();
-    _bloc = serviceLocator<PaymentVerificationBloc>();
-    _bloc.add(FetchAllPayments());
-  }
+  static final _currencyFmt =
+      NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+  static final _dateFmt = DateFormat('dd MMM yyyy, HH:mm', 'id_ID');
 
-  @override
-  void dispose() {
-    _searchPendingCtrl.dispose();
-    _searchAllCtrl.dispose();
-    super.dispose();
-  }
-
-  String formatRupiah(double v) =>
-      NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(v);
+  String formatRupiah(double v) => _currencyFmt.format(v);
 
   String formatDate(String d) {
     final dt = DateTime.tryParse(d);
-    return dt != null ? DateFormat('dd MMM yyyy, HH:mm', 'id_ID').format(dt) : '-';
+    return dt != null ? _dateFmt.format(dt) : '-';
   }
 
   String _methodLabel(String m) => m == 'midtrans' ? 'Midtrans / QRIS' : 'Transfer Manual';
   IconData _methodIcon(String m) => m == 'midtrans' ? Icons.qr_code : Icons.account_balance;
-  Color _methodColor(String m, bool isDark) =>
-      m == 'midtrans'
-          ? (isDark ? AppColorsDark.primary : AppColorsLight.primary)
-          : (isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone);
+  Color _methodColor(String m, bool isDark) => m == 'midtrans'
+      ? (isDark ? AppColorsDark.primary : AppColorsLight.primary)
+      : (isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone);
 
   String _statusLabel(String s) {
     switch (s.toLowerCase()) {
@@ -140,20 +127,6 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
   List<PaymentEntity> _filteredPending(List<PaymentEntity> all) =>
       all.where((p) => _isPending(p) && _matchSearch(p, _searchPending)).toList();
 
-  String _allTableTitle() {
-    final parts = <String>[];
-    if (_filterMonth != null && _filterYear != null) {
-      parts.add(DateFormat('MMMM yyyy', 'id_ID').format(DateTime(_filterYear!, _filterMonth!)));
-    } else if (_filterYear != null) {
-      parts.add('Tahun $_filterYear');
-    } else if (_filterMonth != null) {
-      parts.add(DateFormat('MMMM', 'id_ID').format(DateTime(0, _filterMonth!)));
-    }
-    if (_methodFilter != 'Semua') parts.add(_methodFilter);
-    if (_statusFilter != 'Semua') parts.add(_statusFilter);
-    return parts.isEmpty ? 'Semua Pembayaran' : 'Pembayaran — ${parts.join(' · ')}';
-  }
-
   List<int> _availableYears(List<PaymentEntity> all) {
     final years = all
         .map((p) => DateTime.tryParse(p.paymentDate)?.year)
@@ -190,7 +163,48 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
 
   int _totalPages(int count) => (count / _perPage).ceil().clamp(1, 9999);
 
-  // ─── Dialog Verifikasi (untuk payment pending) ────────────────────────────
+  @override
+  void initState() {
+    super.initState();
+    _bloc = serviceLocator<PaymentVerificationBloc>();
+    _bloc.add(FetchAllPayments());
+  }
+
+  @override
+  void dispose() {
+    _searchPendingCtrl.dispose();
+    _searchAllCtrl.dispose();
+    super.dispose();
+  }
+
+  // ─── Section title ────────────────────────────────────────────────────────
+
+  Widget _sectionTitle(BuildContext context, String title, bool isDark) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 6,
+          height: 22,
+          decoration: BoxDecoration(
+            color: isDark ? AppColorsDark.primary : AppColorsLight.primary,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: Theme.of(context)
+              .textTheme
+              .titleLarge
+              ?.copyWith(fontWeight: FontWeight.w600),
+        ),
+      ],
+    );
+  }
+
+  // ─── Dialogs ──────────────────────────────────────────────────────────────
+
   void _showVerificationDialog(PaymentEntity payment) {
     final notesCtrl = TextEditingController(text: payment.adminNotes ?? '');
     final isDark = AppTheme.isDark(context);
@@ -202,24 +216,32 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
         title: Row(children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: Colors.orange.shade50, borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(
+              color: Colors.orange.shade50,
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Icon(Icons.verified_user_outlined, color: Colors.orange.shade700, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             const Text('Verifikasi Pembayaran', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text(payment.invoiceNumber ?? 'ID #${payment.id}',
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.normal)),
+            Text(
+              payment.invoiceNumber ?? 'ID #${payment.id}',
+              style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.normal),
+            ),
           ])),
         ]),
         content: SingleChildScrollView(
           child: SizedBox(
             width: 460,
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // Info penghuni + nominal
               Container(
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey.shade200)),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
                 child: Column(children: [
                   Row(children: [
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -231,8 +253,10 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                     Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                       Text('Nominal', style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
                       Text(formatRupiah(payment.amount), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text(_methodLabel(payment.paymentMethod),
-                          style: TextStyle(fontSize: 12, color: _methodColor(payment.paymentMethod, isDark), fontWeight: FontWeight.w600)),
+                      Text(
+                        _methodLabel(payment.paymentMethod),
+                        style: TextStyle(fontSize: 12, color: _methodColor(payment.paymentMethod, isDark), fontWeight: FontWeight.w600),
+                      ),
                     ]),
                   ]),
                   if (payment.invoiceType != null) ...[
@@ -257,38 +281,10 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                 ]),
               ),
               const SizedBox(height: 14),
-
-              // Bukti transfer
               const Text('Bukti Transfer:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 8),
-              Container(
-                height: 280,
-                width: double.infinity,
-                decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey.shade300)),
-                child: (payment.paymentProofUrl != null && payment.paymentProofUrl!.isNotEmpty)
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          payment.paymentProofUrl!,
-                          fit: BoxFit.contain,
-                          loadingBuilder: (_, child, progress) =>
-                              progress == null ? child : const Center(child: CircularProgressIndicator()),
-                          errorBuilder: (_, __, ___) => Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-                            Icon(Icons.broken_image_outlined, size: 40, color: Colors.grey.shade400),
-                            const SizedBox(height: 8),
-                            Text('Gambar tidak dapat dimuat', style: TextStyle(color: Colors.grey.shade500)),
-                          ])),
-                        ),
-                      )
-                    : Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-                        Icon(Icons.image_not_supported_outlined, size: 40, color: Colors.grey.shade400),
-                        const SizedBox(height: 8),
-                        Text('Tidak ada bukti transfer', style: TextStyle(color: Colors.grey.shade500)),
-                      ])),
-              ),
+              _proofImage(payment),
               const SizedBox(height: 14),
-
-              // Catatan penolakan
               Text('Catatan Penolakan', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
               const SizedBox(height: 2),
               Text('Wajib diisi jika pembayaran ditolak', style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
@@ -311,10 +307,16 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
           OutlinedButton.icon(
             icon: Icon(Icons.close, size: 16, color: Colors.red.shade600),
             label: Text('Tolak', style: TextStyle(color: Colors.red.shade600)),
-            style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.red.shade300), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: Colors.red.shade300),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             onPressed: () {
               if (notesCtrl.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Catatan wajib diisi jika menolak!'), backgroundColor: Colors.red));
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Catatan wajib diisi jika menolak!'),
+                  backgroundColor: Colors.red,
+                ));
                 return;
               }
               _bloc.add(VerifyPaymentEvent(paymentId: payment.id, isApproved: false, adminNotes: notesCtrl.text));
@@ -325,13 +327,19 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
             OutlinedButton.icon(
               icon: Icon(Icons.replay, size: 16, color: Colors.orange.shade700),
               label: Text('Refund', style: TextStyle(color: Colors.orange.shade700)),
-              style: OutlinedButton.styleFrom(side: BorderSide(color: Colors.orange.shade300), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(color: Colors.orange.shade300),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
               onPressed: () { Navigator.pop(ctx); _showRefundDialog(payment); },
             ),
           FilledButton.icon(
             icon: const Icon(Icons.check, size: 16),
             label: const Text('Setujui'),
-            style: FilledButton.styleFrom(backgroundColor: Colors.green.shade600, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.green.shade600,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             onPressed: () {
               _bloc.add(VerifyPaymentEvent(paymentId: payment.id, isApproved: true));
               Navigator.pop(ctx);
@@ -342,7 +350,6 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
     );
   }
 
-  // ─── Dialog Detail (untuk payment yang sudah diproses) ────────────────────
   void _showDetailDialog(PaymentEntity payment) {
     final isDark = AppTheme.isDark(context);
     showDialog(
@@ -352,24 +359,32 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
         title: Row(children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(color: _statusBg(payment.status, isDark), borderRadius: BorderRadius.circular(8)),
+            decoration: BoxDecoration(
+              color: _statusBg(payment.status, isDark),
+              borderRadius: BorderRadius.circular(8),
+            ),
             child: Icon(_statusIcon(payment.status), color: _statusColor(payment.status, isDark), size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Detail Pembayaran', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-            Text(_statusLabel(payment.status),
-                style: TextStyle(fontSize: 12, color: _statusColor(payment.status, isDark), fontWeight: FontWeight.w600)),
+            const Text('Detail Pembayaran', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              _statusLabel(payment.status),
+              style: TextStyle(fontSize: 12, color: _statusColor(payment.status, isDark), fontWeight: FontWeight.w600),
+            ),
           ])),
         ]),
         content: SingleChildScrollView(
           child: SizedBox(
             width: 460,
             child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-              // Info penghuni + nominal
               Container(
                 padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(color: Colors.grey.shade50, borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey.shade200)),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
                 child: Column(children: [
                   Row(children: [
                     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -391,8 +406,10 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                     Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
                       Text('Nominal', style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
                       Text(formatRupiah(payment.amount), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      Text(_methodLabel(payment.paymentMethod),
-                          style: TextStyle(fontSize: 12, color: _methodColor(payment.paymentMethod, isDark), fontWeight: FontWeight.w600)),
+                      Text(
+                        _methodLabel(payment.paymentMethod),
+                        style: TextStyle(fontSize: 12, color: _methodColor(payment.paymentMethod, isDark), fontWeight: FontWeight.w600),
+                      ),
                     ]),
                   ]),
                   const Divider(height: 16),
@@ -409,10 +426,8 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                   ]),
                 ]),
               ),
-              const SizedBox(height: 14),
-
-              // Catatan admin (jika ada)
               if (payment.adminNotes != null && payment.adminNotes!.isNotEmpty) ...[
+                const SizedBox(height: 14),
                 Text('Catatan Admin', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Colors.grey.shade700)),
                 const SizedBox(height: 6),
                 Container(
@@ -421,37 +436,17 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                   decoration: BoxDecoration(
                     color: payment.status.toLowerCase() == 'rejected' ? Colors.red.shade50 : Colors.grey.shade50,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: payment.status.toLowerCase() == 'rejected' ? Colors.red.shade200 : Colors.grey.shade200),
+                    border: Border.all(
+                      color: payment.status.toLowerCase() == 'rejected' ? Colors.red.shade200 : Colors.grey.shade200,
+                    ),
                   ),
                   child: Text(payment.adminNotes!, style: TextStyle(fontSize: 13, color: Colors.grey.shade800)),
                 ),
-                const SizedBox(height: 14),
               ],
-
-              // Bukti transfer
+              const SizedBox(height: 14),
               const Text('Bukti Transfer:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 8),
-              Container(
-                height: 280,
-                width: double.infinity,
-                decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.grey.shade300)),
-                child: (payment.paymentProofUrl != null && payment.paymentProofUrl!.isNotEmpty)
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(10),
-                        child: Image.network(
-                          payment.paymentProofUrl!,
-                          fit: BoxFit.contain,
-                          loadingBuilder: (_, child, progress) =>
-                              progress == null ? child : const Center(child: CircularProgressIndicator()),
-                          errorBuilder: (_, __, ___) => Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
-                            Icon(Icons.broken_image_outlined, size: 40, color: Colors.grey.shade400),
-                            const SizedBox(height: 8),
-                            Text('Gambar tidak dapat dimuat', style: TextStyle(color: Colors.grey.shade500)),
-                          ])),
-                        ),
-                      )
-                    : Center(child: Text('Tidak ada bukti transfer', style: TextStyle(color: Colors.grey.shade500))),
-              ),
+              _proofImage(payment),
             ]),
           ),
         ),
@@ -462,7 +457,6 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
     );
   }
 
-  // ─── Dialog Refund ────────────────────────────────────────────────────────
   void _showRefundDialog(PaymentEntity payment) {
     final reasonCtrl = TextEditingController();
     showDialog(
@@ -479,11 +473,18 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
           child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.red.shade50, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.red.shade200)),
+              decoration: BoxDecoration(
+                color: Colors.red.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.red.shade200),
+              ),
               child: Row(children: [
                 Icon(Icons.warning_amber_rounded, color: Colors.red.shade600, size: 18),
                 const SizedBox(width: 8),
-                const Expanded(child: Text('Fitur ini akan mengembalikan dana ke rekening pengguna secara otomatis melalui Midtrans.', style: TextStyle(fontSize: 12))),
+                const Expanded(child: Text(
+                  'Fitur ini akan mengembalikan dana ke rekening pengguna secara otomatis melalui Midtrans.',
+                  style: TextStyle(fontSize: 12),
+                )),
               ]),
             ),
             const SizedBox(height: 14),
@@ -505,10 +506,15 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
           FilledButton.icon(
             icon: const Icon(Icons.replay, size: 16),
             label: const Text('Kirim Refund'),
-            style: FilledButton.styleFrom(backgroundColor: Colors.orange.shade700, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8))),
+            style: FilledButton.styleFrom(
+              backgroundColor: Colors.orange.shade700,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
             onPressed: () {
               if (reasonCtrl.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Alasan refund wajib diisi!')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Alasan refund wajib diisi!')),
+                );
                 return;
               }
               _bloc.add(RefundPaymentEvent(paymentId: payment.id, reason: reasonCtrl.text));
@@ -519,6 +525,8 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
       ),
     );
   }
+
+  // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -558,12 +566,11 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                 child: BlocBuilder<PaymentVerificationBloc, PaymentVerificationState>(
                   buildWhen: (p, c) =>
                       c is PaymentVerificationLoading ||
+                      c is PaymentVerificationRefreshing ||
                       c is PaymentVerificationLoaded ||
                       c is PaymentVerificationError,
                   builder: (ctx, state) {
-                    if (state is PaymentVerificationLoading) {
-                      return _buildSkeleton(isDark);
-                    }
+                    if (state is PaymentVerificationLoading) return _buildSkeleton(isDark);
                     if (state is PaymentVerificationError) {
                       return EmptyStateWidget(
                         icon: Icons.error_outline,
@@ -575,134 +582,137 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                         ),
                       );
                     }
-                    if (state is! PaymentVerificationLoaded) return const SizedBox.shrink();
-
-                    final all = state.payments;
+                    final all = state is PaymentVerificationLoaded
+                        ? state.payments
+                        : state is PaymentVerificationRefreshing
+                            ? state.currentPayments
+                            : null;
+                    if (all == null) return const SizedBox.shrink();
                     final years = _availableYears(all);
+
                     final pendingCount  = all.where((p) => p.status.toLowerCase() == 'pending').length;
                     final verifiedCount = all.where((p) => ['verified', 'paid'].contains(p.status.toLowerCase())).length;
                     final rejectedCount = all.where((p) => ['rejected', 'failed'].contains(p.status.toLowerCase())).length;
-                    final totalVerified = all.where((p) => ['verified', 'paid'].contains(p.status.toLowerCase())).fold(0.0, (s, p) => s + p.amount);
+                    final totalVerified = all
+                        .where((p) => ['verified', 'paid'].contains(p.status.toLowerCase()))
+                        .fold(0.0, (s, p) => s + p.amount);
 
-                    final filteredPending = _filteredPending(all);
+                    final filteredPending   = _filteredPending(all);
                     final totalPagesPending = _totalPages(filteredPending.length);
-                    final pagePending = _pagePending.clamp(1, totalPagesPending);
-                    final pagedPending = _paged(filteredPending, pagePending);
+                    final pagePending       = _pagePending.clamp(1, totalPagesPending);
+                    final pagedPending      = _paged(filteredPending, pagePending);
 
-                    final filteredAll = _filteredAll(all);
-                    final totalPagesAll = _totalPages(filteredAll.length);
-                    final pageAll = _pageAll.clamp(1, totalPagesAll);
-                    final pagedAll = _paged(filteredAll, pageAll);
+                    final filteredAll    = _filteredAll(all);
+                    final totalPagesAll  = _totalPages(filteredAll.length);
+                    final pageAll        = _pageAll.clamp(1, totalPagesAll);
+                    final pagedAll       = _paged(filteredAll, pageAll);
 
-                    return SingleChildScrollView(
+                    return Stack(
+                      children: [
+                        SingleChildScrollView(
                       padding: const EdgeInsets.all(AppSpacing.xxxl),
-                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                        // ── Summary cards ────────────────────────────────
-                        Row(children: [
-                          Expanded(child: SummaryStatCard(
-                            label: 'Menunggu Verifikasi',
-                            value: '$pendingCount Transaksi',
-                            icon: Icons.hourglass_top,
-                            iconColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
-                            iconBg: isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg,
-                            trend: 'Perlu tindak lanjut',
-                            trendColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
-                          )),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(child: SummaryStatCard(
-                            label: 'Disetujui',
-                            value: '$verifiedCount Transaksi',
-                            icon: Icons.check_circle_outline,
-                            iconColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
-                            iconBg: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
-                            trend: formatRupiah(totalVerified),
-                            trendColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
-                          )),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(child: SummaryStatCard(
-                            label: 'Ditolak / Gagal',
-                            value: '$rejectedCount Transaksi',
-                            icon: Icons.cancel_outlined,
-                            iconColor: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled,
-                            iconBg: isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg,
-                            trend: 'Perlu perhatian',
-                            trendColor: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled,
-                          )),
-                          const SizedBox(width: AppSpacing.lg),
-                          Expanded(child: SummaryStatCard(
-                            label: 'Total Transaksi',
-                            value: '${all.length} Transaksi',
-                            icon: Icons.receipt_long,
-                            iconColor: isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess,
-                            iconBg: isDark ? AppColorsDark.statusProcessBg : AppColorsLight.statusProcessBg,
-                            trend: 'Semua status',
-                          )),
-                        ]).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0, duration: 300.ms),
-                        const SizedBox(height: AppSpacing.xxxl),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
 
-                        // ════════════════════════════════════════════════
-                        // TABEL ATAS — Menunggu Verifikasi
-                        // ════════════════════════════════════════════════
-                        SearchAndFilterBar(
-                          searchController: _searchPendingCtrl,
-                          searchHint: 'Cari pada pembayaran menunggu verifikasi...',
-                          onSearchChanged: (v) => setState(() { _searchPending = v; _pagePending = 1; }),
-                        ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
-                        const SizedBox(height: AppSpacing.lg),
-                        TableCard(
-                          title: 'Menunggu Verifikasi',
-                          emptyMessage: _searchPending.isEmpty
-                              ? 'Tidak ada pembayaran yang menunggu verifikasi.\nSemua pembayaran sudah diproses!'
-                              : 'Tidak ada hasil untuk "$_searchPending".',
-                          columns: const [
-                            TableColumn(label: 'Penghuni & Tagihan', flex: 4),
-                            TableColumn(label: 'Metode', flex: 2),
-                            TableColumn(label: 'Nominal', flex: 2),
-                            TableColumn(label: 'Tanggal Upload', flex: 2),
-                            TableColumn(label: 'Aksi', flex: 2, align: TextAlign.right),
-                          ],
-                          rows: pagedPending.map((payment) => [
-                            _colPenghuni(payment, isDark),
-                            _colMetode(payment, isDark),
-                            Text(formatRupiah(payment.amount), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                            Text(formatDate(payment.paymentDate), style: TextStyle(fontSize: 12, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary)),
-                            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                              FilledButton(
-                                onPressed: () => _showVerificationDialog(payment),
-                                style: FilledButton.styleFrom(
-                                  backgroundColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  minimumSize: const Size(90, 36),
-                                ),
-                                child: const Text('Verifikasi', style: TextStyle(fontSize: 12)),
-                              ),
-                            ]),
-                          ]).toList(),
-                        ).animate().fadeIn(delay: 150.ms, duration: 300.ms),
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                          child: Row(children: [
-                            Text('Menampilkan ${pagedPending.length} dari ${filteredPending.length} transaksi pending',
-                                style: TextStyle(fontSize: 13, color: isDark ? AppColorsDark.textHint : AppColorsLight.textHint)),
-                            const Spacer(),
-                            _PaginationBar(currentPage: pagePending, totalPages: totalPagesPending, onPageChanged: (p) => setState(() => _pagePending = p)),
-                          ]),
-                        ),
-                        const SizedBox(height: AppSpacing.xxxl),
+                          // ── Ringkasan Statistik ─────────────────────────
+                          IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Expanded(child: SummaryStatCard(
+                                  label: 'Menunggu Verifikasi',
+                                  value: '$pendingCount Transaksi',
+                                  icon: Icons.hourglass_top,
+                                  iconColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
+                                  iconBg: isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg,
+                                  trend: 'Perlu tindak lanjut',
+                                  trendColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
+                                )),
+                                const SizedBox(width: AppSpacing.lg),
+                                Expanded(child: SummaryStatCard(
+                                  label: 'Disetujui',
+                                  value: '$verifiedCount Transaksi',
+                                  icon: Icons.check_circle_outline,
+                                  iconColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
+                                  iconBg: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
+                                  trend: formatRupiah(totalVerified),
+                                  trendColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
+                                )),
+                                const SizedBox(width: AppSpacing.lg),
+                                Expanded(child: SummaryStatCard(
+                                  label: 'Ditolak / Gagal',
+                                  value: '$rejectedCount Transaksi',
+                                  icon: Icons.cancel_outlined,
+                                  iconColor: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled,
+                                  iconBg: isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg,
+                                  trend: 'Perlu perhatian',
+                                  trendColor: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled,
+                                )),
+                                const SizedBox(width: AppSpacing.lg),
+                                Expanded(child: SummaryStatCard(
+                                  label: 'Total Transaksi',
+                                  value: '${all.length} Transaksi',
+                                  icon: Icons.receipt_long,
+                                  iconColor: isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess,
+                                  iconBg: isDark ? AppColorsDark.statusProcessBg : AppColorsLight.statusProcessBg,
+                                  trend: 'Semua status',
+                                )),
+                              ],
+                            ),
+                          ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0, duration: 300.ms),
+                          const SizedBox(height: AppSpacing.xxxl),
 
-                        // ════════════════════════════════════════════════
-                        // TABEL BAWAH — Semua Pembayaran
-                        // ════════════════════════════════════════════════
-                        SearchAndFilterBar(
-                          searchController: _searchAllCtrl,
-                          searchHint: 'Cari nama penghuni, kamar, nomor invoice, ID transaksi...',
-                          onSearchChanged: (v) => setState(() { _searchAll = v; _pageAll = 1; }),
-                          dropdownFilter: Row(
-                            mainAxisSize: MainAxisSize.min,
+                          // ══════════════════════════════════════════════
+                          // TABEL ATAS — Menunggu Verifikasi
+                          // ══════════════════════════════════════════════
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              _YearMonthDropdown(
+                              _sectionTitle(context, 'Menunggu Verifikasi', isDark),
+                              const Spacer(),
+                              SizedBox(
+                                height: 40,
+                                width: 300,
+                                child: TextField(
+                                  controller: _searchPendingCtrl,
+                                  onChanged: (v) => setState(() { _searchPending = v; _pagePending = 1; }),
+                                  decoration: InputDecoration(
+                                    hintText: 'Cari nama, kamar, invoice...',
+                                    prefixIcon: const Icon(Icons.search, size: 18),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ),
+                            ],
+                          ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
+                          const SizedBox(height: AppSpacing.lg),
+
+                          _buildPendingTable(pagedPending, isDark),
+
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildPaginationRow(
+                            shown: pagedPending.length,
+                            total: filteredPending.length,
+                            label: 'transaksi pending',
+                            currentPage: pagePending,
+                            totalPages: totalPagesPending,
+                            onPageChanged: (p) => setState(() => _pagePending = p),
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: AppSpacing.xxxl),
+
+                          // ══════════════════════════════════════════════
+                          // TABEL BAWAH — Semua Pembayaran
+                          // ══════════════════════════════════════════════
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              _sectionTitle(context, 'Semua Pembayaran', isDark),
+                              const Spacer(),
+                              _FilterDropdown<int?>(
                                 hint: 'Tahun',
                                 value: _filterYear,
                                 items: [null, ...years],
@@ -710,8 +720,8 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                                 onChanged: (v) => setState(() { _filterYear = v; _filterMonth = null; _pageAll = 1; }),
                                 isDark: isDark,
                               ),
-                              const SizedBox(width: 8),
-                              _YearMonthDropdown(
+                              const SizedBox(width: AppSpacing.sm),
+                              _FilterDropdown<int?>(
                                 hint: 'Bulan',
                                 value: _filterMonth,
                                 items: [null, ...List.generate(12, (i) => i + 1)],
@@ -720,108 +730,83 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
                                 isDark: isDark,
                               ),
                               if (_filterYear != null || _filterMonth != null) ...[
-                                const SizedBox(width: 8),
-                                TextButton.icon(
+                                const SizedBox(width: AppSpacing.xs),
+                                IconButton(
                                   onPressed: () => setState(() { _filterYear = null; _filterMonth = null; _pageAll = 1; }),
-                                  icon: const Icon(Icons.close, size: 14),
-                                  label: const Text('Reset', style: TextStyle(fontSize: 12)),
-                                  style: TextButton.styleFrom(foregroundColor: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary),
+                                  icon: const Icon(Icons.close_rounded, size: 16),
+                                  tooltip: 'Reset filter tanggal',
+                                  style: IconButton.styleFrom(
+                                    foregroundColor: Colors.grey.shade500,
+                                    visualDensity: VisualDensity.compact,
+                                  ),
                                 ),
                               ],
                             ],
-                          ),
-                        ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
-                        const SizedBox(height: AppSpacing.sm),
-                        Row(children: [
-                          Text('Metode:', style: TextStyle(fontSize: 12, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary, fontWeight: FontWeight.w500)),
-                          const SizedBox(width: 8),
-                          ..._methodOptions.map((opt) => Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: GestureDetector(
+                          ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
+                          const SizedBox(height: AppSpacing.md),
+
+                          // Search + filter chips
+                          Row(children: [
+                            Expanded(
+                              child: SizedBox(
+                                height: 40,
+                                child: TextField(
+                                  controller: _searchAllCtrl,
+                                  onChanged: (v) => setState(() { _searchAll = v; _pageAll = 1; }),
+                                  decoration: InputDecoration(
+                                    hintText: 'Cari nama penghuni, kamar, nomor invoice, ID transaksi...',
+                                    prefixIcon: const Icon(Icons.search, size: 18),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+                                  ),
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ),
+                            ),
+                          ]).animate().fadeIn(delay: 220.ms, duration: 300.ms),
+                          const SizedBox(height: AppSpacing.sm),
+
+                          // Method + Status chips
+                          Row(children: [
+                            _chipGroupLabel('Metode:', isDark),
+                            const SizedBox(width: AppSpacing.sm),
+                            ..._methodOptions.map((opt) => _FilterChip(
+                              label: opt,
+                              selected: _methodFilter == opt,
+                              isDark: isDark,
                               onTap: () => setState(() { _methodFilter = opt; _pageAll = 1; }),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: _methodFilter == opt ? Theme.of(context).primaryColor : (isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: _methodFilter == opt ? Theme.of(context).primaryColor : (isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight)),
-                                ),
-                                child: Text(opt, style: TextStyle(fontSize: 12, fontWeight: _methodFilter == opt ? FontWeight.w600 : FontWeight.normal, color: _methodFilter == opt ? Colors.white : (isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary))),
-                              ),
-                            ),
-                          )),
-                          const SizedBox(width: 16),
-                          Text('Status:', style: TextStyle(fontSize: 12, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary, fontWeight: FontWeight.w500)),
-                          const SizedBox(width: 8),
-                          ..._statusOptions.map((opt) => Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: GestureDetector(
+                            )),
+                            const SizedBox(width: AppSpacing.lg),
+                            _chipGroupLabel('Status:', isDark),
+                            const SizedBox(width: AppSpacing.sm),
+                            ..._statusOptions.map((opt) => _FilterChip(
+                              label: opt,
+                              selected: _statusFilter == opt,
+                              isDark: isDark,
                               onTap: () => setState(() { _statusFilter = opt; _pageAll = 1; }),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: _statusFilter == opt ? Theme.of(context).primaryColor : (isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant),
-                                  borderRadius: BorderRadius.circular(20),
-                                  border: Border.all(color: _statusFilter == opt ? Theme.of(context).primaryColor : (isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight)),
-                                ),
-                                child: Text(opt, style: TextStyle(fontSize: 12, fontWeight: _statusFilter == opt ? FontWeight.w600 : FontWeight.normal, color: _statusFilter == opt ? Colors.white : (isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary))),
-                              ),
-                            ),
-                          )),
-                        ]).animate().fadeIn(delay: 250.ms, duration: 300.ms),
-                        const SizedBox(height: AppSpacing.lg),
-                        TableCard(
-                          title: _allTableTitle(),
-                          emptyMessage: _searchAll.isEmpty
-                              ? 'Tidak ada pembayaran pada kategori ini.'
-                              : 'Tidak ada hasil untuk "$_searchAll".',
-                          columns: const [
-                            TableColumn(label: 'Penghuni & Tagihan', flex: 4),
-                            TableColumn(label: 'Metode', flex: 2),
-                            TableColumn(label: 'Nominal', flex: 2),
-                            TableColumn(label: 'Tanggal', flex: 2),
-                            TableColumn(label: 'Status', flex: 2),
-                            TableColumn(label: 'Aksi', flex: 2, align: TextAlign.right),
-                          ],
-                          rows: pagedAll.map((payment) => [
-                            _colPenghuni(payment, isDark),
-                            _colMetode(payment, isDark),
-                            Text(formatRupiah(payment.amount), style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                            Text(formatDate(payment.paymentDate), style: TextStyle(fontSize: 12, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary)),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(color: _statusBg(payment.status, isDark), borderRadius: BorderRadius.circular(20), border: Border.all(color: _statusColor(payment.status, isDark).withValues(alpha: 0.3))),
-                              child: Text(_statusLabel(payment.status), style: TextStyle(color: _statusColor(payment.status, isDark), fontSize: 12, fontWeight: FontWeight.w600)),
-                            ),
-                            Row(mainAxisAlignment: MainAxisAlignment.end, children: [
-                              if (_isPending(payment))
-                                FilledButton(
-                                  onPressed: () => _showVerificationDialog(payment),
-                                  style: FilledButton.styleFrom(backgroundColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), minimumSize: const Size(90, 36)),
-                                  child: const Text('Verifikasi', style: TextStyle(fontSize: 12)),
-                                )
-                              else
-                                OutlinedButton(
-                                  onPressed: () => _showDetailDialog(payment),
-                                  style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)), side: BorderSide(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight), minimumSize: const Size(80, 36)),
-                                  child: const Text('Detail', style: TextStyle(fontSize: 12)),
-                                ),
-                            ]),
-                          ]).toList(),
-                        ).animate().fadeIn(delay: 300.ms, duration: 300.ms),
-                        const SizedBox(height: 8),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                          child: Row(children: [
-                            Text('Menampilkan ${pagedAll.length} dari ${filteredAll.length} transaksi',
-                                style: TextStyle(fontSize: 13, color: isDark ? AppColorsDark.textHint : AppColorsLight.textHint)),
-                            const Spacer(),
-                            _PaginationBar(currentPage: pageAll, totalPages: totalPagesAll, onPageChanged: (p) => setState(() => _pageAll = p)),
-                          ]),
-                        ),
-                      ]),
+                            )),
+                          ]).animate().fadeIn(delay: 240.ms, duration: 300.ms),
+                          const SizedBox(height: AppSpacing.lg),
+
+                          _buildAllTable(pagedAll, isDark),
+
+                          const SizedBox(height: AppSpacing.sm),
+                          _buildPaginationRow(
+                            shown: pagedAll.length,
+                            total: filteredAll.length,
+                            label: 'transaksi',
+                            currentPage: pageAll,
+                            totalPages: totalPagesAll,
+                            onPageChanged: (p) => setState(() => _pageAll = p),
+                            isDark: isDark,
+                          ),
+                          const SizedBox(height: AppSpacing.xxl),
+                        ],
+                      ),
+                    ),
+                        if (state is PaymentVerificationRefreshing)
+                          const LinearProgressIndicator(),
+                      ],
                     );
                   },
                 ),
@@ -833,59 +818,200 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
     );
   }
 
-  Widget _buildSkeleton(bool isDark) {
-    final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
-    final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
+  // ─── Tables ───────────────────────────────────────────────────────────────
 
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.xxxl),
-      child: Column(
-        children: [
-          Row(children: List.generate(4, (i) => Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(right: i < 3 ? AppSpacing.lg : 0),
-              child: Shimmer.fromColors(
-                baseColor: baseColor,
-                highlightColor: highlightColor,
-                child: Container(
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  ),
-                ),
-              ),
-            ),
-          ))),
-          const SizedBox(height: AppSpacing.xxxl),
-          Shimmer.fromColors(
-            baseColor: baseColor,
-            highlightColor: highlightColor,
-            child: Container(
-              height: 44,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              ),
-            ),
+  Widget _buildPendingTable(List<PaymentEntity> rows, bool isDark) {
+    if (rows.isEmpty) {
+      return _emptyTable(
+        _searchPending.isEmpty
+            ? 'Tidak ada pembayaran yang menunggu verifikasi.\nSemua pembayaran sudah diproses!'
+            : 'Tidak ada hasil untuk "$_searchPending".',
+        isDark,
+      );
+    }
+
+    return AppDataTable(
+      dataRowMinHeight: 64,
+      dataRowMaxHeight: double.infinity,
+      columns: const [
+        DataColumn(label: Text('Penghuni & Tagihan')),
+        DataColumn(label: Text('Metode')),
+        DataColumn(label: Text('Nominal'), numeric: true),
+        DataColumn(label: Text('Tanggal Upload')),
+        DataColumn(label: Text('Aksi')),
+      ],
+      rows: rows.map((p) => DataRow(cells: [
+        DataCell(_colPenghuni(p, isDark)),
+        DataCell(_colMetode(p, isDark)),
+        DataCell(Text(
+          formatRupiah(p.amount),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        )),
+        DataCell(Text(
+          formatDate(p.paymentDate),
+          style: TextStyle(
+            fontSize: 12,
+            color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary,
           ),
-          const SizedBox(height: AppSpacing.lg),
-          Expanded(
-            child: Shimmer.fromColors(
-              baseColor: baseColor,
-              highlightColor: highlightColor,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-              ),
-            ),
+        )),
+        DataCell(FilledButton(
+          onPressed: () => _showVerificationDialog(p),
+          style: FilledButton.styleFrom(
+            backgroundColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            minimumSize: const Size(90, 36),
           ),
-        ],
-      ),
-    );
+          child: const Text('Verifikasi', style: TextStyle(fontSize: 12)),
+        )),
+      ])).toList(),
+    ).animate().fadeIn(delay: 150.ms, duration: 300.ms);
   }
+
+  Widget _buildAllTable(List<PaymentEntity> rows, bool isDark) {
+    if (rows.isEmpty) {
+      return _emptyTable(
+        _searchAll.isEmpty
+            ? 'Tidak ada pembayaran pada kategori ini.'
+            : 'Tidak ada hasil untuk "$_searchAll".',
+        isDark,
+      );
+    }
+
+    return AppDataTable(
+      dataRowMinHeight: 64,
+      dataRowMaxHeight: double.infinity,
+      columns: const [
+        DataColumn(label: Text('Penghuni & Tagihan')),
+        DataColumn(label: Text('Metode')),
+        DataColumn(label: Text('Nominal'), numeric: true),
+        DataColumn(label: Text('Tanggal')),
+        DataColumn(label: Text('Status')),
+        DataColumn(label: Text('Aksi')),
+      ],
+      rows: rows.map((p) => DataRow(cells: [
+        DataCell(_colPenghuni(p, isDark)),
+        DataCell(_colMetode(p, isDark)),
+        DataCell(Text(
+          formatRupiah(p.amount),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        )),
+        DataCell(Text(
+          formatDate(p.paymentDate),
+          style: TextStyle(
+            fontSize: 12,
+            color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary,
+          ),
+        )),
+        DataCell(StatusBadge(status: p.status)),
+        DataCell(_isPending(p)
+            ? FilledButton(
+                onPressed: () => _showVerificationDialog(p),
+                style: FilledButton.styleFrom(
+                  backgroundColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  minimumSize: const Size(90, 36),
+                ),
+                child: const Text('Verifikasi', style: TextStyle(fontSize: 12)),
+              )
+            : OutlinedButton(
+                onPressed: () => _showDetailDialog(p),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  side: BorderSide(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+                  minimumSize: const Size(80, 36),
+                ),
+                child: const Text('Detail', style: TextStyle(fontSize: 12)),
+              )),
+      ])).toList(),
+    ).animate().fadeIn(delay: 280.ms, duration: 300.ms);
+  }
+
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  Widget _emptyTable(String message, bool isDark) => Container(
+    padding: const EdgeInsets.all(AppSpacing.xxxl),
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      color: isDark ? AppColorsDark.surface : AppColorsLight.surface,
+      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+      border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+    ),
+    child: Text(
+      message,
+      textAlign: TextAlign.center,
+      style: TextStyle(color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary),
+    ),
+  );
+
+  Widget _buildPaginationRow({
+    required int shown,
+    required int total,
+    required String label,
+    required int currentPage,
+    required int totalPages,
+    required ValueChanged<int> onPageChanged,
+    required bool isDark,
+  }) =>
+      Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: Row(children: [
+          Text(
+            'Menampilkan $shown dari $total $label',
+            style: TextStyle(
+              fontSize: 13,
+              color: isDark ? AppColorsDark.textHint : AppColorsLight.textHint,
+            ),
+          ),
+          const Spacer(),
+          _PaginationBar(
+            currentPage: currentPage,
+            totalPages: totalPages,
+            onPageChanged: onPageChanged,
+          ),
+        ]),
+      );
+
+  Widget _chipGroupLabel(String text, bool isDark) => Text(
+    text,
+    style: TextStyle(
+      fontSize: 12,
+      fontWeight: FontWeight.w500,
+      color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary,
+    ),
+  );
+
+  Widget _proofImage(PaymentEntity payment) => Container(
+    height: 280,
+    width: double.infinity,
+    decoration: BoxDecoration(
+      color: Colors.grey.shade100,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: Colors.grey.shade300),
+    ),
+    child: payment.paymentProofUrl != null && payment.paymentProofUrl!.isNotEmpty
+        ? ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.network(
+              payment.paymentProofUrl!,
+              fit: BoxFit.contain,
+              loadingBuilder: (_, child, progress) =>
+                  progress == null ? child : const Center(child: CircularProgressIndicator()),
+              errorBuilder: (_, __, ___) => Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Icon(Icons.broken_image_outlined, size: 40, color: Colors.grey.shade400),
+                const SizedBox(height: 8),
+                Text('Gambar tidak dapat dimuat', style: TextStyle(color: Colors.grey.shade500)),
+              ])),
+            ),
+          )
+        : Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Icon(Icons.image_not_supported_outlined, size: 40, color: Colors.grey.shade400),
+            const SizedBox(height: 8),
+            Text('Tidak ada bukti transfer', style: TextStyle(color: Colors.grey.shade500)),
+          ])),
+  );
 
   Widget _invoiceTypeBadge(String? type) {
     if (type == null) return const SizedBox.shrink();
@@ -911,12 +1037,19 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
   Widget _colPenghuni(PaymentEntity p, bool isDark) => Row(children: [
     Container(
       width: 40, height: 40,
-      decoration: BoxDecoration(color: _statusBg(p.status, isDark), borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+        color: _statusBg(p.status, isDark),
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: Icon(_statusIcon(p.status), color: _statusColor(p.status, isDark), size: 20),
     ),
     const SizedBox(width: 12),
     Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      Text(p.residentName ?? '-', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14), overflow: TextOverflow.ellipsis),
+      Text(
+        p.residentName ?? '-',
+        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        overflow: TextOverflow.ellipsis,
+      ),
       Row(children: [
         if (p.roomNumber != null) ...[
           Icon(Icons.meeting_room_outlined, size: 12, color: isDark ? AppColorsDark.textHint : AppColorsLight.textHint),
@@ -938,22 +1071,52 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
   Widget _colMetode(PaymentEntity p, bool isDark) => Row(children: [
     Icon(_methodIcon(p.paymentMethod), size: 15, color: _methodColor(p.paymentMethod, isDark)),
     const SizedBox(width: 6),
-    Flexible(child: Text(_methodLabel(p.paymentMethod),
-        style: TextStyle(fontSize: 12, color: _methodColor(p.paymentMethod, isDark), fontWeight: FontWeight.w600))),
+    Flexible(child: Text(
+      _methodLabel(p.paymentMethod),
+      style: TextStyle(fontSize: 12, color: _methodColor(p.paymentMethod, isDark), fontWeight: FontWeight.w600),
+    )),
   ]);
 
+  // ─── Skeleton ─────────────────────────────────────────────────────────────
+
+  Widget _buildSkeleton(bool isDark) {
+    final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
+    final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
+
+    Widget shimmer({double height = 100}) => Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        ),
+      ),
+    );
+
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xxxl),
+      child: Column(children: [
+        Row(children: List.generate(4, (i) => Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(right: i < 3 ? AppSpacing.lg : 0),
+            child: shimmer(),
+          ),
+        ))),
+        const SizedBox(height: AppSpacing.xxxl),
+        shimmer(height: 44),
+        const SizedBox(height: AppSpacing.lg),
+        Expanded(child: shimmer(height: double.infinity)),
+      ]),
+    );
+  }
 }
 
-// ── Year / Month Dropdown ──────────────────────────────────────────────────
-class _YearMonthDropdown<T> extends StatelessWidget {
-  final String hint;
-  final T value;
-  final List<T> items;
-  final String Function(T) labelBuilder;
-  final ValueChanged<T> onChanged;
-  final bool isDark;
+// ─── Filter Dropdown ──────────────────────────────────────────────────────────
 
-  const _YearMonthDropdown({
+class _FilterDropdown<T> extends StatelessWidget {
+  const _FilterDropdown({
     required this.hint,
     required this.value,
     required this.items,
@@ -962,18 +1125,31 @@ class _YearMonthDropdown<T> extends StatelessWidget {
     required this.isDark,
   });
 
+  final String hint;
+  final T value;
+  final List<T> items;
+  final String Function(T) labelBuilder;
+  final ValueChanged<T> onChanged;
+  final bool isDark;
+
   @override
   Widget build(BuildContext context) {
     final borderColor = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
     final hintColor = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(border: Border.all(color: borderColor), borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(
+        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(10),
+      ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<T>(
           value: value,
           hint: Text(hint, style: TextStyle(fontSize: 13, color: hintColor)),
-          items: items.map((item) => DropdownMenuItem<T>(value: item, child: Text(labelBuilder(item), style: const TextStyle(fontSize: 13)))).toList(),
+          items: items.map((item) => DropdownMenuItem<T>(
+            value: item,
+            child: Text(labelBuilder(item), style: const TextStyle(fontSize: 13)),
+          )).toList(),
           onChanged: (v) { if (v != null || null is T) onChanged(v as T); },
           icon: Icon(Icons.keyboard_arrow_down, size: 18, color: hintColor),
         ),
@@ -982,17 +1158,70 @@ class _YearMonthDropdown<T> extends StatelessWidget {
   }
 }
 
-// ── Pagination Bar ──────────────────────────────────────────────────────────
+// ─── Filter Chip ──────────────────────────────────────────────────────────────
+
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
+    required this.label,
+    required this.selected,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = Theme.of(context).primaryColor;
+    return Padding(
+      padding: const EdgeInsets.only(right: 6),
+      child: GestureDetector(
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            color: selected ? primary : (isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selected ? primary : (isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+            ),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
+              color: selected ? Colors.white : (isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Pagination Bar ───────────────────────────────────────────────────────────
+
 class _PaginationBar extends StatelessWidget {
-  final int currentPage, totalPages;
+  const _PaginationBar({
+    required this.currentPage,
+    required this.totalPages,
+    required this.onPageChanged,
+  });
+
+  final int currentPage;
+  final int totalPages;
   final ValueChanged<int> onPageChanged;
-  const _PaginationBar({required this.currentPage, required this.totalPages, required this.onPageChanged});
 
   @override
   Widget build(BuildContext context) {
     int start = (currentPage - 2).clamp(1, totalPages);
     int end   = (start + 4).clamp(1, totalPages);
-    start = (end - 4).clamp(1, totalPages);
+    start     = (end - 4).clamp(1, totalPages);
     final pages = List.generate(end - start + 1, (i) => start + i);
 
     return Row(mainAxisSize: MainAxisSize.min, children: [
@@ -1012,32 +1241,35 @@ class _PaginationBar extends StatelessWidget {
     ]);
   }
 
-  Widget _btn(BuildContext ctx, int page, bool active) {
-    return GestureDetector(
-      onTap: () => onPageChanged(page),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: 34, height: 34,
-        decoration: BoxDecoration(
-          color: active ? Theme.of(ctx).primaryColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-          border: active ? null : Border.all(color: Colors.grey.shade300),
-        ),
-        alignment: Alignment.center,
-        child: Text('$page', style: TextStyle(fontWeight: active ? FontWeight.bold : FontWeight.normal, color: active ? Colors.white : Colors.grey.shade700, fontSize: 13)),
+  Widget _btn(BuildContext ctx, int page, bool active) => GestureDetector(
+    onTap: () => onPageChanged(page),
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      width: 34, height: 34,
+      decoration: BoxDecoration(
+        color: active ? Theme.of(ctx).primaryColor : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        border: active ? null : Border.all(color: Colors.grey.shade300),
       ),
-    );
-  }
+      alignment: Alignment.center,
+      child: Text('$page', style: TextStyle(
+        fontWeight: active ? FontWeight.bold : FontWeight.normal,
+        color: active ? Colors.white : Colors.grey.shade700,
+        fontSize: 13,
+      )),
+    ),
+  );
 
-  Widget _nav(BuildContext ctx, IconData icon, bool enabled, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: enabled ? onTap : null,
-      child: Container(
-        width: 34, height: 34,
-        decoration: BoxDecoration(borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade300)),
-        alignment: Alignment.center,
-        child: Icon(icon, size: 18, color: enabled ? Colors.grey.shade700 : Colors.grey.shade300),
+  Widget _nav(BuildContext ctx, IconData icon, bool enabled, VoidCallback onTap) => GestureDetector(
+    onTap: enabled ? onTap : null,
+    child: Container(
+      width: 34, height: 34,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.grey.shade300),
       ),
-    );
-  }
+      alignment: Alignment.center,
+      child: Icon(icon, size: 18, color: enabled ? Colors.grey.shade700 : Colors.grey.shade300),
+    ),
+  );
 }

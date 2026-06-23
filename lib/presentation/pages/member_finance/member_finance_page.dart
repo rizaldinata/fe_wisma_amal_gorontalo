@@ -195,7 +195,9 @@ class _MemberFinancePageState extends State<MemberFinancePage> {
                     final overdueTotal = overdueInvoices.fold(0.0, (s, i) => s + i.amount);
                     final textSecondary = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
 
-                    return SingleChildScrollView(
+                    final isRefreshing = state.status == MemberFinanceStatus.loading && state.summary != null;
+                    return Stack(children: [
+                      SingleChildScrollView(
                       padding: const EdgeInsets.all(AppSpacing.xxl),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -231,7 +233,9 @@ class _MemberFinancePageState extends State<MemberFinancePage> {
                               .fadeIn(delay: 150.ms, duration: 300.ms),
                         ],
                       ),
-                    );
+                      ),
+                      if (isRefreshing) const LinearProgressIndicator(),
+                    ]);
                   },
                 ),
               ),

@@ -13,15 +13,16 @@ import '../../bloc/finance_dashboard/finance_dashboard_state.dart';
 import '../../bloc/midtrans_monitoring/midtrans_monitoring_cubit.dart';
 import '../../widget/core/appbar/app_topbar.dart';
 import '../../widget/core/card/basic_card.dart';
+import '../../widget/core/card/summary_stat_card.dart';
+import '../../widget/core/chip/status_badge.dart';
+import '../../widget/core/table/app_data_table.dart';
 import '../../widget/core/wrapper/empty_state_widget.dart';
 import '../../../domain/entity/finance/invoice_entity.dart';
+import '../../../domain/entity/finance/kpi_entity.dart';
+import '../../../domain/entity/finance/payment_entity.dart';
+import '../../../domain/entity/finance/revenue_entity.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import '../../../domain/entity/finance/payment_entity.dart';
-import '../../../domain/entity/finance/kpi_entity.dart';
-import '../../../domain/entity/finance/revenue_entity.dart';
-import '../../widget/core/table/table.dart';
-import '../../../domain/entity/table/tabel_colum.dart';
 
 // ─── Semantic colors ────────────────────────────────────────────────────────
 
@@ -49,15 +50,12 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
   int? _selectedYear = DateTime.now().year;
   int? _selectedMonth = DateTime.now().month;
 
-  // ─── Formatters ───────────────────────────────────────────────────────────
-
   static final _currencyFmt =
       NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
   static final _dateFmt = DateFormat('d MMM yyyy', 'id_ID');
 
   String _formatRupiah(double amount) => _currencyFmt.format(amount);
 
-  /// Returns compact form: 1.2jt, 500rb, 50rb, etc.
   String _compact(double value) {
     if (value >= 1000000000) {
       return '${(value / 1000000000).toStringAsFixed(1)}M';
@@ -80,15 +78,12 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
     return 'Semua Periode';
   }
 
-  // ─── Lifecycle ────────────────────────────────────────────────────────────
-
   @override
   void initState() {
     super.initState();
     _financeBloc = serviceLocator.get<FinanceDashboardBloc>();
-    _applyFilter();
     _monitoringCubit = serviceLocator.get<MidtransMonitoringCubit>();
-    _monitoringCubit.load();
+    _applyFilter();
   }
 
   @override
@@ -99,9 +94,8 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
 
   void _applyFilter() {
     _financeBloc.add(FetchDashboardData(month: _selectedMonth, year: _selectedYear));
+    _monitoringCubit.load();
   }
-
-  // ─── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -144,54 +138,52 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
                       ),
                     );
                   }
-                  if (state is FinanceDashboardLoaded) {
-                    return SingleChildScrollView(
-                      padding: const EdgeInsets.all(AppSpacing.xxxl),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          BasicCard(
-                            padding: const EdgeInsets.all(AppSpacing.md),
-                            child: Row(children: [
-                              _DashboardFilterDropdown<int?>(
-                                hint: 'Semua Tahun',
-                                value: _selectedYear,
-                                items: [null, ...List.generate(6, (i) => DateTime.now().year - i)],
-                                labelBuilder: (v) => v == null ? 'Semua Tahun' : '$v',
-                                onChanged: (v) { setState(() { _selectedYear = v; _selectedMonth = null; }); _applyFilter(); },
+                  final loaded = state is FinanceDashboardLoaded
+                      ? state
+                      : state is FinanceDashboardRefreshing
+                          ? state.currentData
+                          : null;
+                  if (loaded != null) {
+                    return Stack(
+                      children: [
+                        SingleChildScrollView(
+                          padding: const EdgeInsets.all(AppSpacing.xxxl),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _DashboardContent(
+                                kpi: loaded.kpiSummary,
+                                revenueChart: loaded.revenueChart,
+                                dueInvoices: loaded.dueInvoices,
+                                pendingPayments: loaded.pendingPayments,
+                                periodLabel: _periodLabel,
+                                formatRupiah: _formatRupiah,
+                                compact: _compact,
+                                dateFmt: _dateFmt,
+                                selectedYear: _selectedYear,
+                                selectedMonth: _selectedMonth,
+                                onYearChanged: (v) {
+                                  setState(() { _selectedYear = v; _selectedMonth = null; });
+                                  _applyFilter();
+                                },
+                                onMonthChanged: (v) {
+                                  setState(() => _selectedMonth = v);
+                                  _applyFilter();
+                                },
+                                onReset: () {
+                                  setState(() {
+                                    _selectedYear = DateTime.now().year;
+                                    _selectedMonth = DateTime.now().month;
+                                  });
+                                  _applyFilter();
+                                },
                               ),
-                              const SizedBox(width: AppSpacing.sm),
-                              _DashboardFilterDropdown<int?>(
-                                hint: 'Semua Bulan',
-                                value: _selectedMonth,
-                                items: [null, ...List.generate(12, (i) => i + 1)],
-                                labelBuilder: (v) => v == null ? 'Semua Bulan' : DateFormat('MMMM', 'id_ID').format(DateTime(0, v)),
-                                onChanged: (v) { setState(() => _selectedMonth = v); _applyFilter(); },
-                              ),
-                              if (_selectedYear != DateTime.now().year || _selectedMonth != DateTime.now().month) ...[
-                                const SizedBox(width: AppSpacing.sm),
-                                TextButton.icon(
-                                  onPressed: () { setState(() { _selectedYear = DateTime.now().year; _selectedMonth = DateTime.now().month; }); _applyFilter(); },
-                                  icon: const Icon(Icons.close, size: 14),
-                                  label: const Text('Reset', style: TextStyle(fontSize: 12)),
-                                  style: TextButton.styleFrom(foregroundColor: Colors.grey.shade600),
-                                ),
-                              ],
-                            ]),
-                          ).animate().fadeIn(duration: 300.ms),
-                          const SizedBox(height: AppSpacing.xxxl),
-                          _DashboardContent(
-                            kpi: state.kpiSummary,
-                            revenueChart: state.revenueChart,
-                            dueInvoices: state.dueInvoices,
-                            pendingPayments: state.pendingPayments,
-                            periodLabel: _periodLabel,
-                            formatRupiah: _formatRupiah,
-                            compact: _compact,
-                            dateFmt: _dateFmt,
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        if (state is FinanceDashboardRefreshing)
+                          const LinearProgressIndicator(),
+                      ],
                     );
                   }
                   return const SizedBox.shrink();
@@ -208,241 +200,45 @@ class _FinanceDashboardPageState extends State<FinanceDashboardPage> {
     final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
     final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
 
+    Widget shimmerCard({double height = 100}) => Shimmer.fromColors(
+      baseColor: baseColor,
+      highlightColor: highlightColor,
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+        ),
+      ),
+    );
+
+    Widget cardRow(int count) => Row(
+      children: List.generate(count, (i) => Expanded(
+        child: Padding(
+          padding: EdgeInsets.only(right: i < count - 1 ? AppSpacing.lg : 0),
+          child: shimmerCard(),
+        ),
+      )),
+    );
+
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.xxxl),
       child: Column(
         children: [
-          Shimmer.fromColors(
-            baseColor: baseColor,
-            highlightColor: highlightColor,
-            child: Container(
-              height: 50,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xxxl),
-          Row(children: List.generate(4, (i) => Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(right: i < 3 ? AppSpacing.lg : 0),
-              child: Shimmer.fromColors(
-                baseColor: baseColor,
-                highlightColor: highlightColor,
-                child: Container(
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  ),
-                ),
-              ),
-            ),
-          ))),
+          cardRow(4),
           const SizedBox(height: AppSpacing.lg),
-          Row(children: List.generate(4, (i) => Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(right: i < 3 ? AppSpacing.lg : 0),
-              child: Shimmer.fromColors(
-                baseColor: baseColor,
-                highlightColor: highlightColor,
-                child: Container(
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                  ),
-                ),
-              ),
-            ),
-          ))),
+          cardRow(4),
+          const SizedBox(height: AppSpacing.lg),
+          cardRow(2),
           const SizedBox(height: AppSpacing.xxxl),
-          Shimmer.fromColors(
-            baseColor: baseColor,
-            highlightColor: highlightColor,
-            child: Container(
-              height: 260,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-              ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.xxxl),
-          Expanded(
-            child: Shimmer.fromColors(
-              baseColor: baseColor,
-              highlightColor: highlightColor,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                ),
-              ),
-            ),
-          ),
+          Expanded(child: shimmerCard(height: double.infinity)),
         ],
       ),
     );
   }
 }
 
-// ─── Midtrans Monitoring Card ────────────────────────────────────────────────
-
-class _MidtransMonitoringCard extends StatelessWidget {
-  const _MidtransMonitoringCard({required this.formatRupiah});
-
-  final String Function(double) formatRupiah;
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<MidtransMonitoringCubit, MidtransMonitoringState>(
-      builder: (context, state) {
-        if (state is MidtransMonitoringInitial || state is MidtransMonitoringLoading) {
-          return const BasicCard(
-            padding: EdgeInsets.symmetric(vertical: 40),
-            child: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        if (state is MidtransMonitoringError) {
-          return BasicCard(
-            padding: const EdgeInsets.all(20),
-            child: Center(
-              child: Text(
-                'Gagal memuat data Midtrans: ${state.message}',
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          );
-        }
-
-        if (state is! MidtransMonitoringLoaded) return const SizedBox.shrink();
-        final d = state.data;
-
-        final bulanNames = ['', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
-            'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
-        final bulanLabel = d.bulan > 0 && d.bulan <= 12 ? bulanNames[d.bulan] : '';
-
-        return BasicCard(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Stat Chips Row ────────────────────────────────────────────
-              Row(
-                children: [
-                  _MonitoringStatChip(
-                    label: 'Settlement',
-                    value: '${d.jumlahSettlement}×',
-                    color: _kColorRevenue,
-                  ),
-                  const SizedBox(width: 10),
-                  _MonitoringStatChip(
-                    label: 'Pending',
-                    value: '${d.jumlahPending}×',
-                    color: _kColorWarning,
-                  ),
-                  const SizedBox(width: 10),
-                  _MonitoringStatChip(
-                    label: 'Total Transaksi',
-                    value: '${d.totalTransaksi}×',
-                    color: _kColorInfo,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // ── Total Settlement ──────────────────────────────────────────
-              Row(
-                children: [
-                  Expanded(
-                    child: _KpiCard(
-                      icon: Icons.check_circle_outline_rounded,
-                      iconColor: _kColorRevenue,
-                      title: 'Total Terkumpul (Settlement)',
-                      tooltip: 'Jumlah total uang dari pembayaran Midtrans yang sudah berstatus settlement (sudah masuk rekening).',
-                      value: formatRupiah(d.totalSettlement),
-                      valueColor: _kColorRevenue,
-                    ),
-                  ),
-                  if (bulanLabel.isNotEmpty) ...[
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _KpiCard(
-                        icon: Icons.calendar_today_outlined,
-                        iconColor: _kColorMonthly,
-                        title: 'Settlement $bulanLabel ${d.tahun}',
-                        tooltip: 'Jumlah pembayaran Midtrans yang settlement pada bulan ini.',
-                        value: formatRupiah(d.settlementBulanIni),
-                        valueColor: _kColorMonthly,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-
-              // ── Refresh button ────────────────────────────────────────────
-              const SizedBox(height: 8),
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton.icon(
-                  onPressed: () => context.read<MidtransMonitoringCubit>().load(),
-                  icon: const Icon(Icons.refresh_rounded, size: 16),
-                  label: const Text('Refresh', style: TextStyle(fontSize: 12)),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _MonitoringStatChip extends StatelessWidget {
-  const _MonitoringStatChip({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.10),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: color.withOpacity(0.25)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              value,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: color),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              style: TextStyle(fontSize: 11, color: color.withOpacity(0.8)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Filter dropdown (same style as other finance pages) ────────────────────
+// ─── Filter dropdown ─────────────────────────────────────────────────────────
 
 class _DashboardFilterDropdown<T> extends StatelessWidget {
   const _DashboardFilterDropdown({
@@ -487,7 +283,7 @@ class _DashboardFilterDropdown<T> extends StatelessWidget {
   }
 }
 
-// ─── Dashboard content (Loaded state) ───────────────────────────────────────
+// ─── Dashboard content ───────────────────────────────────────────────────────
 
 class _DashboardContent extends StatelessWidget {
   const _DashboardContent({
@@ -499,6 +295,11 @@ class _DashboardContent extends StatelessWidget {
     required this.formatRupiah,
     required this.compact,
     required this.dateFmt,
+    required this.selectedYear,
+    required this.selectedMonth,
+    required this.onYearChanged,
+    required this.onMonthChanged,
+    required this.onReset,
   });
 
   final KpiEntity kpi;
@@ -509,8 +310,15 @@ class _DashboardContent extends StatelessWidget {
   final String Function(double) formatRupiah;
   final String Function(double) compact;
   final DateFormat dateFmt;
+  final int? selectedYear;
+  final int? selectedMonth;
+  final ValueChanged<int?> onYearChanged;
+  final ValueChanged<int?> onMonthChanged;
+  final VoidCallback onReset;
 
-  // ─── Section title helper ──────────────────────────────────────────────
+  bool get _isDefaultPeriod =>
+      selectedYear == DateTime.now().year &&
+      selectedMonth == DateTime.now().month;
 
   Widget _sectionTitle(BuildContext context, String title, bool isDark) {
     return Row(
@@ -539,17 +347,50 @@ class _DashboardContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
-    final isProfit = kpi.netProfit >= 0;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── KPI Section ───────────────────────────────────────────────────
-        _sectionTitle(context, 'Ringkasan Keuangan', isDark),
+        // ── KPI + Midtrans Section ────────────────────────────────────────
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            _sectionTitle(context, 'Ringkasan Keuangan', isDark),
+            const Spacer(),
+            _DashboardFilterDropdown<int?>(
+              hint: 'Semua Tahun',
+              value: selectedYear,
+              items: [null, ...List.generate(6, (i) => DateTime.now().year - i)],
+              labelBuilder: (v) => v == null ? 'Semua Tahun' : '$v',
+              onChanged: onYearChanged,
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            _DashboardFilterDropdown<int?>(
+              hint: 'Semua Bulan',
+              value: selectedMonth,
+              items: [null, ...List.generate(12, (i) => i + 1)],
+              labelBuilder: (v) => v == null
+                  ? 'Semua Bulan'
+                  : DateFormat('MMMM', 'id_ID').format(DateTime(0, v)),
+              onChanged: onMonthChanged,
+            ),
+            if (!_isDefaultPeriod) ...[
+              const SizedBox(width: AppSpacing.xs),
+              IconButton(
+                onPressed: onReset,
+                icon: const Icon(Icons.close_rounded, size: 16),
+                tooltip: 'Reset filter',
+                style: IconButton.styleFrom(
+                  foregroundColor: Colors.grey.shade500,
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+            ],
+          ],
+        ).animate().fadeIn(duration: 300.ms),
         const SizedBox(height: AppSpacing.lg),
         _KpiGrid(
           kpi: kpi,
-          isProfit: isProfit,
           formatRupiah: formatRupiah,
           periodLabel: periodLabel,
         ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0, duration: 300.ms),
@@ -565,253 +406,205 @@ class _DashboardContent extends StatelessWidget {
         // ── Due Invoices ──────────────────────────────────────────────────
         _sectionTitle(context, 'Tagihan Jatuh Tempo', isDark),
         const SizedBox(height: AppSpacing.lg),
-        _DueInvoicesTable(invoices: dueInvoices, formatRupiah: formatRupiah, dateFmt: dateFmt)
-            .animate().fadeIn(delay: 150.ms, duration: 300.ms),
+        _DueInvoicesTable(
+          invoices: dueInvoices,
+          formatRupiah: formatRupiah,
+          dateFmt: dateFmt,
+          isDark: isDark,
+        ).animate().fadeIn(delay: 150.ms, duration: 300.ms),
         const SizedBox(height: AppSpacing.xxxl),
 
         // ── Pending Payments ──────────────────────────────────────────────
         _sectionTitle(context, 'Pembayaran Perlu Konfirmasi', isDark),
         const SizedBox(height: AppSpacing.lg),
-        _PendingPaymentsTable(payments: pendingPayments, formatRupiah: formatRupiah)
-            .animate().fadeIn(delay: 200.ms, duration: 300.ms),
-        const SizedBox(height: AppSpacing.xxxl),
-
-        // ── Midtrans Monitoring ───────────────────────────────────────────
-        _sectionTitle(context, 'Monitoring Pembayaran Midtrans', isDark),
-        const SizedBox(height: AppSpacing.lg),
-        _MidtransMonitoringCard(formatRupiah: formatRupiah)
-            .animate().fadeIn(delay: 250.ms, duration: 300.ms),
+        _PendingPaymentsTable(
+          payments: pendingPayments,
+          formatRupiah: formatRupiah,
+          isDark: isDark,
+        ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
         const SizedBox(height: AppSpacing.xxl),
       ],
     );
   }
 }
 
-// ─── KPI Grid (2 rows × 4 cards) ────────────────────────────────────────────
+// ─── KPI Grid ────────────────────────────────────────────────────────────────
+// Row 1: 4 main financial KPIs
+// Row 2: 2 operational KPIs + 2 Midtrans count KPIs
+// Row 3: 2 Midtrans amount KPIs
 
 class _KpiGrid extends StatelessWidget {
   const _KpiGrid({
     required this.kpi,
-    required this.isProfit,
     required this.formatRupiah,
     required this.periodLabel,
   });
 
   final KpiEntity kpi;
-  final bool isProfit;
   final String Function(double) formatRupiah;
   final String periodLabel;
 
-  @override
-  Widget build(BuildContext context) {
-    final netProfitColor = isProfit ? _kColorRevenue : _kColorExpense;
-
-    return Column(
-      children: [
-        // Row 1
-        Row(
-          children: [
-            Expanded(
-              child: _KpiCard(
-                icon: Icons.account_balance_wallet_rounded,
-                iconColor: _kColorRevenue,
-                title: 'Total Pendapatan',
-                tooltip: 'Jumlah seluruh uang masuk dari pembayaran sewa yang telah dikonfirmasi pada periode ini.',
-                value: formatRupiah(kpi.totalRevenue),
-                valueColor: _kColorRevenue,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _KpiCard(
-                icon: Icons.trending_down_rounded,
-                iconColor: _kColorExpense,
-                title: 'Total Pengeluaran',
-                tooltip: 'Jumlah semua biaya operasional yang dikeluarkan wisma pada periode ini.',
-                value: formatRupiah(kpi.totalExpense),
-                valueColor: _kColorExpense,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _KpiCard(
-                icon: isProfit
-                    ? Icons.trending_up_rounded
-                    : Icons.trending_down_rounded,
-                iconColor: netProfitColor,
-                title: 'Laba Bersih',
-                tooltip: 'Selisih antara total pendapatan dikurangi total pengeluaran. Positif berarti untung, negatif berarti rugi.',
-                value: formatRupiah(kpi.netProfit),
-                valueColor: netProfitColor,
-                badge: isProfit ? null : 'Merugi',
-                badgeColor: _kColorExpense,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _KpiCard(
-                icon: Icons.money_off_rounded,
-                iconColor: _kColorExpense,
-                title: 'Tagihan Belum Bayar',
-                tooltip: 'Total nilai tagihan yang sudah jatuh tempo namun belum dilunasi.',
-                value: formatRupiah(kpi.dueInvoicesTotal),
-                valueColor: _kColorExpense,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        // Row 2
-        Row(
-          children: [
-            Expanded(
-              child: _KpiCard(
-                icon: Icons.calendar_month_rounded,
-                iconColor: _kColorMonthly,
-                title: 'Sewa Bulanan',
-                tooltip: 'Total pemasukan dari penghuni yang menggunakan kontrak sewa per bulan.',
-                value: formatRupiah(kpi.revenueMonthlyRents),
-                valueColor: _kColorMonthly,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _KpiCard(
-                icon: Icons.today_rounded,
-                iconColor: _kColorDaily,
-                title: 'Sewa Harian',
-                tooltip: 'Total pemasukan dari tamu yang menggunakan paket sewa harian.',
-                value: formatRupiah(kpi.revenueDailyRents),
-                valueColor: _kColorDaily,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _KpiCard(
-                icon: Icons.receipt_long_rounded,
-                iconColor: _kColorWarning,
-                title: 'Jatuh Tempo',
-                tooltip: 'Jumlah tagihan yang sudah melewati tanggal jatuh tempo dan belum dibayar.',
-                value: '${kpi.dueInvoicesCount} Tagihan',
-                valueColor: _kColorWarning,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _KpiCard(
-                icon: Icons.hourglass_top_rounded,
-                iconColor: _kColorInfo,
-                title: 'Perlu Konfirmasi',
-                tooltip: 'Transaksi transfer bank yang sudah diunggah penghuni dan menunggu verifikasi dari admin.',
-                value: '${kpi.pendingPaymentsCount} Transaksi',
-                valueColor: _kColorInfo,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Single KPI Card ─────────────────────────────────────────────────────────
-
-class _KpiCard extends StatelessWidget {
-  const _KpiCard({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.tooltip,
-    required this.value,
-    required this.valueColor,
-    this.badge,
-    this.badgeColor,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String tooltip;
-  final String value;
-  final Color valueColor;
-  final String? badge;
-  final Color? badgeColor;
+  static const _bulanNames = [
+    '', 'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+    'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des',
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isDark = AppTheme.isDark(context);
+    final isProfit = kpi.netProfit >= 0;
 
-    return BasicCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Icon bubble
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: iconColor, size: 18),
+    final profitIconColor = isProfit
+        ? (isDark ? AppColorsDark.conditionGood : AppColorsLight.conditionGood)
+        : (isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled);
+    final profitIconBg = isProfit
+        ? (isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg)
+        : (isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg);
+
+    return BlocBuilder<MidtransMonitoringCubit, MidtransMonitoringState>(
+      builder: (context, midtransState) {
+        final midtrans = midtransState is MidtransMonitoringLoaded
+            ? midtransState.data
+            : null;
+        final isLoading = midtransState is MidtransMonitoringInitial ||
+            midtransState is MidtransMonitoringLoading;
+
+        final bulanLabel = midtrans != null &&
+                midtrans.bulan > 0 &&
+                midtrans.bulan <= 12
+            ? _bulanNames[midtrans.bulan]
+            : '';
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── Row 1: Main financial KPIs ────────────────────────────────
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: SummaryStatCard(
+                    label: 'Total Pendapatan',
+                    value: formatRupiah(kpi.totalRevenue),
+                    icon: Icons.account_balance_wallet_rounded,
+                    iconColor: isDark ? AppColorsDark.conditionGood : AppColorsLight.conditionGood,
+                    iconBg: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
+                    trend: periodLabel,
+                  )),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(child: SummaryStatCard(
+                    label: 'Total Pengeluaran',
+                    value: formatRupiah(kpi.totalExpense),
+                    icon: Icons.trending_down_rounded,
+                    iconColor: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled,
+                    iconBg: isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg,
+                    trend: periodLabel,
+                  )),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(child: SummaryStatCard(
+                    label: 'Laba Bersih',
+                    value: formatRupiah(kpi.netProfit),
+                    icon: isProfit ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+                    iconColor: profitIconColor,
+                    iconBg: profitIconBg,
+                    trend: isProfit ? 'Surplus' : 'Defisit',
+                    trendColor: profitIconColor,
+                    valueColor: profitIconColor,
+                  )),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(child: SummaryStatCard(
+                    label: 'Tagihan Belum Bayar',
+                    value: formatRupiah(kpi.dueInvoicesTotal),
+                    icon: Icons.money_off_rounded,
+                    iconColor: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled,
+                    iconBg: isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg,
+                  )),
+                ],
               ),
-              const Spacer(),
-              Tooltip(
-                message: tooltip,
-                preferBelow: false,
-                triggerMode: TooltipTriggerMode.tap,
-                child: Icon(
-                  Icons.info_outline_rounded,
-                  size: 16,
-                  color: theme.colorScheme.onSurfaceVariant.withOpacity(0.5),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            title,
-            style: theme.textTheme.labelMedium?.copyWith(
-              color: theme.colorScheme.onSurfaceVariant,
-              fontWeight: FontWeight.w500,
             ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: theme.textTheme.titleMedium?.copyWith(
-              color: valueColor,
-              fontWeight: FontWeight.w700,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          if (badge != null) ...[
-            const SizedBox(height: 4),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-              decoration: BoxDecoration(
-                color: (badgeColor ?? _kColorExpense).withOpacity(0.12),
-                borderRadius: BorderRadius.circular(20),
+            const SizedBox(height: AppSpacing.lg),
+
+            // ── Row 2: Operational + Midtrans counts ──────────────────────
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: SummaryStatCard(
+                    label: 'Jatuh Tempo',
+                    value: '${kpi.dueInvoicesCount} Tagihan',
+                    icon: Icons.receipt_long_rounded,
+                    iconColor: isDark ? AppColorsDark.conditionFair : AppColorsLight.conditionFair,
+                    iconBg: isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg,
+                  )),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(child: SummaryStatCard(
+                    label: 'Perlu Konfirmasi',
+                    value: '${kpi.pendingPaymentsCount} Transaksi',
+                    icon: Icons.hourglass_top_rounded,
+                    iconColor: isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess,
+                    iconBg: isDark ? AppColorsDark.statusProcessBg : AppColorsLight.statusProcessBg,
+                  )),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(child: SummaryStatCard(
+                    label: 'Settlement Midtrans',
+                    value: isLoading ? '–' : (midtrans != null ? '${midtrans.jumlahSettlement}×' : '–'),
+                    icon: Icons.check_circle_outline_rounded,
+                    iconColor: isDark ? AppColorsDark.conditionGood : AppColorsLight.conditionGood,
+                    iconBg: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
+                  )),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(child: SummaryStatCard(
+                    label: 'Pending Midtrans',
+                    value: isLoading ? '–' : (midtrans != null ? '${midtrans.jumlahPending}×' : '–'),
+                    icon: Icons.hourglass_empty_rounded,
+                    iconColor: isDark ? AppColorsDark.conditionFair : AppColorsLight.conditionFair,
+                    iconBg: isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg,
+                  )),
+                ],
               ),
-              child: Text(
-                badge!,
-                style: TextStyle(
-                  color: badgeColor ?? _kColorExpense,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+
+            // ── Row 3: Midtrans amounts ───────────────────────────────────
+            IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(child: SummaryStatCard(
+                    label: 'Total Terkumpul (Midtrans)',
+                    value: isLoading ? '–' : (midtrans != null ? formatRupiah(midtrans.totalSettlement) : '–'),
+                    icon: Icons.account_balance_wallet_rounded,
+                    iconColor: isDark ? AppColorsDark.conditionGood : AppColorsLight.conditionGood,
+                    iconBg: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
+                    valueColor: midtrans != null
+                        ? (isDark ? AppColorsDark.conditionGood : AppColorsLight.conditionGood)
+                        : null,
+                  )),
+                  const SizedBox(width: AppSpacing.lg),
+                  Expanded(child: SummaryStatCard(
+                    label: bulanLabel.isNotEmpty && midtrans != null
+                        ? 'Settlement $bulanLabel ${midtrans.tahun}'
+                        : 'Settlement Bulan Ini',
+                    value: isLoading
+                        ? '–'
+                        : (midtrans != null && bulanLabel.isNotEmpty
+                            ? formatRupiah(midtrans.settlementBulanIni)
+                            : '–'),
+                    icon: Icons.calendar_today_outlined,
+                    iconColor: isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess,
+                    iconBg: isDark ? AppColorsDark.statusProcessBg : AppColorsLight.statusProcessBg,
+                  )),
+                  // Fill remaining 2 slots with invisible spacers to maintain grid alignment
+                  const SizedBox(width: AppSpacing.lg),
+                  const Expanded(child: SizedBox()),
+                  const SizedBox(width: AppSpacing.lg),
+                  const Expanded(child: SizedBox()),
+                ],
               ),
             ),
           ],
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -850,7 +643,6 @@ class _RevenueChart extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Legend row
           Wrap(
             spacing: 16,
             runSpacing: 6,
@@ -861,18 +653,13 @@ class _RevenueChart extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          // Chart area
           SizedBox(
             height: 200,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: chartData.map((data) {
                 return Expanded(
-                  child: _RevenueBar(
-                    data: data,
-                    maxVal: maxVal,
-                    compact: compact,
-                  ),
+                  child: _RevenueBar(data: data, maxVal: maxVal, compact: compact),
                 );
               }).toList(),
             ),
@@ -926,13 +713,13 @@ class _RevenueBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final ratio = maxVal == 0 ? 0.0 : (data.total / maxVal).clamp(0.0, 1.0);
-    // minimum visual bar height of 4px when there's data
     const double chartHeight = 160.0;
-    final barHeight = data.total == 0 ? 4.0 : (ratio * chartHeight).clamp(4.0, chartHeight);
+    final barHeight = data.total == 0
+        ? 4.0
+        : (ratio * chartHeight).clamp(4.0, chartHeight);
 
     return Tooltip(
-      message:
-          'Total: ${NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(data.total)}'
+      message: 'Total: ${NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(data.total)}'
           '\nBulanan: ${NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(data.monthlyRentTotal)}'
           '\nHarian: ${NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(data.dailyRentTotal)}',
       preferBelow: false,
@@ -941,7 +728,6 @@ class _RevenueBar extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            // Value label
             Text(
               compact(data.total),
               style: theme.textTheme.labelSmall?.copyWith(
@@ -951,7 +737,6 @@ class _RevenueBar extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 4),
-            // Bar
             ClipRRect(
               borderRadius: const BorderRadius.vertical(top: Radius.circular(5)),
               child: SizedBox(
@@ -961,19 +746,19 @@ class _RevenueBar extends StatelessWidget {
                     final w = constraints.maxWidth;
                     return Row(
                       children: [
-                        // Monthly
                         if (data.total > 0)
                           SizedBox(
                             width: w * (data.monthlyRentTotal / data.total).clamp(0.0, 1.0),
                             height: barHeight,
-                            child: ColoredBox(color: _kColorMonthly),
+                            child: const ColoredBox(color: _kColorMonthly),
                           ),
-                        // Daily
                         Expanded(
                           child: SizedBox(
                             height: barHeight,
                             child: ColoredBox(
-                              color: data.total == 0 ? _kColorRevenue.withOpacity(0.15) : _kColorDaily,
+                              color: data.total == 0
+                                  ? _kColorRevenue.withOpacity(0.15)
+                                  : _kColorDaily,
                             ),
                           ),
                         ),
@@ -984,7 +769,6 @@ class _RevenueBar extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            // Month label
             Text(
               data.month,
               style: theme.textTheme.labelSmall?.copyWith(
@@ -1007,85 +791,80 @@ class _DueInvoicesTable extends StatelessWidget {
     required this.invoices,
     required this.formatRupiah,
     required this.dateFmt,
+    required this.isDark,
   });
 
   final List<InvoiceEntity> invoices;
   final String Function(double) formatRupiah;
   final DateFormat dateFmt;
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    return TableCard(
-      title: 'Daftar Tagihan Jatuh Tempo',
-      emptyMessage: 'Tidak ada tagihan yang jatuh tempo. Semua lancar!',
+    if (invoices.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(AppSpacing.xxxl),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isDark ? AppColorsDark.surface : AppColorsLight.surface,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(
+            color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight,
+          ),
+        ),
+        child: Text(
+          'Tidak ada tagihan yang jatuh tempo. Semua lancar!',
+          style: TextStyle(
+            color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary,
+          ),
+        ),
+      );
+    }
+
+    return AppDataTable(
       columns: const [
-        TableColumn(label: 'NO TAGIHAN', flex: 3),
-        TableColumn(label: 'JUMLAH', flex: 3),
-        TableColumn(label: 'JATUH TEMPO', flex: 3),
-        TableColumn(label: 'AKSI', flex: 2, align: TextAlign.center),
+        DataColumn(label: Text('No Tagihan')),
+        DataColumn(label: Text('Jumlah')),
+        DataColumn(label: Text('Jatuh Tempo')),
+        DataColumn(label: Text('Aksi')),
       ],
       rows: invoices.map((inv) {
         final isOverdue = inv.dueDate.isBefore(DateTime.now());
-        return [
-          // No tagihan
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: _kColorExpense.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.receipt_outlined,
-                  size: 16,
-                  color: _kColorExpense,
-                ),
+        return DataRow(cells: [
+          DataCell(Row(children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: _kColorExpense.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  inv.invoiceNumber,
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          // Jumlah
-          Text(
-            formatRupiah(inv.amount),
-            style: const TextStyle(
-              fontWeight: FontWeight.w700,
-              color: _kColorExpense,
+              child: const Icon(Icons.receipt_outlined, size: 16, color: _kColorExpense),
             ),
-          ),
-          // Jatuh tempo
-          Row(
-            children: [
-              Icon(
-                Icons.event_rounded,
-                size: 14,
-                color: isOverdue ? _kColorExpense : _kColorWarning,
+            const SizedBox(width: 10),
+            Text(inv.invoiceNumber, style: const TextStyle(fontWeight: FontWeight.w600)),
+          ])),
+          DataCell(Text(
+            formatRupiah(inv.amount),
+            style: const TextStyle(fontWeight: FontWeight.w700, color: _kColorExpense),
+          )),
+          DataCell(Row(children: [
+            Icon(
+              Icons.event_rounded,
+              size: 14,
+              color: isOverdue ? _kColorExpense : _kColorWarning,
+            ),
+            const SizedBox(width: 4),
+            Text(
+              dateFmt.format(inv.dueDate),
+              style: TextStyle(
+                fontSize: 13,
+                color: isOverdue ? _kColorExpense : null,
+                fontWeight: isOverdue ? FontWeight.w600 : FontWeight.normal,
               ),
-              const SizedBox(width: 4),
-              Text(
-                dateFmt.format(inv.dueDate),
-                style: TextStyle(
-                  fontSize: 13,
-                  color: isOverdue ? _kColorExpense : null,
-                  fontWeight:
-                      isOverdue ? FontWeight.w600 : FontWeight.normal,
-                ),
-              ),
-            ],
-          ),
-          // Aksi
-          Align(
-            alignment: Alignment.center,
-            child: _RemindButton(invoiceNumber: inv.invoiceNumber),
-          ),
-        ];
+            ),
+          ])),
+          DataCell(_RemindButton(invoiceNumber: inv.invoiceNumber)),
+        ]);
       }).toList(),
     );
   }
@@ -1101,9 +880,7 @@ class _RemindButton extends StatelessWidget {
       onPressed: () {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(
-              'Pengingat untuk $invoiceNumber akan segera hadir.',
-            ),
+            content: Text('Pengingat untuk $invoiceNumber akan segera hadir.'),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -1127,123 +904,76 @@ class _PendingPaymentsTable extends StatelessWidget {
   const _PendingPaymentsTable({
     required this.payments,
     required this.formatRupiah,
+    required this.isDark,
   });
 
   final List<PaymentEntity> payments;
   final String Function(double) formatRupiah;
-
-  Color _statusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return _kColorWarning;
-      case 'confirmed':
-      case 'success':
-        return _kColorRevenue;
-      case 'rejected':
-      case 'failed':
-        return _kColorExpense;
-      default:
-        return _kColorInfo;
-    }
-  }
-
-  String _statusLabel(String status) {
-    switch (status.toLowerCase()) {
-      case 'pending':
-        return 'Menunggu';
-      case 'confirmed':
-        return 'Dikonfirmasi';
-      case 'success':
-        return 'Berhasil';
-      case 'rejected':
-        return 'Ditolak';
-      case 'failed':
-        return 'Gagal';
-      default:
-        return status.toUpperCase();
-    }
-  }
+  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    return TableCard(
-      title: 'Daftar Pembayaran Menunggu',
-      emptyMessage: 'Belum ada pembayaran yang menunggu konfirmasi.',
+    if (payments.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(AppSpacing.xxxl),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: isDark ? AppColorsDark.surface : AppColorsLight.surface,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+          border: Border.all(
+            color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight,
+          ),
+        ),
+        child: Text(
+          'Belum ada pembayaran yang menunggu konfirmasi.',
+          style: TextStyle(
+            color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary,
+          ),
+        ),
+      );
+    }
+
+    return AppDataTable(
       columns: const [
-        TableColumn(label: 'ID TRANSAKSI', flex: 3),
-        TableColumn(label: 'INVOICE', flex: 2),
-        TableColumn(label: 'METODE', flex: 2),
-        TableColumn(label: 'JUMLAH', flex: 3),
-        TableColumn(label: 'STATUS', flex: 2, align: TextAlign.center),
+        DataColumn(label: Text('ID Transaksi')),
+        DataColumn(label: Text('Invoice')),
+        DataColumn(label: Text('Metode')),
+        DataColumn(label: Text('Jumlah')),
+        DataColumn(label: Text('Status')),
       ],
-      rows: payments.map((p) {
-        final color = _statusColor(p.status);
-        return [
-          // ID Transaksi
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: _kColorInfo.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Icon(
-                  Icons.receipt_long_rounded,
-                  size: 16,
-                  color: _kColorInfo,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  p.transactionId ?? '–',
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          // Invoice ID
-          Text(
-            '#${p.invoiceId}',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-              fontSize: 13,
+      rows: payments.map((p) => DataRow(cells: [
+        DataCell(Row(children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: _kColorInfo.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(8),
             ),
+            child: const Icon(Icons.receipt_long_rounded, size: 16, color: _kColorInfo),
           ),
-          // Metode
+          const SizedBox(width: 10),
           Text(
-            p.paymentMethod.toUpperCase(),
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+            p.transactionId ?? '–',
+            style: const TextStyle(fontWeight: FontWeight.w600),
           ),
-          // Jumlah
-          Text(
-            formatRupiah(p.amount),
-            style: const TextStyle(fontWeight: FontWeight.w700),
+        ])),
+        DataCell(Text(
+          '#${p.invoiceId}',
+          style: TextStyle(
+            color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary,
+            fontSize: 13,
           ),
-          // Status badge
-          Align(
-            alignment: Alignment.center,
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.12),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                _statusLabel(p.status),
-                style: TextStyle(
-                  color: color,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-        ];
-      }).toList(),
+        )),
+        DataCell(Text(
+          p.paymentMethod.toUpperCase(),
+          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+        )),
+        DataCell(Text(
+          formatRupiah(p.amount),
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        )),
+        DataCell(StatusBadge(status: p.status)),
+      ])).toList(),
     );
   }
 }

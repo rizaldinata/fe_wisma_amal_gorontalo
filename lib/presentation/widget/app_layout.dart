@@ -195,10 +195,11 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                   // ─── Keuangan (Admin) ──────────────────────────────
                   if (context.isFeatureEnabled('finance') &&
                       ((context.can(PermissionKeys.financeDashboardView) && context.isFeatureEnabled('finance_dashboard')) ||
-                      ((context.can(PermissionKeys.financeExpenseView) || context.can(PermissionKeys.financeFixedExpenseView)) && (context.isFeatureEnabled('finance_expense') || context.isFeatureEnabled('finance_fixed_expense'))) ||
+                      (context.can(PermissionKeys.financeExpenseView) || context.can(PermissionKeys.financeFixedExpenseView)) ||
                       (context.can(PermissionKeys.financeInvoiceView) && context.isFeatureEnabled('finance_invoice')) ||
                       (context.can(PermissionKeys.financePaymentVerify) && context.isFeatureEnabled('finance_invoice')) ||
-                      (context.can(PermissionKeys.financePaymentView) && context.isFeatureEnabled('finance_invoice'))))
+                      (context.can(PermissionKeys.financePaymentView) && context.isFeatureEnabled('finance_invoice')) ||
+                      (context.can(PermissionKeys.financeFineView) && context.isFeatureEnabled('finance_fine'))))
                     SidebarItem(
                       label: 'Keuangan',
                       icon: Icons.monetization_on,
@@ -210,8 +211,8 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                             icon: Icons.dashboard_outlined,
                             page: const FinanceDashboardRoute(),
                           ),
-                        if ((context.can(PermissionKeys.financeExpenseView) ||
-                            context.can(PermissionKeys.financeFixedExpenseView)) && (context.isFeatureEnabled('finance_expense') || context.isFeatureEnabled('finance_fixed_expense')))
+                        if (context.can(PermissionKeys.financeExpenseView) ||
+                            context.can(PermissionKeys.financeFixedExpenseView))
                           SidebarItem(
                             label: 'Pengeluaran',
                             icon: Icons.receipt_long,
@@ -228,6 +229,12 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                             label: 'Manajemen Pembayaran',
                             icon: Icons.payments_outlined,
                             page: const PaymentVerificationRoute(),
+                          ),
+                        if (context.can(PermissionKeys.financeFineView) && context.isFeatureEnabled('finance_fine'))
+                          SidebarItem(
+                            label: 'Manajemen Denda',
+                            icon: Icons.gavel_outlined,
+                            page: const FineManagementRoute(),
                           ),
                       ],
                     ),
@@ -375,6 +382,15 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                               label: 'Pengaturan',
                               icon: Icons.settings,
                               page: const SettingRoute(),
+                            ),
+                          if (!isResident &&
+                              !isMember &&
+                              context.can(PermissionKeys.notificationLogView) &&
+                              context.isFeatureEnabled('notification'))
+                            SidebarItem(
+                              label: 'Monitoring Notifikasi',
+                              icon: Icons.notifications_outlined,
+                              page: const NotificationMonitoringRoute(),
                             ),
                           if ((isMember || isResident) &&
                               context.can(PermissionKeys.completeResidentProfile))

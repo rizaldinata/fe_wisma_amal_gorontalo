@@ -30,7 +30,8 @@ class FinanceDashboardBloc
     FetchDashboardData event,
     Emitter<FinanceDashboardState> emit,
   ) async {
-    emit(FinanceDashboardLoading());
+    final current = state is FinanceDashboardLoaded ? state as FinanceDashboardLoaded : null;
+    emit(current != null ? FinanceDashboardRefreshing(current) : FinanceDashboardLoading());
     try {
       // Kita panggil ke-4 API secara bersamaan agar sangat cepat!
       final results = await Future.wait([

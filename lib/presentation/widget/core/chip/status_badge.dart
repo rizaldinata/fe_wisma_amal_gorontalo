@@ -51,7 +51,7 @@ class StatusBadge extends StatelessWidget {
         textColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
         label: 'Selesai',
       );
-    } else if (normalizedStatus == 'dibatalkan' || normalizedStatus == 'batal') {
+    } else if (normalizedStatus == 'cancelled' || normalizedStatus == 'dibatalkan' || normalizedStatus == 'batal') {
       return StatusBadgeConfig(
         backgroundColor: isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg,
         borderColor: isDark ? AppColorsDark.statusCancelledBorder : AppColorsLight.statusCancelledBorder,
@@ -114,6 +114,22 @@ class StatusBadge extends StatelessWidget {
         dotColor: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled,
         textColor: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled,
         label: normalizedStatus == 'rejected' ? 'Ditolak' : 'Gagal',
+      );
+    } else if (normalizedStatus == 'confirmed' || normalizedStatus == 'dikonfirmasi' || normalizedStatus == 'terkonfirmasi') {
+      return StatusBadgeConfig(
+        backgroundColor: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
+        borderColor: isDark ? AppColorsDark.statusDoneBorder : AppColorsLight.statusDoneBorder,
+        dotColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
+        textColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
+        label: 'Terkonfirmasi',
+      );
+    } else if (normalizedStatus == 'success' || normalizedStatus == 'berhasil' || normalizedStatus == 'sukses') {
+      return StatusBadgeConfig(
+        backgroundColor: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
+        borderColor: isDark ? AppColorsDark.statusDoneBorder : AppColorsLight.statusDoneBorder,
+        dotColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
+        textColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
+        label: 'Berhasil',
       );
     } else {
       // Default / Unknown

@@ -217,12 +217,15 @@ class _FineManagementPageState extends State<FineManagementPage> {
           if (state is FineError) _snackError(context, state.message, isDark);
         },
         builder: (context, state) {
-          final isLoading = state is FineLoading || state is FineInitial;
+          final isFirstLoad = state is FineLoading || state is FineInitial;
+          final isRefreshing = state is FineRefreshing;
           final allFines = state is FineLoaded
               ? state.fines
               : state is FineOperationSuccess
                   ? state.fines
-                  : <FineEntity>[];
+                  : state is FineRefreshing
+                      ? state.currentFines
+                      : <FineEntity>[];
 
           return Scaffold(
             backgroundColor: isDark ? AppColorsDark.background : AppColorsLight.background,
@@ -237,9 +240,12 @@ class _FineManagementPageState extends State<FineManagementPage> {
                 ),
               ),
               Expanded(
-                child: isLoading
+                child: isFirstLoad
                     ? _buildSkeleton(isDark)
-                    : _buildContent(allFines, isDark),
+                    : Stack(children: [
+                        _buildContent(allFines, isDark),
+                        if (isRefreshing) const LinearProgressIndicator(),
+                      ]),
               ),
             ]),
           );

@@ -12,6 +12,13 @@ class ExpenseInitial extends ExpenseState {}
 
 class ExpenseLoading extends ExpenseState {}
 
+class ExpenseRefreshing extends ExpenseState {
+  final List<ExpenseEntity> currentExpenses;
+  const ExpenseRefreshing(this.currentExpenses);
+  @override
+  List<Object?> get props => [currentExpenses];
+}
+
 class ExpenseLoaded extends ExpenseState {
   final List<ExpenseEntity> expenses;
 
