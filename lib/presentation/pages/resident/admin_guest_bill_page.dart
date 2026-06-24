@@ -118,8 +118,25 @@ class _AdminGuestBillViewState extends State<_AdminGuestBillView> {
   }
 
   Future<void> _showVerifyDialog(AdminGuestBillItem item) async {
+    final theme = Theme.of(context);
     final notesController = TextEditingController();
     bool? isApproved;
+
+    // Label metode pembayaran
+    String methodLabel;
+    switch (item.paymentMethod) {
+      case 'cash':
+        methodLabel = 'Tunai';
+        break;
+      case 'midtrans':
+        methodLabel = 'Midtrans';
+        break;
+      case 'manual':
+        methodLabel = 'Transfer Manual';
+        break;
+      default:
+        methodLabel = item.paymentMethod ?? '-';
+    }
 
     await showDialog(
       context: context,
@@ -134,12 +151,59 @@ class _AdminGuestBillViewState extends State<_AdminGuestBillView> {
               Text('Penghuni: ${item.penghuni}'),
               Text('Tamu: ${item.guestName}'),
               Text('Jumlah: ${_currency.format(item.amount)}'),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Text('Metode: ', style: theme.textTheme.bodyMedium),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: item.paymentMethod == 'cash'
+                          ? Colors.green.withAlpha(30)
+                          : theme.colorScheme.primaryContainer.withAlpha(80),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      methodLabel,
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: item.paymentMethod == 'cash'
+                            ? Colors.green[700]
+                            : theme.colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               const SizedBox(height: 16),
-              if (item.paymentProofUrl != null)
+              if (item.paymentMethod == 'manual' && item.paymentProofUrl != null)
                 TextButton.icon(
                   onPressed: () {},
                   icon: const Icon(Icons.image_outlined),
                   label: const Text('Lihat Bukti Bayar'),
+                ),
+              if (item.paymentMethod == 'cash')
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withAlpha(30),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.amber.withAlpha(80)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.info_outline, size: 18, color: Colors.amber[800]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'Pembayaran tunai — pastikan uang sudah diterima sebelum memverifikasi.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.amber[900],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               const SizedBox(height: 12),
               CustomTextField(
@@ -153,12 +217,12 @@ class _AdminGuestBillViewState extends State<_AdminGuestBillView> {
                   Expanded(
                     child: BasicButton(
                       type: ButtonType.secondary,
-                      foregroundColor: Colors.red,
+                      foregroundColor: theme.colorScheme.error,
                       onPressed: () {
                         setDialogState(() => isApproved = false);
                         Navigator.pop(ctx);
                       },
-                      leadIcon: const Icon(Icons.close, color: Colors.red, size: 18),
+                      leadIcon: Icon(Icons.close, color: theme.colorScheme.error, size: 18),
                       label: 'Tolak',
                     ),
                   ),
@@ -170,7 +234,7 @@ class _AdminGuestBillViewState extends State<_AdminGuestBillView> {
                         setDialogState(() => isApproved = true);
                         Navigator.pop(ctx);
                       },
-                      leadIcon: const Icon(Icons.check, color: Colors.white, size: 18),
+                      leadIcon: Icon(Icons.check, color: theme.colorScheme.onPrimary, size: 18),
                       label: 'Terima',
                     ),
                   ),

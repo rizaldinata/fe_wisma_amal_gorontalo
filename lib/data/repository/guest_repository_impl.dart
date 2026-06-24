@@ -32,18 +32,16 @@ class GuestRepositoryImpl implements GuestRepository {
   }
 
   @override
-  Future<MyGuestItem> createGuest({
-    required String name,
+  Future<List<MyGuestItem>> createGuest({
+    required List<Map<String, dynamic>> guests,
     required String checkInAt,
     required String checkOutAt,
-    required String relationship,
   }) async {
     try {
       return await datasource.createGuest(
-        name: name,
+        guests: guests,
         checkInAt: checkInAt,
         checkOutAt: checkOutAt,
-        relationship: relationship,
       );
     } catch (e) {
       rethrow;
@@ -51,20 +49,18 @@ class GuestRepositoryImpl implements GuestRepository {
   }
 
   @override
-  Future<GuestItem> createAdminGuest({
+  Future<List<GuestItem>> createAdminGuest({
     required int scheduleId,
-    required String name,
+    required List<Map<String, dynamic>> guests,
     required String checkInAt,
     required String checkOutAt,
-    required String relationship,
   }) async {
     try {
       return await datasource.createAdminGuest(
         scheduleId: scheduleId,
-        name: name,
+        guests: guests,
         checkInAt: checkInAt,
         checkOutAt: checkOutAt,
-        relationship: relationship,
       );
     } catch (e) {
       rethrow;

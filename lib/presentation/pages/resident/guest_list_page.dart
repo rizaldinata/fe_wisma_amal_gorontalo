@@ -21,6 +21,8 @@ import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/dialog/app_dialog.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/textform/textfield.dart';
+import 'package:frontend/presentation/widget/core/textform/date_time_picker_field.dart';
+import 'package:frontend/presentation/widget/core/textform/dropdown_field.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -190,7 +192,7 @@ class _GuestListViewState extends State<_GuestListView> {
                 const SizedBox(width: AppSpacing.sm),
                 BasicButton(
                   onPressed: _showAddGuestDialog,
-                  leadIcon: const Icon(Icons.add, size: 18, color: Colors.white),
+                  leadIcon: Icon(Icons.add, size: 18, color: Theme.of(context).colorScheme.onPrimary),
                   label: 'Tambah Tamu',
                 ),
               ],
@@ -281,7 +283,7 @@ class _GuestListViewState extends State<_GuestListView> {
                               DataCell(
                                 TextButton(
                                   onPressed: () => _confirmCheckout(context, row),
-                                  child: const Text('Checkout', style: TextStyle(color: Colors.red)),
+                                  child: Text('Checkout', style: TextStyle(color: Theme.of(context).colorScheme.error)),
                                 ),
                               ),
                             ],
@@ -388,12 +390,24 @@ class _AdminGuestDialog extends StatefulWidget {
   State<_AdminGuestDialog> createState() => _AdminGuestDialogState();
 }
 
+/// Representasi satu entry tamu dalam form admin
+class _AdminGuestFormEntry {
+  final TextEditingController nameController;
+  String relationship;
+
+  _AdminGuestFormEntry({String? name, this.relationship = 'friend'})
+      : nameController = TextEditingController(text: name);
+
+  void dispose() => nameController.dispose();
+}
+
 class _AdminGuestDialogState extends State<_AdminGuestDialog> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
   final _roomController = TextEditingController();
 
-  String _relationship = 'friend';
+  // REVISI: List dinamis tamu (maks 3)
+  final List<_AdminGuestFormEntry> _guestEntries = [_AdminGuestFormEntry()];
+
   DateTime? _checkIn;
   DateTime? _checkOut;
   bool _isSubmitting = false;
@@ -402,6 +416,8 @@ class _AdminGuestDialogState extends State<_AdminGuestDialog> {
   ResidentItem? _selectedResident;
   bool _isLoadingResidents = false;
   String? _residentError;
+
+  static const int _maxGuests = 3;
 
   static const _relationships = [
     ('parent', 'Orang Tua'),
@@ -420,8 +436,10 @@ class _AdminGuestDialogState extends State<_AdminGuestDialog> {
 
   @override
   void dispose() {
-    _nameController.dispose();
     _roomController.dispose();
+    for (final e in _guestEntries) {
+      e.dispose();
+    }
     super.dispose();
   }
 
@@ -459,6 +477,19 @@ class _AdminGuestDialogState extends State<_AdminGuestDialog> {
     setState(() {
       _selectedResident = item;
       _roomController.text = item?.kamar ?? '-';
+    });
+  }
+
+  void _addGuestEntry() {
+    if (_guestEntries.length >= _maxGuests) return;
+    setState(() => _guestEntries.add(_AdminGuestFormEntry()));
+  }
+
+  void _removeGuestEntry(int index) {
+    if (_guestEntries.length <= 1) return;
+    setState(() {
+      _guestEntries[index].dispose();
+      _guestEntries.removeAt(index);
     });
   }
 
@@ -531,12 +562,17 @@ class _AdminGuestDialogState extends State<_AdminGuestDialog> {
 
     setState(() => _isSubmitting = true);
 
+    // REVISI: Kirim array tamu ke BLoC
+    final guests = _guestEntries.map((e) => {
+      'name': e.nameController.text.trim(),
+      'relationship': e.relationship,
+    }).toList();
+
     context.read<GuestBloc>().add(CreateAdminGuest(
           scheduleId: scheduleId,
-          name: _nameController.text.trim(),
+          guests: guests,
           checkInAt: _checkIn!.toIso8601String(),
           checkOutAt: _checkOut!.toIso8601String(),
-          relationship: _relationship,
         ));
 
     Navigator.of(context).pop();
@@ -551,124 +587,211 @@ class _AdminGuestDialogState extends State<_AdminGuestDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         padding: const EdgeInsets.all(24),
-        constraints: const BoxConstraints(maxWidth: 460),
+        constraints: const BoxConstraints(maxWidth: 500),
         child: Form(
           key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Tambah Tamu',
-                style: theme.textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              if (_isLoadingResidents)
-                const LinearProgressIndicator(minHeight: 2),
-              if (_residentError != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8, bottom: 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _residentError!,
-                          style: const TextStyle(color: Colors.red),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tambah Tamu',
+                  style: theme.textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Daftarkan hingga $_maxGuests tamu sekaligus',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                if (_isLoadingResidents)
+                  const LinearProgressIndicator(minHeight: 2),
+                if (_residentError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _residentError!,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: _loadResidents,
+                          child: const Text('Coba lagi'),
+                        ),
+                      ],
+                    ),
+                  ),
+                CustomDropdownField<ResidentItem>(
+                  title: 'Nama Penghuni (aktif)',
+                  hint: 'Pilih penghuni aktif',
+                  value: _selectedResident,
+                  items: _residentOptions
+                      .map((row) => DropdownMenuItem(
+                            value: row,
+                            child: Text('${row.nama} - ${row.kamar}'),
+                          ))
+                      .toList(),
+                  onChanged: _isLoadingResidents ? (_) {} : (v) => _setSelectedResident(v),
+                  validator: (value) =>
+                      value == null ? 'Pilih penghuni aktif' : null,
+                ),
+                const SizedBox(height: 16),
+                CustomTextField(
+                  controller: _roomController,
+                  enabled: false,
+                  hintText: 'Nomor Kamar',
+                ),
+                const SizedBox(height: 20),
+
+                // ─── Daftar Tamu Dinamis ──────────────────────────────
+                ..._guestEntries.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final guestEntry = entry.value;
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHigh.withAlpha(60),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.colorScheme.outlineVariant),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                '${index + 1}',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Tamu ${index + 1}',
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Spacer(),
+                            if (_guestEntries.length > 1)
+                              IconButton(
+                                onPressed: () => _removeGuestEntry(index),
+                                icon: Icon(Icons.close_rounded,
+                                    color: theme.colorScheme.error, size: 18),
+                                visualDensity: VisualDensity.compact,
+                                tooltip: 'Hapus Tamu ${index + 1}',
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        CustomTextField(
+                          controller: guestEntry.nameController,
+                          hintText: 'Nama Tamu',
+                          validator: (v) => (v == null || v.trim().isEmpty)
+                              ? 'Nama tamu tidak boleh kosong'
+                              : null,
+                        ),
+                        const SizedBox(height: 12),
+                        CustomDropdownField<String>(
+                          title: 'Hubungan',
+                          hint: 'Pilih hubungan',
+                          value: guestEntry.relationship,
+                          items: _relationships
+                              .map((r) => DropdownMenuItem(
+                                    value: r.$1,
+                                    child: Text(r.$2),
+                                  ))
+                              .toList(),
+                          onChanged: (v) =>
+                              setState(() => guestEntry.relationship = v ?? 'friend'),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+
+                // Tombol tambah tamu
+                if (_guestEntries.length < _maxGuests)
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _addGuestEntry,
+                      icon: const Icon(Icons.person_add_outlined, size: 18),
+                      label: Text('Tambah Tamu (${_guestEntries.length}/$_maxGuests)'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        side: BorderSide(
+                          color: theme.colorScheme.primary.withAlpha(120),
+                          style: BorderStyle.solid,
                         ),
                       ),
-                      TextButton(
-                        onPressed: _loadResidents,
-                        child: const Text('Coba lagi'),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+
+                CustomDateTimePickerField(
+                  label: 'Tanggal & Jam Masuk',
+                  value: _checkIn != null ? _formatDateTime(_checkIn!) : null,
+                  onTap: () => _pickDateTime(isCheckIn: true),
+                ),
+                const SizedBox(height: 12),
+                CustomDateTimePickerField(
+                  label: 'Tanggal & Jam Keluar',
+                  value: _checkOut != null ? _formatDateTime(_checkOut!) : null,
+                  onTap: () => _pickDateTime(isCheckIn: false),
+                ),
+                const SizedBox(height: 24),
+                if (_residentOptions.isEmpty && !_isLoadingResidents)
+                  Text(
+                    'Belum ada penghuni aktif yang bisa dipilih.',
+                    style: theme.textTheme.bodySmall
+                        ?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: BasicButton(
+                        type: ButtonType.secondary,
+                        onPressed: () => Navigator.of(context).pop(),
+                        label: 'Batal',
                       ),
-                    ],
-                  ),
-                ),
-              DropdownButtonFormField<ResidentItem>(
-                value: _selectedResident,
-                decoration: const InputDecoration(
-                  labelText: 'Nama Penghuni (aktif)',
-                  border: OutlineInputBorder(),
-                ),
-                items: _residentOptions
-                    .map((row) => DropdownMenuItem(
-                          value: row,
-                          child: Text('${row.nama} - ${row.kamar}'),
-                        ))
-                    .toList(),
-                onChanged: _isLoadingResidents ? null : _setSelectedResident,
-                validator: (value) =>
-                    value == null ? 'Pilih penghuni aktif' : null,
-              ),
-              const SizedBox(height: 16),
-              CustomTextField(
-                controller: _roomController,
-                enabled: false,
-                hintText: 'Nomor Kamar',
-              ),
-              const SizedBox(height: 16),
-              CustomTextField(
-                controller: _nameController,
-                hintText: 'Nama Tamu',
-                validator: (v) => (v == null || v.trim().isEmpty)
-                    ? 'Nama tamu tidak boleh kosong'
-                    : null,
-              ),
-              const SizedBox(height: 16),
-              DropdownButtonFormField<String>(
-                value: _relationship,
-                decoration: const InputDecoration(
-                  labelText: 'Hubungan',
-                  border: OutlineInputBorder(),
-                ),
-                items: _relationships
-                    .map((r) => DropdownMenuItem(
-                          value: r.$1,
-                          child: Text(r.$2),
-                        ))
-                    .toList(),
-                onChanged: (v) => setState(() => _relationship = v ?? 'friend'),
-              ),
-              const SizedBox(height: 16),
-              _DateTimeTile(
-                label: 'Tanggal & Jam Masuk',
-                value: _checkIn != null ? _formatDateTime(_checkIn!) : null,
-                onTap: () => _pickDateTime(isCheckIn: true),
-              ),
-              const SizedBox(height: 12),
-              _DateTimeTile(
-                label: 'Tanggal & Jam Keluar',
-                value: _checkOut != null ? _formatDateTime(_checkOut!) : null,
-                onTap: () => _pickDateTime(isCheckIn: false),
-              ),
-              const SizedBox(height: 24),
-              if (_residentOptions.isEmpty && !_isLoadingResidents)
-                Text(
-                  'Belum ada penghuni aktif yang bisa dipilih.',
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: const Color(0xFF6B7280)),
-                ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: BasicButton(
-                      type: ButtonType.secondary,
-                      onPressed: () => Navigator.of(context).pop(),
-                      label: 'Batal',
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: BasicButton(
-                      isLoading: _isSubmitting,
-                      onPressed: _isSubmitting ? null : _submit,
-                      label: 'Simpan',
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: BasicButton(
+                        isLoading: _isSubmitting,
+                        onPressed: _isSubmitting ? null : _submit,
+                        label: 'Simpan (${_guestEntries.length} tamu)',
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -734,8 +857,8 @@ class _NotificationLogDialogState extends State<_NotificationLogDialog> {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.notifications_active,
-                      color: Color(0xFFA794F2), size: 22),
+                  Icon(Icons.notifications_active,
+                      color: theme.colorScheme.primary, size: 22),
                   const SizedBox(width: 10),
                   Text(
                     'Log Notifikasi',
@@ -773,13 +896,13 @@ class _NotificationLogDialogState extends State<_NotificationLogDialog> {
                                   padding: const EdgeInsets.symmetric(
                                       horizontal: 8, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.1),
+                                    color: theme.colorScheme.error.withOpacity(0.1),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Text(
                                     '$unread baru',
                                     style: theme.textTheme.bodySmall?.copyWith(
-                                      color: Colors.red,
+                                      color: theme.colorScheme.error,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -806,9 +929,7 @@ class _NotificationLogDialogState extends State<_NotificationLogDialog> {
                     return const SizedBox(
                       height: 240,
                       child: Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFFA794F2),
-                        ),
+                        child: CircularProgressIndicator(),
                       ),
                     );
                   }
@@ -820,7 +941,7 @@ class _NotificationLogDialogState extends State<_NotificationLogDialog> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(state.message,
-                              style: const TextStyle(color: Colors.red)),
+                              style: TextStyle(color: theme.colorScheme.error)),
                           const SizedBox(height: 12),
                           BasicButton(
                             type: ButtonType.secondary,
@@ -845,12 +966,12 @@ class _NotificationLogDialogState extends State<_NotificationLogDialog> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               const Icon(Icons.notifications_off,
-                                  size: 48, color: Color(0xFFE5E7EB)),
+                                  size: 48, color: Colors.grey),
                               const SizedBox(height: 12),
                               Text(
                                 'Tidak ada log notifikasi',
                                 style: theme.textTheme.bodyMedium?.copyWith(
-                                  color: const Color(0xFF6B7280),
+                                  color: theme.colorScheme.onSurfaceVariant,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -862,7 +983,7 @@ class _NotificationLogDialogState extends State<_NotificationLogDialog> {
                                 icon: const Icon(Icons.refresh, size: 18),
                                 label: const Text('Muat Ulang'),
                                 style: TextButton.styleFrom(
-                                  foregroundColor: const Color(0xFFA794F2),
+                                  foregroundColor: theme.colorScheme.primary,
                                 ),
                               ),
                             ],
@@ -948,11 +1069,11 @@ class _NotificationLogTile extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: isRead ? const Color(0xFFF3F4F6) : const Color(0xFFFEE2E2),
+                  color: isRead ? theme.colorScheme.surfaceContainerHigh : theme.colorScheme.errorContainer,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(Icons.notifications,
-                    color: isRead ? const Color(0xFF6B7280) : Colors.red),
+                    color: isRead ? theme.colorScheme.onSurfaceVariant : theme.colorScheme.error),
               ),
               if (!isRead)
                 Positioned(
@@ -961,8 +1082,8 @@ class _NotificationLogTile extends StatelessWidget {
                   child: Container(
                     width: 10,
                     height: 10,
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.error,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -992,14 +1113,14 @@ class _NotificationLogTile extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 6, vertical: 1),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFA794F2).withOpacity(0.1),
+                        color: theme.colorScheme.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         item.typeLabel,
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontSize: 10,
-                          color: const Color(0xFFA794F2),
+                          color: theme.colorScheme.primary,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -1060,47 +1181,4 @@ class _NotificationLogTile extends StatelessWidget {
     );
   }
 }
-
-class _DateTimeTile extends StatelessWidget {
-  const _DateTimeTile({
-    required this.label,
-    required this.value,
-    required this.onTap,
-  });
-
-  final String label;
-  final String? value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFE5E7EB)),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            const Icon(Icons.calendar_today, size: 18),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                value ?? label,
-                style: TextStyle(
-                  color: value != null
-                      ? const Color(0xFF111827)
-                      : const Color(0xFF9CA3AF),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+

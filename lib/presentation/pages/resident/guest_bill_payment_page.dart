@@ -9,6 +9,7 @@ import 'package:frontend/domain/usecase/setting/get_public_bank_accounts_usecase
 import 'package:frontend/presentation/bloc/guest/my_guest_bloc.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
+import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:intl/intl.dart';
 
 @RoutePage()
@@ -129,8 +130,8 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
   }
 
   Color _timerColor(ThemeData theme) {
-    if (_remainingSeconds <= 60) return Colors.red;
-    if (_remainingSeconds <= 120) return Colors.orange;
+    if (_remainingSeconds <= 60) return theme.colorScheme.error;
+    if (_remainingSeconds <= 120) return theme.colorScheme.secondary;
     return theme.colorScheme.primary;
   }
 
@@ -208,7 +209,7 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
                       onPressed: (_selectedFile == null || _isSubmitting || _timerExpired)
                           ? null
                           : _submit,
-                      icon: const Icon(Icons.send_outlined, color: Colors.white, size: 18),
+                      icon: Icon(Icons.send_outlined, color: theme.colorScheme.onPrimary, size: 18),
                       label: Text(_isSubmitting ? 'Mengirim...' : 'Kirim Bukti Pembayaran'),
                     ),
                   ),
@@ -275,17 +276,11 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
   }
 
   Widget _buildSummaryCard(ThemeData theme) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return BasicCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             Text('Ringkasan Tagihan',
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.bold)),
@@ -312,22 +307,15 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
             ),
           ],
         ),
-      ),
     );
   }
 
   Widget _buildBankInfoCard(ThemeData theme) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return BasicCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             Text('Informasi Transfer',
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.bold)),
@@ -405,22 +393,15 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
               )),
           ],
         ),
-      ),
     );
   }
 
   Widget _buildUploadCard(ThemeData theme) {
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+    return BasicCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             Text('Upload Bukti Pembayaran',
                 style: theme.textTheme.titleMedium
                     ?.copyWith(fontWeight: FontWeight.bold)),
@@ -437,20 +418,20 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
                 padding: const EdgeInsets.symmetric(
                     horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: Colors.green.shade50,
+                  color: theme.colorScheme.tertiaryContainer,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.shade300),
+                  border: Border.all(color: theme.colorScheme.tertiary),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.check_circle_outline,
-                        color: Colors.green, size: 18),
+                    Icon(Icons.check_circle_outline,
+                        color: theme.colorScheme.onTertiaryContainer, size: 18),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
                         _selectedFile!.name,
-                        style: const TextStyle(
-                            fontSize: 12, color: Colors.green),
+                        style: TextStyle(
+                            fontSize: 12, color: theme.colorScheme.onTertiaryContainer),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -475,7 +456,6 @@ class _GuestBillPaymentViewState extends State<_GuestBillPaymentView> {
             ),
           ],
         ),
-      ),
     );
   }
 

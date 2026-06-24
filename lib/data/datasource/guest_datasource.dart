@@ -46,50 +46,65 @@ class GuestDatasource {
     }
   }
 
-  Future<MyGuestItem> createGuest({
-    required String name,
+  // REVISI: Mendukung pendaftaran multi-tamu (maks 3) dalam satu request
+  Future<List<MyGuestItem>> createGuest({
+    required List<Map<String, dynamic>> guests,
     required String checkInAt,
     required String checkOutAt,
-    required String relationship,
   }) async {
     try {
       final response = await dioClient.post(
         EndpointConstant.myGuestsEndpoint,
         data: {
-          'name': name,
+          'guests': guests,
           'check_in_at': checkInAt,
           'check_out_at': checkOutAt,
-          'relationship': relationship,
         },
       );
-      return MyGuestItem.fromJson(
-          response.data['data'] as Map<String, dynamic>);
+      final payload = response.data['data'];
+      if (payload is List) {
+        return payload
+            .map((e) => MyGuestItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      // Fallback: jika backend mengembalikan single object
+      if (payload is Map<String, dynamic>) {
+        return [MyGuestItem.fromJson(payload)];
+      }
+      return [];
     } catch (e) {
       rethrow;
     }
   }
 
-  Future<GuestItem> createAdminGuest({
+  // REVISI: Mendukung pendaftaran multi-tamu oleh admin
+  Future<List<GuestItem>> createAdminGuest({
     required int scheduleId,
-    required String name,
+    required List<Map<String, dynamic>> guests,
     required String checkInAt,
     required String checkOutAt,
-    required String relationship,
   }) async {
     try {
       final response = await dioClient.post(
         EndpointConstant.adminGuestsEndpoint,
         data: {
           'schedule_id': scheduleId,
-          'name': name,
+          'guests': guests,
           'check_in_at': checkInAt,
           'check_out_at': checkOutAt,
-          'relationship': relationship,
         },
       );
       final payload = response.data['data'];
-      return GuestItem.fromJson(
-          payload is Map<String, dynamic> ? payload : <String, dynamic>{});
+      if (payload is List) {
+        return payload
+            .map((e) => GuestItem.fromJson(e as Map<String, dynamic>))
+            .toList();
+      }
+      // Fallback: jika backend mengembalikan single object
+      if (payload is Map<String, dynamic>) {
+        return [GuestItem.fromJson(payload)];
+      }
+      return [];
     } catch (e) {
       rethrow;
     }

@@ -6,19 +6,17 @@ class CreateAdminGuestUseCase {
 
   CreateAdminGuestUseCase(this._repository);
 
-  Future<GuestItem> call({
+  Future<List<GuestItem>> call({
     required int scheduleId,
-    required String name,
+    required List<Map<String, dynamic>> guests,
     required String checkInAt,
     required String checkOutAt,
-    required String relationship,
   }) {
     return _repository.createAdminGuest(
       scheduleId: scheduleId,
-      name: name,
+      guests: guests,
       checkInAt: checkInAt,
       checkOutAt: checkOutAt,
-      relationship: relationship,
     );
   }
 }

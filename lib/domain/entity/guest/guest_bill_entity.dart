@@ -88,7 +88,7 @@ class AdminGuestBillItem {
     required this.kamar,
   });
 
-  bool get canVerify => status == 'pending' && paymentMethod == 'manual';
+  bool get canVerify => status == 'pending' && (paymentMethod == 'manual' || paymentMethod == 'cash');
 
   factory AdminGuestBillItem.fromJson(Map<String, dynamic> json) {
     final guest = json['guest'] as Map<String, dynamic>? ?? {};

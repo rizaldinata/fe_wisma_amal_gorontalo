@@ -15,39 +15,31 @@ class ResidentResponse {
     final metaMap =
         json['meta'] as Map<String, dynamic>? ?? <String, dynamic>{};
 
-    final items = schedulesList
+    final scheduleItems = schedulesList
         .map((item) => ResidentItem.fromJson(item as Map<String, dynamic>))
         .toList();
 
     // Membaca key yang benar dari response backend: 'residents', 'pagination', 'stats'
     final residentsList = json['residents'] as List<dynamic>? ?? <dynamic>[];
-    // final paginationMap =
-    //     json['pagination'] as Map<String, dynamic>? ?? <String, dynamic>{};
+    final paginationMap = json['pagination'] as Map<String, dynamic>? ?? <String, dynamic>{};
     final statsMap = json['stats'] as Map<String, dynamic>?;
 
-    // final resident = residentsList
-    //     .map((item) => ResidentItem.fromJson(item as Map<String, dynamic>))
-    //     .toList();
+    final residentItems = residentsList
+        .map((item) => ResidentItem.fromJson(item as Map<String, dynamic>))
+        .toList();
+
+    final finalItems = residentItems.isNotEmpty ? residentItems : scheduleItems;
 
     return ResidentResponse(
-      stats: statsMap != null
-          ? ResidentStats.fromJson(statsMap)
+      stats: statsMap != null 
+          ? ResidentStats.fromJson(statsMap) 
           : ResidentStats(
-              penghuniAktif: items.where((i) => i.status == 'active').length,
-              kontrakPending: items.where((i) => i.status == 'pending').length,
-              // kontrakBerakhir: 0,
+              penghuniAktif: finalItems.where((i) => i.status.toLowerCase() == 'active').length,
+              kontrakPending: finalItems.where((i) => i.status.toLowerCase() == 'pending').length,
               kamarTersedia: 0,
             ),
-      // stats: statsMap != null
-      //     ? ResidentStats.fromJson(statsMap)
-      //     : ResidentStats(
-      //         penghuniAktif: items.where((i) => i.status == 'Active').length,
-      //         kontrakPending: items.where((i) => i.status == 'Pending').length,
-      //         kamarTersedia: 0,
-      //       ),
-      residents: items,
-      pagination: PaginationEntity.fromJson(metaMap),
-      // pagination: PaginationEntity.fromJson(paginationMap),
+      residents: finalItems,
+      pagination: PaginationEntity.fromJson(paginationMap.isNotEmpty ? paginationMap : metaMap),
     );
   }
 }

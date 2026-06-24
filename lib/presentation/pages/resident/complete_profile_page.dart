@@ -13,6 +13,7 @@ import 'package:frontend/presentation/widget/core/textform/dropdown_field.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
+import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 @RoutePage()
 class CompleteProfilePage extends StatefulWidget {
@@ -68,21 +69,12 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
             });
           }
           if (state is CompleteProfileSuccess) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Biodata berhasil disimpan.'),
-              ),
-            );
+            AppSnackbar.showSuccess('Biodata berhasil disimpan.');
             // Refresh Auth state to update permissions/roles
             context.read<AuthBloc>().add(const InitLoginStatusEvent());
             context.router.pop();
           } else if (state is CompleteProfileFailure) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Gagal: ${state.message}'),
-                backgroundColor: Colors.red,
-              ),
-            );
+            AppSnackbar.showError('Gagal: ${state.message}');
           }
         },
         child: Scaffold(
@@ -150,12 +142,14 @@ class _CompleteProfilePageState extends State<CompleteProfilePage> {
                         Row(
                           children: [
                             Expanded(
-                              child: CustomDropdownField(
+                              child: CustomDropdownField<String>(
                                 title: 'Jenis Kelamin',
                                 isRequired: true,
                                 hint: 'Pilih jenis kelamin',
                                 value: _gender,
-                                items: const ['male', 'female'],
+                                items: const ['male', 'female']
+                                    .map((e) => DropdownMenuItem(value: e, child: Text(e == 'male' ? 'Laki-laki' : 'Perempuan')))
+                                    .toList(),
                                 onChanged: (v) => setState(() => _gender = v!),
                               ),
                             ),

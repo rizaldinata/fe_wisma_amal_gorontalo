@@ -17,6 +17,9 @@ import 'package:frontend/presentation/widget/core/dialog/app_dialog.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/textform/textfield.dart';
+import 'package:frontend/presentation/widget/core/textform/date_time_picker_field.dart';
+import 'package:frontend/presentation/widget/core/textform/dropdown_field.dart';
+import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -68,7 +71,7 @@ class _MyGuestView extends StatelessWidget {
               breadcrumb: 'Penghuni / Tamu Saya',
               action: BasicButton(
                 onPressed: () => _showAddGuestDialog(context),
-                leadIcon: const Icon(Icons.add_rounded, size: 18, color: Colors.white),
+                leadIcon: Icon(Icons.add_rounded, size: 18, color: Theme.of(context).colorScheme.onPrimary),
                 label: 'Tambah Tamu',
               ),
             ),
@@ -95,7 +98,7 @@ class _MyGuestView extends StatelessWidget {
                           subtitle: 'Tambahkan tamu pertama Anda dengan menekan tombol di atas.',
                           action: BasicButton(
                             onPressed: () => _showAddGuestDialog(context),
-                            leadIcon: const Icon(Icons.add_rounded, size: 18, color: Colors.white),
+                            leadIcon: Icon(Icons.add_rounded, size: 18, color: Theme.of(context).colorScheme.onPrimary),
                             label: 'Tambah Tamu',
                           ),
                         );
@@ -118,7 +121,7 @@ class _MyGuestView extends StatelessWidget {
                               onCheckout: () => _confirmCheckout(
                                   context, state.guests[index]),
                               onExtend: () => _showExtendDialog(
-                                  context, state.guests[index]),
+                                  context, state.guests[index], state.guests),
                             );
                           },
                         ),
@@ -174,16 +177,25 @@ class _MyGuestView extends StatelessWidget {
     );
   }
 
-  void _showExtendDialog(BuildContext context, MyGuestItem item) {
+  // REVISI: Cari tamu terkait (check-in/out yang sama) untuk perpanjangan selektif
+  void _showExtendDialog(BuildContext context, MyGuestItem item, List<MyGuestItem> allGuests) {
+    // Cari tamu-tamu lain yang memiliki check-in dan check-out yang sama (didaftarkan bersamaan)
+    final relatedGuests = allGuests.where((g) =>
+      g.checkInAt == item.checkInAt &&
+      g.checkOutAt == item.checkOutAt &&
+      g.stayCompletedNotifiedAt == null // Hanya yang masih aktif
+    ).toList();
+
     showDialog(
       context: context,
       builder: (dialogContext) => BlocProvider.value(
         value: context.read<MyGuestBloc>(),
-        child: _ExtendGuestDialog(item: item),
+        child: _ExtendGuestDialog(item: item, relatedGuests: relatedGuests),
       ),
     );
   }
 
+  // REVISI: Tambahkan opsi pembayaran cash
   Future<void> _showPaymentDialog(BuildContext context, MyGuestItem item) async {
     final method = await showDialog<String>(
       context: context,
@@ -193,7 +205,11 @@ class _MyGuestView extends StatelessWidget {
 
     if (method == 'midtrans') {
       context.read<MyGuestBloc>().add(PayGuestBillMidtrans(item.id));
+    } else if (method == 'cash') {
+      // Pembayaran cash langsung tanpa upload bukti
+      context.read<MyGuestBloc>().add(PayGuestBillCash(item.id));
     } else {
+      // Manual transfer — navigasi ke halaman upload bukti
       final amount = item.bill != null && (item.bill!.amount < item.chargeAmount)
           ? item.chargeAmount - item.bill!.amount
           : (item.bill?.amount ?? item.chargeAmount);
@@ -212,10 +228,11 @@ class _MyGuestView extends StatelessWidget {
   }
 }
 
-// ─── Extend Guest Dialog ───────────────────────────────────────────────
+// ─── Extend Guest Dialog (REVISI: Perpanjangan Selektif) ─────────────────────
 class _ExtendGuestDialog extends StatefulWidget {
-  const _ExtendGuestDialog({required this.item});
+  const _ExtendGuestDialog({required this.item, required this.relatedGuests});
   final MyGuestItem item;
+  final List<MyGuestItem> relatedGuests;
 
   @override
   State<_ExtendGuestDialog> createState() => _ExtendGuestDialogState();
@@ -224,6 +241,22 @@ class _ExtendGuestDialog extends StatefulWidget {
 class _ExtendGuestDialogState extends State<_ExtendGuestDialog> {
   DateTime? _checkOut;
   bool _isSubmitting = false;
+  late Map<int, bool> _selectedGuests;
+
+  @override
+  void initState() {
+    super.initState();
+    // Inisialisasi: centang tamu yang diklik, sisanya tidak dicentang
+    _selectedGuests = {};
+    for (final g in widget.relatedGuests) {
+      _selectedGuests[g.id] = g.id == widget.item.id;
+    }
+  }
+
+  bool get _hasMultipleGuests => widget.relatedGuests.length > 1;
+
+  List<int> get _selectedIds =>
+      _selectedGuests.entries.where((e) => e.value).map((e) => e.key).toList();
 
   Future<void> _pickDateTime() async {
     final oldCheckOut = DateTime.tryParse(widget.item.checkOutAt) ?? DateTime.now();
@@ -264,12 +297,23 @@ class _ExtendGuestDialogState extends State<_ExtendGuestDialog> {
       return;
     }
 
+    final selectedIds = _selectedIds;
+    if (selectedIds.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Pilih minimal satu tamu untuk diperpanjang')),
+      );
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
-    context.read<MyGuestBloc>().add(ExtendMyGuest(
-          id: widget.item.id,
-          newCheckOutAt: _checkOut!.toIso8601String(),
-        ));
+    // Fire ExtendMyGuest event untuk setiap tamu yang dipilih
+    for (final id in selectedIds) {
+      context.read<MyGuestBloc>().add(ExtendMyGuest(
+            id: id,
+            newCheckOutAt: _checkOut!.toIso8601String(),
+          ));
+    }
 
     Navigator.of(context).pop();
   }
@@ -292,55 +336,104 @@ class _ExtendGuestDialogState extends State<_ExtendGuestDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         padding: const EdgeInsets.all(24),
-        constraints: const BoxConstraints(maxWidth: 420),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Perpanjang Masa Inap',
-              style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Pilih tanggal keluar yang baru untuk tamu ${widget.item.name}. '
-              'Biaya sewa tambahan (jika ada) akan dihitung secara otomatis.',
-              style: theme.textTheme.bodyMedium,
-            ),
-            const SizedBox(height: 16),
-            _DateTimeTile(
-              label: 'Pilih Tanggal Keluar Baru',
-              value: _checkOut != null ? _formatDateTime(_checkOut!) : null,
-              onTap: _pickDateTime,
-            ),
-            const SizedBox(height: 28),
-            Row(
-              children: [
-                Expanded(
-                  child: BasicButton(
-                    type: ButtonType.secondary,
-                    onPressed: () => Navigator.of(context).pop(),
-                    label: 'Batal',
-                  ),
+        constraints: const BoxConstraints(maxWidth: 460),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Perpanjang Masa Inap',
+                style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                _hasMultipleGuests
+                    ? 'Pilih tamu yang akan diperpanjang masa inap nya, '
+                      'lalu tentukan tanggal keluar baru. '
+                      'Biaya sewa tambahan (jika ada) akan dihitung secara otomatis.'
+                    : 'Pilih tanggal keluar yang baru untuk tamu ${widget.item.name}. '
+                      'Biaya sewa tambahan (jika ada) akan dihitung secara otomatis.',
+                style: theme.textTheme.bodyMedium,
+              ),
+
+              // REVISI: Tampilkan checkbox jika ada lebih dari 1 tamu terkait
+              if (_hasMultipleGuests) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Pilih Tamu',
+                  style: theme.textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: BasicButton(
-                    isLoading: _isSubmitting,
-                    onPressed: _isSubmitting ? null : _submit,
-                    label: 'Perpanjang',
+                const SizedBox(height: 8),
+                ...widget.relatedGuests.map((g) => Container(
+                  margin: const EdgeInsets.only(bottom: 6),
+                  decoration: BoxDecoration(
+                    color: _selectedGuests[g.id] == true
+                        ? theme.colorScheme.primaryContainer.withAlpha(80)
+                        : theme.colorScheme.surfaceContainerHigh.withAlpha(60),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: _selectedGuests[g.id] == true
+                          ? theme.colorScheme.primary.withAlpha(120)
+                          : theme.colorScheme.outlineVariant,
+                    ),
                   ),
-                ),
+                  child: CheckboxListTile(
+                    title: Text(
+                      g.name,
+                      style: theme.textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      g.relationshipLabel,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: theme.colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    value: _selectedGuests[g.id] ?? false,
+                    onChanged: (val) => setState(() => _selectedGuests[g.id] = val ?? false),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    dense: true,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
+                )),
               ],
-            ),
-          ],
+
+              const SizedBox(height: 16),
+              CustomDateTimePickerField(
+                label: 'Pilih Tanggal Keluar Baru',
+                value: _checkOut != null ? _formatDateTime(_checkOut!) : null,
+                onTap: _pickDateTime,
+              ),
+              const SizedBox(height: 28),
+              Row(
+                children: [
+                  Expanded(
+                    child: BasicButton(
+                      type: ButtonType.secondary,
+                      onPressed: () => Navigator.of(context).pop(),
+                      label: 'Batal',
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: BasicButton(
+                      isLoading: _isSubmitting,
+                      onPressed: _isSubmitting ? null : _submit,
+                      label: 'Perpanjang${_hasMultipleGuests ? ' (${_selectedIds.length})' : ''}',
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ─── Payment Method Dialog ────────────────────────────────────────────────────
+// ─── Payment Method Dialog (REVISI: Tambah opsi Cash) ─────────────────────────
 class _PaymentMethodDialog extends StatefulWidget {
   const _PaymentMethodDialog({required this.item});
   final MyGuestItem item;
@@ -372,7 +465,7 @@ class _PaymentMethodDialogState extends State<_PaymentMethodDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         padding: const EdgeInsets.all(24),
-        constraints: const BoxConstraints(maxWidth: 400),
+        constraints: const BoxConstraints(maxWidth: 440),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -398,18 +491,19 @@ class _PaymentMethodDialogState extends State<_PaymentMethodDialog> {
                 style: theme.textTheme.labelLarge
                     ?.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 10),
+            // REVISI: 3 opsi pembayaran — Manual, Midtrans, Cash
             Row(
               children: [
                 Expanded(
                   child: _MethodOption(
-                    label: 'Manual',
+                    label: 'Transfer',
                     subtitle: 'Upload bukti transfer',
                     icon: Icons.account_balance_outlined,
                     selected: _method == 'manual',
                     onTap: () => setState(() => _method = 'manual'),
                   ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 8),
                 Expanded(
                   child: _MethodOption(
                     label: 'Midtrans',
@@ -417,6 +511,16 @@ class _PaymentMethodDialogState extends State<_PaymentMethodDialog> {
                     icon: Icons.payment_outlined,
                     selected: _method == 'midtrans',
                     onTap: () => setState(() => _method = 'midtrans'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _MethodOption(
+                    label: 'Tunai',
+                    subtitle: 'Bayar langsung',
+                    icon: Icons.money_outlined,
+                    selected: _method == 'cash',
+                    onTap: () => setState(() => _method = 'cash'),
                   ),
                 ),
               ],
@@ -437,7 +541,9 @@ class _PaymentMethodDialogState extends State<_PaymentMethodDialog> {
                     onPressed: () => Navigator.of(context).pop(_method),
                     label: _method == 'midtrans'
                         ? 'Lanjut ke Midtrans'
-                        : 'Lanjut ke Pembayaran',
+                        : _method == 'cash'
+                            ? 'Konfirmasi Tunai'
+                            : 'Lanjut ke Pembayaran',
                   ),
                 ),
               ],
@@ -509,7 +615,7 @@ class _MethodOption extends StatelessWidget {
   }
 }
 
-// ─── Add Guest Dialog ─────────────────────────────────────────────────────────
+// ─── Add Guest Dialog (REVISI: Multi-Tamu maks 3) ─────────────────────────────
 class _AddGuestDialog extends StatefulWidget {
   const _AddGuestDialog();
 
@@ -517,18 +623,33 @@ class _AddGuestDialog extends StatefulWidget {
   State<_AddGuestDialog> createState() => _AddGuestDialogState();
 }
 
+/// Representasi satu entry tamu dalam form
+class _GuestFormEntry {
+  final TextEditingController nameController;
+  String relationship;
+
+  _GuestFormEntry({String? name, this.relationship = 'friend'})
+      : nameController = TextEditingController(text: name);
+
+  void dispose() => nameController.dispose();
+}
+
 class _AddGuestDialogState extends State<_AddGuestDialog> {
   final _formKey = GlobalKey<FormState>();
   final _residentController = TextEditingController();
   final _roomController = TextEditingController();
-  final _nameController = TextEditingController();
-  String _relationship = 'friend';
+
+  // REVISI: List dinamis tamu (maks 3)
+  final List<_GuestFormEntry> _guestEntries = [_GuestFormEntry()];
+
   DateTime? _checkIn;
   DateTime? _checkOut;
   bool _isSubmitting = false;
   bool _isLoadingResident = false;
   String? _residentError;
   bool _hasActiveLease = true;
+
+  static const int _maxGuests = 3;
 
   static const _relationships = [
     ('parent', 'Orang Tua'),
@@ -549,7 +670,9 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
   void dispose() {
     _residentController.dispose();
     _roomController.dispose();
-    _nameController.dispose();
+    for (final e in _guestEntries) {
+      e.dispose();
+    }
     super.dispose();
   }
 
@@ -582,6 +705,19 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
         setState(() => _isLoadingResident = false);
       }
     }
+  }
+
+  void _addGuestEntry() {
+    if (_guestEntries.length >= _maxGuests) return;
+    setState(() => _guestEntries.add(_GuestFormEntry()));
+  }
+
+  void _removeGuestEntry(int index) {
+    if (_guestEntries.length <= 1) return;
+    setState(() {
+      _guestEntries[index].dispose();
+      _guestEntries.removeAt(index);
+    });
   }
 
   Future<void> _pickDateTime({required bool isCheckIn}) async {
@@ -653,11 +789,16 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
 
     setState(() => _isSubmitting = true);
 
+    // REVISI: Kirim array tamu ke BLoC
+    final guests = _guestEntries.map((e) => {
+      'name': e.nameController.text.trim(),
+      'relationship': e.relationship,
+    }).toList();
+
     context.read<MyGuestBloc>().add(CreateMyGuest(
-          name: _nameController.text.trim(),
+          guests: guests,
           checkInAt: _checkIn!.toIso8601String(),
           checkOutAt: _checkOut!.toIso8601String(),
-          relationship: _relationship,
         ));
 
     Navigator.of(context).pop();
@@ -672,165 +813,204 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         padding: const EdgeInsets.all(24),
-        constraints: const BoxConstraints(maxWidth: 420),
+        constraints: const BoxConstraints(maxWidth: 480),
         child: Form(
           key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Tambah Tamu',
-                style: theme.textTheme.titleLarge
-                    ?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tambah Tamu',
+                  style: theme.textTheme.titleLarge
+                      ?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Daftarkan hingga $_maxGuests tamu sekaligus',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 20),
 
-              if (_isLoadingResident)
-                const LinearProgressIndicator(minHeight: 2),
-              if (_residentError != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8, bottom: 12),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _residentError!,
-                          style: const TextStyle(color: Colors.red),
+                if (_isLoadingResident)
+                  const LinearProgressIndicator(minHeight: 2),
+                if (_residentError != null)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8, bottom: 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _residentError!,
+                            style: const TextStyle(color: Colors.red),
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: _loadResidentInfo,
+                          child: const Text('Coba lagi'),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                CustomTextField(
+                  controller: _residentController,
+                  enabled: false,
+                  hintText: 'Nama Penghuni',
+                ),
+                const SizedBox(height: 16),
+
+                CustomTextField(
+                  controller: _roomController,
+                  enabled: false,
+                  hintText: 'Nomor Kamar',
+                ),
+                const SizedBox(height: 20),
+
+                // ─── Daftar Tamu Dinamis ──────────────────────────────
+                ..._guestEntries.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final guestEntry = entry.value;
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surfaceContainerHigh.withAlpha(60),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: theme.colorScheme.outlineVariant),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 24,
+                              height: 24,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                '${index + 1}',
+                                style: theme.textTheme.labelSmall?.copyWith(
+                                  color: theme.colorScheme.onPrimary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Tamu ${index + 1}',
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            const Spacer(),
+                            if (_guestEntries.length > 1)
+                              IconButton(
+                                onPressed: () => _removeGuestEntry(index),
+                                icon: Icon(Icons.close_rounded,
+                                    color: theme.colorScheme.error, size: 18),
+                                visualDensity: VisualDensity.compact,
+                                tooltip: 'Hapus Tamu ${index + 1}',
+                                constraints: const BoxConstraints(),
+                                padding: EdgeInsets.zero,
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        CustomTextField(
+                          controller: guestEntry.nameController,
+                          hintText: 'Nama Tamu',
+                          validator: (v) =>
+                              (v == null || v.trim().isEmpty) ? 'Nama tidak boleh kosong' : null,
+                        ),
+                        const SizedBox(height: 12),
+                        CustomDropdownField<String>(
+                          title: 'Hubungan',
+                          hint: 'Pilih hubungan',
+                          value: guestEntry.relationship,
+                          items: _relationships
+                              .map((r) => DropdownMenuItem(
+                                    value: r.$1,
+                                    child: Text(r.$2),
+                                  ))
+                              .toList(),
+                          onChanged: (v) =>
+                              setState(() => guestEntry.relationship = v!),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+
+                // Tombol tambah tamu
+                if (_guestEntries.length < _maxGuests)
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: _addGuestEntry,
+                      icon: const Icon(Icons.person_add_outlined, size: 18),
+                      label: Text('Tambah Tamu (${_guestEntries.length}/$_maxGuests)'),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        side: BorderSide(
+                          color: theme.colorScheme.primary.withAlpha(120),
+                          style: BorderStyle.solid,
                         ),
                       ),
-                      TextButton(
-                        onPressed: _loadResidentInfo,
-                        child: const Text('Coba lagi'),
+                    ),
+                  ),
+                const SizedBox(height: 16),
+
+                // Tanggal Masuk
+                CustomDateTimePickerField(
+                  label: 'Tanggal & Jam Masuk',
+                  value: _checkIn != null ? _formatDateTime(_checkIn!) : null,
+                  onTap: () => _pickDateTime(isCheckIn: true),
+                ),
+                const SizedBox(height: 12),
+
+                // Tanggal Keluar
+                CustomDateTimePickerField(
+                  label: 'Tanggal & Jam Keluar',
+                  value: _checkOut != null ? _formatDateTime(_checkOut!) : null,
+                  onTap: () => _pickDateTime(isCheckIn: false),
+                ),
+                const SizedBox(height: 28),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: BasicButton(
+                        type: ButtonType.secondary,
+                        onPressed: () => Navigator.of(context).pop(),
+                        label: 'Batal',
                       ),
-                    ],
-                  ),
-                ),
-
-              CustomTextField(
-                controller: _residentController,
-                enabled: false,
-                hintText: 'Nama Penghuni',
-              ),
-              const SizedBox(height: 16),
-
-              CustomTextField(
-                controller: _roomController,
-                enabled: false,
-                hintText: 'Nomor Kamar',
-              ),
-              const SizedBox(height: 16),
-
-              // Nama
-              CustomTextField(
-                controller: _nameController,
-                hintText: 'Nama Tamu',
-                validator: (v) =>
-                    (v == null || v.trim().isEmpty) ? 'Nama tidak boleh kosong' : null,
-              ),
-              const SizedBox(height: 16),
-
-              // Hubungan
-              DropdownButtonFormField<String>(
-                value: _relationship,
-                decoration: const InputDecoration(
-                  labelText: 'Hubungan',
-                  border: OutlineInputBorder(),
-                ),
-                items: _relationships
-                    .map((r) => DropdownMenuItem(
-                          value: r.$1,
-                          child: Text(r.$2),
-                        ))
-                    .toList(),
-                onChanged: (v) => setState(() => _relationship = v!),
-              ),
-              const SizedBox(height: 16),
-
-              // Tanggal Masuk
-              _DateTimeTile(
-                label: 'Tanggal & Jam Masuk',
-                value: _checkIn != null ? _formatDateTime(_checkIn!) : null,
-                onTap: () => _pickDateTime(isCheckIn: true),
-              ),
-              const SizedBox(height: 12),
-
-              // Tanggal Keluar
-              _DateTimeTile(
-                label: 'Tanggal & Jam Keluar',
-                value: _checkOut != null ? _formatDateTime(_checkOut!) : null,
-                onTap: () => _pickDateTime(isCheckIn: false),
-              ),
-              const SizedBox(height: 28),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: BasicButton(
-                      type: ButtonType.secondary,
-                      onPressed: () => Navigator.of(context).pop(),
-                      label: 'Batal',
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: BasicButton(
-                      isLoading: _isSubmitting,
-                      onPressed: (_isSubmitting || _isLoadingResident || !_hasActiveLease)
-                          ? null
-                          : _submit,
-                      label: 'Simpan',
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: BasicButton(
+                        isLoading: _isSubmitting,
+                        onPressed: (_isSubmitting || _isLoadingResident || !_hasActiveLease)
+                            ? null
+                            : _submit,
+                        label: 'Simpan (${_guestEntries.length} tamu)',
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DateTimeTile extends StatelessWidget {
-  const _DateTimeTile({
-    required this.label,
-    required this.value,
-    required this.onTap,
-  });
-
-  final String label;
-  final String? value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
-        decoration: BoxDecoration(
-          border: Border.all(color: theme.colorScheme.outline),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.calendar_today_outlined,
-                size: 18, color: theme.colorScheme.primary),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                value ?? label,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: value != null
-                      ? theme.colorScheme.onSurface
-                      : theme.colorScheme.onSurfaceVariant,
+                  ],
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -869,20 +1049,20 @@ class _GuestCard extends StatelessWidget {
     }
   }
 
-  Color _billStatusColor(String status) {
+  Color _billStatusColor(String status, ThemeData theme) {
     switch (status) {
       case 'unpaid':
-        return Colors.grey;
+        return theme.colorScheme.outline;
       case 'pending':
-        return Colors.orange;
+        return theme.colorScheme.secondary;
       case 'verified':
       case 'paid':
-        return Colors.green;
+        return theme.colorScheme.tertiary;
       case 'rejected':
       case 'failed':
-        return Colors.red;
+        return theme.colorScheme.error;
       default:
-        return Colors.grey;
+        return theme.colorScheme.outline;
     }
   }
 
@@ -892,192 +1072,187 @@ class _GuestCard extends StatelessWidget {
     final bill = item.bill;
     final hasBill = bill != null;
 
-    // Logika perhitungan selisih tagihan (Hanya ditampilkan jika nominal bill < chargeAmount)
     final isExtensionBill = hasBill && (bill.amount < item.chargeAmount);
-
     final canPay = (hasBill && bill.canPay) || isExtensionBill;
 
-    return Card(
-      elevation: 2,
-      shadowColor: theme.colorScheme.shadow.withAlpha(40),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: theme.colorScheme.outlineVariant),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── Row atas: avatar + nama + badge hubungan + tombol hapus ──
+    return BasicCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
             Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.primaryContainer,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
+                CircleAvatar(
+                  radius: 20,
+                  backgroundColor: theme.colorScheme.primaryContainer.withAlpha(150),
                   child: Icon(Icons.person_outline,
-                      color: theme.colorScheme.onPrimaryContainer, size: 28),
+                      color: theme.colorScheme.onPrimaryContainer, size: 20),
                 ),
-                const SizedBox(width: 16),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        item.name,
-                        style: theme.textTheme.titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.secondaryContainer,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          item.relationshipLabel,
-                          style: theme.textTheme.labelMedium?.copyWith(
-                            color: theme.colorScheme.onSecondaryContainer,
-                            fontWeight: FontWeight.w600,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              item.name,
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: theme.colorScheme.surfaceContainerHigh,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              item.relationshipLabel,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: theme.colorScheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _CompactInfo(label: 'Masuk', value: _formatDateTime(item.checkInAt)),
+                          ),
+                          Expanded(
+                            child: _CompactInfo(label: 'Keluar', value: _formatDateTime(item.checkOutAt)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: _CompactInfo(
+                              label: 'Durasi', 
+                              value: '${item.totalDays} hari${item.billableDays > 0 ? '\n(${item.billableDays} berbayar)' : ''}',
+                            ),
+                          ),
+                          if (item.chargeAmount > 0)
+                            Expanded(
+                              child: _CompactInfo(
+                                label: isExtensionBill ? 'Total Keseluruhan' : 'Total Biaya', 
+                                value: currency.format(item.chargeAmount),
+                                valueColor: isExtensionBill ? theme.colorScheme.onSurface : theme.colorScheme.error,
+                              ),
+                            ),
+                        ],
                       ),
                     ],
                   ),
                 ),
+                const SizedBox(width: 4),
                 IconButton(
                   onPressed: onDelete,
                   icon: Icon(Icons.delete_outline_rounded,
-                      color: theme.colorScheme.error, size: 24),
+                      color: theme.colorScheme.error.withAlpha(200), size: 20),
                   tooltip: 'Hapus Tamu',
+                  visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
-            const SizedBox(height: 14),
-            const Divider(height: 1),
-            const SizedBox(height: 14),
 
-            // ── Info tanggal & biaya ──
-            Row(
-              children: [
-                Expanded(
-                  child: _InfoRow(
-                    icon: Icons.login_outlined,
-                    label: 'Masuk',
-                    value: _formatDateTime(item.checkInAt),
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-                Expanded(
-                  child: _InfoRow(
-                    icon: Icons.logout_outlined,
-                    label: 'Keluar',
-                    value: _formatDateTime(item.checkOutAt),
-                    color: theme.colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-            if (item.totalDays > 0) ...[
-              const SizedBox(height: 8),
-              _InfoRow(
-                icon: Icons.nights_stay_outlined,
-                label: 'Durasi',
-                value: '${item.totalDays} hari'
-                    '${item.billableDays > 0 ? ' (${item.billableDays} hari berbayar)' : ''}',
-                color: theme.colorScheme.onSurfaceVariant,
-              ),
-            ],
-            if (item.chargeAmount > 0) ...[
-              const SizedBox(height: 8),
-              _InfoRow(
-                icon: Icons.receipt_outlined,
-                // Ubah nama label jika ada selisih tagihan
-                label: isExtensionBill ? 'Total Biaya Keseluruhan' : 'Total Biaya Tamu',
-                value: currency.format(item.chargeAmount),
-                color: isExtensionBill ? theme.colorScheme.onSurfaceVariant : theme.colorScheme.error,
-                bold: !isExtensionBill, // Jika ada selisih, bold-nya dilepas agar tidak membingungkan
-              ),
-            ],
-
-            // Tampilkan baris khusus ini HANYA jika nominal tagihan baru < total keseluruhan
             if (isExtensionBill) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: 16),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.errorContainer.withAlpha(50),
+                  color: theme.colorScheme.errorContainer.withAlpha(80),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: theme.colorScheme.errorContainer),
                 ),
-                child: _InfoRow(
-                  icon: Icons.account_balance_wallet_outlined,
-                  label: 'Tagihan Baru (Selisih Extend)',
-                  value: currency.format(item.chargeAmount - bill.amount),
-                  color: theme.colorScheme.error,
-                  bold: true,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Sisa Tagihan (Extend)', 
+                      style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.error)),
+                    Text(currency.format(item.chargeAmount - bill.amount),
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: theme.colorScheme.error, fontWeight: FontWeight.bold)),
+                  ],
                 ),
               ),
             ],
 
-            // ── Status tagihan + tombol bayar ──
             if (hasBill) ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: _billStatusColor(bill.status).withAlpha(30),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      bill.statusLabel,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: _billStatusColor(bill.status),
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _billStatusColor(bill.status, theme),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        bill.statusLabel,
+                        style: theme.textTheme.labelMedium?.copyWith(
+                          color: _billStatusColor(bill.status, theme),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (canPay)
+                    TextButton.icon(
+                      onPressed: onPay,
+                      icon: Icon(Icons.payment_outlined, size: 16, color: theme.colorScheme.primary),
+                      label: Text('Bayar', style: TextStyle(color: theme.colorScheme.primary)),
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                       ),
                     ),
-                  ),
-                  if (canPay) ...[
-                    const SizedBox(width: 10),
-                    BasicButton(
-                      onPressed: onPay,
-                      leadIcon: const Icon(Icons.payment_outlined, size: 18, color: Colors.white),
-                      label: 'Bayar',
-                    ),
-                  ],
                 ],
               ),
             ],
 
-            // ── Tombol Perpanjang / status checkout ──
             const SizedBox(height: 16),
             if (item.stayCompletedNotifiedAt == null)
               Row(
                 children: [
                   Expanded(
-                    child: BasicButton(
-                      type: ButtonType.secondary,
+                    child: OutlinedButton(
                       onPressed: onExtend,
-                      leadIcon: const Icon(Icons.update, size: 20),
-                      label: 'Perpanjang',
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        side: BorderSide(color: theme.colorScheme.outlineVariant),
+                      ),
+                      child: Text('Perpanjang', style: TextStyle(color: theme.colorScheme.onSurface)),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: BasicButton(
+                    child: FilledButton(
                       onPressed: onCheckout,
-                      leadIcon: const Icon(Icons.check_circle_outline, size: 20, color: Colors.white),
-                      label: 'Telah Keluar',
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                      ),
+                      child: const Text('Checkout'),
                     ),
                   ),
                 ],
@@ -1085,80 +1260,55 @@ class _GuestCard extends StatelessWidget {
             else
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: Colors.green.withAlpha(20),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.green.withAlpha(60)),
+                  color: theme.colorScheme.surfaceContainerHighest.withAlpha(100),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.check_circle,
-                        size: 20, color: Colors.green),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Tamu Telah Keluar',
-                      style: theme.textTheme.bodyLarge?.copyWith(
-                        color: Colors.green,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  'Telah Keluar',
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    color: theme.colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
           ],
         ),
-      ),
     );
   }
 }
 
-/// Helper row widget untuk menampilkan info dengan icon
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({
-    required this.icon,
+class _CompactInfo extends StatelessWidget {
+  const _CompactInfo({
     required this.label,
     required this.value,
-    required this.color,
-    this.bold = false,
+    this.valueColor,
   });
 
-  final IconData icon;
   final String label;
   final String value;
-  final Color color;
-  final bool bold;
+  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    final theme = Theme.of(context);
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(width: 6),
-        Expanded(
-          child: RichText(
-            text: TextSpan(
-              style: TextStyle(
-                  color: color,
-                  fontSize: 13,
-                  fontFamily: DefaultTextStyle.of(context).style.fontFamily),
-              children: [
-                TextSpan(
-                  text: '$label: ',
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-                TextSpan(
-                  text: value,
-                  style: TextStyle(
-                    fontWeight:
-                        bold ? FontWeight.w700 : FontWeight.w400,
-                  ),
-                ),
-              ],
-            ),
+        Text(
+          label,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: theme.colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: valueColor ?? theme.colorScheme.onSurface,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -1199,7 +1349,7 @@ class _EmptyView extends StatelessWidget {
           const SizedBox(height: 24),
           BasicButton(
             onPressed: onAdd,
-            leadIcon: const Icon(Icons.add_rounded, size: 18, color: Colors.white),
+            leadIcon: Icon(Icons.add_rounded, size: 18, color: Theme.of(context).colorScheme.onPrimary),
             label: 'Tambah Tamu',
           ),
         ],
@@ -1235,7 +1385,7 @@ class _ErrorView extends StatelessWidget {
           const SizedBox(height: 24),
           BasicButton(
             onPressed: onRetry,
-            leadIcon: const Icon(Icons.refresh_rounded, size: 18, color: Colors.white),
+            leadIcon: Icon(Icons.refresh_rounded, size: 18, color: Theme.of(context).colorScheme.onPrimary),
             label: 'Coba Lagi',
           ),
         ],

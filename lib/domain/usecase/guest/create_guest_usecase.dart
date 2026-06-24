@@ -6,16 +6,14 @@ class CreateGuestUseCase {
 
   CreateGuestUseCase(this._repository);
 
-  Future<MyGuestItem> call({
-    required String name,
+  Future<List<MyGuestItem>> call({
+    required List<Map<String, dynamic>> guests,
     required String checkInAt,
     required String checkOutAt,
-    required String relationship,
   }) =>
       _repository.createGuest(
-        name: name,
+        guests: guests,
         checkInAt: checkInAt,
         checkOutAt: checkOutAt,
-        relationship: relationship,
       );
 }
