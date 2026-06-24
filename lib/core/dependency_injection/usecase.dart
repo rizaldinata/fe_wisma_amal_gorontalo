@@ -91,6 +91,7 @@ import 'package:frontend/domain/repository/role_repository.dart';
 import 'package:frontend/domain/usecase/role/role_usecases.dart';
 import 'package:frontend/domain/repository/my_reservation_repository.dart';
 import 'package:frontend/domain/usecase/my_reservation/get_my_reservations_usecase.dart';
+import 'package:frontend/domain/usecase/my_reservation/ajukan_pembatalan_dp_usecase.dart';
 import 'package:frontend/domain/repository/resident_repository.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
 import 'package:frontend/domain/usecase/resident/get_admin_resident_detail_usecase.dart';
@@ -120,6 +121,10 @@ import 'package:frontend/domain/usecase/finance/get_fixed_expenses_usecase.dart'
 import 'package:frontend/domain/usecase/finance/update_fixed_expense_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_fixed_expense_status_usecase.dart';
 import 'package:frontend/domain/usecase/finance/generate_fixed_expenses_usecase.dart';
+import 'package:frontend/domain/repository/refund_request_repository.dart';
+import 'package:frontend/domain/usecase/refund_request/get_refund_requests_usecase.dart';
+import 'package:frontend/domain/usecase/refund_request/proses_refund_usecase.dart';
+import 'package:frontend/domain/usecase/refund_request/tolak_refund_usecase.dart';
 
 Future<void> initializeUseCase() async {
   // Auth UseCases
@@ -410,10 +415,15 @@ Future<void> initializeUseCase() async {
 
   // My Reservation UseCases
   serviceLocator.registerFactory(
-  () => GetMyReservationsUseCase(
-    serviceLocator<MyReservationRepository>(),
-  ),
-);
+    () => GetMyReservationsUseCase(
+      serviceLocator<MyReservationRepository>(),
+    ),
+  );
+  serviceLocator.registerFactory(
+    () => AjukanPembatalanDpUseCase(
+      repository: serviceLocator<MyReservationRepository>(),
+    ),
+  );
 
   // Guest UseCases
   serviceLocator.registerFactory(
@@ -488,6 +498,23 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => GenerateFixedExpensesUseCase(serviceLocator<FixedExpenseRepository>()),
+  );
+
+  // Refund Request UseCases (Admin)
+  serviceLocator.registerFactory(
+    () => GetRefundRequestsUseCase(
+      repository: serviceLocator<RefundRequestRepository>(),
+    ),
+  );
+  serviceLocator.registerFactory(
+    () => ProsesRefundUseCase(
+      repository: serviceLocator<RefundRequestRepository>(),
+    ),
+  );
+  serviceLocator.registerFactory(
+    () => TolakRefundUseCase(
+      repository: serviceLocator<RefundRequestRepository>(),
+    ),
   );
 
   // Fine UseCases

@@ -8,6 +8,7 @@ import 'package:frontend/domain/entity/reservation_entity.dart';
 import 'package:frontend/presentation/bloc/my_reservation/my_reservation_bloc.dart';
 import 'package:frontend/presentation/bloc/my_reservation/my_reservation_event.dart';
 import 'package:frontend/presentation/bloc/my_reservation/my_reservation_state.dart';
+import 'package:intl/intl.dart';
 
 @RoutePage()
 class MyReservationPage extends StatefulWidget {
@@ -37,12 +38,30 @@ class _MyReservationPageState extends State<MyReservationPage> {
     return BlocProvider.value(
       value: _bloc,
       child: BlocListener<MyReservationBloc, MyReservationState>(
-        listenWhen: (prev, curr) => prev.cancelStatus != curr.cancelStatus,
+        listenWhen: (prev, curr) =>
+            prev.cancelStatus != curr.cancelStatus ||
+            prev.pembatalanDpStatus != curr.pembatalanDpStatus,
         listener: (context, state) {
           if (state.cancelStatus == FormzSubmissionStatus.failure) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.errorMessage ?? 'Gagal membatalkan reservasi'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+          if (state.pembatalanDpStatus == FormzSubmissionStatus.success) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Permintaan pembatalan berhasil diajukan. Menunggu review admin.'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          }
+          if (state.pembatalanDpStatus == FormzSubmissionStatus.failure) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.errorMessage ?? 'Gagal mengajukan pembatalan'),
                 backgroundColor: Colors.red,
               ),
             );
@@ -319,7 +338,10 @@ class _ReservationCard extends StatelessWidget {
             ],
 
             // Action button (contextual berdasarkan status)
-            if (reservation.status == 'pending' || reservation.status == 'active' || reservation.isDpTerbayar) ...[
+            if (reservation.status == 'pending' ||
+                reservation.status == 'active' ||
+                reservation.isDpTerbayar ||
+                (reservation.status == 'terkonfirmasi' && reservation.isDp)) ...[
               const SizedBox(height: 14),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
@@ -349,6 +371,21 @@ class _ReservationCard extends StatelessWidget {
                       ),
                     ),
                   ],
+                  if ((reservation.isDpTerbayar || reservation.status == 'terkonfirmasi') &&
+                      reservation.isDp) ...[
+                    const SizedBox(width: 8),
+                    OutlinedButton.icon(
+                      onPressed: () => _showAjukanPembatalanDialog(context, reservation),
+                      icon: const Icon(Icons.cancel_schedule_send_outlined, size: 16),
+                      label: const Text('Ajukan Pembatalan'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Colors.red.shade700,
+                        side: BorderSide(color: Colors.red.shade700),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        textStyle: const TextStyle(fontSize: 13),
+                      ),
+                    ),
+                  ],
                   if (reservation.status == 'pending') ...[
                     const SizedBox(width: 8),
                     OutlinedButton.icon(
@@ -368,6 +405,131 @@ class _ReservationCard extends StatelessWidget {
             ],
           ],
         ),
+      ),
+    );
+  }
+
+  void _showAjukanPembatalanDialog(BuildContext context, ReservationEntity reservation) {
+    final bankCtrl = TextEditingController();
+    final noRekCtrl = TextEditingController();
+    final atasNamaCtrl = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return BlocProvider.value(
+            value: context.read<MyReservationBloc>(),
+            child: BlocListener<MyReservationBloc, MyReservationState>(
+              listenWhen: (prev, curr) => prev.pembatalanDpStatus != curr.pembatalanDpStatus,
+              listener: (_, state) {
+                if (state.pembatalanDpStatus == FormzSubmissionStatus.success ||
+                    state.pembatalanDpStatus == FormzSubmissionStatus.failure) {
+                  Navigator.of(dialogContext).pop();
+                }
+              },
+              child: AlertDialog(
+                title: const Text('Ajukan Pembatalan DP'),
+                content: SingleChildScrollView(
+                  child: Form(
+                    key: formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.amber.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: Colors.amber.shade300),
+                          ),
+                          child: Text(
+                            'Pengajuan pembatalan akan direview oleh admin. '
+                            'Jika disetujui dan berhak refund (lebih dari 3 hari sebelum tanggal masuk), '
+                            'dana akan ditransfer ke rekening yang tertera.',
+                            style: TextStyle(fontSize: 12, color: Colors.amber.shade900, height: 1.4),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextFormField(
+                          controller: bankCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Nama Bank',
+                            hintText: 'Contoh: BRI, BCA, Mandiri',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          ),
+                          validator: (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: noRekCtrl,
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                            labelText: 'Nomor Rekening',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          ),
+                          validator: (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+                        ),
+                        const SizedBox(height: 12),
+                        TextFormField(
+                          controller: atasNamaCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Atas Nama',
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                          ),
+                          validator: (v) => (v == null || v.trim().isEmpty) ? 'Wajib diisi' : null,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: const Text('Batal'),
+                  ),
+                  BlocBuilder<MyReservationBloc, MyReservationState>(
+                    builder: (_, state) {
+                      final isLoading =
+                          state.pembatalanDpStatus == FormzSubmissionStatus.inProgress;
+                      return ElevatedButton(
+                        onPressed: isLoading
+                            ? null
+                            : () {
+                                if (!formKey.currentState!.validate()) return;
+                                context.read<MyReservationBloc>().add(
+                                      AjukanPembatalanDpEvent(
+                                        scheduleId: reservation.id,
+                                        bankName: bankCtrl.text.trim(),
+                                        accountNumber: noRekCtrl.text.trim(),
+                                        accountHolderName: atasNamaCtrl.text.trim(),
+                                      ),
+                                    );
+                              },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red.shade700,
+                          foregroundColor: Colors.white,
+                        ),
+                        child: isLoading
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Text('Kirim Pengajuan'),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

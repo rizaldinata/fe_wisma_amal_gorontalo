@@ -67,6 +67,7 @@ class RouteConstant {
 
   static const String financeInvoiceName = 'finance/invoices';
   static const String paymentVerificationName = 'finance/payment-verification';
+  static const String refundRequestName = 'finance/refund-requests';
   static const String paymentHistoryName = 'finance/payment-history';
   static const String memberFinanceName = 'me/finance';
   static const String extendLeaseName = 'me/finance/extend-lease';

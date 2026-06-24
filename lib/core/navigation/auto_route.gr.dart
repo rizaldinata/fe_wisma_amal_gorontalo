@@ -115,6 +115,9 @@ import 'package:frontend/presentation/pages/setting/landing_cms/landing_cms_page
 import 'package:frontend/presentation/pages/setting/setting_page.dart' as _i52;
 import 'package:frontend/presentation/pages/user_management/user_management_page.dart'
     as _i53;
+    as _i52;
+import 'package:frontend/presentation/pages/finance/refund_request_page.dart'
+    as _i61;
 import 'package:frontend/presentation/widget/app_layout.dart' as _i3;
 
 /// generated route for
@@ -1828,6 +1831,22 @@ class UserManagementRoute extends _i54.PageRouteInfo<void> {
     name,
     builder: (data) {
       return const _i53.UserManagementPage();
+    },
+  );
+}
+
+/// generated route for
+/// [_i61.RefundRequestPage]
+class RefundRequestRoute extends _i53.PageRouteInfo<void> {
+  const RefundRequestRoute({List<_i53.PageRouteInfo>? children})
+    : super(RefundRequestRoute.name, initialChildren: children);
+
+  static const String name = 'RefundRequestRoute';
+
+  static _i53.PageInfo page = _i53.PageInfo(
+    name,
+    builder: (data) {
+      return const _i61.RefundRequestPage();
     },
   );
 }

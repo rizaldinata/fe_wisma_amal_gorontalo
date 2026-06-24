@@ -323,16 +323,6 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
               Navigator.pop(ctx);
             },
           ),
-          if (payment.paymentMethod == 'midtrans')
-            OutlinedButton.icon(
-              icon: Icon(Icons.replay, size: 16, color: Colors.orange.shade700),
-              label: Text('Refund', style: TextStyle(color: Colors.orange.shade700)),
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Colors.orange.shade300),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-              ),
-              onPressed: () { Navigator.pop(ctx); _showRefundDialog(payment); },
-            ),
           FilledButton.icon(
             icon: const Icon(Icons.check, size: 16),
             label: const Text('Setujui'),
@@ -452,75 +442,6 @@ class _PaymentVerificationPageState extends State<PaymentVerificationPage> {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Tutup')),
-        ],
-      ),
-    );
-  }
-
-  void _showRefundDialog(PaymentEntity payment) {
-    final reasonCtrl = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Row(children: [
-          Icon(Icons.replay, color: Colors.orange.shade700),
-          const SizedBox(width: 8),
-          const Text('Proses Refund', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-        ]),
-        content: SizedBox(
-          width: 380,
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red.shade50,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.red.shade200),
-              ),
-              child: Row(children: [
-                Icon(Icons.warning_amber_rounded, color: Colors.red.shade600, size: 18),
-                const SizedBox(width: 8),
-                const Expanded(child: Text(
-                  'Fitur ini akan mengembalikan dana ke rekening pengguna secara otomatis melalui Midtrans.',
-                  style: TextStyle(fontSize: 12),
-                )),
-              ]),
-            ),
-            const SizedBox(height: 14),
-            const Text('Alasan Refund', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 6),
-            TextField(
-              controller: reasonCtrl,
-              maxLines: 2,
-              decoration: InputDecoration(
-                hintText: 'Jelaskan alasan refund...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                contentPadding: const EdgeInsets.all(12),
-              ),
-            ),
-          ]),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Batal')),
-          FilledButton.icon(
-            icon: const Icon(Icons.replay, size: 16),
-            label: const Text('Kirim Refund'),
-            style: FilledButton.styleFrom(
-              backgroundColor: Colors.orange.shade700,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            ),
-            onPressed: () {
-              if (reasonCtrl.text.trim().isEmpty) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Alasan refund wajib diisi!')),
-                );
-                return;
-              }
-              _bloc.add(RefundPaymentEvent(paymentId: payment.id, reason: reasonCtrl.text));
-              Navigator.pop(ctx);
-            },
-          ),
         ],
       ),
     );

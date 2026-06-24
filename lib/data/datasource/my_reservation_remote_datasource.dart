@@ -8,6 +8,26 @@ class MyReservationRemoteDatasource {
     required this.dioClient,
   });
 
+  Future<void> ajukanPembatalanDp({
+    required int scheduleId,
+    required String bankName,
+    required String accountNumber,
+    required String accountHolderName,
+  }) async {
+    try {
+      await dioClient.post(
+        '/finance/me/schedules/$scheduleId/ajukan-pembatalan-dp',
+        data: {
+          'bank_name': bankName,
+          'account_number': accountNumber,
+          'account_holder_name': accountHolderName,
+        },
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<List<ReservationEntity>> getMyReservations() async {
     try {
       final response = await dioClient.get(

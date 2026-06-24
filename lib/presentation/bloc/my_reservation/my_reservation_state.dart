@@ -5,12 +5,14 @@ import 'package:frontend/domain/entity/reservation_entity.dart';
 class MyReservationState extends Equatable {
   final FormzSubmissionStatus status;
   final FormzSubmissionStatus cancelStatus;
+  final FormzSubmissionStatus pembatalanDpStatus;
   final List<ReservationEntity> reservations;
   final String? errorMessage;
 
   const MyReservationState({
     this.status = FormzSubmissionStatus.initial,
     this.cancelStatus = FormzSubmissionStatus.initial,
+    this.pembatalanDpStatus = FormzSubmissionStatus.initial,
     this.reservations = const [],
     this.errorMessage,
   });
@@ -18,17 +20,19 @@ class MyReservationState extends Equatable {
   MyReservationState copyWith({
     FormzSubmissionStatus? status,
     FormzSubmissionStatus? cancelStatus,
+    FormzSubmissionStatus? pembatalanDpStatus,
     List<ReservationEntity>? reservations,
     String? errorMessage,
   }) {
     return MyReservationState(
       status: status ?? this.status,
       cancelStatus: cancelStatus ?? this.cancelStatus,
+      pembatalanDpStatus: pembatalanDpStatus ?? this.pembatalanDpStatus,
       reservations: reservations ?? this.reservations,
       errorMessage: errorMessage ?? this.errorMessage,
     );
   }
 
   @override
-  List<Object?> get props => [status, cancelStatus, reservations, errorMessage];
+  List<Object?> get props => [status, cancelStatus, pembatalanDpStatus, reservations, errorMessage];
 }

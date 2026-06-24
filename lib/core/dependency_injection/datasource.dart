@@ -19,6 +19,7 @@ import 'package:frontend/data/datasource/notification_datasource.dart';
 import 'package:frontend/data/datasource/fixed_expense_datasource.dart';
 import 'package:frontend/data/datasource/feature_toggle_datasource.dart';
 import 'package:frontend/data/datasource/dashboard_datasource.dart';
+import 'package:frontend/data/datasource/refund_request_datasource.dart';
 
 Future<void> initializeDatasource() async {
   serviceLocator.registerFactory<AuthDatasource>(
@@ -85,5 +86,8 @@ Future<void> initializeDatasource() async {
   );
   serviceLocator.registerFactory<DashboardDatasource>(
     () => DashboardDatasource(dioClient: serviceLocator<DioClient>()),
+  );
+  serviceLocator.registerFactory<RefundRequestDatasource>(
+    () => RefundRequestDatasource(dioClient: serviceLocator<DioClient>()),
   );
 }
