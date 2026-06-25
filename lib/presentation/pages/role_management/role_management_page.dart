@@ -9,6 +9,7 @@ import 'package:frontend/presentation/bloc/role/role_bloc.dart';
 import 'package:frontend/presentation/widget/core/card/stat_card.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/table/table.dart';
+import 'package:frontend/core/constant/role_templates.dart';
 
 @RoutePage()
 class RoleManagementPage extends StatelessWidget {
@@ -253,6 +254,8 @@ class RoleManagementView extends StatelessWidget {
             role.name != 'member' &&
             role.name != 'resident');
 
+    String? selectedTemplate;
+
     showDialog(
       context: context,
       builder: (dialogContext) => BlocProvider.value(
@@ -283,22 +286,109 @@ class RoleManagementView extends StatelessWidget {
                         hintText: 'Deskripsi role...',
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
                     const Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Permission',
+                        'Gunakan Template Role',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          fontSize: 14,
                         ),
                       ),
                     ),
                     const SizedBox(height: 8),
-                    _buildPermissionGroups(
-                      allPermissions,
-                      selectedPermissions,
-                      setState,
+                    SizedBox(
+                      width: double.infinity,
+                      child: Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          ChoiceChip(
+                            label: const Text('Super Admin'),
+                            avatar: const Icon(Icons.admin_panel_settings, size: 16),
+                            selected: selectedTemplate == 'Super Admin',
+                            onSelected: (_) {
+                              setState(() {
+                                selectedTemplate = 'Super Admin';
+                                selectedPermissions.clear();
+                                selectedPermissions.addAll(RoleTemplates.superAdminPermissions);
+                              });
+                            },
+                          ),
+                          ChoiceChip(
+                            label: const Text('Admin'),
+                            avatar: const Icon(Icons.security, size: 16),
+                            selected: selectedTemplate == 'Admin',
+                            onSelected: (_) {
+                              setState(() {
+                                selectedTemplate = 'Admin';
+                                selectedPermissions.clear();
+                                selectedPermissions.addAll(RoleTemplates.adminPermissions);
+                              });
+                            },
+                          ),
+                          ChoiceChip(
+                            label: const Text('Resident'),
+                            avatar: const Icon(Icons.home_work, size: 16),
+                            selected: selectedTemplate == 'Resident',
+                            onSelected: (_) {
+                              setState(() {
+                                selectedTemplate = 'Resident';
+                                selectedPermissions.clear();
+                                selectedPermissions.addAll(RoleTemplates.residentPermissions);
+                              });
+                            },
+                          ),
+                          ChoiceChip(
+                            label: const Text('Member'),
+                            avatar: const Icon(Icons.person, size: 16),
+                            selected: selectedTemplate == 'Member',
+                            onSelected: (_) {
+                              setState(() {
+                                selectedTemplate = 'Member';
+                                selectedPermissions.clear();
+                                selectedPermissions.addAll(RoleTemplates.memberPermissions);
+                              });
+                            },
+                          ),
+                          ActionChip(
+                            label: const Text('Kosongkan'),
+                            avatar: const Icon(Icons.clear, size: 16),
+                            onPressed: () {
+                              setState(() {
+                                selectedTemplate = null;
+                                selectedPermissions.clear();
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Theme(
+                      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                      child: ExpansionTile(
+                        tilePadding: EdgeInsets.zero,
+                        title: const Text(
+                          'Advanced Setting',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                        subtitle: const Text(
+                          'Atur permission secara manual',
+                          style: TextStyle(fontSize: 12, color: Colors.grey),
+                        ),
+                        children: [
+                          _buildPermissionGroups(
+                            allPermissions,
+                            selectedPermissions,
+                            setState,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

@@ -5,6 +5,7 @@ import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/domain/entity/table/tabel_colum.dart';
 import 'package:frontend/domain/entity/user/user_entity.dart';
 import 'package:frontend/presentation/bloc/user_management/user_management_bloc.dart';
+import 'package:frontend/presentation/bloc/role/role_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
@@ -18,8 +19,15 @@ class UserManagementPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: serviceLocator<UserManagementBloc>()..add(FetchUsers()),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(
+          value: serviceLocator<UserManagementBloc>()..add(FetchUsers()),
+        ),
+        BlocProvider.value(
+          value: serviceLocator<RoleBloc>()..add(FetchRolesAndPermissions()),
+        ),
+      ],
       child: const UserManagementView(),
     );
   }
@@ -309,10 +317,20 @@ class UserManagementView extends StatelessWidget {
     final passwordController = TextEditingController();
     String selectedRole = user?.role ?? 'member';
 
+    final roleState = context.read<RoleBloc>().state;
+    List<String> availableRoles = ['admin', 'member', 'resident'];
+    if (roleState is RoleLoaded) {
+      availableRoles = roleState.roles.map((r) => r.name).toList();
+    }
+    
+    if (!availableRoles.contains(selectedRole) && availableRoles.isNotEmpty) {
+      availableRoles.add(selectedRole);
+    }
+
     showDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
+        builder: (stateContext, setState) => AlertDialog(
           title: Text(user == null ? 'Undang Pengguna' : 'Edit Pengguna'),
           content: SingleChildScrollView(
             child: Column(
@@ -339,7 +357,7 @@ class UserManagementView extends StatelessWidget {
                 DropdownButtonFormField<String>(
                   initialValue: selectedRole,
                   decoration: const InputDecoration(labelText: 'Role'),
-                  items: ['admin', 'member', 'resident']
+                  items: availableRoles
                       .map(
                         (role) => DropdownMenuItem(
                           value: role,
@@ -456,8 +474,11 @@ class _RoleChip extends StatelessWidget {
       case 'resident':
         color = Colors.green;
         break;
-      default:
+      case 'member':
         color = Colors.orange;
+        break;
+      default:
+        color = theme.colorScheme.secondary;
     }
 
     return Container(

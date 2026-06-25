@@ -24,6 +24,7 @@ class UserRepositoryImpl implements UserRepository {
       'name': name,
       'email': email,
       'password': password,
+      'password_confirmation': password,
       'role': role,
       'phone_number': phoneNumber,
     });
