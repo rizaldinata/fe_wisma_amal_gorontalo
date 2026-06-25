@@ -1,19 +1,23 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:formz/formz.dart';
 import 'package:intl/intl.dart';
+import 'package:shimmer/shimmer.dart';
 
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
+import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/presentation/bloc/reservation_detail_form/reservation_detail_form_bloc.dart';
-import 'package:frontend/presentation/widget/core/appbar/custom_appbar.dart';
-import 'package:frontend/presentation/widget/core/card/basic_card.dart';
+import 'package:frontend/presentation/widget/core/appbar/app_topbar.dart';
+import 'package:frontend/presentation/widget/core/card/app_section_card.dart';
+import 'package:frontend/presentation/widget/core/card/selection_card.dart';
 import 'package:frontend/presentation/widget/core/textform/textform.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/wrapper/hover_wrapper.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
-import 'package:frontend/core/constant/permission_key.dart';
-import 'package:frontend/main.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 import 'package:frontend/domain/entity/room_entity.dart';
@@ -141,49 +145,98 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
       },
       builder: (context, state) {
         final room = state.room;
-        if (room == null)
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+        final isDark = AppTheme.isDark(context);
 
-        final isDark = Theme.of(context).brightness == Brightness.dark;
+        // ── Design system tokens ─────────────────────────────────────────────
+        final textPrimary =
+            isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+        final textSecondary =
+            isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+        final primaryColor =
+            isDark ? AppColorsDark.primary : AppColorsLight.primary;
+        final borderColor =
+            isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+
+        final statusWaiting =
+            isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
+        final statusWaitingBg = isDark
+            ? AppColorsDark.statusWaitingBg
+            : AppColorsLight.statusWaitingBg;
+        final statusWaitingBorder = isDark
+            ? AppColorsDark.statusWaitingBorder
+            : AppColorsLight.statusWaitingBorder;
+
+        if (room == null) {
+          return Scaffold(
+            backgroundColor: isDark
+                ? AppColorsDark.background
+                : AppColorsLight.background,
+            body: Column(
+              children: [
+                AppTopBar(
+                  title: 'Detail Reservasi',
+                  breadcrumb: 'Reservasi / Detail',
+                  leading: IconButton(
+                    icon: const Icon(Icons.arrow_back),
+                    onPressed: () => context.router.pop(),
+                    tooltip: 'Kembali',
+                  ),
+                ),
+                Expanded(child: _buildSkeleton(isDark)),
+              ],
+            ),
+          );
+        }
 
         return Scaffold(
-          appBar: CustomAppbar(
-            icon: const Icon(Icons.arrow_back),
-            title: 'Kembali',
-            onPressed: () => context.router.pop(),
-          ),
-          body: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 20),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                /// LEFT
-                Expanded(
-                  flex: 3,
-                  child: SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        /// KAMAR
-                        BasicCard(
-                          title: 'Kamar yang dipilih',
+          backgroundColor: isDark
+              ? AppColorsDark.background
+              : AppColorsLight.background,
+          body: Column(
+            children: [
+              AppTopBar(
+                title: 'Detail Reservasi',
+                breadcrumb: 'Reservasi / Detail',
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back),
+                  onPressed: () => context.router.pop(),
+                  tooltip: 'Kembali',
+                ),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.xxxl),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      /// LEFT ─────────────────────────────────────────────────
+                      Expanded(
+                        flex: 3,
+                        child: SingleChildScrollView(
                           child: Column(
                             children: [
-                              /// BOX KAMAR (FULL WIDTH)
-                              SizedBox(
-                                width: double.infinity,
+                              /// KAMAR YANG DIPILIH
+                              AppSectionCard(
+                                title: 'Kamar yang dipilih',
+                                icon: Icons.bed_outlined,
                                 child: Container(
-                                  padding: const EdgeInsets.all(16),
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.all(AppSpacing.lg),
                                   decoration: BoxDecoration(
                                     color: isDark
-                                        ? Colors.blue.withOpacity(0.15)
-                                        : Colors.blue.shade50,
-                                    borderRadius: BorderRadius.circular(10),
+                                        ? AppColorsDark.primaryLight
+                                        : AppColorsLight.primaryLight,
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.radiusLg,
+                                    ),
                                     border: Border.all(
                                       color: isDark
-                                          ? Colors.blue.shade800
-                                          : Colors.blue.shade200,
+                                          ? AppColorsDark.primary.withValues(
+                                              alpha: 0.4,
+                                            )
+                                          : AppColorsLight.primary.withValues(
+                                              alpha: 0.3,
+                                            ),
                                     ),
                                   ),
                                   child: Column(
@@ -194,354 +247,266 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                         room.title,
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: isDark
-                                              ? Colors.white
-                                              : Colors.black87,
+                                          color: textPrimary,
                                         ),
                                       ),
-                                      const SizedBox(height: 4),
+                                      const SizedBox(height: AppSpacing.xs),
                                       Text(
                                         'No. ${room.number} • ${room.facilities.join(', ')}',
-                                        style: TextStyle(
-                                          color: isDark
-                                              ? Colors.grey.shade300
-                                              : Colors.grey.shade800,
-                                        ),
+                                        style: TextStyle(color: textSecondary),
                                       ),
-                                      const SizedBox(height: 8),
+                                      const SizedBox(height: AppSpacing.sm),
                                       Text(
                                         'Bulanan: ${room.priceFormatted} | Tahunan: Rp ${NumberFormat.decimalPattern('id').format((room.price * 12).toInt()).replaceAll(',', '.')}',
-                                        style: const TextStyle(
-                                          color: Colors.blue,
+                                        style: TextStyle(
+                                          color: primaryColor,
+                                          fontWeight: FontWeight.w500,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
 
-                        const SizedBox(height: 24),
+                              const SizedBox(height: AppSpacing.xxl),
 
-                        /// RENT TYPE
-                        BasicCard(
-                          title: 'Pilih Jenis Sewa',
-                          child: Wrap(
-                            spacing: 16,
-                            runSpacing: 16,
-                            children: [
-                              _rentCard(
-                                title: 'Sewa Bulanan',
-                                subtitle: 'Hemat jangka panjang',
-                                price: '${room.priceFormatted} / bulan',
-                                selected: state.rentType == 'Bulanan',
-                                onTap: () => context
-                                    .read<ReservationDetailFormBloc>()
-                                    .add(const RentTypeChanged('Bulanan')),
-                              ),
-
-                              _rentCard(
-                                title: 'Sewa Tahunan',
-                                subtitle: 'Lebih hemat untuk jangka panjang',
-                                price:
-                                    'Rp ${NumberFormat.decimalPattern('id').format((room.price * 12).toInt()).replaceAll(',', '.')} / tahun',
-                                selected: state.rentType == 'Tahunan',
-                                onTap: () => context
-                                    .read<ReservationDetailFormBloc>()
-                                    .add(const RentTypeChanged('Tahunan')),
-                              ),
-
-                              // Daily logic (dipertahankan)
-                              if (state.isDailyRentalEnabled &&
-                                  room.priceDaily > 0)
-                                const SizedBox.shrink(),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        /// DETAIL SEWA
-                        BasicCard(
-                          title: 'Detail Sewa',
-                          child: Column(
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: GestureDetector(
-                                      onTap: () => _pickDate(
-                                        context,
-                                        _startDateController,
-                                        (date) {
-                                          context
-                                              .read<ReservationDetailFormBloc>()
-                                              .add(StartDateChanged(date));
-                                        },
-                                      ),
-                                      child: AbsorbPointer(
-                                        child: CustomTextForm(
-                                          title: 'Tanggal Mulai',
-                                          hintText: 'Pilih tanggal',
-                                          controller: _startDateController,
-                                          isRequired: true,
-                                          suffixIcon: const Icon(
-                                            Icons.calendar_today,
-                                            size: 18,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  if (state.rentType == 'Bulanan' ||
-                                      state.rentType == 'Tahunan')
-                                    Expanded(
-                                      child: CustomTextForm(
-                                        title: state.rentType == 'Bulanan'
-                                            ? 'Jumlah Bulan'
-                                            : 'Jumlah Tahun',
-                                        hintText: state.rentType == 'Bulanan'
-                                            ? 'Berapa bulan?'
-                                            : 'Berapa tahun?',
-                                        keyboardType: TextInputType.number,
-                                        initialValue: state.durationMonths
-                                            .toString(),
-                                        onChanged: (val) {
-                                          final value = int.tryParse(val) ?? 1;
-
-                                          context
-                                              .read<ReservationDetailFormBloc>()
-                                              .add(
-                                                DurationMonthsChanged(value),
-                                              );
-                                        },
-                                        isRequired: true,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              if (state.rentType == 'Bulanan' ||
-                                  state.rentType == 'Tahunan') ...[
-                                const SizedBox(height: 16),
-                                CustomTextForm(
-                                  title: 'Estimasi Tanggal Selesai',
-                                  hintText: '-',
-                                  controller: _endDateController,
-                                  enabled: false,
-                                  isRequired: false,
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(height: 24),
-
-                        /// SKEMA PEMBAYARAN (DP / FULL) — hanya muncul jika start_date > H+7
-                        if (state.isDpAvailable) ...[
-                          BasicCard(
-                            title: 'Skema Pembayaran',
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Tanggal mulai lebih dari 7 hari ke depan. Anda bisa memilih membayar DP (uang muka 50%) sekarang dan melunasi sisa sebelum tanggal masuk.',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                                    height: 1.5,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                Wrap(
-                                  spacing: 16,
-                                  runSpacing: 16,
+                              /// JENIS SEWA
+                              AppSectionCard(
+                                title: 'Pilih Jenis Sewa',
+                                icon: Icons.date_range_outlined,
+                                child: Wrap(
+                                  spacing: AppSpacing.lg,
+                                  runSpacing: AppSpacing.lg,
                                   children: [
-                                    _paymentSchemeCard(
-                                      title: 'Bayar Penuh',
-                                      subtitle: 'Lunasi semua biaya sekarang',
-                                      amount: 'Rp ${NumberFormat.decimalPattern('id').format(state.totalPrice).replaceAll(',', '.')}',
-                                      selected: state.paymentScheme == 'full',
-                                      onTap: () => context.read<ReservationDetailFormBloc>().add(const PaymentSchemeChanged('full')),
-                                    ),
-                                    _paymentSchemeCard(
-                                      title: 'DP (Uang Muka)',
-                                      subtitle: 'Bayar 50% sekarang, lunasi sebelum tanggal masuk',
-                                      amount: 'Rp ${NumberFormat.decimalPattern('id').format(state.dpAmount.toInt()).replaceAll(',', '.')}',
-                                      selected: state.paymentScheme == 'dp',
-                                      isHighlighted: true,
-                                      onTap: () => context.read<ReservationDetailFormBloc>().add(const PaymentSchemeChanged('dp')),
-                                    ),
-                                  ],
-                                ),
-                                if (state.paymentScheme == 'dp') ...[
-                                  const SizedBox(height: 12),
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: isDark ? Colors.amber.withOpacity(0.1) : Colors.amber.shade50,
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: Colors.amber.shade300),
-                                    ),
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Icon(Icons.info_outline, size: 18, color: Colors.amber.shade700),
-                                        const SizedBox(width: 10),
-                                        Expanded(
-                                          child: Text(
-                                            'DP harus dibayar dalam 15 menit setelah pemesanan. Sisa pembayaran wajib dilunasi sebelum tanggal masuk.',
-                                            style: TextStyle(fontSize: 12, color: Colors.amber.shade800, height: 1.4),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                        ],
-
-                        /// METODE PEMBAYARAN
-                        BasicCard(
-                          title: 'Metode Pembayaran',
-                          child: Column(
-                            children: [
-                              Wrap(
-                                spacing: 16,
-                                runSpacing: 16,
-                                children: [
-                                  if (state.isMidtransEnabled)
-                                    paymentMethodCard(
-                                      title: 'Pembayaran Online',
-                                      subtitle: _midtransSubtitle(
-                                        state.midtransPaymentMethods,
-                                      ),
-                                      icon: Icons.account_balance_wallet,
-                                      selected: state.paymentMethod == 'online',
+                                    SelectionCard.vertical(
+                                      title: 'Sewa Bulanan',
+                                      subtitle: 'Hemat jangka pendek',
+                                      valueLabel:
+                                          '${room.priceFormatted} / bulan',
+                                      selected: state.rentType == 'Bulanan',
                                       onTap: () => context
                                           .read<ReservationDetailFormBloc>()
                                           .add(
-                                            const PaymentMethodChanged(
-                                              'online',
-                                            ),
+                                            const RentTypeChanged('Bulanan'),
                                           ),
+                                      minWidth: 260,
+                                      maxWidth: 358,
                                     ),
-                                  paymentMethodCard(
-                                    title: 'Pembayaran Manual',
-                                    subtitle: 'Transfer atau Cash dengan Bukti',
-                                    icon: Icons.payments,
-                                    selected: state.paymentMethod == 'tunai',
-                                    onTap: () => context
-                                        .read<ReservationDetailFormBloc>()
-                                        .add(
-                                          const PaymentMethodChanged('tunai'),
-                                        ),
-                                  ),
-                                ],
+                                    SelectionCard.vertical(
+                                      title: 'Sewa Tahunan',
+                                      subtitle:
+                                          'Lebih hemat untuk jangka panjang',
+                                      valueLabel:
+                                          'Rp ${NumberFormat.decimalPattern('id').format((room.price * 12).toInt()).replaceAll(',', '.')} / tahun',
+                                      selected: state.rentType == 'Tahunan',
+                                      onTap: () => context
+                                          .read<ReservationDetailFormBloc>()
+                                          .add(
+                                            const RentTypeChanged('Tahunan'),
+                                          ),
+                                      minWidth: 260,
+                                      maxWidth: 358,
+                                    ),
+                                    // Daily logic (dipertahankan)
+                                    if (state.isDailyRentalEnabled &&
+                                        room.priceDaily > 0)
+                                      const SizedBox.shrink(),
+                                  ],
+                                ),
                               ),
 
-                              if (state.paymentMethod == 'online') ...[
-                                const SizedBox(height: 24),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    'Pilih Metode Pembayaran',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                      color: isDark
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.onSurface
-                                          : Colors.grey.shade800,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    'Metode yang Anda pilih akan dibuka di halaman pembayaran Midtrans.',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      color: isDark
-                                          ? Colors.grey.shade400
-                                          : Colors.grey.shade500,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 12),
-                                if (state.midtransPaymentMethods.isNotEmpty &&
-                                    state.midtransPaymentMethods.every(
-                                      (m) => !m.available,
-                                    )) ...[
-                                  Container(
-                                    padding: const EdgeInsets.all(14),
-                                    decoration: BoxDecoration(
-                                      color: Colors.orange.shade50,
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(
-                                        color: Colors.orange.shade300,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
+                              const SizedBox(height: AppSpacing.xxl),
+
+                              /// DETAIL SEWA
+                              AppSectionCard(
+                                title: 'Detail Sewa',
+                                icon: Icons.calendar_month_outlined,
+                                child: Column(
+                                  children: [
+                                    Row(
                                       children: [
-                                        Icon(
-                                          Icons.build_outlined,
-                                          color: Colors.orange.shade700,
-                                          size: 20,
-                                        ),
-                                        const SizedBox(width: 12),
                                         Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                'Semua metode pembayaran online sedang maintenance',
-                                                style: TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 13,
-                                                  color: Colors.orange.shade800,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                'Tidak ada metode yang tersedia saat ini. Silakan gunakan Pembayaran Manual atau coba lagi nanti.',
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.orange.shade700,
-                                                  height: 1.4,
-                                                ),
-                                              ),
-                                              const SizedBox(height: 10),
-                                              GestureDetector(
-                                                onTap: () => context
+                                          child: GestureDetector(
+                                            onTap: () => _pickDate(
+                                              context,
+                                              _startDateController,
+                                              (date) {
+                                                context
                                                     .read<
                                                       ReservationDetailFormBloc
                                                     >()
                                                     .add(
-                                                      const PaymentMethodChanged(
-                                                        'tunai',
+                                                      StartDateChanged(date),
+                                                    );
+                                              },
+                                            ),
+                                            child: AbsorbPointer(
+                                              child: CustomTextForm(
+                                                title: 'Tanggal Mulai',
+                                                hintText: 'Pilih tanggal',
+                                                controller:
+                                                    _startDateController,
+                                                isRequired: true,
+                                                suffixIcon: const Icon(
+                                                  Icons.calendar_today,
+                                                  size: 18,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: AppSpacing.md),
+                                        if (state.rentType == 'Bulanan' ||
+                                            state.rentType == 'Tahunan')
+                                          Expanded(
+                                            child: CustomTextForm(
+                                              title: state.rentType == 'Bulanan'
+                                                  ? 'Jumlah Bulan'
+                                                  : 'Jumlah Tahun',
+                                              hintText:
+                                                  state.rentType == 'Bulanan'
+                                                  ? 'Berapa bulan?'
+                                                  : 'Berapa tahun?',
+                                              keyboardType:
+                                                  TextInputType.number,
+                                              initialValue:
+                                                  state.durationMonths
+                                                      .toString(),
+                                              onChanged: (val) {
+                                                final value =
+                                                    int.tryParse(val) ?? 1;
+                                                context
+                                                    .read<
+                                                      ReservationDetailFormBloc
+                                                    >()
+                                                    .add(
+                                                      DurationMonthsChanged(
+                                                        value,
                                                       ),
-                                                    ),
+                                                    );
+                                              },
+                                              isRequired: true,
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                    if (state.rentType == 'Bulanan' ||
+                                        state.rentType == 'Tahunan') ...[
+                                      const SizedBox(height: AppSpacing.lg),
+                                      CustomTextForm(
+                                        title: 'Estimasi Tanggal Selesai',
+                                        hintText: '-',
+                                        controller: _endDateController,
+                                        enabled: false,
+                                        isRequired: false,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(height: AppSpacing.xxl),
+
+                              /// SKEMA PEMBAYARAN — hanya muncul jika start_date > H+7
+                              if (state.isDpAvailable) ...[
+                                AppSectionCard(
+                                  title: 'Skema Pembayaran',
+                                  icon: Icons.account_balance_outlined,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Tanggal mulai lebih dari 7 hari ke depan. Anda bisa memilih membayar DP (uang muka 50%) sekarang dan melunasi sisa sebelum tanggal masuk.',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: textSecondary,
+                                          height: 1.5,
+                                        ),
+                                      ),
+                                      const SizedBox(height: AppSpacing.lg),
+                                      Wrap(
+                                        spacing: AppSpacing.lg,
+                                        runSpacing: AppSpacing.lg,
+                                        children: [
+                                          SelectionCard.vertical(
+                                            title: 'Bayar Penuh',
+                                            subtitle:
+                                                'Lunasi semua biaya sekarang',
+                                            valueLabel:
+                                                'Rp ${NumberFormat.decimalPattern('id').format(state.totalPrice).replaceAll(',', '.')}',
+                                            selected:
+                                                state.paymentScheme == 'full',
+                                            onTap: () => context
+                                                .read<
+                                                  ReservationDetailFormBloc
+                                                >()
+                                                .add(
+                                                  const PaymentSchemeChanged(
+                                                    'full',
+                                                  ),
+                                                ),
+                                            minWidth: 220,
+                                            maxWidth: 320,
+                                          ),
+                                          SelectionCard.vertical(
+                                            title: 'DP (Uang Muka)',
+                                            subtitle:
+                                                'Bayar 50% sekarang, lunasi sebelum tanggal masuk',
+                                            valueLabel:
+                                                'Rp ${NumberFormat.decimalPattern('id').format(state.dpAmount.toInt()).replaceAll(',', '.')}',
+                                            selected:
+                                                state.paymentScheme == 'dp',
+                                            accentColor: statusWaiting,
+                                            onTap: () => context
+                                                .read<
+                                                  ReservationDetailFormBloc
+                                                >()
+                                                .add(
+                                                  const PaymentSchemeChanged(
+                                                    'dp',
+                                                  ),
+                                                ),
+                                            minWidth: 220,
+                                            maxWidth: 320,
+                                          ),
+                                        ],
+                                      ),
+                                      if (state.paymentScheme == 'dp') ...[
+                                        const SizedBox(height: AppSpacing.md),
+                                        // ── Banner DP (design system tokens) ──
+                                        Container(
+                                          padding: const EdgeInsets.all(
+                                            AppSpacing.md,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: statusWaitingBg,
+                                            borderRadius: BorderRadius.circular(
+                                              AppSpacing.radiusMd,
+                                            ),
+                                            border: Border.all(
+                                              color: statusWaitingBorder,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Icon(
+                                                Icons.info_outline,
+                                                size: 18,
+                                                color: statusWaiting,
+                                              ),
+                                              const SizedBox(
+                                                width: AppSpacing.sm,
+                                              ),
+                                              Expanded(
                                                 child: Text(
-                                                  'Beralih ke Pembayaran Manual →',
+                                                  'DP harus dibayar dalam 15 menit setelah pemesanan. Sisa pembayaran wajib dilunasi sebelum tanggal masuk.',
                                                   style: TextStyle(
                                                     fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                    color:
-                                                        Colors.orange.shade800,
-                                                    decoration: TextDecoration
-                                                        .underline,
+                                                    color: statusWaiting,
+                                                    height: 1.4,
                                                   ),
                                                 ),
                                               ),
@@ -549,276 +514,573 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                                           ),
                                         ),
                                       ],
-                                    ),
+                                    ],
                                   ),
-                                  const SizedBox(height: 12),
-                                ],
-                                if (state.midtransPaymentMethods.isEmpty) ...[
-                                  Container(
-                                    padding: const EdgeInsets.all(14),
-                                    decoration: BoxDecoration(
-                                      color: isDark
-                                          ? Theme.of(
-                                              context,
-                                            ).colorScheme.surfaceContainerLow
-                                          : Colors.grey.shade100,
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(
-                                        color: isDark
-                                            ? Colors.grey.shade800
-                                            : Colors.grey.shade300,
-                                      ),
-                                    ),
-                                    child: Row(
+                                ),
+                                const SizedBox(height: AppSpacing.xxl),
+                              ],
+
+                              /// METODE PEMBAYARAN
+                              AppSectionCard(
+                                title: 'Metode Pembayaran',
+                                icon: Icons.payment_outlined,
+                                child: Column(
+                                  children: [
+                                    Wrap(
+                                      spacing: AppSpacing.lg,
+                                      runSpacing: AppSpacing.lg,
                                       children: [
-                                        Icon(
-                                          Icons.info_outline,
-                                          color: isDark
-                                              ? Colors.grey.shade400
-                                              : Colors.grey.shade500,
-                                          size: 18,
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Text(
-                                            'Tidak ada metode pembayaran online yang aktif. Hubungi pengelola atau gunakan Pembayaran Manual.',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: isDark
-                                                  ? Colors.grey.shade300
-                                                  : Colors.grey.shade600,
-                                              height: 1.4,
+                                        if (state.isMidtransEnabled)
+                                          SelectionCard.horizontal(
+                                            title: 'Pembayaran Online',
+                                            subtitle: _midtransSubtitle(
+                                              state.midtransPaymentMethods,
                                             ),
+                                            icon: Icons.account_balance_wallet,
+                                            selected:
+                                                state.paymentMethod == 'online',
+                                            onTap: () => context
+                                                .read<
+                                                  ReservationDetailFormBloc
+                                                >()
+                                                .add(
+                                                  const PaymentMethodChanged(
+                                                    'online',
+                                                  ),
+                                                ),
+                                            minWidth: 260,
+                                            maxWidth: 358,
                                           ),
+                                        SelectionCard.horizontal(
+                                          title: 'Pembayaran Manual',
+                                          subtitle:
+                                              'Transfer atau Cash dengan Bukti',
+                                          icon: Icons.payments,
+                                          selected:
+                                              state.paymentMethod == 'tunai',
+                                          onTap: () => context
+                                              .read<ReservationDetailFormBloc>()
+                                              .add(
+                                                const PaymentMethodChanged(
+                                                  'tunai',
+                                                ),
+                                              ),
+                                          minWidth: 260,
+                                          maxWidth: 358,
                                         ),
                                       ],
                                     ),
-                                  ),
-                                ] else
-                                  GridView.builder(
-                                    shrinkWrap: true,
-                                    physics:
-                                        const NeverScrollableScrollPhysics(),
-                                    gridDelegate:
-                                        const SliverGridDelegateWithFixedCrossAxisCount(
-                                          crossAxisCount: 2,
-                                          mainAxisSpacing: 8,
-                                          crossAxisSpacing: 8,
-                                          mainAxisExtent: 72,
+
+                                    if (state.paymentMethod == 'online') ...[
+                                      const SizedBox(height: AppSpacing.xxl),
+                                      Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          'Pilih Metode Pembayaran',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14,
+                                            color: textPrimary,
+                                          ),
                                         ),
-                                    itemCount:
-                                        state.midtransPaymentMethods.length,
-                                    itemBuilder: (context, index) {
-                                      final method =
-                                          state.midtransPaymentMethods[index];
-                                      final isSelected =
-                                          state.selectedMidtransMethod ==
-                                          method.code;
-                                      return _midtransMethodCard(
-                                        method: method,
-                                        selected: isSelected,
-                                        onTap: method.available
-                                            ? () => context
-                                                  .read<
-                                                    ReservationDetailFormBloc
-                                                  >()
-                                                  .add(
-                                                    SelectedMidtransMethodChanged(
-                                                      isSelected
-                                                          ? null
-                                                          : method.code,
-                                                    ),
-                                                  )
-                                            : () {},
-                                      );
-                                    },
-                                  ),
-                              ] else if (state.paymentMethod == 'tunai') ...[
-                                const SizedBox(height: 16),
-                                Container(
-                                  padding: const EdgeInsets.all(14),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange.shade50,
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: Colors.orange.shade200,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.info_outline,
-                                        color: Colors.orange.shade700,
-                                        size: 20,
                                       ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              'Pembayaran Manual',
-                                              style: TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                                fontSize: 13,
-                                                color: Colors.orange.shade700,
-                                              ),
+                                      const SizedBox(height: AppSpacing.xs),
+                                      Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          'Metode yang Anda pilih akan dibuka di halaman pembayaran Midtrans.',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: AppSpacing.md),
+
+                                      // ── Semua metode maintenance ──────────
+                                      if (state.midtransPaymentMethods
+                                              .isNotEmpty &&
+                                          state.midtransPaymentMethods.every(
+                                            (m) => !m.available,
+                                          )) ...[
+                                        Container(
+                                          padding: const EdgeInsets.all(
+                                            AppSpacing.lg,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: statusWaitingBg,
+                                            borderRadius: BorderRadius.circular(
+                                              AppSpacing.radiusMd,
                                             ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              'Lakukan transfer bank atau bayar cash, lalu unggah bukti pembayaran di langkah berikutnya.',
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                color: Colors.orange.shade600,
+                                            border: Border.all(
+                                              color: statusWaitingBorder,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Icon(
+                                                Icons.build_outlined,
+                                                color: statusWaiting,
+                                                size: 20,
+                                              ),
+                                              const SizedBox(
+                                                width: AppSpacing.md,
+                                              ),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      'Semua metode pembayaran online sedang maintenance',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 13,
+                                                        color: statusWaiting,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(
+                                                      height: AppSpacing.xs,
+                                                    ),
+                                                    Text(
+                                                      'Tidak ada metode yang tersedia saat ini. Silakan gunakan Pembayaran Manual atau coba lagi nanti.',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: statusWaiting,
+                                                        height: 1.4,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(
+                                                      height: AppSpacing.sm,
+                                                    ),
+                                                    GestureDetector(
+                                                      onTap: () => context
+                                                          .read<
+                                                            ReservationDetailFormBloc
+                                                          >()
+                                                          .add(
+                                                            const PaymentMethodChanged(
+                                                              'tunai',
+                                                            ),
+                                                          ),
+                                                      child: Text(
+                                                        'Beralih ke Pembayaran Manual →',
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          color: statusWaiting,
+                                                          decoration: TextDecoration
+                                                              .underline,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const SizedBox(height: AppSpacing.md),
+                                      ],
+
+                                      // ── Tidak ada metode ──────────────────
+                                      if (state
+                                          .midtransPaymentMethods.isEmpty) ...[
+                                        Container(
+                                          padding: const EdgeInsets.all(
+                                            AppSpacing.lg,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: isDark
+                                                ? AppColorsDark.surface
+                                                : AppColorsLight.surface,
+                                            borderRadius: BorderRadius.circular(
+                                              AppSpacing.radiusMd,
+                                            ),
+                                            border: Border.all(
+                                              color: borderColor,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.info_outline,
+                                                color: textSecondary,
+                                                size: 18,
+                                              ),
+                                              const SizedBox(
+                                                width: AppSpacing.md,
+                                              ),
+                                              Expanded(
+                                                child: Text(
+                                                  'Tidak ada metode pembayaran online yang aktif. Hubungi pengelola atau gunakan Pembayaran Manual.',
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: textSecondary,
+                                                    height: 1.4,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ] else
+                                        GridView.builder(
+                                          shrinkWrap: true,
+                                          physics:
+                                              const NeverScrollableScrollPhysics(),
+                                          gridDelegate:
+                                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                                crossAxisCount: 2,
+                                                mainAxisSpacing:
+                                                    AppSpacing.sm,
+                                                crossAxisSpacing: AppSpacing.sm,
+                                                mainAxisExtent: 72,
+                                              ),
+                                          itemCount: state
+                                              .midtransPaymentMethods.length,
+                                          itemBuilder: (context, index) {
+                                            final method = state
+                                                .midtransPaymentMethods[index];
+                                            final isSelected =
+                                                state.selectedMidtransMethod ==
+                                                method.code;
+                                            return _midtransMethodCard(
+                                              method: method,
+                                              selected: isSelected,
+                                              onTap: method.available
+                                                  ? () => context
+                                                        .read<
+                                                          ReservationDetailFormBloc
+                                                        >()
+                                                        .add(
+                                                          SelectedMidtransMethodChanged(
+                                                            isSelected
+                                                                ? null
+                                                                : method.code,
+                                                          ),
+                                                        )
+                                                  : () {},
+                                            );
+                                          },
+                                        ),
+                                    ] else if (state.paymentMethod ==
+                                        'tunai') ...[
+                                      const SizedBox(height: AppSpacing.lg),
+                                      // ── Banner Pembayaran Manual ────────────
+                                      Container(
+                                        padding: const EdgeInsets.all(
+                                          AppSpacing.lg,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: statusWaitingBg,
+                                          borderRadius: BorderRadius.circular(
+                                            AppSpacing.radiusMd,
+                                          ),
+                                          border: Border.all(
+                                            color: statusWaitingBorder,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Icon(
+                                              Icons.info_outline,
+                                              color: statusWaiting,
+                                              size: 20,
+                                            ),
+                                            const SizedBox(
+                                              width: AppSpacing.md,
+                                            ),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    'Pembayaran Manual',
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      fontSize: 13,
+                                                      color: statusWaiting,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(
+                                                    height: AppSpacing.xs,
+                                                  ),
+                                                  Text(
+                                                    'Lakukan transfer bank atau bayar cash, lalu unggah bukti pembayaran di langkah berikutnya.',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: statusWaiting,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
                                             ),
                                           ],
                                         ),
                                       ),
                                     ],
-                                  ),
+                                  ],
                                 ),
-                              ],
+                              ),
                             ],
-                          ),
+                          )
+                              .animate()
+                              .fadeIn(duration: 300.ms)
+                              .slideY(
+                                begin: 0.05,
+                                end: 0,
+                                duration: 300.ms,
+                              ),
                         ),
-                      ],
-                    ),
-                  ),
-                ),
+                      ),
 
-                const SizedBox(width: 24),
+                      const SizedBox(width: AppSpacing.xxl),
 
-                /// RIGHT
-                Expanded(
-                  flex: 1,
-                  child: Column(
-                    children: [
-                      BasicCard(
-                        title: 'Ringkasan Biaya',
+                      /// RIGHT ────────────────────────────────────────────────
+                      Expanded(
+                        flex: 1,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(room.title),
-                                Text(
-                                  '${state.duration} '
-                                  '${state.rentType == 'Bulanan'
-                                      ? 'Bulan'
-                                      : state.rentType == 'Tahunan'
-                                      ? 'Tahun'
-                                      : 'Hari'}',
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 10),
-
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Harga / '
-                                  '${state.rentType == 'Bulanan'
-                                      ? 'bulan'
-                                      : state.rentType == 'Tahunan'
-                                      ? 'tahun'
-                                      : 'hari'}',
-                                ),
-                                Text(
-                                  state.rentType == 'Bulanan'
-                                      ? room.priceFormatted
-                                      : state.rentType == 'Tahunan'
-                                      ? 'Rp ${NumberFormat.decimalPattern('id').format((room.price * 12).toInt()).replaceAll(',', '.')}'
-                                      : room.priceDailyFormatted,
-                                ),
-                              ],
-                            ),
-
-                            const Divider(),
-
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Total Biaya'),
-                                Text(
-                                  'Rp ${NumberFormat.decimalPattern('id').format(state.totalPrice).replaceAll(',', '.')}',
-                                  style: const TextStyle(
-                                    color: Colors.blue,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-
-                            if (state.paymentScheme == 'dp') ...[
-                              const Divider(),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            // ── Ringkasan Biaya ─────────────────────────────
+                            AppSectionCard(
+                              title: 'Ringkasan Biaya',
+                              icon: Icons.receipt_long_outlined,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'Bayar Sekarang (DP)',
-                                    style: TextStyle(fontWeight: FontWeight.bold),
+                                  // Baris nama kamar + durasi
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        room.title,
+                                        style:
+                                            TextStyle(color: textSecondary),
+                                      ),
+                                      Text(
+                                        '${state.duration} '
+                                        '${state.rentType == 'Bulanan' ? 'Bulan' : state.rentType == 'Tahunan' ? 'Tahun' : 'Hari'}',
+                                        style:
+                                            TextStyle(color: textSecondary),
+                                      ),
+                                    ],
                                   ),
-                                  Text(
-                                    'Rp ${NumberFormat.decimalPattern('id').format(state.dpAmount.toInt()).replaceAll(',', '.')}',
-                                    style: const TextStyle(
-                                      color: Colors.orange,
-                                      fontWeight: FontWeight.bold,
+                                  const SizedBox(height: AppSpacing.sm),
+
+                                  // Baris harga per periode
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Harga / '
+                                        '${state.rentType == 'Bulanan' ? 'bulan' : state.rentType == 'Tahunan' ? 'tahun' : 'hari'}',
+                                        style:
+                                            TextStyle(color: textSecondary),
+                                      ),
+                                      Text(
+                                        state.rentType == 'Bulanan'
+                                            ? room.priceFormatted
+                                            : state.rentType == 'Tahunan'
+                                            ? 'Rp ${NumberFormat.decimalPattern('id').format((room.price * 12).toInt()).replaceAll(',', '.')}'
+                                            : room.priceDailyFormatted,
+                                        style:
+                                            TextStyle(color: textSecondary),
+                                      ),
+                                    ],
+                                  ),
+
+                                  // ── Divider borderLight ──────────────────
+                                  const SizedBox(height: AppSpacing.sm),
+                                  Container(
+                                    height: 1,
+                                    color: borderColor,
+                                  ),
+                                  const SizedBox(height: AppSpacing.sm),
+
+                                  // Baris Total Biaya
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        'Total Biaya',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          color: textPrimary,
+                                        ),
+                                      ),
+                                      Text(
+                                        'Rp ${NumberFormat.decimalPattern('id').format(state.totalPrice).replaceAll(',', '.')}',
+                                        style: TextStyle(
+                                          color: primaryColor,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+
+                                  if (state.paymentScheme == 'dp') ...[
+                                    const SizedBox(height: AppSpacing.xs),
+                                    Container(height: 1, color: borderColor),
+                                    const SizedBox(height: AppSpacing.xs),
+
+                                    // Baris DP sekarang
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Bayar Sekarang (DP)',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: textPrimary,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Rp ${NumberFormat.decimalPattern('id').format(state.dpAmount.toInt()).replaceAll(',', '.')}',
+                                          style: TextStyle(
+                                            color: statusWaiting,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ),
+                                    const SizedBox(height: AppSpacing.xs),
+
+                                    // Baris pelunasan
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'Pelunasan (sebelum tanggal masuk)',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: textSecondary,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Rp ${NumberFormat.decimalPattern('id').format(state.dpAmount.toInt()).replaceAll(',', '.')}',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            color: textSecondary,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ],
                               ),
-                              const SizedBox(height: 4),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Pelunasan (sebelum tanggal masuk)',
-                                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                                  ),
-                                  Text(
-                                    'Rp ${NumberFormat.decimalPattern('id').format(state.dpAmount.toInt()).replaceAll(',', '.')}',
-                                    style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
-                                  ),
-                                ],
+                            ),
+
+                            const SizedBox(height: AppSpacing.xl),
+
+                            // ── Tombol Pesan Kamar ──────────────────────────
+                            SizedBox(
+                              width: double.infinity,
+                              child: BasicButton(
+                                label: 'Pesan Kamar',
+                                isLoading: state.status ==
+                                    FormzSubmissionStatus.inProgress,
+                                onPressed: () {
+                                  _showConfirmReservationDialog(context);
+                                },
                               ),
-                            ],
+                            ),
+
+                            const SizedBox(height: AppSpacing.sm),
+
+                            // ── Catatan bawah ────────────────────────────────
+                            Text(
+                              'Setelah submit, Anda akan diarahkan untuk melakukan pembayaran',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ],
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
-
-                      SizedBox(
-                        width: double.infinity,
-                        child: BasicButton(
-                          label: 'Pesan Kamar',
-                          isLoading:
-                              state.status == FormzSubmissionStatus.inProgress,
-                          onPressed: () {
-                            _showConfirmReservationDialog(context);
-                          },
-                        ),
-                      ),
-
-                      const SizedBox(height: 8),
-
-                      const Text(
-                        'Setelah submit, Anda akan diarahkan untuk melakukan pembayaran',
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
-                        textAlign: TextAlign.center,
+                        )
+                            .animate()
+                            .fadeIn(delay: 100.ms, duration: 300.ms)
+                            .slideY(
+                              begin: 0.05,
+                              end: 0,
+                              duration: 300.ms,
+                            ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSkeleton(bool isDark) {
+    final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
+    final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.xxxl),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: 3,
+            child: Column(
+              children: List.generate(
+                3,
+                (i) => Padding(
+                  padding: EdgeInsets.only(
+                    bottom: i < 2 ? AppSpacing.xxl : 0,
+                  ),
+                  child: Shimmer.fromColors(
+                    baseColor: baseColor,
+                    highlightColor: highlightColor,
+                    child: Container(
+                      height: i == 0 ? 120 : 180,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusLg,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.xxl),
+          Expanded(
+            flex: 1,
+            child: Shimmer.fromColors(
+              baseColor: baseColor,
+              highlightColor: highlightColor,
+              child: Container(
+                height: 260,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -887,6 +1149,16 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
       return;
     }
 
+    final isDark = AppTheme.isDark(context);
+    final statusWaiting =
+        isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
+    final statusWaitingBg = isDark
+        ? AppColorsDark.statusWaitingBg
+        : AppColorsLight.statusWaitingBg;
+    final statusWaitingBorder = isDark
+        ? AppColorsDark.statusWaitingBorder
+        : AppColorsLight.statusWaitingBorder;
+
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -898,7 +1170,7 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
             const Text(
               'Apakah Anda yakin ingin melakukan pemesanan kamar ini?',
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AppSpacing.lg),
             _infoRow('Kamar', state.room?.title ?? '-'),
             _infoRow(
               'Mulai',
@@ -909,10 +1181,7 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
               'Rp ${NumberFormat.decimalPattern('id').format(state.totalPrice).replaceAll(',', '.')}',
             ),
             if (state.paymentScheme == 'dp') ...[
-              _infoRow(
-                'Skema',
-                'DP (Uang Muka 50%)',
-              ),
+              _infoRow('Skema', 'DP (Uang Muka 50%)'),
               _infoRow(
                 'Bayar Sekarang',
                 'Rp ${NumberFormat.decimalPattern('id').format(state.dpAmount.toInt()).replaceAll(',', '.')}',
@@ -928,17 +1197,21 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                   : 'Manual',
             ),
             if (state.paymentScheme == 'dp') ...[
-              const SizedBox(height: 12),
+              const SizedBox(height: AppSpacing.md),
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(AppSpacing.sm),
                 decoration: BoxDecoration(
-                  color: Colors.amber.shade50,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.amber.shade300),
+                  color: statusWaitingBg,
+                  borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                  border: Border.all(color: statusWaitingBorder),
                 ),
                 child: Text(
                   'DP harus dibayar dalam 15 menit. Sisa pembayaran wajib dilunasi sebelum tanggal masuk.',
-                  style: TextStyle(fontSize: 11, color: Colors.amber.shade800, height: 1.4),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: statusWaiting,
+                    height: 1.4,
+                  ),
                 ),
               ),
             ],
@@ -956,7 +1229,11 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
                 const SubmitReservation(),
               );
             },
-            child: Text(state.paymentScheme == 'dp' ? 'Ya, Bayar DP Sekarang' : 'Ya, Pesan Sekarang'),
+            child: Text(
+              state.paymentScheme == 'dp'
+                  ? 'Ya, Bayar DP Sekarang'
+                  : 'Ya, Pesan Sekarang',
+            ),
           ),
         ],
       ),
@@ -981,227 +1258,6 @@ class _ReservationDetailFormViewState extends State<ReservationDetailFormView> {
       ),
     );
   }
-}
-
-/// RENT CARD
-Widget _rentCard({
-  required String title,
-  required String subtitle,
-  required String price,
-  required bool selected,
-  required VoidCallback onTap,
-}) {
-  return Builder(
-    builder: (context) {
-      final isDark = Theme.of(context).brightness == Brightness.dark;
-      return HoverTapWrapper(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        hoverColor: Colors.blue.withOpacity(0.05),
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 260, maxWidth: 358),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: selected
-                ? (isDark ? Colors.blue.withOpacity(0.15) : Colors.blue.shade50)
-                : (isDark
-                      ? Theme.of(context).colorScheme.surface
-                      : Colors.white),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected
-                  ? Colors.blue
-                  : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  Icon(
-                    selected
-                        ? Icons.radio_button_checked
-                        : Icons.radio_button_off,
-                    color: selected
-                        ? Colors.blue
-                        : (isDark ? Colors.grey.shade500 : Colors.grey),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                price,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: selected ? Colors.blue : Colors.green,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
-
-/// PAYMENT SCHEME CARD (Full / DP)
-Widget _paymentSchemeCard({
-  required String title,
-  required String subtitle,
-  required String amount,
-  required bool selected,
-  required VoidCallback onTap,
-  bool isHighlighted = false,
-}) {
-  return Builder(
-    builder: (context) {
-      final isDark = Theme.of(context).brightness == Brightness.dark;
-      final Color accentColor = isHighlighted ? Colors.orange : Colors.blue;
-      final Color accentShade50 = isHighlighted ? Colors.orange.shade50 : Colors.blue.shade50;
-      return HoverTapWrapper(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        hoverColor: accentColor.withOpacity(0.05),
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 220, maxWidth: 320),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: selected
-                ? (isDark ? accentColor.withOpacity(0.15) : accentShade50)
-                : (isDark ? Theme.of(context).colorScheme.surface : Colors.white),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected
-                  ? accentColor
-                  : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
-              width: selected ? 1.5 : 1,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Icon(
-                    selected ? Icons.radio_button_checked : Icons.radio_button_off,
-                    color: selected ? accentColor : (isDark ? Colors.grey.shade500 : Colors.grey),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                amount,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: selected ? accentColor : Colors.green,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
-}
-
-/// PAYMENT METHOD CARD
-Widget paymentMethodCard({
-  required String title,
-  required String subtitle,
-  required IconData icon,
-  required bool selected,
-  required VoidCallback onTap,
-}) {
-  return Builder(
-    builder: (context) {
-      final isDark = Theme.of(context).brightness == Brightness.dark;
-      return HoverTapWrapper(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        hoverColor: Colors.blue.withOpacity(0.05),
-        child: Container(
-          constraints: const BoxConstraints(minWidth: 260, maxWidth: 358),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: selected
-                ? (isDark ? Colors.blue.withOpacity(0.15) : Colors.blue.shade50)
-                : (isDark
-                      ? Theme.of(context).colorScheme.surface
-                      : Colors.white),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: selected
-                  ? Colors.blue
-                  : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                color: selected
-                    ? Colors.blue
-                    : (isDark ? Colors.grey.shade400 : Colors.grey),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: isDark
-                            ? Colors.grey.shade400
-                            : Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                selected ? Icons.radio_button_checked : Icons.radio_button_off,
-                color: selected
-                    ? Colors.blue
-                    : (isDark ? Colors.grey.shade500 : Colors.grey),
-              ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
 }
 
 // ── Midtrans payment method metadata ─────────────────────────────────────────
@@ -1332,7 +1388,7 @@ Widget _midtransMethodCard({
 }) {
   return Builder(
     builder: (context) {
-      final isDark = Theme.of(context).brightness == Brightness.dark;
+      final isDark = AppTheme.isDark(context);
       final info =
           _kMidtransMethodMap[method.code] ??
           _MidtransMethodInfo(
@@ -1344,35 +1400,49 @@ Widget _midtransMethodCard({
       final isMaintenance = method.maintenance;
       final isUnavailable = !method.available;
 
+      // ── Design system tokens ───────────────────────────────────────────────
+      final primaryColor =
+          isDark ? AppColorsDark.primary : AppColorsLight.primary;
+      final primaryLight =
+          isDark ? AppColorsDark.surfaceVariant : AppColorsLight.primaryLight;
+      final surfaceColor =
+          isDark ? AppColorsDark.surface : AppColorsLight.surface;
+      final borderColor =
+          isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+      final textPrimary =
+          isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+      final textSecondary =
+          isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
+      final statusWaiting =
+          isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting;
+      final iconBg =
+          isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant;
+      final iconBgSelected =
+          isDark
+          ? AppColorsDark.primary.withValues(alpha: 0.2)
+          : AppColorsLight.primary.withValues(alpha: 0.12);
+
       return Opacity(
         opacity: isUnavailable ? 0.5 : 1.0,
         child: HoverTapWrapper(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
           hoverColor: isUnavailable
               ? Colors.transparent
-              : Colors.blue.withValues(alpha: 0.04),
+              : primaryColor.withValues(alpha: 0.04),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 150),
             decoration: BoxDecoration(
-              color: selected
-                  ? (isDark
-                        ? Colors.blue.withOpacity(0.15)
-                        : Colors.blue.shade50)
-                  : (isDark
-                        ? Theme.of(context).colorScheme.surface
-                        : Colors.white),
-              borderRadius: BorderRadius.circular(10),
+              color: selected ? primaryLight : surfaceColor,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
               border: Border.all(
-                color: selected
-                    ? Colors.blue
-                    : (isDark ? Colors.grey.shade800 : Colors.grey.shade300),
+                color: selected ? primaryColor : borderColor,
                 width: selected ? 1.5 : 1.0,
               ),
               boxShadow: selected
                   ? [
                       BoxShadow(
-                        color: Colors.blue.withValues(alpha: 0.12),
+                        color: primaryColor.withValues(alpha: 0.12),
                         blurRadius: 6,
                         offset: const Offset(0, 2),
                       ),
@@ -1380,7 +1450,10 @@ Widget _midtransMethodCard({
                   : null,
             ),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.md,
+                vertical: AppSpacing.sm,
+              ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -1389,26 +1462,16 @@ Widget _midtransMethodCard({
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: selected
-                          ? (isDark
-                                ? Colors.blue.withOpacity(0.2)
-                                : Colors.blue.withValues(alpha: 0.12))
-                          : (isDark
-                                ? Colors.grey.shade900
-                                : Colors.grey.shade100),
-                      borderRadius: BorderRadius.circular(8),
+                      color: selected ? iconBgSelected : iconBg,
+                      borderRadius: BorderRadius.circular(AppSpacing.radiusSm),
                     ),
                     child: Icon(
                       info.icon,
                       size: 20,
-                      color: selected
-                          ? Colors.blue
-                          : (isDark
-                                ? Colors.grey.shade400
-                                : Colors.grey.shade500),
+                      color: selected ? primaryColor : textSecondary,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: AppSpacing.sm),
                   // Nama + deskripsi
                   Expanded(
                     child: Column(
@@ -1421,13 +1484,7 @@ Widget _midtransMethodCard({
                             fontWeight: FontWeight.bold,
                             fontSize: 12.5,
                             height: 1.3,
-                            color: selected
-                                ? (isDark
-                                      ? Colors.blue.shade300
-                                      : Colors.blue.shade800)
-                                : (isDark
-                                      ? Theme.of(context).colorScheme.onSurface
-                                      : Colors.black87),
+                            color: selected ? primaryColor : textPrimary,
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -1439,7 +1496,7 @@ Widget _midtransMethodCard({
                             style: TextStyle(
                               fontSize: 10.5,
                               height: 1.2,
-                              color: Colors.orange.shade600,
+                              color: statusWaiting,
                               fontWeight: FontWeight.w500,
                             ),
                             maxLines: 1,
@@ -1451,9 +1508,7 @@ Widget _midtransMethodCard({
                             style: TextStyle(
                               fontSize: 10.5,
                               height: 1.2,
-                              color: isDark
-                                  ? Colors.grey.shade400
-                                  : Colors.grey.shade500,
+                              color: textSecondary,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -1461,22 +1516,18 @@ Widget _midtransMethodCard({
                       ],
                     ),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: AppSpacing.xs),
                   if (isMaintenance)
                     Icon(
                       Icons.build_outlined,
                       size: 16,
-                      color: Colors.orange.shade400,
+                      color: statusWaiting,
                     )
                   else
                     Icon(
                       selected ? Icons.check_circle : Icons.circle_outlined,
                       size: 18,
-                      color: selected
-                          ? Colors.blue
-                          : (isDark
-                                ? Colors.grey.shade700
-                                : Colors.grey.shade300),
+                      color: selected ? primaryColor : borderColor,
                     ),
                 ],
               ),

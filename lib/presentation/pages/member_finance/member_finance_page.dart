@@ -152,14 +152,14 @@ class _MemberFinancePageState extends State<MemberFinancePage> {
                         );
                       },
                     ),
-                    IconButton(
+                    ElevatedButton.icon(
                       onPressed: () {
                         _bloc.add(FetchMemberFinanceSummary());
                         _bloc.add(FetchMemberInvoices());
                         _bloc.add(FetchMemberPayments());
                       },
-                      icon: const Icon(Icons.refresh_outlined),
-                      tooltip: 'Refresh',
+                      icon: const Icon(Icons.refresh, size: 18),
+                      label: const Text('Refresh'),
                     ),
                   ],
                 ),
