@@ -20,18 +20,24 @@ class AppTopBar extends StatelessWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
-    final surfaceColor = isDark ? AppColorsDark.surface : AppColorsLight.surface;
-    final borderLightColor = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
-    final textSecondaryColor = isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary;
-    final textPrimaryColor = isDark ? AppColorsDark.textPrimary : AppColorsLight.textPrimary;
+    final surfaceColor = isDark
+        ? AppColorsDark.surface
+        : AppColorsLight.surface;
+    final borderLightColor = isDark
+        ? AppColorsDark.borderLight
+        : AppColorsLight.borderLight;
+    final textSecondaryColor = isDark
+        ? AppColorsDark.textSecondary
+        : AppColorsLight.textSecondary;
+    final textPrimaryColor = isDark
+        ? AppColorsDark.textPrimary
+        : AppColorsLight.textPrimary;
 
     return Container(
       height: 64,
       decoration: BoxDecoration(
         color: surfaceColor,
-        border: Border(
-          bottom: BorderSide(color: borderLightColor),
-        ),
+        border: Border(bottom: BorderSide(color: borderLightColor)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxl),
       child: Row(
