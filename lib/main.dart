@@ -82,11 +82,13 @@ extension FeatureToggleContext on BuildContext {
         bool? checkRecursive(
           List<FeatureToggleModel> toggles,
           String searchKey,
+          [bool parentActive = true]
         ) {
           for (var toggle in toggles) {
-            if (toggle.key == searchKey) return toggle.isActive;
+            bool currentActive = parentActive && toggle.isActive;
+            if (toggle.key == searchKey) return currentActive;
             if (toggle.children.isNotEmpty) {
-              final result = checkRecursive(toggle.children, searchKey);
+              final result = checkRecursive(toggle.children, searchKey, currentActive);
               if (result != null) return result;
             }
           }

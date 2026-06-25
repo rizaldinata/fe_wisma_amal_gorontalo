@@ -19,7 +19,7 @@ import '../../bloc/setting/setting_state.dart';
 
 @RoutePage()
 class FeatureTogglePage extends StatefulWidget {
-  const FeatureTogglePage({Key? key}) : super(key: key);
+  const FeatureTogglePage({super.key});
 
   @override
   _FeatureTogglePageState createState() => _FeatureTogglePageState();
@@ -50,7 +50,6 @@ class _FeatureTogglePageState extends State<FeatureTogglePage> {
   void dispose() {
     _paymentCubit.close();
     _midtransFeeCubit.close();
-    // SettingBloc adalah lazySingleton, tidak di-close di sini
     super.dispose();
   }
 
