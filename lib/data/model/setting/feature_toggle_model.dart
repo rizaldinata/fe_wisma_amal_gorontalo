@@ -7,6 +7,7 @@ class FeatureToggleModel {
   final String? icon;
   final bool isActive;
   final bool isLocked;
+  final bool isLicensed;
   final int sortOrder;
   final List<FeatureToggleModel> children;
 
@@ -19,6 +20,7 @@ class FeatureToggleModel {
     this.icon,
     required this.isActive,
     required this.isLocked,
+    this.isLicensed = true,
     required this.sortOrder,
     this.children = const [],
   });
@@ -33,6 +35,7 @@ class FeatureToggleModel {
       icon: json['icon'],
       isActive: json['is_active'] == 1 || json['is_active'] == true,
       isLocked: json['is_locked'] == 1 || json['is_locked'] == true,
+      isLicensed: json['is_licensed'] ?? true, // Default true jika tidak ada
       sortOrder: json['sort_order'] ?? 0,
       children: json['children'] != null
           ? (json['children'] as List)
@@ -51,6 +54,7 @@ class FeatureToggleModel {
     String? icon,
     bool? isActive,
     bool? isLocked,
+    bool? isLicensed,
     int? sortOrder,
     List<FeatureToggleModel>? children,
   }) {
@@ -63,6 +67,7 @@ class FeatureToggleModel {
       icon: icon ?? this.icon,
       isActive: isActive ?? this.isActive,
       isLocked: isLocked ?? this.isLocked,
+      isLicensed: isLicensed ?? this.isLicensed,
       sortOrder: sortOrder ?? this.sortOrder,
       children: children ?? this.children,
     );

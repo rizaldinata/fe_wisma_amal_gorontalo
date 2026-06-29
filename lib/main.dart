@@ -85,7 +85,7 @@ extension FeatureToggleContext on BuildContext {
           [bool parentActive = true]
         ) {
           for (var toggle in toggles) {
-            bool currentActive = parentActive && toggle.isActive;
+            bool currentActive = parentActive && toggle.isActive && toggle.isLicensed;
             if (toggle.key == searchKey) return currentActive;
             if (toggle.children.isNotEmpty) {
               final result = checkRecursive(toggle.children, searchKey, currentActive);

@@ -206,7 +206,11 @@ class _FeatureTogglePageState extends State<FeatureTogglePage> {
             ),
             title: Text(
               module.name,
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              style: TextStyle(
+                fontWeight: FontWeight.bold, 
+                fontSize: 16,
+                color: !module.isLicensed ? Colors.grey : null,
+              ),
             ),
             subtitle: module.description != null
                 ? Text(module.description!)
@@ -218,12 +222,14 @@ class _FeatureTogglePageState extends State<FeatureTogglePage> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : Tooltip(
-                    message: module.isLocked
-                        ? 'Modul inti tidak dapat dimatikan'
-                        : '',
+                    message: !module.isLicensed 
+                        ? 'Fitur ini tidak tersedia dalam paket Anda'
+                        : module.isLocked
+                            ? 'Modul inti tidak dapat dimatikan'
+                            : '',
                     child: Switch(
                       value: module.isActive,
-                      onChanged: module.isLocked
+                      onChanged: (module.isLocked || !module.isLicensed)
                           ? null
                           : (val) => _onToggleChanged(module, val),
                     ),
@@ -281,7 +287,7 @@ class _FeatureTogglePageState extends State<FeatureTogglePage> {
         child.name,
         style: TextStyle(
           fontSize: 14,
-          color: module.isActive ? Colors.black87 : Colors.grey,
+          color: (!child.isLicensed) ? Colors.grey.withOpacity(0.5) : (module.isActive ? Colors.black87 : Colors.grey),
         ),
       ),
       subtitle: child.description != null
@@ -289,7 +295,7 @@ class _FeatureTogglePageState extends State<FeatureTogglePage> {
               child.description!,
               style: TextStyle(
                 fontSize: 12,
-                color: module.isActive ? Colors.grey[600] : Colors.grey[400],
+                color: (!child.isLicensed) ? Colors.grey.withOpacity(0.5) : (module.isActive ? Colors.grey[600] : Colors.grey[400]),
               ),
             )
           : null,
@@ -299,11 +305,14 @@ class _FeatureTogglePageState extends State<FeatureTogglePage> {
               height: 20,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
-          : Switch(
-              value: effectiveIsActive,
-              onChanged: (!module.isActive || child.isLocked)
-                  ? null
-                  : (val) => _onToggleChanged(child, val),
+          : Tooltip(
+              message: !child.isLicensed ? 'Fitur ini tidak tersedia dalam paket Anda' : '',
+              child: Switch(
+                value: effectiveIsActive,
+                onChanged: (!module.isActive || child.isLocked || !child.isLicensed)
+                    ? null
+                    : (val) => _onToggleChanged(child, val),
+              ),
             ),
     );
   }
