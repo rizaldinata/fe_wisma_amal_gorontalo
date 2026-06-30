@@ -37,6 +37,7 @@ abstract class PermissionKeys {
   static const financeDashboardView = 'finance-dashboard-view';
   static const financePaymentView = 'finance-payment-view';
   static const financePaymentVerify = 'finance-payment-verify';
+  static const financePaymentRefund = 'finance-payment-refund';
   static const financeInvoiceView = 'finance-invoice-view';
   static const financeInvoiceCreate = 'finance-invoice-create';
   static const financeExpenseView = 'finance-expense-view';

@@ -274,6 +274,15 @@ class _AppLayoutPageState extends State<AppLayoutPage>
                               icon: Icons.payments_outlined,
                               page: const PaymentVerificationRoute(),
                             ),
+                          if (context.can(
+                                PermissionKeys.financePaymentRefund,
+                              ) &&
+                              context.isFeatureEnabled('finance_invoice'))
+                            SidebarItem(
+                              label: 'Permintaan Refund',
+                              icon: Icons.currency_exchange_outlined,
+                              page: const RefundRequestRoute(),
+                            ),
                           if (context.can(PermissionKeys.financeFineView) &&
                               context.isFeatureEnabled('finance_fine'))
                             SidebarItem(
