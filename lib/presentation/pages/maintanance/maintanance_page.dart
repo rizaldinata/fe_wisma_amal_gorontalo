@@ -2,6 +2,8 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/core/constant/permission_key.dart';
+import 'package:frontend/main.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
@@ -149,7 +151,7 @@ class _MaintananceViewState extends State<_MaintananceView> {
             AppTopBar(
             title: 'Jadwal Pemeliharaan',
             breadcrumb: 'Operasional / Jadwal Pemeliharaan',
-            action: ElevatedButton.icon(
+            action: context.can(PermissionKeys.createMaintenance) ? ElevatedButton.icon(
               onPressed: () async {
                 final result = await context.router.push(MaintananceFormRoute());
                 if (result == true && context.mounted) {
@@ -158,7 +160,7 @@ class _MaintananceViewState extends State<_MaintananceView> {
               },
               icon: const Icon(Icons.add, size: 18),
               label: const Text('Tambah Jadwal'),
-            ),
+            ) : const SizedBox.shrink(),
           ),
           
           Container(
