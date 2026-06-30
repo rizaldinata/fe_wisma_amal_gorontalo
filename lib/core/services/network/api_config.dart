@@ -14,7 +14,7 @@ class ApiConfig {
   static const String PRODUCTION = 'production';
   static const String DEVELOP = 'develop';
 
-  static const String currentMode = DEVELOP;
+  static const String currentMode = PRODUCTION;
 
   static const String localURl = 'http://localhost:8000';
   static const String productionURL = String.fromEnvironment(
