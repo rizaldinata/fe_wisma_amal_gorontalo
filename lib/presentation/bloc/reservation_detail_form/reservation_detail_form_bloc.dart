@@ -201,7 +201,7 @@ class ReservationDetailFormBloc
       String message = 'Gagal membuat reservasi. Silakan coba lagi.';
       if (e is DioException) {
         final data = e.response?.data;
-        if (data != null) {
+        if (data is Map<String, dynamic>) {
           // Prioritaskan pesan error field pertama jika ada (422 validation)
           final errors = data['errors'] as Map<String, dynamic>?;
           if (errors != null && errors.isNotEmpty) {
@@ -209,10 +209,10 @@ class ReservationDetailFormBloc
             if (firstFieldErrors is List && firstFieldErrors.isNotEmpty) {
               message = firstFieldErrors.first.toString();
             } else {
-              message = data['message'] ?? message;
+              message = data['message']?.toString() ?? message;
             }
           } else {
-            message = data['message'] ?? message;
+            message = data['message']?.toString() ?? message;
           }
         }
       }
