@@ -37,9 +37,7 @@ class MaintanancePage extends StatelessWidget {
         BlocProvider.value(
           value: serviceLocator<ScheduleListBloc>()..add(FetchSchedules()),
         ),
-        BlocProvider.value(
-          value: serviceLocator<ScheduleActionBloc>(),
-        ),
+        BlocProvider.value(value: serviceLocator<ScheduleActionBloc>()),
       ],
       child: const _MaintananceView(),
     );
@@ -57,7 +55,7 @@ enum _ViewMode { calendar, list }
 
 class _MaintananceViewState extends State<_MaintananceView> {
   _ViewMode _currentView = _ViewMode.calendar;
-  
+
   // Calendar State
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
@@ -87,7 +85,9 @@ class _MaintananceViewState extends State<_MaintananceView> {
               context.read<ScheduleActionBloc>().add(DeleteSchedule(id));
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled,
+              backgroundColor: isDark
+                  ? AppColorsDark.statusCancelled
+                  : AppColorsLight.statusCancelled,
             ),
             child: const Text('Hapus'),
           ),
@@ -98,13 +98,16 @@ class _MaintananceViewState extends State<_MaintananceView> {
 
   String _statusLabel(String status) {
     switch (status) {
-      case 'done': return 'Selesai';
-      case 'in_progress': return 'Dalam Proses';
-      case 'cancelled': return 'Dibatalkan';
-      default: return 'Terjadwal';
+      case 'done':
+        return 'Selesai';
+      case 'in_progress':
+        return 'Dalam Proses';
+      case 'cancelled':
+        return 'Dibatalkan';
+      default:
+        return 'Terjadwal';
     }
   }
-
 
   String _fmtDt(DateTime? dt) {
     if (dt == null) return '-';
@@ -118,115 +121,179 @@ class _MaintananceViewState extends State<_MaintananceView> {
     return BlocListener<ScheduleActionBloc, ScheduleActionState>(
       listener: (context, state) {
         if (state is ScheduleActionSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Row(children: [
-              Icon(Icons.check_circle, color: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone),
-              const SizedBox(width: 8),
-              Text(state.message, style: const TextStyle(color: Colors.white)),
-            ]),
-            backgroundColor: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 3),
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: isDark
+                        ? AppColorsDark.statusDone
+                        : AppColorsLight.statusDone,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    state.message,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+              backgroundColor: isDark
+                  ? AppColorsDark.statusDoneBg
+                  : AppColorsLight.statusDoneBg,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 3),
+            ),
+          );
           context.read<ScheduleListBloc>().add(FetchSchedules());
         } else if (state is ScheduleActionFailure) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Row(children: [
-              Icon(Icons.error, color: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled),
-              const SizedBox(width: 8),
-              Text(state.message, style: const TextStyle(color: Colors.white)),
-            ]),
-            backgroundColor: isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 3),
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(
+                    Icons.error,
+                    color: isDark
+                        ? AppColorsDark.statusCancelled
+                        : AppColorsLight.statusCancelled,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    state.message,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+              backgroundColor: isDark
+                  ? AppColorsDark.statusCancelledBg
+                  : AppColorsLight.statusCancelledBg,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 3),
+            ),
+          );
         }
       },
       child: Scaffold(
-        backgroundColor: isDark ? AppColorsDark.background : AppColorsLight.background,
+        backgroundColor: isDark
+            ? AppColorsDark.background
+            : AppColorsLight.background,
         body: Column(
           children: [
             AppTopBar(
-            title: 'Jadwal Pemeliharaan',
-            breadcrumb: 'Operasional / Jadwal Pemeliharaan',
-            action: context.can(PermissionKeys.createMaintenance) ? ElevatedButton.icon(
-              onPressed: () async {
-                final result = await context.router.push(MaintananceFormRoute());
-                if (result == true && context.mounted) {
-                  context.read<ScheduleListBloc>().add(FetchSchedules());
-                }
-              },
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Tambah Jadwal'),
-            ) : const SizedBox.shrink(),
-          ),
-          
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xxxl, vertical: AppSpacing.lg),
-            alignment: Alignment.centerLeft,
-            decoration: BoxDecoration(
-              color: isDark ? AppColorsDark.surface : AppColorsLight.surface,
-              border: Border(bottom: BorderSide(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight)),
+              title: 'Jadwal Pemeliharaan',
+              breadcrumb: 'Operasional / Jadwal Pemeliharaan',
+              action: context.can(PermissionKeys.createMaintenance)
+                  ? ElevatedButton.icon(
+                      onPressed: () async {
+                        final result = await context.router.push(
+                          MaintananceFormRoute(),
+                        );
+                        if (result == true && context.mounted) {
+                          context.read<ScheduleListBloc>().add(
+                            FetchSchedules(),
+                          );
+                        }
+                      },
+                      icon: const Icon(Icons.add, size: 18),
+                      label: const Text('Tambah Jadwal'),
+                    )
+                  : const SizedBox.shrink(),
             ),
-            child: SegmentedButton<_ViewMode>(
-              segments: const [
-                ButtonSegment(value: _ViewMode.calendar, icon: Icon(Icons.calendar_month), label: Text('Kalender')),
-                ButtonSegment(value: _ViewMode.list, icon: Icon(Icons.list), label: Text('List')),
-              ],
-              selected: {_currentView},
-              onSelectionChanged: (set) => setState(() => _currentView = set.first),
-              style: SegmentedButton.styleFrom(
-                selectedForegroundColor: Colors.white,
-                selectedBackgroundColor: isDark ? AppColorsDark.primary : AppColorsLight.primary,
+
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.xxxl,
+                vertical: AppSpacing.lg,
+              ),
+              alignment: Alignment.centerLeft,
+              decoration: BoxDecoration(
+                color: isDark ? AppColorsDark.surface : AppColorsLight.surface,
+                border: Border(
+                  bottom: BorderSide(
+                    color: isDark
+                        ? AppColorsDark.borderLight
+                        : AppColorsLight.borderLight,
+                  ),
+                ),
+              ),
+              child: SegmentedButton<_ViewMode>(
+                segments: const [
+                  ButtonSegment(
+                    value: _ViewMode.calendar,
+                    icon: Icon(Icons.calendar_month),
+                    label: Text('Kalender', style: TextStyle(fontSize: 12)),
+                  ),
+                  ButtonSegment(
+                    value: _ViewMode.list,
+                    icon: Icon(Icons.list),
+                    label: Text('List', style: TextStyle(fontSize: 12)),
+                  ),
+                ],
+                selected: {_currentView},
+                onSelectionChanged: (set) =>
+                    setState(() => _currentView = set.first),
+                style: SegmentedButton.styleFrom(
+                  selectedForegroundColor: Colors.white,
+                  selectedBackgroundColor: isDark
+                      ? AppColorsDark.primary
+                      : AppColorsLight.primary,
+                ),
               ),
             ),
-          ),
-          
-          Expanded(
-            child: BlocBuilder<ScheduleListBloc, ScheduleListState>(
-              builder: (context, state) {
-                if (state is ScheduleListLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
 
-                if (state is ScheduleListError) {
-                  return EmptyStateWidget(
-                    icon: Icons.error_outline,
-                    title: 'Gagal Memuat Data',
-                    subtitle: state.message,
-                    action: ElevatedButton(
-                      onPressed: () => context.read<ScheduleListBloc>().add(FetchSchedules()),
-                      child: const Text('Coba Lagi'),
-                    ),
-                  );
-                }
-
-                if (state is ScheduleListLoaded) {
-                  final allSchedules = state.schedules;
-                  
-                  if (_currentView == _ViewMode.calendar) {
-                    return _buildCalendarView(allSchedules, isDark);
-                  } else {
-                    return _buildListView(allSchedules, state.meta, isDark);
+            Expanded(
+              child: BlocBuilder<ScheduleListBloc, ScheduleListState>(
+                builder: (context, state) {
+                  if (state is ScheduleListLoading) {
+                    return const Center(child: CircularProgressIndicator());
                   }
-                }
 
-                return const SizedBox.shrink();
-              },
+                  if (state is ScheduleListError) {
+                    return EmptyStateWidget(
+                      icon: Icons.error_outline,
+                      title: 'Gagal Memuat Data',
+                      subtitle: state.message,
+                      action: ElevatedButton(
+                        onPressed: () => context.read<ScheduleListBloc>().add(
+                          FetchSchedules(),
+                        ),
+                        child: const Text('Coba Lagi'),
+                      ),
+                    );
+                  }
+
+                  if (state is ScheduleListLoaded) {
+                    final allSchedules = state.schedules;
+
+                    if (_currentView == _ViewMode.calendar) {
+                      return _buildCalendarView(allSchedules, isDark);
+                    } else {
+                      return _buildListView(allSchedules, state.meta, isDark);
+                    }
+                  }
+
+                  return const SizedBox.shrink();
+                },
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildCalendarView(List<ScheduleEntity> schedules, bool isDark) {
-    final selectedDaySchedules = schedules.where((s) => isSameDay(s.startTime, _selectedDay)).toList();
+    final selectedDaySchedules = schedules
+        .where((s) => isSameDay(s.startTime, _selectedDay))
+        .toList();
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -240,7 +307,11 @@ class _MaintananceViewState extends State<_MaintananceView> {
               decoration: BoxDecoration(
                 color: isDark ? AppColorsDark.surface : AppColorsLight.surface,
                 borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
-                border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+                border: Border.all(
+                  color: isDark
+                      ? AppColorsDark.borderLight
+                      : AppColorsLight.borderLight,
+                ),
               ),
               child: TableCalendar<ScheduleEntity>(
                 firstDay: DateTime.utc(2020, 1, 1),
@@ -266,19 +337,29 @@ class _MaintananceViewState extends State<_MaintananceView> {
                   _focusedDay = focusedDay;
                 },
                 eventLoader: (day) {
-                  return schedules.where((s) => isSameDay(s.startTime, day)).toList();
+                  return schedules
+                      .where((s) => isSameDay(s.startTime, day))
+                      .toList();
                 },
                 calendarStyle: CalendarStyle(
                   todayDecoration: BoxDecoration(
-                    color: (isDark ? AppColorsDark.primary : AppColorsLight.primary).withOpacity(0.3),
+                    color:
+                        (isDark
+                                ? AppColorsDark.primary
+                                : AppColorsLight.primary)
+                            .withOpacity(0.3),
                     shape: BoxShape.circle,
                   ),
                   selectedDecoration: BoxDecoration(
-                    color: isDark ? AppColorsDark.primary : AppColorsLight.primary,
+                    color: isDark
+                        ? AppColorsDark.primary
+                        : AppColorsLight.primary,
                     shape: BoxShape.circle,
                   ),
                   markerDecoration: BoxDecoration(
-                    color: isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess,
+                    color: isDark
+                        ? AppColorsDark.statusProcess
+                        : AppColorsLight.statusProcess,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -286,7 +367,12 @@ class _MaintananceViewState extends State<_MaintananceView> {
             ),
           ),
         ),
-        Container(width: 1, color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+        Container(
+          width: 1,
+          color: isDark
+              ? AppColorsDark.borderLight
+              : AppColorsLight.borderLight,
+        ),
         Expanded(
           flex: 4,
           child: SingleChildScrollView(
@@ -297,16 +383,27 @@ class _MaintananceViewState extends State<_MaintananceView> {
                 Row(
                   children: [
                     Container(
-                      width: 4, height: 16,
+                      width: 4,
+                      height: 16,
                       decoration: BoxDecoration(
-                        color: isDark ? AppColorsDark.primary : AppColorsLight.primary,
+                        color: isDark
+                            ? AppColorsDark.primary
+                            : AppColorsLight.primary,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Text(
-                      _selectedDay != null ? DateFormat('dd MMMM yyyy', 'id_ID').format(_selectedDay!) : 'Pilih Tanggal',
-                      style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                      _selectedDay != null
+                          ? DateFormat(
+                              'dd MMMM yyyy',
+                              'id_ID',
+                            ).format(_selectedDay!)
+                          : 'Pilih Tanggal',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
                     ),
                   ],
                 ),
@@ -317,15 +414,30 @@ class _MaintananceViewState extends State<_MaintananceView> {
                       padding: const EdgeInsets.symmetric(vertical: 40),
                       child: Column(
                         children: [
-                          Icon(Icons.event_busy_outlined, size: 48, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary),
+                          Icon(
+                            Icons.event_busy_outlined,
+                            size: 48,
+                            color: isDark
+                                ? AppColorsDark.textSecondary
+                                : AppColorsLight.textSecondary,
+                          ),
                           const SizedBox(height: AppSpacing.md),
-                          Text('Tidak ada jadwal pada tanggal ini', style: TextStyle(color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary)),
+                          Text(
+                            'Tidak ada jadwal pada tanggal ini',
+                            style: TextStyle(
+                              color: isDark
+                                  ? AppColorsDark.textSecondary
+                                  : AppColorsLight.textSecondary,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   )
                 else
-                  ...selectedDaySchedules.map((s) => _buildScheduleCard(s, isDark)),
+                  ...selectedDaySchedules.map(
+                    (s) => _buildScheduleCard(s, isDark),
+                  ),
               ],
             ),
           ),
@@ -341,7 +453,11 @@ class _MaintananceViewState extends State<_MaintananceView> {
       decoration: BoxDecoration(
         color: isDark ? AppColorsDark.surface : AppColorsLight.surface,
         borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-        border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+        border: Border.all(
+          color: isDark
+              ? AppColorsDark.borderLight
+              : AppColorsLight.borderLight,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -352,22 +468,40 @@ class _MaintananceViewState extends State<_MaintananceView> {
               StatusBadge(status: _statusLabel(schedule.status)),
               Text(
                 '${DateFormat('HH:mm').format(schedule.startTime)} - ${schedule.endTime != null ? DateFormat('HH:mm').format(schedule.endTime!) : '?'}',
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.lg),
           Row(
             children: [
-              Icon(Icons.person_outline, size: 16, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary),
+              Icon(
+                Icons.person_outline,
+                size: 16,
+                color: isDark
+                    ? AppColorsDark.textSecondary
+                    : AppColorsLight.textSecondary,
+              ),
               const SizedBox(width: AppSpacing.sm),
-              Text(schedule.technicianName, style: const TextStyle(fontWeight: FontWeight.w500)),
+              Text(
+                schedule.technicianName,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              Icon(Icons.location_on_outlined, size: 16, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary),
+              Icon(
+                Icons.location_on_outlined,
+                size: 16,
+                color: isDark
+                    ? AppColorsDark.textSecondary
+                    : AppColorsLight.textSecondary,
+              ),
               const SizedBox(width: AppSpacing.sm),
               Text(schedule.location),
             ],
@@ -375,7 +509,13 @@ class _MaintananceViewState extends State<_MaintananceView> {
           const SizedBox(height: AppSpacing.sm),
           Row(
             children: [
-              Icon(Icons.build_circle_outlined, size: 16, color: isDark ? AppColorsDark.textSecondary : AppColorsLight.textSecondary),
+              Icon(
+                Icons.build_circle_outlined,
+                size: 16,
+                color: isDark
+                    ? AppColorsDark.textSecondary
+                    : AppColorsLight.textSecondary,
+              ),
               const SizedBox(width: AppSpacing.sm),
               Text('${schedule.type} - ${schedule.subtype}'),
             ],
@@ -386,7 +526,9 @@ class _MaintananceViewState extends State<_MaintananceView> {
             children: [
               TextButton(
                 onPressed: () async {
-                  await context.router.push(MaintananceDetailRoute(schedule: schedule));
+                  await context.router.push(
+                    MaintananceDetailRoute(schedule: schedule),
+                  );
                 },
                 child: const Text('Detail'),
               ),
@@ -397,7 +539,11 @@ class _MaintananceViewState extends State<_MaintananceView> {
     );
   }
 
-  Widget _buildListView(List<ScheduleEntity> schedules, PaginationMeta meta, bool isDark) {
+  Widget _buildListView(
+    List<ScheduleEntity> schedules,
+    PaginationMeta meta,
+    bool isDark,
+  ) {
     if (schedules.isEmpty) {
       return EmptyStateWidget(
         icon: Icons.calendar_today_outlined,
@@ -407,7 +553,8 @@ class _MaintananceViewState extends State<_MaintananceView> {
     }
 
     // Sort by newest start time first
-    final sortedSchedules = List<ScheduleEntity>.from(schedules)..sort((a, b) => b.startTime.compareTo(a.startTime));
+    final sortedSchedules = List<ScheduleEntity>.from(schedules)
+      ..sort((a, b) => b.startTime.compareTo(a.startTime));
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.xxxl),
@@ -424,45 +571,70 @@ class _MaintananceViewState extends State<_MaintananceView> {
               DataColumn(label: Text('SELESAI')),
               DataColumn(label: Text('')),
             ],
-            rows: sortedSchedules.map((item) => DataRow(
-              cells: [
-                DataCell(Text(item.technicianName, style: const TextStyle(fontWeight: FontWeight.w600))),
-                DataCell(Text(item.location)),
-                DataCell(Text('${item.type} (${item.subtype})')),
-                DataCell(StatusBadge(status: _statusLabel(item.status))),
-                DataCell(Text(_fmtDt(item.startTime))),
-                DataCell(Text(_fmtDt(item.endTime))),
-                DataCell(
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.edit_outlined, size: 18),
-                        onPressed: () async {
-                          final result = await context.router.push(MaintananceFormRoute(scheduleData: item));
-                          if (result == true && context.mounted) {
-                            context.read<ScheduleListBloc>().add(FetchSchedules(page: meta.currentPage, perPage: meta.perPage));
-                          }
-                        },
-                        tooltip: 'Edit',
+            rows: sortedSchedules
+                .map(
+                  (item) => DataRow(
+                    cells: [
+                      DataCell(
+                        Text(
+                          item.technicianName,
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
                       ),
-                      IconButton(
-                        icon: Icon(Icons.delete_outline, size: 18, color: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled),
-                        onPressed: () => _confirmDelete(context, item.id!),
-                        tooltip: 'Hapus',
+                      DataCell(Text(item.location)),
+                      DataCell(Text('${item.type} (${item.subtype})')),
+                      DataCell(StatusBadge(status: _statusLabel(item.status))),
+                      DataCell(Text(_fmtDt(item.startTime))),
+                      DataCell(Text(_fmtDt(item.endTime))),
+                      DataCell(
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit_outlined, size: 18),
+                              onPressed: () async {
+                                final result = await context.router.push(
+                                  MaintananceFormRoute(scheduleData: item),
+                                );
+                                if (result == true && context.mounted) {
+                                  context.read<ScheduleListBloc>().add(
+                                    FetchSchedules(
+                                      page: meta.currentPage,
+                                      perPage: meta.perPage,
+                                    ),
+                                  );
+                                }
+                              },
+                              tooltip: 'Edit',
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                Icons.delete_outline,
+                                size: 18,
+                                color: isDark
+                                    ? AppColorsDark.statusCancelled
+                                    : AppColorsLight.statusCancelled,
+                              ),
+                              onPressed: () =>
+                                  _confirmDelete(context, item.id!),
+                              tooltip: 'Hapus',
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
-                ),
-              ],
-            )).toList(),
+                )
+                .toList(),
           ).animate().fadeIn(duration: 300.ms),
-          
+
           AppPagination(
             meta: meta,
             currentLength: sortedSchedules.length,
             onChanged: (page, perPage) {
-              context.read<ScheduleListBloc>().add(FetchSchedules(page: page, perPage: perPage));
+              context.read<ScheduleListBloc>().add(
+                FetchSchedules(page: page, perPage: perPage),
+              );
             },
           ),
         ],
