@@ -15,9 +15,8 @@ class MaintenanceRepositoryImpl implements MaintenanceRepository {
   }
 
   @override
-  Future<List<MaintenanceRequestEntity>> getAllRequests() async {
-    final response = await defaultDataSource.getAllRequests();
-    return response.map((e) => e.toEntity()).toList();
+  Future<PaginatedMaintenanceRequests> getAllRequests(int page, int perPage) async {
+    return await defaultDataSource.getAllRequests(page, perPage);
   }
 
   @override

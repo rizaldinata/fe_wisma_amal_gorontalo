@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'maintenance_status.dart';
+import 'pagination_meta.dart';
 
 class MaintenanceTimelineEntity extends Equatable {
   final int id;
@@ -73,4 +74,14 @@ class MaintenanceRequestEntity extends Equatable {
         timeline,
         createdAt,
       ];
+}
+
+class PaginatedMaintenanceRequests {
+  final List<MaintenanceRequestEntity> data;
+  final PaginationMeta meta;
+
+  const PaginatedMaintenanceRequests({
+    required this.data,
+    required this.meta,
+  });
 }

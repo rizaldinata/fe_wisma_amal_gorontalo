@@ -17,8 +17,11 @@ class ScheduleListBloc extends Bloc<ScheduleListEvent, ScheduleListState> {
   ) async {
     emit(ScheduleListLoading());
     try {
-      final schedules = await getSchedulesUseCase();
-      emit(ScheduleListLoaded(schedules));
+      final result = await getSchedulesUseCase(page: event.page, perPage: event.perPage);
+      emit(ScheduleListLoaded(
+        schedules: result.data,
+        meta: result.meta,
+      ));
     } catch (e) {
       emit(ScheduleListError(e.toString()));
     }

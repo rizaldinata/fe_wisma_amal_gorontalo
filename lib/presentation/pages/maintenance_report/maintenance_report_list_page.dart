@@ -7,6 +7,7 @@ import 'package:frontend/core/theme/app_colors.dart';
 import 'package:frontend/core/theme/app_spacing.dart';
 import 'package:frontend/core/theme/app_theme.dart';
 import 'package:frontend/domain/entity/maintenance_request_entity.dart';
+import 'package:frontend/domain/entity/pagination_meta.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/maintenance_list/maintenance_list_bloc.dart';
 import 'package:frontend/presentation/bloc/maintenance_list/maintenance_list_event.dart';
@@ -18,6 +19,7 @@ import 'package:frontend/presentation/widget/core/card/summary_stat_card.dart';
 import 'package:frontend/presentation/widget/core/chip/status_badge.dart';
 import 'package:frontend/presentation/widget/core/table/app_data_table.dart';
 import 'package:frontend/presentation/widget/core/wrapper/empty_state_widget.dart';
+import 'package:frontend/presentation/widget/core/table/app_pagination.dart';
 import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -105,7 +107,9 @@ class _MaintenanceReportListViewState
             false);
 
     return Scaffold(
-      backgroundColor: isDark ? AppColorsDark.background : AppColorsLight.background,
+      backgroundColor: isDark
+          ? AppColorsDark.background
+          : AppColorsLight.background,
       body: Column(
         children: [
           AppTopBar(
@@ -172,7 +176,12 @@ class _MaintenanceReportListViewState
                   }).toList();
 
                   if (isAdmin) {
-                    return _buildAdminView(filteredItems, allItems, isDark);
+                    return _buildAdminView(
+                      filteredItems,
+                      allItems,
+                      isDark,
+                      state.meta,
+                    );
                   } else {
                     return _buildResidentView(filteredItems, allItems, isDark);
                   }
@@ -191,6 +200,7 @@ class _MaintenanceReportListViewState
     List<MaintenanceRequestEntity> filteredItems,
     List<MaintenanceRequestEntity> allItems,
     bool isDark,
+    PaginationMeta? meta,
   ) {
     final totalLaporan = allItems.length;
     final menunggu = allItems.where((r) => r.status.value == 'pending').length;
@@ -293,11 +303,11 @@ class _MaintenanceReportListViewState
           else
             AppDataTable(
               columns: const [
-                DataColumn(label: Text('ID')),
-                DataColumn(label: Text('JUDUL')),
-                DataColumn(label: Text('PELAPOR')),
+                DataColumn(label: Text('ID LAPORAN')),
+                DataColumn(label: Text('JUDUL LAPORAN')),
+                DataColumn(label: Text('NAMA PELAPOR')),
                 DataColumn(label: Text('STATUS')),
-                DataColumn(label: Text('TANGGAL')),
+                DataColumn(label: Text('TANGGAL LAPOR')),
                 DataColumn(label: Text('')),
               ],
               rows: filteredItems
@@ -350,6 +360,17 @@ class _MaintenanceReportListViewState
                   )
                   .toList(),
             ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
+
+          if (filteredItems.isNotEmpty && meta != null)
+            AppPagination(
+              meta: meta,
+              currentLength: filteredItems.length,
+              onChanged: (page, perPage) {
+                context.read<MaintenanceListBloc>().add(
+                  FetchAllMaintenanceRequests(page: page, perPage: perPage),
+                );
+              },
+            ),
         ],
       ),
     );

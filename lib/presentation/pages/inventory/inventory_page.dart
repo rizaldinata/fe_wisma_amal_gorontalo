@@ -30,9 +30,7 @@ class InventoryPage extends StatelessWidget {
         BlocProvider.value(
           value: serviceLocator<InventoryListBloc>()..add(FetchInventories()),
         ),
-        BlocProvider.value(
-          value: serviceLocator<InventoryActionBloc>(),
-        ),
+        BlocProvider.value(value: serviceLocator<InventoryActionBloc>()),
       ],
       child: const InventoryView(),
     );
@@ -49,13 +47,10 @@ class InventoryView extends StatefulWidget {
 class _InventoryViewState extends State<InventoryView> {
   String _searchQuery = '';
   String _selectedKondisi = 'Semua Kondisi';
+  int _perPage = 10;
 
   String _formatCurrency(double? price) {
     if (price == null || price == 0) return '-';
-    if (price >= 1000000) {
-      final inJuta = price / 1000000;
-      return 'Rp ${inJuta.toStringAsFixed(inJuta.truncateToDouble() == inJuta ? 0 : 1)}jt';
-    }
     final formatCurrency = NumberFormat.currency(
       locale: 'id_ID',
       symbol: 'Rp ',
@@ -68,16 +63,22 @@ class _InventoryViewState extends State<InventoryView> {
     Color color;
     switch (kondisi) {
       case InventoryCondition.baik:
-        color = isDark ? AppColorsDark.conditionGood : AppColorsLight.conditionGood;
+        color = isDark
+            ? AppColorsDark.conditionGood
+            : AppColorsLight.conditionGood;
         break;
       case InventoryCondition.cukup:
-        color = isDark ? AppColorsDark.conditionFair : AppColorsLight.conditionFair;
+        color = isDark
+            ? AppColorsDark.conditionFair
+            : AppColorsLight.conditionFair;
         break;
       case InventoryCondition.rusakRingan:
         color = Colors.deepOrange;
         break;
       case InventoryCondition.rusakBerat:
-        color = isDark ? AppColorsDark.conditionPoor : AppColorsLight.conditionPoor;
+        color = isDark
+            ? AppColorsDark.conditionPoor
+            : AppColorsLight.conditionPoor;
         break;
     }
 
@@ -92,7 +93,11 @@ class _InventoryViewState extends State<InventoryView> {
         const SizedBox(width: 8),
         Text(
           kondisi.displayName,
-          style: TextStyle(color: color, fontWeight: FontWeight.w600, fontSize: 13),
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w600,
+            fontSize: 13,
+          ),
         ),
       ],
     );
@@ -118,7 +123,9 @@ class _InventoryViewState extends State<InventoryView> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Hapus Inventaris?'),
-        content: Text('Anda yakin ingin menghapus "${item.nama}"? Aksi ini tidak dapat dibatalkan.'),
+        content: Text(
+          'Anda yakin ingin menghapus "${item.nama}"? Aksi ini tidak dapat dibatalkan.',
+        ),
         actions: [
           TextButton(
             child: const Text('Batal'),
@@ -126,11 +133,15 @@ class _InventoryViewState extends State<InventoryView> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled,
+              backgroundColor: isDark
+                  ? AppColorsDark.statusCancelled
+                  : AppColorsLight.statusCancelled,
             ),
             onPressed: () {
               Navigator.pop(ctx);
-              context.read<InventoryActionBloc>().add(DeleteInventoryEvent(item.id!));
+              context.read<InventoryActionBloc>().add(
+                DeleteInventoryEvent(item.id!),
+              );
             },
             child: const Text('Ya, Hapus'),
           ),
@@ -146,203 +157,502 @@ class _InventoryViewState extends State<InventoryView> {
     return BlocListener<InventoryActionBloc, InventoryActionState>(
       listener: (context, state) {
         if (state is InventoryActionSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Row(children: [
-              Icon(Icons.check_circle, color: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone),
-              const SizedBox(width: 8),
-              Text(state.message, style: const TextStyle(color: Colors.white)),
-            ]),
-            backgroundColor: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 3),
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(
+                    Icons.check_circle,
+                    color: isDark
+                        ? AppColorsDark.statusDone
+                        : AppColorsLight.statusDone,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    state.message,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+              backgroundColor: isDark
+                  ? AppColorsDark.statusDoneBg
+                  : AppColorsLight.statusDoneBg,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 3),
+            ),
+          );
           context.read<InventoryListBloc>().add(FetchInventories());
         } else if (state is InventoryActionError) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Row(children: [
-              Icon(Icons.error, color: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled),
-              const SizedBox(width: 8),
-              Text(state.message, style: const TextStyle(color: Colors.white)),
-            ]),
-            backgroundColor: isDark ? AppColorsDark.statusCancelledBg : AppColorsLight.statusCancelledBg,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-            margin: const EdgeInsets.all(16),
-            duration: const Duration(seconds: 3),
-          ));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  Icon(
+                    Icons.error,
+                    color: isDark
+                        ? AppColorsDark.statusCancelled
+                        : AppColorsLight.statusCancelled,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    state.message,
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ],
+              ),
+              backgroundColor: isDark
+                  ? AppColorsDark.statusCancelledBg
+                  : AppColorsLight.statusCancelledBg,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+              margin: const EdgeInsets.all(16),
+              duration: const Duration(seconds: 3),
+            ),
+          );
         }
       },
       child: Scaffold(
-        backgroundColor: isDark ? AppColorsDark.background : AppColorsLight.background,
+        backgroundColor: isDark
+            ? AppColorsDark.background
+            : AppColorsLight.background,
         body: Column(
           children: [
             AppTopBar(
-            title: 'Inventaris',
-            breadcrumb: 'Operasional / Inventaris',
-            action: ElevatedButton.icon(
-              onPressed: () => _showFormDialog(context),
-              icon: const Icon(Icons.add, size: 18),
-              label: const Text('Tambah Inventaris'),
+              title: 'Inventaris',
+              breadcrumb: 'Operasional / Inventaris',
+              action: ElevatedButton.icon(
+                onPressed: () => _showFormDialog(context),
+                icon: const Icon(Icons.add, size: 18),
+                label: const Text('Tambah Inventaris'),
+              ),
             ),
-          ),
-          Expanded(
-            child: BlocBuilder<InventoryListBloc, InventoryListState>(
-              builder: (context, state) {
-                if (state is InventoryListLoading || state is InventoryListInitial) {
-                  return _buildSkeleton(isDark);
-                } else if (state is InventoryListError) {
-                  return EmptyStateWidget(
-                    icon: Icons.error_outline,
-                    title: 'Gagal Memuat Data',
-                    subtitle: state.message,
-                    action: ElevatedButton(
-                      onPressed: () => context.read<InventoryListBloc>().add(FetchInventories()),
-                      child: const Text('Coba Lagi'),
-                    ),
-                  );
-                } else if (state is InventoryListLoaded) {
-                  final allItems = state.inventories;
-                  
-                  // Stats calc
-                  final totalBarang = allItems.fold<int>(0, (sum, item) => sum + item.jumlah);
-                  final totalNilai = allItems.fold<double>(0, (sum, item) => sum + ((item.purchasePrice ?? 0) * item.jumlah));
-                  final kondisiBaik = allItems.where((i) => i.kondisi == InventoryCondition.baik).fold<int>(0, (sum, item) => sum + item.jumlah);
-                  final perluPerhatian = allItems.where((i) => i.kondisi != InventoryCondition.baik).fold<int>(0, (sum, item) => sum + item.jumlah);
+            Expanded(
+              child: BlocBuilder<InventoryListBloc, InventoryListState>(
+                builder: (context, state) {
+                  if (state is InventoryListLoading ||
+                      state is InventoryListInitial) {
+                    return _buildSkeleton(isDark);
+                  } else if (state is InventoryListError) {
+                    return EmptyStateWidget(
+                      icon: Icons.error_outline,
+                      title: 'Gagal Memuat Data',
+                      subtitle: state.message,
+                      action: ElevatedButton(
+                        onPressed: () => context.read<InventoryListBloc>().add(
+                          FetchInventories(),
+                        ),
+                        child: const Text('Coba Lagi'),
+                      ),
+                    );
+                  } else if (state is InventoryListLoaded) {
+                    final allItems = state.inventories;
 
-                  // Filtering
-                  var filteredItems = allItems.where((item) {
-                    final matchQuery = item.nama.toLowerCase().contains(_searchQuery.toLowerCase()) || 
-                                     (item.keterangan.toLowerCase().contains(_searchQuery.toLowerCase()));
-                    final matchKondisi = _selectedKondisi == 'Semua Kondisi' || item.kondisi.displayName == _selectedKondisi;
-                    return matchQuery && matchKondisi;
-                  }).toList();
+                    // Stats calc
+                    final totalBarang = allItems.fold<int>(
+                      0,
+                      (sum, item) => sum + item.jumlah,
+                    );
+                    final totalNilai = allItems.fold<double>(
+                      0,
+                      (sum, item) =>
+                          sum + ((item.purchasePrice ?? 0) * item.jumlah),
+                    );
+                    final kondisiBaik = allItems
+                        .where((i) => i.kondisi == InventoryCondition.baik)
+                        .fold<int>(0, (sum, item) => sum + item.jumlah);
+                    final perluPerhatian = allItems
+                        .where((i) => i.kondisi != InventoryCondition.baik)
+                        .fold<int>(0, (sum, item) => sum + item.jumlah);
 
-                  // Sorting (default alphabetical)
-                  filteredItems.sort((a, b) => a.nama.compareTo(b.nama));
+                    // Filtering
+                    var filteredItems = allItems.where((item) {
+                      final matchQuery =
+                          item.nama.toLowerCase().contains(
+                            _searchQuery.toLowerCase(),
+                          ) ||
+                          (item.keterangan.toLowerCase().contains(
+                            _searchQuery.toLowerCase(),
+                          ));
+                      final matchKondisi =
+                          _selectedKondisi == 'Semua Kondisi' ||
+                          item.kondisi.displayName == _selectedKondisi;
+                      return matchQuery && matchKondisi;
+                    }).toList();
 
-                  return SingleChildScrollView(
-                    padding: const EdgeInsets.all(AppSpacing.xxxl),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Summary Cards
-                        Row(
-                          children: [
-                            Expanded(child: SummaryStatCard(
-                              label: 'Total Barang',
-                              value: totalBarang.toString(),
-                              icon: Icons.inventory_2_outlined,
-                              iconColor: isDark ? AppColorsDark.primary : AppColorsLight.primary,
-                              iconBg: isDark ? AppColorsDark.primaryLight : AppColorsLight.primaryLight,
-                            )),
-                            const SizedBox(width: AppSpacing.lg),
-                            Expanded(child: SummaryStatCard(
-                              label: 'Total Nilai',
-                              value: _formatCurrency(totalNilai),
-                              icon: Icons.account_balance_wallet_outlined,
-                              iconColor: isDark ? AppColorsDark.statusProcess : AppColorsLight.statusProcess,
-                              iconBg: isDark ? AppColorsDark.statusProcessBg : AppColorsLight.statusProcessBg,
-                            )),
-                            const SizedBox(width: AppSpacing.lg),
-                            Expanded(child: SummaryStatCard(
-                              label: 'Kondisi Baik',
-                              value: '$kondisiBaik Baik',
-                              icon: Icons.check_circle_outline,
-                              iconColor: isDark ? AppColorsDark.conditionGood : AppColorsLight.conditionGood,
-                              iconBg: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
-                            )),
-                            const SizedBox(width: AppSpacing.lg),
-                            Expanded(child: SummaryStatCard(
-                              label: 'Perlu Perhatian',
-                              value: '$perluPerhatian Cukup/Buruk',
-                              icon: Icons.warning_amber_rounded,
-                              iconColor: isDark ? AppColorsDark.conditionFair : AppColorsLight.conditionFair,
-                              iconBg: isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg,
-                            )),
-                          ],
-                        ).animate().fadeIn(duration: 300.ms).slideY(begin: 0.1, end: 0, duration: 300.ms),
-                        
-                        const SizedBox(height: AppSpacing.xxxl),
-                        
-                        // Search & Filter
-                        SearchAndFilterBar(
-                          searchHint: 'Cari nama barang...',
-                          onSearchChanged: (val) => setState(() => _searchQuery = val),
-                          dropdownFilter: Container(
-                            height: 40,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
-                              border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
-                            ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: _selectedKondisi,
-                                items: ['Semua Kondisi', ...InventoryCondition.displayNames].map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 14)))).toList(),
-                                onChanged: (v) => setState(() => _selectedKondisi = v!),
+                    // Sorting (default alphabetical)
+                    filteredItems.sort((a, b) => a.nama.compareTo(b.nama));
+
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.all(AppSpacing.xxxl),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Summary Cards
+                          Row(
+                                children: [
+                                  Expanded(
+                                    child: SummaryStatCard(
+                                      label: 'Total Barang',
+                                      value: totalBarang.toString(),
+                                      icon: Icons.inventory_2_outlined,
+                                      iconColor: isDark
+                                          ? AppColorsDark.primary
+                                          : AppColorsLight.primary,
+                                      iconBg: isDark
+                                          ? AppColorsDark.primaryLight
+                                          : AppColorsLight.primaryLight,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.lg),
+                                  Expanded(
+                                    child: SummaryStatCard(
+                                      label: 'Total Nilai',
+                                      value: _formatCurrency(totalNilai),
+                                      icon:
+                                          Icons.account_balance_wallet_outlined,
+                                      iconColor: isDark
+                                          ? AppColorsDark.statusProcess
+                                          : AppColorsLight.statusProcess,
+                                      iconBg: isDark
+                                          ? AppColorsDark.statusProcessBg
+                                          : AppColorsLight.statusProcessBg,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.lg),
+                                  Expanded(
+                                    child: SummaryStatCard(
+                                      label: 'Kondisi Baik',
+                                      value: '$kondisiBaik Baik',
+                                      icon: Icons.check_circle_outline,
+                                      iconColor: isDark
+                                          ? AppColorsDark.conditionGood
+                                          : AppColorsLight.conditionGood,
+                                      iconBg: isDark
+                                          ? AppColorsDark.statusDoneBg
+                                          : AppColorsLight.statusDoneBg,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.lg),
+                                  Expanded(
+                                    child: SummaryStatCard(
+                                      label: 'Perlu Perhatian',
+                                      value: '$perluPerhatian Cukup/Buruk',
+                                      icon: Icons.warning_amber_rounded,
+                                      iconColor: isDark
+                                          ? AppColorsDark.conditionFair
+                                          : AppColorsLight.conditionFair,
+                                      iconBg: isDark
+                                          ? AppColorsDark.statusWaitingBg
+                                          : AppColorsLight.statusWaitingBg,
+                                    ),
+                                  ),
+                                ],
+                              )
+                              .animate()
+                              .fadeIn(duration: 300.ms)
+                              .slideY(begin: 0.1, end: 0, duration: 300.ms),
+
+                          const SizedBox(height: AppSpacing.xxxl),
+
+                          // Search & Filter
+                          SearchAndFilterBar(
+                            searchHint: 'Cari nama barang...',
+                            onSearchChanged: (val) =>
+                                setState(() => _searchQuery = val),
+                            dropdownFilter: Container(
+                              height: 40,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                              ),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusMd,
+                                ),
+                                border: Border.all(
+                                  color: isDark
+                                      ? AppColorsDark.borderLight
+                                      : AppColorsLight.borderLight,
+                                ),
+                              ),
+                              child: DropdownButtonHideUnderline(
+                                child: DropdownButton<String>(
+                                  value: _selectedKondisi,
+                                  items:
+                                      [
+                                            'Semua Kondisi',
+                                            ...InventoryCondition.displayNames,
+                                          ]
+                                          .map(
+                                            (e) => DropdownMenuItem(
+                                              value: e,
+                                              child: Text(
+                                                e,
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ),
+                                          )
+                                          .toList(),
+                                  onChanged: (v) =>
+                                      setState(() => _selectedKondisi = v!),
+                                ),
                               ),
                             ),
-                          ),
-                          onSortPressed: () {},
-                          sortLabel: 'Sort: Nama',
-                        ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
-                        
-                        const SizedBox(height: AppSpacing.lg),
-                        
-                        // Table
-                        if (filteredItems.isEmpty)
-                          EmptyStateWidget(
-                            icon: Icons.inventory_2_outlined,
-                            title: 'Tidak ada barang ditemukan',
-                            subtitle: 'Coba ubah filter atau kata kunci pencarian Anda.',
-                          ).animate().fadeIn()
-                        else
-                          AppDataTable(
-                            columns: const [
-                              DataColumn(label: Text('NAMA')),
-                              DataColumn(label: Text('KETERANGAN')),
-                              DataColumn(label: Text('JML')),
-                              DataColumn(label: Text('KONDISI')),
-                              DataColumn(label: Text('NILAI')),
-                              DataColumn(label: Text('')),
-                            ],
-                            rows: filteredItems.map((item) => DataRow(
-                              cells: [
-                                DataCell(Text(item.nama, style: const TextStyle(fontWeight: FontWeight.w600))),
-                                DataCell(Text(item.keterangan.isEmpty ? '-' : item.keterangan, maxLines: 1, overflow: TextOverflow.ellipsis)),
-                                DataCell(Text(item.jumlah.toString())),
-                                DataCell(_buildConditionDot(item.kondisi, isDark)),
-                                DataCell(Text(_formatCurrency((item.purchasePrice ?? 0) * item.jumlah))),
-                                DataCell(Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit_outlined, size: 18),
-                                      onPressed: () => _showFormDialog(context, item: item),
-                                      tooltip: 'Edit',
-                                    ),
-                                    IconButton(
-                                      icon: Icon(Icons.delete_outline, size: 18, color: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled),
-                                      onPressed: () => _confirmDelete(context, item),
-                                      tooltip: 'Hapus',
-                                    ),
-                                  ],
-                                )),
+                            onSortPressed: () {},
+                            sortLabel: 'Sort: Nama',
+                          ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
+
+                          const SizedBox(height: AppSpacing.lg),
+
+                          // Table
+                          if (filteredItems.isEmpty)
+                            EmptyStateWidget(
+                              icon: Icons.inventory_2_outlined,
+                              title: 'Tidak ada barang ditemukan',
+                              subtitle:
+                                  'Coba ubah filter atau kata kunci pencarian Anda.',
+                            ).animate().fadeIn()
+                          else
+                            AppDataTable(
+                              columns: const [
+                                DataColumn(label: Text('NAMA BARANG')),
+                                DataColumn(label: Text('KETERANGAN')),
+                                DataColumn(label: Text('JUMLAH')),
+                                DataColumn(label: Text('KONDISI')),
+                                DataColumn(label: Text('TOTAL NILAI')),
+                                DataColumn(label: Text('')),
                               ],
-                            )).toList(),
-                          ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
-                      ],
-                    ),
-                  );
-                }
-                return const SizedBox();
-              },
+                              rows: filteredItems
+                                  .map(
+                                    (item) => DataRow(
+                                      cells: [
+                                        DataCell(
+                                          Text(
+                                            item.nama,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Text(
+                                            item.keterangan.isEmpty
+                                                ? '-'
+                                                : item.keterangan,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        DataCell(Text(item.jumlah.toString())),
+                                        DataCell(
+                                          _buildConditionDot(
+                                            item.kondisi,
+                                            isDark,
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Text(
+                                            _formatCurrency(
+                                              (item.purchasePrice ?? 0) *
+                                                  item.jumlah,
+                                            ),
+                                          ),
+                                        ),
+                                        DataCell(
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                icon: const Icon(
+                                                  Icons.edit_outlined,
+                                                  size: 18,
+                                                ),
+                                                onPressed: () =>
+                                                    _showFormDialog(
+                                                      context,
+                                                      item: item,
+                                                    ),
+                                                tooltip: 'Edit',
+                                              ),
+                                              IconButton(
+                                                icon: Icon(
+                                                  Icons.delete_outline,
+                                                  size: 18,
+                                                  color: isDark
+                                                      ? AppColorsDark
+                                                            .statusCancelled
+                                                      : AppColorsLight
+                                                            .statusCancelled,
+                                                ),
+                                                onPressed: () => _confirmDelete(
+                                                  context,
+                                                  item,
+                                                ),
+                                                tooltip: 'Hapus',
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                  .toList(),
+                            ).animate().fadeIn(delay: 200.ms, duration: 300.ms),
+
+                          if (filteredItems.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                top: AppSpacing.xl,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Text(
+                                        'Menampilkan ${state.meta.total == 0 ? 0 : ((state.meta.currentPage - 1) * state.meta.perPage) + 1} - ${((state.meta.currentPage - 1) * state.meta.perPage) + filteredItems.length} dari ${state.meta.total} data',
+                                        style: TextStyle(
+                                          color: isDark
+                                              ? AppColorsDark.textSecondary
+                                              : AppColorsLight.textSecondary,
+                                          fontSize: 13,
+                                        ),
+                                      ),
+                                      const SizedBox(width: AppSpacing.md),
+                                      Container(
+                                        height: 32,
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          border: Border.all(
+                                            color: isDark
+                                                ? AppColorsDark.borderLight
+                                                : AppColorsLight.borderLight,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            6,
+                                          ),
+                                        ),
+                                        child: DropdownButtonHideUnderline(
+                                          child: DropdownButton<int>(
+                                            value: _perPage,
+                                            icon: const Icon(
+                                              Icons.arrow_drop_down,
+                                              size: 16,
+                                            ),
+                                            style: TextStyle(
+                                              color: isDark
+                                                  ? AppColorsDark.textPrimary
+                                                  : AppColorsLight.textPrimary,
+                                              fontSize: 13,
+                                            ),
+                                            onChanged: (int? newValue) {
+                                              if (newValue != null) {
+                                                setState(() {
+                                                  _perPage = newValue;
+                                                });
+                                                context
+                                                    .read<InventoryListBloc>()
+                                                    .add(
+                                                      FetchInventories(
+                                                        page: 1,
+                                                        perPage: newValue,
+                                                      ),
+                                                    );
+                                              }
+                                            },
+                                            items: <int>[10, 20, 50, 100]
+                                                .map<DropdownMenuItem<int>>((
+                                                  int value,
+                                                ) {
+                                                  return DropdownMenuItem<int>(
+                                                    value: value,
+                                                    child: Text(
+                                                      '$value / halaman',
+                                                    ),
+                                                  );
+                                                })
+                                                .toList(),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Row(
+                                    children: [
+                                      TextButton.icon(
+                                        onPressed: state.meta.currentPage > 1
+                                            ? () => context
+                                                  .read<InventoryListBloc>()
+                                                  .add(
+                                                    FetchInventories(
+                                                      page:
+                                                          state
+                                                              .meta
+                                                              .currentPage -
+                                                          1,
+                                                      perPage: _perPage,
+                                                    ),
+                                                  )
+                                            : null,
+                                        icon: const Icon(
+                                          Icons.chevron_left,
+                                          size: 18,
+                                        ),
+                                        label: const Text('Sebelumnya'),
+                                      ),
+                                      const SizedBox(width: AppSpacing.md),
+                                      Text(
+                                        'Halaman ${state.meta.currentPage} dari ${state.meta.lastPage}',
+                                      ),
+                                      const SizedBox(width: AppSpacing.md),
+                                      TextButton.icon(
+                                        onPressed:
+                                            state.meta.currentPage <
+                                                state.meta.lastPage
+                                            ? () => context
+                                                  .read<InventoryListBloc>()
+                                                  .add(
+                                                    FetchInventories(
+                                                      page:
+                                                          state
+                                                              .meta
+                                                              .currentPage +
+                                                          1,
+                                                      perPage: _perPage,
+                                                    ),
+                                                  )
+                                            : null,
+                                        icon: const Icon(
+                                          Icons.chevron_right,
+                                          size: 18,
+                                        ),
+                                        label: const Text('Selanjutnya'),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                        ],
+                      ),
+                    );
+                  }
+                  return const SizedBox();
+                },
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }
@@ -350,28 +660,35 @@ class _InventoryViewState extends State<InventoryView> {
   Widget _buildSkeleton(bool isDark) {
     final baseColor = isDark ? Colors.grey[800]! : Colors.grey[300]!;
     final highlightColor = isDark ? Colors.grey[700]! : Colors.grey[100]!;
-    
+
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.xxxl),
       child: Column(
         children: [
           Row(
-            children: List.generate(4, (index) => Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(right: index < 3 ? AppSpacing.lg : 0),
-                child: Shimmer.fromColors(
-                  baseColor: baseColor,
-                  highlightColor: highlightColor,
-                  child: Container(
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+            children: List.generate(
+              4,
+              (index) => Expanded(
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    right: index < 3 ? AppSpacing.lg : 0,
+                  ),
+                  child: Shimmer.fromColors(
+                    baseColor: baseColor,
+                    highlightColor: highlightColor,
+                    child: Container(
+                      height: 100,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.radiusLg,
+                        ),
+                      ),
                     ),
                   ),
                 ),
               ),
-            )),
+            ),
           ),
           const SizedBox(height: AppSpacing.xxxl),
           Expanded(
@@ -417,9 +734,16 @@ class _InventoryFormDialogState extends State<InventoryFormDialog> {
     final data = widget.inventoryData;
     _namaController = TextEditingController(text: data?.nama ?? '');
     _keteranganController = TextEditingController(text: data?.keterangan ?? '');
-    _jumlahController = TextEditingController(text: data != null ? data.jumlah.toString() : '');
-    _hargaBeliController = TextEditingController(text: data?.purchasePrice != null ? data!.purchasePrice!.toInt().toString() : '');
-    _selectedKondisi = data?.kondisi.displayName ?? InventoryCondition.baik.displayName;
+    _jumlahController = TextEditingController(
+      text: data != null ? data.jumlah.toString() : '',
+    );
+    _hargaBeliController = TextEditingController(
+      text: data?.purchasePrice != null
+          ? data!.purchasePrice!.toInt().toString()
+          : '',
+    );
+    _selectedKondisi =
+        data?.kondisi.displayName ?? InventoryCondition.baik.displayName;
 
     _jumlahController.addListener(_calcTotal);
     _hargaBeliController.addListener(_calcTotal);
@@ -451,14 +775,16 @@ class _InventoryFormDialogState extends State<InventoryFormDialog> {
       nama: _namaController.text.trim(),
       keterangan: _keteranganController.text.trim(),
       jumlah: int.tryParse(_jumlahController.text) ?? 0,
-      kondisi: _selectedKondisi != null 
+      kondisi: _selectedKondisi != null
           ? InventoryCondition.fromString(_selectedKondisi!)
           : InventoryCondition.baik,
       purchasePrice: double.tryParse(_hargaBeliController.text.trim()),
     );
 
     if (widget.inventoryData != null) {
-      context.read<InventoryActionBloc>().add(UpdateInventoryEvent(entity.id!, entity));
+      context.read<InventoryActionBloc>().add(
+        UpdateInventoryEvent(entity.id!, entity),
+      );
     } else {
       context.read<InventoryActionBloc>().add(CreateInventoryEvent(entity));
     }
@@ -468,13 +794,21 @@ class _InventoryFormDialogState extends State<InventoryFormDialog> {
   @override
   Widget build(BuildContext context) {
     final isDark = AppTheme.isDark(context);
-    final surfaceColor = isDark ? AppColorsDark.surface : AppColorsLight.surface;
+    final surfaceColor = isDark
+        ? AppColorsDark.surface
+        : AppColorsLight.surface;
     final isEditMode = widget.inventoryData != null;
 
-    final formatCurrency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+    final formatCurrency = NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    );
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppSpacing.radiusLg)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+      ),
       backgroundColor: surfaceColor,
       child: Container(
         width: 520,
@@ -487,7 +821,10 @@ class _InventoryFormDialogState extends State<InventoryFormDialog> {
             children: [
               Text(
                 isEditMode ? 'Edit Inventaris' : 'Tambah Inventaris',
-                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                style: const TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: AppSpacing.xxxl),
               Row(
@@ -500,7 +837,9 @@ class _InventoryFormDialogState extends State<InventoryFormDialog> {
                       hintText: 'Masukkan nama',
                       isRequired: true,
                       controller: _namaController,
-                      validator: (val) => (val == null || val.trim().isEmpty) ? 'Wajib diisi' : null,
+                      validator: (val) => (val == null || val.trim().isEmpty)
+                          ? 'Wajib diisi'
+                          : null,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.lg),
@@ -513,7 +852,9 @@ class _InventoryFormDialogState extends State<InventoryFormDialog> {
                       controller: _jumlahController,
                       keyboardType: TextInputType.number,
                       inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                      validator: (val) => (val == null || val.trim().isEmpty) ? 'Wajib diisi' : null,
+                      validator: (val) => (val == null || val.trim().isEmpty)
+                          ? 'Wajib diisi'
+                          : null,
                     ),
                   ),
                 ],
@@ -533,15 +874,35 @@ class _InventoryFormDialogState extends State<InventoryFormDialog> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Kondisi *', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 13)),
+                        const Text(
+                          'Kondisi *',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w500,
+                            fontSize: 13,
+                          ),
+                        ),
                         const SizedBox(height: 8),
                         DropdownButtonFormField<String>(
                           value: _selectedKondisi,
                           decoration: InputDecoration(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
                           ),
-                          items: InventoryCondition.displayNames.map((e) => DropdownMenuItem(value: e, child: Text(e, style: const TextStyle(fontSize: 14)))).toList(),
-                          onChanged: (v) => setState(() => _selectedKondisi = v),
+                          items: InventoryCondition.displayNames
+                              .map(
+                                (e) => DropdownMenuItem(
+                                  value: e,
+                                  child: Text(
+                                    e,
+                                    style: const TextStyle(fontSize: 14),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (v) =>
+                              setState(() => _selectedKondisi = v),
                         ),
                       ],
                     ),
@@ -562,16 +923,27 @@ class _InventoryFormDialogState extends State<InventoryFormDialog> {
               Container(
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
-                  color: isDark ? AppColorsDark.surfaceVariant : AppColorsLight.surfaceVariant,
+                  color: isDark
+                      ? AppColorsDark.surfaceVariant
+                      : AppColorsLight.surfaceVariant,
                   borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text('Total Harga Estimasi', style: TextStyle(fontWeight: FontWeight.w500)),
+                    const Text(
+                      'Total Harga Estimasi',
+                      style: TextStyle(fontWeight: FontWeight.w500),
+                    ),
                     Text(
                       formatCurrency.format(_totalHarga),
-                      style: TextStyle(fontWeight: FontWeight.w700, color: isDark ? AppColorsDark.primary : AppColorsLight.primary, fontSize: 16),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        color: isDark
+                            ? AppColorsDark.primary
+                            : AppColorsLight.primary,
+                        fontSize: 16,
+                      ),
                     ),
                   ],
                 ),
@@ -590,7 +962,7 @@ class _InventoryFormDialogState extends State<InventoryFormDialog> {
                     child: const Text('Simpan'),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         ),

@@ -9,4 +9,12 @@ abstract class MaintenanceListEvent extends Equatable {
 
 class FetchMyMaintenanceRequests extends MaintenanceListEvent {}
 
-class FetchAllMaintenanceRequests extends MaintenanceListEvent {}
+class FetchAllMaintenanceRequests extends MaintenanceListEvent {
+  final int page;
+  final int perPage;
+
+  const FetchAllMaintenanceRequests({this.page = 1, this.perPage = 10});
+
+  @override
+  List<Object?> get props => [page, perPage];
+}

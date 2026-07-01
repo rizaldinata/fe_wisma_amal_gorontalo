@@ -4,7 +4,7 @@ import 'package:frontend/domain/repository/schedule_repository.dart';
 class GetSchedulesUseCase {
   final ScheduleRepository repository;
   GetSchedulesUseCase(this.repository);
-  Future<List<ScheduleEntity>> call() => repository.getSchedules();
+  Future<PaginatedSchedules> call({int page = 1, int perPage = 10}) => repository.getSchedules(page: page, perPage: perPage);
 }
 
 class GetScheduleByIdUseCase {

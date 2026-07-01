@@ -1,15 +1,12 @@
 import '../../entity/maintenance_request_entity.dart';
 import '../../repository/maintenance_repository.dart';
-import '../usecase.dart';
 
-class GetAllRequestsUseCase
-    implements UseCase<List<MaintenanceRequestEntity>, NoParams> {
+class GetAllRequestsUseCase {
   final MaintenanceRepository repository;
 
   GetAllRequestsUseCase(this.repository);
 
-  @override
-  Future<List<MaintenanceRequestEntity>> call(NoParams params) {
-    return repository.getAllRequests();
+  Future<PaginatedMaintenanceRequests> call({int page = 1, int perPage = 10}) {
+    return repository.getAllRequests(page, perPage);
   }
 }

@@ -39,8 +39,8 @@ class MaintenanceListBloc extends Bloc<MaintenanceListEvent, MaintenanceListStat
   ) async {
     emit(MaintenanceListLoading());
     try {
-      final results = await getAllRequestsUseCase(NoParams());
-      emit(MaintenanceListLoaded(results));
+      final results = await getAllRequestsUseCase(page: event.page, perPage: event.perPage);
+      emit(MaintenanceListLoaded(results.data, meta: results.meta));
     } on AppException catch (e) {
       emit(MaintenanceListError(e.message));
     } catch (e) {

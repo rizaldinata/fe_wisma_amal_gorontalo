@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:frontend/domain/entity/pagination_meta.dart';
 import 'package:frontend/domain/entity/schedule_update_entity.dart';
 
 class ScheduleEntity extends Equatable {
@@ -65,4 +66,17 @@ class ScheduleEntity extends Equatable {
         endTime,
         updates,
       ];
+}
+
+class PaginatedSchedules extends Equatable {
+  final List<ScheduleEntity> data;
+  final PaginationMeta meta;
+
+  const PaginatedSchedules({
+    required this.data,
+    required this.meta,
+  });
+
+  @override
+  List<Object?> get props => [data, meta];
 }

@@ -6,4 +6,12 @@ abstract class ScheduleListEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class FetchSchedules extends ScheduleListEvent {}
+class FetchSchedules extends ScheduleListEvent {
+  final int page;
+  final int perPage;
+
+  FetchSchedules({this.page = 1, this.perPage = 10});
+
+  @override
+  List<Object?> get props => [page, perPage];
+}

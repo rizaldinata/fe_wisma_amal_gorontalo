@@ -23,6 +23,8 @@ import 'package:intl/intl.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:frontend/presentation/widget/core/table/app_pagination.dart';
+import 'package:frontend/domain/entity/pagination_meta.dart';
 
 @RoutePage()
 class MaintanancePage extends StatelessWidget {
@@ -209,7 +211,7 @@ class _MaintananceViewState extends State<_MaintananceView> {
                   if (_currentView == _ViewMode.calendar) {
                     return _buildCalendarView(allSchedules, isDark);
                   } else {
-                    return _buildListView(allSchedules, isDark);
+                    return _buildListView(allSchedules, state.meta, isDark);
                   }
                 }
 
@@ -395,7 +397,7 @@ class _MaintananceViewState extends State<_MaintananceView> {
     );
   }
 
-  Widget _buildListView(List<ScheduleEntity> schedules, bool isDark) {
+  Widget _buildListView(List<ScheduleEntity> schedules, PaginationMeta meta, bool isDark) {
     if (schedules.isEmpty) {
       return EmptyStateWidget(
         icon: Icons.calendar_today_outlined,
@@ -409,49 +411,62 @@ class _MaintananceViewState extends State<_MaintananceView> {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.xxxl),
-      child: AppDataTable(
-        columns: const [
-          DataColumn(label: Text('TEKNISI')),
-          DataColumn(label: Text('LOKASI')),
-          DataColumn(label: Text('TIPE')),
-          DataColumn(label: Text('STATUS')),
-          DataColumn(label: Text('MULAI')),
-          DataColumn(label: Text('SELESAI')),
-          DataColumn(label: Text('')),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AppDataTable(
+            columns: const [
+              DataColumn(label: Text('TEKNISI')),
+              DataColumn(label: Text('LOKASI')),
+              DataColumn(label: Text('TIPE')),
+              DataColumn(label: Text('STATUS')),
+              DataColumn(label: Text('MULAI')),
+              DataColumn(label: Text('SELESAI')),
+              DataColumn(label: Text('')),
+            ],
+            rows: sortedSchedules.map((item) => DataRow(
+              cells: [
+                DataCell(Text(item.technicianName, style: const TextStyle(fontWeight: FontWeight.w600))),
+                DataCell(Text(item.location)),
+                DataCell(Text('${item.type} (${item.subtype})')),
+                DataCell(StatusBadge(status: _statusLabel(item.status))),
+                DataCell(Text(_fmtDt(item.startTime))),
+                DataCell(Text(_fmtDt(item.endTime))),
+                DataCell(
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.edit_outlined, size: 18),
+                        onPressed: () async {
+                          final result = await context.router.push(MaintananceFormRoute(scheduleData: item));
+                          if (result == true && context.mounted) {
+                            context.read<ScheduleListBloc>().add(FetchSchedules(page: meta.currentPage, perPage: meta.perPage));
+                          }
+                        },
+                        tooltip: 'Edit',
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.delete_outline, size: 18, color: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled),
+                        onPressed: () => _confirmDelete(context, item.id!),
+                        tooltip: 'Hapus',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            )).toList(),
+          ).animate().fadeIn(duration: 300.ms),
+          
+          AppPagination(
+            meta: meta,
+            currentLength: sortedSchedules.length,
+            onChanged: (page, perPage) {
+              context.read<ScheduleListBloc>().add(FetchSchedules(page: page, perPage: perPage));
+            },
+          ),
         ],
-        rows: sortedSchedules.map((item) => DataRow(
-          cells: [
-            DataCell(Text(item.technicianName, style: const TextStyle(fontWeight: FontWeight.w600))),
-            DataCell(Text(item.location)),
-            DataCell(Text('${item.type} (${item.subtype})')),
-            DataCell(StatusBadge(status: _statusLabel(item.status))),
-            DataCell(Text(_fmtDt(item.startTime))),
-            DataCell(Text(_fmtDt(item.endTime))),
-            DataCell(
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined, size: 18),
-                    onPressed: () async {
-                      final result = await context.router.push(MaintananceFormRoute(scheduleData: item));
-                      if (result == true && context.mounted) {
-                        context.read<ScheduleListBloc>().add(FetchSchedules());
-                      }
-                    },
-                    tooltip: 'Edit',
-                  ),
-                  IconButton(
-                    icon: Icon(Icons.delete_outline, size: 18, color: isDark ? AppColorsDark.statusCancelled : AppColorsLight.statusCancelled),
-                    onPressed: () => _confirmDelete(context, item.id!),
-                    tooltip: 'Hapus',
-                  ),
-                ],
-              ),
-            ),
-          ],
-        )).toList(),
-      ).animate().fadeIn(duration: 300.ms),
+      ),
     );
   }
 }

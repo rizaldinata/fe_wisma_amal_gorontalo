@@ -6,7 +6,7 @@ class GetInventoriesUseCase {
 
   GetInventoriesUseCase(this.repository);
 
-  Future<List<InventoryEntity>> call() async {
-    return await repository.getInventories();
+  Future<PaginatedInventories> call({int page = 1, int perPage = 10}) async {
+    return await repository.getInventories(page, perPage);
   }
 }
