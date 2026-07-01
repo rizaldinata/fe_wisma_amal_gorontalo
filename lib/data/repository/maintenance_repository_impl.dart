@@ -30,12 +30,14 @@ class MaintenanceRepositoryImpl implements MaintenanceRepository {
     required String title,
     required String description,
     int? roomId,
+    String? location,
     List<PlatformFile>? images,
   }) async {
     final response = await defaultDataSource.createReport(
       title: title,
       description: description,
       roomId: roomId,
+      location: location,
       images: images,
     );
     return response.toEntity();

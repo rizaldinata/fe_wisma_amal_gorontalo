@@ -11,6 +11,7 @@ abstract class MaintenanceRepository {
     required String title,
     required String description,
     int? roomId,
+    String? location,
     List<PlatformFile>? images,
   });
 

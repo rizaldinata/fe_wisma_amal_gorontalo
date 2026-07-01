@@ -28,6 +28,7 @@ class MaintenanceActionBloc extends Bloc<MaintenanceActionEvent, MaintenanceActi
           title: event.title,
           description: event.description,
           roomId: event.roomId,
+          location: event.location,
           images: event.images,
         ),
       );

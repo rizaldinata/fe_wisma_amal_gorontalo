@@ -342,6 +342,11 @@ class _DetailContent extends StatelessWidget {
                   icon: Icons.meeting_room_outlined,
                   label: 'Kamar ${request.room!.number}',
                 ),
+              if (request.location != null && request.location!.isNotEmpty)
+                _MetaItem(
+                  icon: Icons.location_on_outlined,
+                  label: request.location!,
+                ),
               _MetaItem(
                 icon: Icons.calendar_today_outlined,
                 label: dateFormat.format(

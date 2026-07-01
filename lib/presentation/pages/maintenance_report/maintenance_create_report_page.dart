@@ -83,6 +83,7 @@ class _CreateReportViewState extends State<_CreateReportView> {
       SubmitMaintenanceRequest(
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
+        location: _locationController.text.trim(),
         images: _selectedImages.isEmpty ? null : _selectedImages,
       ),
     );

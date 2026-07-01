@@ -69,6 +69,7 @@ class MaintenanceRequestModel {
   final int id;
   final String residentName;
   final MaintenanceRoomModel? room;
+  final String? location;
   final String title;
   final String description;
   final MaintenanceStatus status;
@@ -81,6 +82,7 @@ class MaintenanceRequestModel {
     required this.id,
     required this.residentName,
     this.room,
+    this.location,
     required this.title,
     required this.description,
     required this.status,
@@ -95,6 +97,7 @@ class MaintenanceRequestModel {
       id: json['id'],
       residentName: json['resident']?['name'] ?? json['resident_name'] ?? 'Unknown',
       room: json['room'] != null ? MaintenanceRoomModel.fromJson(json['room']) : null,
+      location: json['location'],
       title: json['title'],
       description: json['description'],
       status: MaintenanceStatus.fromValue(json['status']),
@@ -112,6 +115,7 @@ class MaintenanceRequestModel {
       id: id,
       residentName: residentName,
       room: room?.toEntity(),
+      location: location,
       title: title,
       description: description,
       status: status,

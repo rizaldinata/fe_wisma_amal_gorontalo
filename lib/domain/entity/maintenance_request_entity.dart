@@ -40,6 +40,7 @@ class MaintenanceRequestEntity extends Equatable {
   final int id;
   final String residentName;
   final MaintenanceRoomEntity? room;
+  final String? location;
   final String title;
   final String description;
   final MaintenanceStatus status;
@@ -52,6 +53,7 @@ class MaintenanceRequestEntity extends Equatable {
     required this.id,
     required this.residentName,
     this.room,
+    this.location,
     required this.title,
     required this.description,
     required this.status,
@@ -66,6 +68,7 @@ class MaintenanceRequestEntity extends Equatable {
         id,
         residentName,
         room,
+        location,
         title,
         description,
         status,

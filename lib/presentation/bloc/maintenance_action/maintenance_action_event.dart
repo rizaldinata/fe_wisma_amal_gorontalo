@@ -12,17 +12,19 @@ class SubmitMaintenanceRequest extends MaintenanceActionEvent {
   final String title;
   final String description;
   final int? roomId;
+  final String? location;
   final List<PlatformFile>? images;
 
   const SubmitMaintenanceRequest({
     required this.title,
     required this.description,
     this.roomId,
+    this.location,
     this.images,
   });
 
   @override
-  List<Object?> get props => [title, description, roomId, images];
+  List<Object?> get props => [title, description, roomId, location, images];
 }
 
 class SubmitMaintenanceUpdate extends MaintenanceActionEvent {

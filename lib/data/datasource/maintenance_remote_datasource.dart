@@ -15,6 +15,7 @@ abstract class MaintenanceRemoteDataSource {
     required String title,
     required String description,
     int? roomId,
+    String? location,
     List<PlatformFile>? images,
   });
   Future<MaintenanceTimelineModel> addUpdateReply({
@@ -67,12 +68,14 @@ class MaintenanceRemoteDataSourceImpl implements MaintenanceRemoteDataSource {
     required String title,
     required String description,
     int? roomId,
+    String? location,
     List<PlatformFile>? images,
   }) async {
     final formData = FormData.fromMap({
       'title': title,
       'description': description,
       if (roomId != null) 'room_id': roomId,
+      if (location != null && location.isNotEmpty) 'location': location,
     });
 
     if (images != null && images.isNotEmpty) {
