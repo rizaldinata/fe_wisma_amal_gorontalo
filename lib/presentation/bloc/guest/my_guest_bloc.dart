@@ -16,11 +16,15 @@ class FetchMyGuests extends MyGuestEvent {}
 
 class CreateMyGuest extends MyGuestEvent {
   final List<Map<String, dynamic>> guests; // <-- REVISI: Menggunakan array tamu
+  final List<Uint8List> identityImages;
+  final List<String> identityImageNames;
   final String checkInAt;
   final String checkOutAt;
 
   CreateMyGuest({
     required this.guests,
+    required this.identityImages,
+    required this.identityImageNames,
     required this.checkInAt,
     required this.checkOutAt,
   });
@@ -163,6 +167,8 @@ class MyGuestBloc extends Bloc<MyGuestEvent, MyGuestState> {
     try {
       await createGuestUseCase(
         guests: event.guests, // <-- REVISI: Pass array ke UseCase
+        identityImages: event.identityImages,
+        identityImageNames: event.identityImageNames,
         checkInAt: event.checkInAt,
         checkOutAt: event.checkOutAt,
       );

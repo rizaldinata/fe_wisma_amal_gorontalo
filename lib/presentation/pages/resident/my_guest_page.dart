@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -36,14 +38,21 @@ class MyGuestPage extends StatelessWidget {
   }
 }
 
-class _MyGuestView extends StatelessWidget {
+class _MyGuestView extends StatefulWidget {
   const _MyGuestView();
 
+  @override
+  State<_MyGuestView> createState() => _MyGuestViewState();
+}
+
+class _MyGuestViewState extends State<_MyGuestView> {
   static final _currency = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
     decimalDigits: 0,
   );
+
+  String _selectedStatus = 'Semua';
 
   @override
   Widget build(BuildContext context) {
@@ -106,24 +115,61 @@ class _MyGuestView extends StatelessWidget {
                       return RefreshIndicator(
                         onRefresh: () async =>
                             context.read<MyGuestBloc>().add(FetchMyGuests()),
-                        child: ListView.separated(
-                          itemCount: state.guests.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 10),
-                          itemBuilder: (context, index) {
-                            return _GuestCard(
-                              item: state.guests[index],
-                              currency: _currency,
-                              onDelete: () => _confirmDelete(
-                                  context, state.guests[index]),
-                              onPay: () => _showPaymentDialog(
-                                  context, state.guests[index]),
-                              onCheckout: () => _confirmCheckout(
-                                  context, state.guests[index]),
-                              onExtend: () => _showExtendDialog(
-                                  context, state.guests[index], state.guests),
-                            );
-                          },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: ['Semua', 'Aktif', 'Keluar'].map((status) {
+                                  return Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: ChoiceChip(
+                                      label: Text(status),
+                                      selected: _selectedStatus == status,
+                                      onSelected: (selected) {
+                                        if (selected) {
+                                          setState(() => _selectedStatus = status);
+                                        }
+                                      },
+                                    ),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            Expanded(
+                              child: Builder(
+                                builder: (context) {
+                                  final filteredGuests = state.guests.where((item) {
+                                    if (_selectedStatus == 'Semua') return true;
+                                    if (_selectedStatus == 'Aktif') return item.stayCompletedNotifiedAt == null;
+                                    if (_selectedStatus == 'Keluar') return item.stayCompletedNotifiedAt != null;
+                                    return true;
+                                  }).toList();
+
+                                  if (filteredGuests.isEmpty) {
+                                    return const Center(child: Text('Tidak ada tamu dengan status tersebut.'));
+                                  }
+
+                                  return ListView.separated(
+                                    itemCount: filteredGuests.length,
+                                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                                    itemBuilder: (context, index) {
+                                      return _GuestCard(
+                                        item: filteredGuests[index],
+                                        currency: _currency,
+                                        onDelete: () => _confirmDelete(context, filteredGuests[index]),
+                                        onPay: () => _showPaymentDialog(context, filteredGuests[index]),
+                                        onCheckout: () => _confirmCheckout(context, filteredGuests[index]),
+                                        onExtend: () => _showExtendDialog(context, filteredGuests[index], state.guests),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ),
+                          ],
                         ),
                       );
                     }
@@ -627,6 +673,8 @@ class _AddGuestDialog extends StatefulWidget {
 class _GuestFormEntry {
   final TextEditingController nameController;
   String relationship;
+  Uint8List? imageBytes;
+  String? imageName;
 
   _GuestFormEntry({String? name, this.relationship = 'friend'})
       : nameController = TextEditingController(text: name);
@@ -787,6 +835,14 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
       return;
     }
 
+    final missingIdentity = _guestEntries.any((e) => e.imageBytes == null);
+    if (missingIdentity) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Harap unggah foto identitas untuk setiap tamu')),
+      );
+      return;
+    }
+
     setState(() => _isSubmitting = true);
 
     // REVISI: Kirim array tamu ke BLoC
@@ -795,8 +851,13 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
       'relationship': e.relationship,
     }).toList();
 
+    final identityImages = _guestEntries.map((e) => e.imageBytes ?? Uint8List(0)).toList();
+    final identityImageNames = _guestEntries.map((e) => e.imageName ?? '').toList();
+
     context.read<MyGuestBloc>().add(CreateMyGuest(
           guests: guests,
+          identityImages: identityImages,
+          identityImageNames: identityImageNames,
           checkInAt: _checkIn!.toIso8601String(),
           checkOutAt: _checkOut!.toIso8601String(),
         ));
@@ -943,6 +1004,32 @@ class _AddGuestDialogState extends State<_AddGuestDialog> {
                               .toList(),
                           onChanged: (v) =>
                               setState(() => guestEntry.relationship = v!),
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              final result = await FilePicker.platform.pickFiles(type: FileType.image);
+                              if (result != null) {
+                                setState(() {
+                                  guestEntry.imageBytes = result.files.first.bytes;
+                                  guestEntry.imageName = result.files.first.name;
+                                });
+                              }
+                            },
+                            icon: Icon(guestEntry.imageBytes != null ? Icons.check_circle : Icons.upload_file, size: 18),
+                            label: Text(guestEntry.imageBytes != null ? guestEntry.imageName! : 'Upload Foto Identitas'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              side: BorderSide(
+                                color: guestEntry.imageBytes != null ? theme.colorScheme.primary : theme.colorScheme.outlineVariant,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),

@@ -34,12 +34,16 @@ class GuestRepositoryImpl implements GuestRepository {
   @override
   Future<List<MyGuestItem>> createGuest({
     required List<Map<String, dynamic>> guests,
+    required List<Uint8List> identityImages,
+    required List<String> identityImageNames,
     required String checkInAt,
     required String checkOutAt,
   }) async {
     try {
       return await datasource.createGuest(
         guests: guests,
+        identityImages: identityImages,
+        identityImageNames: identityImageNames,
         checkInAt: checkInAt,
         checkOutAt: checkOutAt,
       );

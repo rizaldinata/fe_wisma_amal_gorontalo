@@ -49,17 +49,30 @@ class GuestDatasource {
   // REVISI: Mendukung pendaftaran multi-tamu (maks 3) dalam satu request
   Future<List<MyGuestItem>> createGuest({
     required List<Map<String, dynamic>> guests,
+    required List<Uint8List> identityImages,
+    required List<String> identityImageNames,
     required String checkInAt,
     required String checkOutAt,
   }) async {
     try {
+      final formData = FormData();
+      formData.fields.add(MapEntry('check_in_at', checkInAt));
+      formData.fields.add(MapEntry('check_out_at', checkOutAt));
+
+      for (int i = 0; i < guests.length; i++) {
+        formData.fields.add(MapEntry('guests[$i][name]', guests[i]['name']));
+        formData.fields.add(MapEntry('guests[$i][relationship]', guests[i]['relationship']));
+        if (i < identityImages.length && i < identityImageNames.length && identityImages[i].isNotEmpty) {
+          formData.files.add(MapEntry(
+            'guests[$i][identity_image]',
+            MultipartFile.fromBytes(identityImages[i], filename: identityImageNames[i]),
+          ));
+        }
+      }
+
       final response = await dioClient.post(
         EndpointConstant.myGuestsEndpoint,
-        data: {
-          'guests': guests,
-          'check_in_at': checkInAt,
-          'check_out_at': checkOutAt,
-        },
+        data: formData,
       );
       final payload = response.data['data'];
       if (payload is List) {

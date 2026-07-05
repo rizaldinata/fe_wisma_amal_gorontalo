@@ -10,6 +10,7 @@ class GuestItem {
   final String? stayCompletedNotifiedAt;
   final String penghuni;
   final String kamar;
+  final String? identityImageUrl;
 
   const GuestItem({
     required this.id,
@@ -21,6 +22,7 @@ class GuestItem {
     this.stayCompletedNotifiedAt,
     required this.penghuni,
     required this.kamar,
+    this.identityImageUrl,
   });
 
   factory GuestItem.fromJson(Map<String, dynamic> json) {
@@ -34,6 +36,7 @@ class GuestItem {
       stayCompletedNotifiedAt: json['stay_completed_notified_at'] as String?,
       penghuni: json['penghuni'] as String? ?? '-',
       kamar: json['kamar'] as String? ?? '-',
+      identityImageUrl: json['identity_image_url'] as String?,
     );
   }
 }

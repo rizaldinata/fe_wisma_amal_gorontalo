@@ -52,6 +52,7 @@ class _AdminGuestBillViewState extends State<_AdminGuestBillView> {
   bool _hasMore = true;
   List<AdminGuestBillItem> _cache = [];
   Timer? _debounce;
+  String _selectedStatus = 'Semua';
 
   final _currency = NumberFormat.currency(
     locale: 'id_ID',
@@ -322,6 +323,21 @@ class _AdminGuestBillViewState extends State<_AdminGuestBillView> {
                           searchController: _searchController,
                           searchHint: 'Cari penghuni, tamu...',
                           onSearchChanged: _onSearch,
+                          dropdownFilter: DropdownButton<String>(
+                            value: _selectedStatus,
+                            items: ['Semua', 'Unpaid', 'Pending', 'Verified', 'Paid', 'Rejected', 'Failed']
+                                .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                                .toList(),
+                            onChanged: (v) {
+                              if (v != null) {
+                                setState(() {
+                                  _selectedStatus = v;
+                                });
+                              }
+                            },
+                            underline: const SizedBox(),
+                            focusColor: Colors.transparent,
+                          ),
                         ).animate().fadeIn(duration: 300.ms),
 
                         const SizedBox(height: AppSpacing.lg),
@@ -338,9 +354,14 @@ class _AdminGuestBillViewState extends State<_AdminGuestBillView> {
                             DataColumn(label: Text('STATUS')),
                             DataColumn(label: Text('AKSI')),
                           ],
-                          rows: _cache.asMap().entries.map((entry) {
-                            final index = entry.key + 1;
-                            final row = entry.value;
+                          rows: (() {
+                            final filteredCache = _cache.where((item) {
+                              if (_selectedStatus == 'Semua') return true;
+                              return item.status.toLowerCase() == _selectedStatus.toLowerCase();
+                            }).toList();
+                            return filteredCache.asMap().entries.map((entry) {
+                              final index = entry.key + 1;
+                              final row = entry.value;
                             return DataRow(
                               cells: [
                                 DataCell(Text('$index')),
@@ -356,10 +377,11 @@ class _AdminGuestBillViewState extends State<_AdminGuestBillView> {
                                     child: const Text('Detail', style: TextStyle(fontSize: 12)),
                                   ),
                                 ),
-                              ],
-                            );
-                          }).toList(),
-                        ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
+                                  ],
+                                );
+                              }).toList();
+                            })(),
+                          ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
 
                         // Loading more indicator
                         if (_isLoadingMore)

@@ -61,6 +61,7 @@ class _GuestListViewState extends State<_GuestListView> {
   bool _hasMore = true;
   List<GuestItem> _guestCache = <GuestItem>[];
   Timer? _debounce;
+  String _selectedStatus = 'Semua';
 
   @override
   void initState() {
@@ -252,6 +253,21 @@ class _GuestListViewState extends State<_GuestListView> {
                         searchController: _searchController,
                         searchHint: 'Cari tamu, penghuni, kamar...',
                         onSearchChanged: _onSearch,
+                        dropdownFilter: DropdownButton<String>(
+                          value: _selectedStatus,
+                          items: ['Semua', 'Aktif', 'Keluar']
+                              .map((s) => DropdownMenuItem(value: s, child: Text(s)))
+                              .toList(),
+                          onChanged: (v) {
+                            if (v != null) {
+                              setState(() {
+                                _selectedStatus = v;
+                              });
+                            }
+                          },
+                          underline: const SizedBox(),
+                          focusColor: Colors.transparent,
+                        ),
                       ).animate().fadeIn(duration: 300.ms),
 
                       const SizedBox(height: AppSpacing.lg),
@@ -268,9 +284,16 @@ class _GuestListViewState extends State<_GuestListView> {
                           DataColumn(label: Text('KELUAR')),
                           DataColumn(label: Text('AKSI')),
                         ],
-                        rows: _guestCache.asMap().entries.map((entry) {
-                          final index = entry.key + 1;
-                          final row = entry.value;
+                        rows: (() {
+                          final filteredCache = _guestCache.where((item) {
+                            if (_selectedStatus == 'Semua') return true;
+                            if (_selectedStatus == 'Aktif') return item.stayCompletedNotifiedAt == null;
+                            if (_selectedStatus == 'Keluar') return item.stayCompletedNotifiedAt != null;
+                            return true;
+                          }).toList();
+                          return filteredCache.asMap().entries.map((entry) {
+                            final index = entry.key + 1;
+                            final row = entry.value;
                           return DataRow(
                             cells: [
                               DataCell(Text('$index')),
@@ -281,15 +304,32 @@ class _GuestListViewState extends State<_GuestListView> {
                               DataCell(Text(_formatDateTime(row.checkInAt))),
                               DataCell(Text(_formatDateTime(row.checkOutAt))),
                               DataCell(
-                                TextButton(
-                                  onPressed: () => _confirmCheckout(context, row),
-                                  child: Text('Checkout', style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      onPressed: () => _showGuestDetail(context, row),
+                                      icon: Icon(Icons.visibility_outlined, color: Theme.of(context).colorScheme.primary),
+                                      tooltip: 'Detail Tamu',
+                                      visualDensity: VisualDensity.compact,
+                                    ),
+                                    if (row.stayCompletedNotifiedAt == null) ...[
+                                      const SizedBox(width: 4),
+                                      IconButton(
+                                        onPressed: () => _confirmCheckout(context, row),
+                                        icon: Icon(Icons.logout_rounded, color: Theme.of(context).colorScheme.error),
+                                        tooltip: 'Checkout Tamu',
+                                        visualDensity: VisualDensity.compact,
+                                      ),
+                                    ],
+                                  ],
                                 ),
                               ),
                             ],
                           );
-                        }).toList(),
-                      ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
+                        }).toList();
+                      })(),
+                    ).animate().fadeIn(delay: 100.ms, duration: 300.ms),
 
                       // Loading more indicator
                       if (_isLoadingMore)
@@ -326,6 +366,66 @@ class _GuestListViewState extends State<_GuestListView> {
     } catch (_) {
       return raw;
     }
+  }
+
+  void _showGuestDetail(BuildContext context, GuestItem item) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Detail Tamu', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              Text('Nama Tamu: ${item.name}'),
+              const SizedBox(height: 4),
+              Text('Penghuni: ${item.penghuni}'),
+              const SizedBox(height: 4),
+              Text('Kamar: ${item.kamar}'),
+              const SizedBox(height: 4),
+              Text('Hubungan: ${item.relationshipLabel}'),
+              const SizedBox(height: 4),
+              Text('Check In: ${_formatDateTime(item.checkInAt)}'),
+              const SizedBox(height: 4),
+              Text('Check Out: ${_formatDateTime(item.checkOutAt)}'),
+              const SizedBox(height: 4),
+              Text('Status: ${item.stayCompletedNotifiedAt == null ? 'Aktif' : 'Telah Keluar'}'),
+              const SizedBox(height: 16),
+              if (item.identityImageUrl != null && item.identityImageUrl!.isNotEmpty) ...[
+                Text('Foto Identitas:', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    item.identityImageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 150,
+                      color: Colors.grey[200],
+                      alignment: Alignment.center,
+                      child: const Icon(Icons.broken_image, color: Colors.grey),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+              ],
+              Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Tutup'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   void _confirmCheckout(BuildContext context, GuestItem item) async {
