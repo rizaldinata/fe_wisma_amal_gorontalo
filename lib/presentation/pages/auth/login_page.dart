@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
-import 'package:frontend/core/constant/permission_key.dart';
 import 'package:frontend/core/constant/style_constant.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
+import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
@@ -13,12 +13,18 @@ import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/textform/textform.dart';
 import 'package:auto_route/auto_route.dart';
+import 'package:frontend/main.dart';
 
 @RoutePage()
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key, @QueryParam('reason') this.reason});
+  const LoginPage({
+    super.key,
+    @QueryParam('reason') this.reason,
+    this.pendingRoom,
+  });
 
   final String? reason;
+  final RoomEntity? pendingRoom;
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -31,7 +37,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    // Tampilkan SnackBar setelah widget selesai di-build
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (widget.reason == 'unauthenticated') {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -42,17 +48,15 @@ class _LoginPageState extends State<LoginPage> {
         );
       }
     });
-
-    // Toggle obscure text saat pertama kali
-    context.read<AuthBloc>().add(const ToggleObscureTextEvent());
   }
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.grey.shade300,
+      backgroundColor: isDark ? Theme.of(context).scaffoldBackgroundColor : Colors.grey.shade300,
       appBar: CustomAppbar(
-        icon: Icon(Icons.arrow_back, color: Colors.black),
+        icon: Icon(Icons.arrow_back, color: Theme.of(context).colorScheme.onSurface),
         title: 'Kembali',
       ),
       body: Stack(
@@ -68,6 +72,7 @@ class _LoginPageState extends State<LoginPage> {
                     style: StyleConstant.customTextStyle.copyWith(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ],
@@ -80,7 +85,7 @@ class _LoginPageState extends State<LoginPage> {
               child: Container(
                 padding: EdgeInsets.symmetric(vertical: 30, horizontal: 40),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: isDark ? Theme.of(context).colorScheme.surface : Colors.white,
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
@@ -93,17 +98,47 @@ class _LoginPageState extends State<LoginPage> {
                 // height: 700,
                 width: 600,
                 child: BlocConsumer<AuthBloc, AuthState>(
-                  listener: (context, state) {
+                  listener: (context, state) async {
                     if (state.status.isFailure) {
                       AppSnackbar.showError(
                         state.errorMessage ?? 'Login failed',
                       );
                     }
 
-                    // Jika login berhasil, kembalikan user ke tampilan utama
-                    // dan reset semua route agar menu mengikuti permission baru.
                     if (state.status.isSuccess && state.isLoggedIn) {
-                      context.router.replaceAll([const AppLayoutRoute()]);
+                      if (widget.pendingRoom != null) {
+                        await context.router.replaceAll([
+                          AppLayoutRoute(
+                            children: [
+                              ReservationDetailFormRoute(
+                                room: widget.pendingRoom!,
+                              ),
+                            ],
+                          ),
+                        ]);
+                      } else {
+                        final perms = state.userInfo?.permissions;
+                        if (perms?.can('view-dashboard') ?? false) {
+                          await context.router.replaceAll([
+                            const AppLayoutRoute(
+                              children: [DashboardRoute()],
+                            ),
+                          ]);
+                        } else if (perms?.can('view-resident-dashboard') ??
+                            false) {
+                          await context.router.replaceAll([
+                            const AppLayoutRoute(
+                              children: [ResidentDashboardRoute()],
+                            ),
+                          ]);
+                        } else {
+                          await context.router.replaceAll([
+                            const AppLayoutRoute(
+                              children: [RoomRoute()],
+                            ),
+                          ]);
+                        }
+                      }
                     }
                   },
                   builder: (context, state) {
@@ -112,17 +147,19 @@ class _LoginPageState extends State<LoginPage> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          'Login Page',
+                          'Halaman Login',
                           style: StyleConstant.customTextStyle.copyWith(
                             fontSize: 30,
                             fontWeight: FontWeight.w900,
+                            color: Theme.of(context).colorScheme.onSurface,
                           ),
                         ),
                         SizedBox(height: 10),
                         Text(
-                          'Masukan Email dan Password untuk melanjutkan',
+                          'Masukkan Email dan Password untuk melanjutkan',
                           style: StyleConstant.customTextStyle.copyWith(
                             fontSize: 16,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
                           ),
                         ),
                         SizedBox(height: 40),
@@ -190,21 +227,28 @@ class _LoginPageState extends State<LoginPage> {
                           ),
                         ),
                         SizedBox(height: 30),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'Belum punya akun?',
-                              style: StyleConstant.customTextStyle,
-                            ),
-                            TextButton(
-                              onPressed: () {
-                                context.router.replace(RegisterRoute());
-                              },
-                              child: Text('Daftar disini'),
-                            ),
-                          ],
-                        ),
+                        if (context.isFeatureEnabled('auth_registration'))
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Belum punya akun?',
+                                style: StyleConstant.customTextStyle.copyWith(
+                                  color: Theme.of(context).colorScheme.onSurface,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  context.router.replace(
+                                    RegisterRoute(
+                                      pendingRoom: widget.pendingRoom,
+                                    ),
+                                  );
+                                },
+                                child: Text('Daftar disini'),
+                              ),
+                            ],
+                          ),
                       ],
                     );
                   },

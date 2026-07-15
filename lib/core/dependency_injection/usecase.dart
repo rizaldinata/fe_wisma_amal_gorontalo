@@ -3,16 +3,41 @@ import 'package:frontend/domain/repository/auth_repository.dart';
 import 'package:frontend/domain/repository/finance_repository.dart';
 import 'package:frontend/domain/repository/permission_repository.dart';
 import 'package:frontend/domain/repository/room_repository.dart';
+import 'package:frontend/domain/repository/setting_repository.dart';
+import 'package:frontend/domain/repository/user_repository.dart';
+import 'package:frontend/domain/repository/profile_repository.dart';
+import 'package:frontend/domain/usecase/user/get_all_users_usecase.dart';
+import 'package:frontend/domain/usecase/user/update_user_usecase.dart';
+import 'package:frontend/domain/usecase/user/delete_user_usecase.dart';
+import 'package:frontend/domain/usecase/user/create_user_usecase.dart';
+import 'package:frontend/domain/usecase/profile/profile_usecases.dart';
 import 'package:frontend/domain/usecase/auth/check_session_usecase.dart';
 import 'package:frontend/domain/usecase/auth/get_permissions_usecase.dart';
 import 'package:frontend/domain/usecase/auth/is_logged_in_usecase.dart';
 import 'package:frontend/domain/usecase/auth/login_usecase.dart';
 import 'package:frontend/domain/usecase/auth/logout_usecase.dart';
 import 'package:frontend/domain/usecase/auth/register_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_invoices_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_settings_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_public_settings_usecase.dart';
+import 'package:frontend/domain/usecase/setting/update_settings_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_due_invoices_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_kpi_summary_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_pending_payments_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_all_payments_usecase.dart';
 import 'package:frontend/domain/usecase/finance/get_revenue_chart_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_expenses_usecase.dart';
+import 'package:frontend/domain/usecase/finance/create_expense_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_midtrans_monitoring_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_my_fines_usecase.dart';
+import 'package:frontend/domain/usecase/finance/pay_fines_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_all_fines_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_fine_eligible_users_usecase.dart';
+import 'package:frontend/domain/usecase/finance/create_fine_usecase.dart';
+import 'package:frontend/domain/usecase/finance/waive_fine_usecase.dart';
+import 'package:frontend/domain/usecase/finance/cancel_fine_usecase.dart';
+import 'package:frontend/domain/usecase/finance/update_expense_usecase.dart';
+import 'package:frontend/domain/usecase/finance/delete_expense_usecase.dart';
 import 'package:frontend/domain/usecase/permission/create_permission_usecase.dart';
 import 'package:frontend/domain/usecase/permission/delete_permission_usecase.dart';
 import 'package:frontend/domain/usecase/permission/get_permission_list_usecase.dart';
@@ -21,6 +46,7 @@ import 'package:frontend/domain/usecase/room/create_room_usecase.dart';
 import 'package:frontend/domain/usecase/room/delete_room_image_usecase.dart';
 import 'package:frontend/domain/usecase/room/delete_room_usecase.dart';
 import 'package:frontend/domain/usecase/room/get_room_by_id_usecase.dart';
+import 'package:frontend/domain/usecase/room/get_room_schedules_usecase.dart';
 import 'package:frontend/domain/usecase/room/get_rooms_usecase.dart';
 import 'package:frontend/domain/usecase/room/update_room_usecase.dart';
 import 'package:frontend/domain/usecase/room/upload_room_image_usecase.dart';
@@ -30,6 +56,25 @@ import 'package:frontend/domain/usecase/maintenance/get_detail_usecase.dart';
 import 'package:frontend/domain/usecase/maintenance/create_request_usecase.dart';
 import 'package:frontend/domain/usecase/maintenance/add_update_usecase.dart';
 import 'package:frontend/domain/repository/maintenance_repository.dart';
+import 'package:frontend/domain/usecase/finance/verify_payment_usecase.dart';
+import 'package:frontend/domain/usecase/finance/refund_payment_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_member_finance_summary_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_member_invoices_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_member_payments_usecase.dart';
+import 'package:frontend/domain/usecase/finance/pay_invoice_usecase.dart';
+import 'package:frontend/domain/usecase/finance/extend_lease_usecase.dart';
+import 'package:frontend/domain/usecase/finance/initiate_perpanjang_manual_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_member_invoice_by_id_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_available_payment_methods_usecase.dart';
+import 'package:frontend/domain/usecase/setting/create_bank_account_usecase.dart';
+import 'package:frontend/domain/usecase/setting/delete_bank_account_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_bank_accounts_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_midtrans_fee_config_usecase.dart';
+import 'package:frontend/domain/usecase/setting/update_midtrans_fee_config_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_payment_methods_usecase.dart';
+import 'package:frontend/domain/usecase/setting/get_public_bank_accounts_usecase.dart';
+import 'package:frontend/domain/usecase/setting/update_bank_account_usecase.dart';
+import 'package:frontend/domain/usecase/setting/update_payment_methods_usecase.dart';
 
 import 'package:frontend/domain/repository/inventory_repository.dart';
 import 'package:frontend/domain/usecase/inventory/get_inventories_usecase.dart';
@@ -37,6 +82,49 @@ import 'package:frontend/domain/usecase/inventory/inventory_action_usecases.dart
 import 'package:frontend/domain/repository/schedule_repository.dart';
 import 'package:frontend/domain/usecase/schedule/schedule_usecases.dart';
 import 'package:frontend/domain/usecase/schedule/add_schedule_update_usecase.dart';
+import 'package:frontend/domain/repository/reservation_repository.dart';
+import 'package:frontend/domain/usecase/reservation/get_reservations_usecase.dart';
+import 'package:frontend/domain/usecase/reservation/create_reservation_usecase.dart';
+import 'package:frontend/domain/usecase/reservation/cancel_reservation_usecase.dart';
+// import 'package:frontend/domain/usecase/reservation/update_reservation_status_usecase.dart';
+import 'package:frontend/domain/repository/role_repository.dart';
+import 'package:frontend/domain/usecase/role/role_usecases.dart';
+import 'package:frontend/domain/repository/my_reservation_repository.dart';
+import 'package:frontend/domain/usecase/my_reservation/get_my_reservations_usecase.dart';
+import 'package:frontend/domain/usecase/my_reservation/ajukan_pembatalan_dp_usecase.dart';
+import 'package:frontend/domain/repository/resident_repository.dart';
+import 'package:frontend/domain/usecase/resident/get_admin_residents_usecase.dart';
+import 'package:frontend/domain/usecase/resident/get_admin_resident_detail_usecase.dart';
+import 'package:frontend/domain/usecase/resident/get_resident_profile_usecase.dart';
+import 'package:frontend/domain/repository/guest_repository.dart';
+import 'package:frontend/domain/usecase/guest/get_admin_guests_usecase.dart';
+import 'package:frontend/domain/usecase/guest/get_my_guests_usecase.dart';
+import 'package:frontend/domain/usecase/guest/create_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/create_admin_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/delete_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/pay_guest_bill_usecase.dart';
+import 'package:frontend/domain/usecase/guest/get_admin_guest_bills_usecase.dart';
+import 'package:frontend/domain/usecase/guest/verify_guest_bill_usecase.dart';
+import 'package:frontend/domain/usecase/guest/checkout_admin_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/checkout_my_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/extend_admin_guest_usecase.dart';
+import 'package:frontend/domain/usecase/guest/extend_my_guest_usecase.dart';
+import 'package:frontend/domain/repository/notification_repository.dart';
+import 'package:frontend/domain/usecase/notification/get_notification_logs_usecase.dart';
+import 'package:frontend/domain/usecase/notification/mark_all_notification_logs_read_usecase.dart';
+import 'package:frontend/domain/usecase/notification/get_notification_summary_usecase.dart';
+import 'package:frontend/domain/usecase/notification/resend_notification_usecase.dart';
+import 'package:frontend/domain/usecase/notification/send_custom_notification_usecase.dart';
+import 'package:frontend/domain/usecase/notification/get_notification_recipients_usecase.dart';
+import 'package:frontend/domain/repository/fixed_expense_repository.dart';
+import 'package:frontend/domain/usecase/finance/get_fixed_expenses_usecase.dart';
+import 'package:frontend/domain/usecase/finance/update_fixed_expense_usecase.dart';
+import 'package:frontend/domain/usecase/finance/get_fixed_expense_status_usecase.dart';
+import 'package:frontend/domain/usecase/finance/generate_fixed_expenses_usecase.dart';
+import 'package:frontend/domain/repository/refund_request_repository.dart';
+import 'package:frontend/domain/usecase/refund_request/get_refund_requests_usecase.dart';
+import 'package:frontend/domain/usecase/refund_request/proses_refund_usecase.dart';
+import 'package:frontend/domain/usecase/refund_request/tolak_refund_usecase.dart';
 
 Future<void> initializeUseCase() async {
   // Auth UseCases
@@ -62,6 +150,9 @@ Future<void> initializeUseCase() async {
   // Room UseCases
   serviceLocator.registerFactory(
     () => GetRoomsUseCase(serviceLocator.get<RoomRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetRoomSchedulesUseCase(serviceLocator.get<RoomRepository>()),
   );
   serviceLocator.registerFactory(
     () => CreateRoomUseCase(serviceLocator.get<RoomRepository>()),
@@ -98,16 +189,105 @@ Future<void> initializeUseCase() async {
 
   // Finance UseCases
   serviceLocator.registerFactory(
+    () => GetInvoicesUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
     () => GetDueInvoicesUseCase(serviceLocator.get<FinanceRepository>()),
   );
   serviceLocator.registerFactory(
     () => GetPendingPaymentsUseCase(serviceLocator.get<FinanceRepository>()),
   );
   serviceLocator.registerFactory(
+    () => GetAllPaymentsUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
     () => GetKpiSummaryUseCase(serviceLocator.get<FinanceRepository>()),
   );
   serviceLocator.registerFactory(
+    () => GetMidtransMonitoringUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
     () => GetRevenueChartUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetExpensesUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateExpenseUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateExpenseUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => DeleteExpenseUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => VerifyPaymentUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => RefundPaymentUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetMemberFinanceSummaryUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetMemberInvoicesUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetMemberPaymentsUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => PayInvoiceUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => ExtendLeaseUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => InitiatePerpanjangManualUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetMemberInvoiceByIdUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetAvailablePaymentMethodsUseCase(serviceLocator.get<FinanceRepository>()),
+  );
+
+  // Setting UseCases
+  serviceLocator.registerFactory(
+    () => GetSettingsUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetPublicSettingsUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateBulkSettingsUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetPaymentMethodsUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdatePaymentMethodsUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetBankAccountsUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetPublicBankAccountsUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateBankAccountUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateBankAccountUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => DeleteBankAccountUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetMidtransFeeConfigUseCase(serviceLocator.get<SettingRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateMidtransFeeConfigUseCase(serviceLocator.get<SettingRepository>()),
   );
 
   // Maintenance UseCases
@@ -162,5 +342,201 @@ Future<void> initializeUseCase() async {
   );
   serviceLocator.registerFactory(
     () => AddScheduleUpdateUseCase(serviceLocator.get<ScheduleRepository>()),
+  );
+
+  // User Management UseCases
+  serviceLocator.registerFactory(
+    () => GetAllUsersUseCase(serviceLocator.get<UserRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateUserUseCase(serviceLocator.get<UserRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => DeleteUserUseCase(serviceLocator.get<UserRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateUserUseCase(serviceLocator.get<UserRepository>()),
+  );
+
+  // Profile UseCases
+  serviceLocator.registerFactory(
+    () => GetProfileUseCase(serviceLocator.get<ProfileRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateProfileUseCase(serviceLocator.get<ProfileRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => ChangePasswordUseCase(serviceLocator.get<ProfileRepository>()),
+  );
+
+  // Reservation UseCases
+  serviceLocator.registerFactory(
+    () => GetReservationsUseCase(serviceLocator<ReservationRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateReservationUseCase(serviceLocator<ReservationRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CancelReservationUseCase(repository: serviceLocator<ReservationRepository>()),
+  );
+
+  // Resident UseCases
+  serviceLocator.registerFactory(
+    () => GetAdminResidentsUseCase(serviceLocator<ResidentRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetAdminResidentDetailUseCase(serviceLocator<ResidentRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetResidentProfileUseCase(serviceLocator<ResidentRepository>()),
+  );
+
+  // serviceLocator.registerFactory(
+  //   () =>
+  //       UpdateReservationStatusUseCase(serviceLocator<ReservationRepository>()),
+  // );
+
+  // Role UseCases
+  serviceLocator.registerFactory(
+    () => GetAllRolesUseCase(serviceLocator.get<RoleRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetAllPermissionsUseCase(serviceLocator.get<RoleRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateRoleUseCase(serviceLocator.get<RoleRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateRoleUseCase(serviceLocator.get<RoleRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => DeleteRoleUseCase(serviceLocator.get<RoleRepository>()),
+  );
+
+  // My Reservation UseCases
+  serviceLocator.registerFactory(
+    () => GetMyReservationsUseCase(
+      serviceLocator<MyReservationRepository>(),
+    ),
+  );
+  serviceLocator.registerFactory(
+    () => AjukanPembatalanDpUseCase(
+      repository: serviceLocator<MyReservationRepository>(),
+    ),
+  );
+
+  // Guest UseCases
+  serviceLocator.registerFactory(
+    () => GetAdminGuestsUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetMyGuestsUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateGuestUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateAdminGuestUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => DeleteGuestUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => PayGuestBillUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetAdminGuestBillsUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => VerifyGuestBillUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CheckoutAdminGuestUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CheckoutMyGuestUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => ExtendAdminGuestUseCase(serviceLocator<GuestRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => ExtendMyGuestUseCase(serviceLocator<GuestRepository>()),
+  );
+
+  serviceLocator.registerFactory(
+    () => GetNotificationLogsUseCase(
+      serviceLocator<NotificationRepository>(),
+    ),
+  );
+  serviceLocator.registerFactory(
+    () => MarkAllNotificationLogsReadUseCase(
+      repository: serviceLocator<NotificationRepository>(),
+    ),
+  );
+  serviceLocator.registerFactory(
+    () => GetNotificationSummaryUseCase(serviceLocator<NotificationRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => ResendNotificationUseCase(serviceLocator<NotificationRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => SendCustomNotificationUseCase(serviceLocator<NotificationRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetNotificationRecipientsUseCase(serviceLocator<NotificationRepository>()),
+  );
+
+  // Fixed Expense UseCases
+  serviceLocator.registerFactory(
+    () => GetFixedExpensesUseCase(serviceLocator<FixedExpenseRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => UpdateFixedExpenseUseCase(serviceLocator<FixedExpenseRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetFixedExpenseStatusUseCase(serviceLocator<FixedExpenseRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GenerateFixedExpensesUseCase(serviceLocator<FixedExpenseRepository>()),
+  );
+
+  // Refund Request UseCases (Admin)
+  serviceLocator.registerFactory(
+    () => GetRefundRequestsUseCase(
+      repository: serviceLocator<RefundRequestRepository>(),
+    ),
+  );
+  serviceLocator.registerFactory(
+    () => ProsesRefundUseCase(
+      repository: serviceLocator<RefundRequestRepository>(),
+    ),
+  );
+  serviceLocator.registerFactory(
+    () => TolakRefundUseCase(
+      repository: serviceLocator<RefundRequestRepository>(),
+    ),
+  );
+
+  // Fine UseCases
+  serviceLocator.registerFactory(
+    () => GetMyFinesUseCase(serviceLocator<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => PayFinesUseCase(serviceLocator<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetAllFinesUseCase(serviceLocator<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CreateFineUseCase(serviceLocator<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => WaiveFineUseCase(serviceLocator<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => CancelFineUseCase(serviceLocator<FinanceRepository>()),
+  );
+  serviceLocator.registerFactory(
+    () => GetFineEligibleUsersUseCase(serviceLocator<FinanceRepository>()),
   );
 }

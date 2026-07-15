@@ -1,13 +1,19 @@
 import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:frontend/domain/entity/table/tabel_colum.dart';
+import 'package:formz/formz.dart';
+import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/presentation/bloc/reservation_list/reservation_bloc.dart';
 import 'package:frontend/presentation/bloc/reservation_list/reservation_event.dart';
 import 'package:frontend/presentation/bloc/reservation_list/reservation_state.dart';
 import 'package:frontend/presentation/pages/reservation_list/widget/reservation_status_badge.dart';
-import 'package:frontend/presentation/widget/core/card/stat_card.dart';
-import 'package:frontend/presentation/widget/core/table/table.dart';
+import 'package:frontend/presentation/widget/core/card/summary_stat_card.dart';
+import 'package:frontend/presentation/widget/core/table/app_data_table.dart';
+import 'package:frontend/presentation/widget/core/appbar/app_topbar.dart';
+import 'package:frontend/presentation/widget/core/appbar/search_and_filter_bar.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_theme.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
 
 @RoutePage()
 class ReservationPage extends StatelessWidget {
@@ -15,8 +21,8 @@ class ReservationPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => ReservationBloc()..add(GetReservationsEvent()),
+    return BlocProvider.value(
+      value: serviceLocator<ReservationBloc>()..add(GetReservationsEvent()),
       child: const ReservationView(),
     );
   }
@@ -32,215 +38,234 @@ class ReservationView extends StatefulWidget {
 class _ReservationViewState extends State<ReservationView> {
   final TextEditingController _searchController = TextEditingController();
 
+  DateTime? selectedStartDate;
+  DateTime? selectedEndDate;
+  String selectedSort = 'all';
+
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
   }
 
+  void _applyDateFilter() {
+    context.read<ReservationBloc>().add(
+      FilterReservationDateEvent(
+        startDate: selectedStartDate,
+        endDate: selectedEndDate,
+      ),
+    );
+  }
+
+  Future<void> _pickStartDate() async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        selectedStartDate = pickedDate;
+      });
+      _applyDateFilter();
+    }
+  }
+
+  Future<void> _pickEndDate() async {
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      setState(() {
+        selectedEndDate = pickedDate;
+      });
+      _applyDateFilter();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isDark = AppTheme.isDark(context);
 
     return BlocBuilder<ReservationBloc, ReservationState>(
       builder: (context, state) {
         return Scaffold(
-          backgroundColor: theme.colorScheme.surface,
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Data Reservasi',
-                    style: theme.textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Kelola Sistem Kost Anda dengan Mudah',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  // ── TOP STAT CARDS ──
-                  Row(
-                    children: [
-                      Expanded(
-                        child: StatCard(
-                          title: 'Total kamar',
-                          count: '10',
-                          icon: const Icon(
-                            Icons.bed_outlined,
-                            size: 24,
-                            color: Color(0xFF3F51B5),
-                          ),
-                          color: const Color(0xFFC5CAE9),
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: StatCard(
-                          title: 'Reservasi Masuk',
-                          count: '3',
-                          icon: const Icon(
-                            Icons.insert_drive_file_outlined,
-                            size: 24,
-                            color: Color(0xFFFFA000),
-                          ),
-                          color: const Color(0xFFFFECB3),
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: StatCard(
-                          title: 'Pembayaran Valid',
-                          count: '10',
-                          icon: const Icon(
-                            Icons.assignment_turned_in_outlined,
-                            size: 24,
-                            color: Color(0xFF43A047),
-                          ),
-                          color: const Color(0xFFDCEDC8),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-
-                  // ── DATA TABLE CARD ──
-                  TableCard(
-                    title: 'Data Reservasi',
-                    actions: _buildHeaderFilters(context),
-                    columns: const [
-                      TableColumn(label: 'Id', flex: 1),
-                      TableColumn(label: 'Nama', flex: 3),
-                      TableColumn(label: 'kamar', flex: 1),
-                      TableColumn(label: 'Jenis Sewa', flex: 2),
-                      TableColumn(label: 'Periode', flex: 4),
-                      TableColumn(label: 'Status Pembayaran', flex: 3),
-                      TableColumn(label: 'Action', flex: 1),
-                    ],
-                    rows: List.generate(
-                      5,
-                      (index) => [
-                        'RSV001',
-                        'Bagus Alfian',
-                        'A201',
-                        'Harian',
-                        '12 Feb 2025 - 18 Feb 2025',
-                        const Align(
-                          alignment: Alignment.centerLeft,
-                          child: ReservationStatusBadge(status: 'Lunas'),
-                        ),
-                        _buildEditButton(),
-                      ],
-                    ),
-                  ),
-                ],
+          backgroundColor: isDark ? AppColorsDark.background : AppColorsLight.background,
+          body: Column(
+            children: [
+              AppTopBar(
+                title: 'Data Reservasi',
+                breadcrumb: 'Kamar & Reservasi / Data Reservasi',
               ),
-            ),
+              Expanded(
+                child: state.status == FormzSubmissionStatus.inProgress
+                    ? const Center(child: CircularProgressIndicator())
+                    : SingleChildScrollView(
+                        padding: const EdgeInsets.all(AppSpacing.xxxl),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: SummaryStatCard(
+                                    label: 'Total Reservasi',
+                                    value: state.reservations.length.toString(),
+                                    icon: Icons.bed_outlined,
+                                    iconColor: isDark ? AppColorsDark.primary : AppColorsLight.primary,
+                                    iconBg: isDark ? AppColorsDark.primaryLight : AppColorsLight.primaryLight,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.lg),
+                                Expanded(
+                                  child: SummaryStatCard(
+                                    label: 'Menunggu',
+                                    value: state.pendingReservations.length.toString(),
+                                    icon: Icons.insert_drive_file_outlined,
+                                    iconColor: isDark ? AppColorsDark.statusWaiting : AppColorsLight.statusWaiting,
+                                    iconBg: isDark ? AppColorsDark.statusWaitingBg : AppColorsLight.statusWaitingBg,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.lg),
+                                Expanded(
+                                  child: SummaryStatCard(
+                                    label: 'Aktif',
+                                    value: state.activeReservations.length.toString(),
+                                    icon: Icons.assignment_turned_in_outlined,
+                                    iconColor: isDark ? AppColorsDark.statusDone : AppColorsLight.statusDone,
+                                    iconBg: isDark ? AppColorsDark.statusDoneBg : AppColorsLight.statusDoneBg,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.xxxl),
+
+                            SearchAndFilterBar(
+                              searchHint: 'Cari penghuni / kamar...',
+                              onSearchChanged: (value) {
+                                context.read<ReservationBloc>().add(SearchReservationEvent(value));
+                              },
+                              dropdownFilter: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    height: 40,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                      border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+                                    ),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        value: selectedSort,
+                                        items: const [
+                                          DropdownMenuItem(value: 'all', child: Text('Semua Status', style: TextStyle(fontSize: 14))),
+                                          DropdownMenuItem(value: 'pending', child: Text('Menunggu', style: TextStyle(fontSize: 14))),
+                                          DropdownMenuItem(value: 'active', child: Text('Aktif', style: TextStyle(fontSize: 14))),
+                                          DropdownMenuItem(value: 'cancelled', child: Text('Dibatalkan', style: TextStyle(fontSize: 14))),
+                                          DropdownMenuItem(value: 'finished', child: Text('Selesai', style: TextStyle(fontSize: 14))),
+                                        ],
+                                        onChanged: (value) {
+                                          if (value != null) {
+                                            setState(() {
+                                              selectedSort = value;
+                                            });
+                                            context.read<ReservationBloc>().add(SortReservationEvent(value));
+                                          }
+                                        },
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.md),
+                                  InkWell(
+                                    onTap: _pickStartDate,
+                                    child: Container(
+                                      height: 40,
+                                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+                                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                      ),
+                                      child: Text(
+                                        selectedStartDate == null
+                                            ? 'Tgl Mulai'
+                                            : '${selectedStartDate!.day}/${selectedStartDate!.month}/${selectedStartDate!.year}',
+                                        style: const TextStyle(fontSize: 14),
+                                      ),
+                                    ),
+                                  ),
+                                  const Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 8),
+                                    child: Icon(Icons.remove, size: 16),
+                                  ),
+                                  InkWell(
+                                    onTap: _pickEndDate,
+                                    child: Container(
+                                      height: 40,
+                                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                                      alignment: Alignment.center,
+                                      decoration: BoxDecoration(
+                                        border: Border.all(color: isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight),
+                                        borderRadius: BorderRadius.circular(AppSpacing.radiusMd),
+                                      ),
+                                      child: Text(
+                                        selectedEndDate == null
+                                            ? 'Tgl Selesai'
+                                            : '${selectedEndDate!.day}/${selectedEndDate!.month}/${selectedEndDate!.year}',
+                                        style: const TextStyle(fontSize: 14),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              onSortPressed: () {},
+                              sortLabel: '', // or hide
+                            ),
+
+                            const SizedBox(height: AppSpacing.lg),
+
+                            AppDataTable(
+                              columns: const [
+                                DataColumn(label: Text('ID')),
+                                DataColumn(label: Text('NAMA PENYEWA')),
+                                DataColumn(label: Text('NO KAMAR')),
+                                DataColumn(label: Text('JENIS SEWA')),
+                                DataColumn(label: Text('PERIODE')),
+                                DataColumn(label: Text('STATUS')),
+                                DataColumn(label: Text('PEMBAYARAN')),
+                              ],
+                              rows: state.filteredReservations.map((reservation) {
+                                return DataRow(cells: [
+                                  DataCell(Text(reservation.id.toString())),
+                                  DataCell(Text(reservation.residentName, style: const TextStyle(fontWeight: FontWeight.w600))),
+                                  DataCell(Text(reservation.roomNumber)),
+                                  DataCell(Text(reservation.rentalType)),
+                                  DataCell(Text('${reservation.startDate} - ${reservation.endDate}')),
+                                  DataCell(ReservationStatusBadge(status: reservation.status)),
+                                  DataCell(ReservationStatusBadge(
+                                    status: reservation.paymentStatus,
+                                    color: reservation.paymentStatus == 'paid'
+                                        ? Colors.green.shade700
+                                        : Colors.orange.shade700,
+                                  )),
+                                ]);
+                              }).toList(),
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
+            ],
           ),
         );
       },
-    );
-  }
-
-  Widget _buildHeaderFilters(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Search
-        SizedBox(
-          width: 250,
-          height: 40,
-          child: TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Cari...',
-              prefixIcon: const Icon(Icons.search, size: 20),
-              contentPadding: const EdgeInsets.symmetric(vertical: 0),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        // Sort
-        const _SmallFilterDropdown(
-          hint: 'Urutkan',
-          icon: Icons.filter_list,
-          width: 110,
-        ),
-        const SizedBox(width: 12),
-        // Date Range
-        const _SmallFilterDropdown(hint: '1 February 2025', width: 160),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 8),
-          child: Icon(Icons.remove, size: 16),
-        ),
-        const _SmallFilterDropdown(hint: '1 Maret 2025', width: 160),
-      ],
-    );
-  }
-
-  Widget _buildEditButton() {
-    return SizedBox(
-      height: 30,
-      child: ElevatedButton(
-        onPressed: () {},
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFFFFC107),
-          foregroundColor: Colors.white,
-          padding: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-        ),
-        child: const Text('Edit', style: TextStyle(fontSize: 11)),
-      ),
-    );
-  }
-}
-
-class _SmallFilterDropdown extends StatelessWidget {
-  final String hint;
-  final IconData? icon;
-  final double width;
-
-  const _SmallFilterDropdown({
-    required this.hint,
-    this.icon,
-    required this.width,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: width,
-      height: 40,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey.shade400),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        children: [
-          if (icon != null) ...[Icon(icon, size: 18), const SizedBox(width: 8)],
-          Expanded(
-            child: Text(
-              hint,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 13),
-            ),
-          ),
-          const Icon(Icons.arrow_drop_down),
-        ],
-      ),
     );
   }
 }

@@ -20,8 +20,8 @@ class InventoryFormPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) => serviceLocator<InventoryActionBloc>(),
+    return BlocProvider.value(
+      value: serviceLocator<InventoryActionBloc>(),
       child: _InventoryFormView(
         inventoryData: inventoryData,
         isEditMode: isEditMode,

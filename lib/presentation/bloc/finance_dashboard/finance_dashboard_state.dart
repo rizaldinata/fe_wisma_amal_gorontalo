@@ -15,6 +15,13 @@ class FinanceDashboardInitial extends FinanceDashboardState {}
 
 class FinanceDashboardLoading extends FinanceDashboardState {}
 
+class FinanceDashboardRefreshing extends FinanceDashboardState {
+  final FinanceDashboardLoaded currentData;
+  const FinanceDashboardRefreshing(this.currentData);
+  @override
+  List<Object?> get props => [currentData];
+}
+
 class FinanceDashboardLoaded extends FinanceDashboardState {
   final List<InvoiceEntity> dueInvoices;
   final List<PaymentEntity> pendingPayments;

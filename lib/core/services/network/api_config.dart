@@ -14,11 +14,13 @@ class ApiConfig {
   static const String PRODUCTION = 'production';
   static const String DEVELOP = 'develop';
 
-  static const String currentMode = DEVELOP;
+  static const String currentMode = PRODUCTION;
 
-  // static const String localURl = 'http://localhost:8000';
-  static const String localURl = 'https://api.wismaamal.com';
-  static const String productionURL = 'https://alfian.taild9066e.ts.net/be';
+  static const String localURl = 'http://localhost:8000';
+  static const String productionURL = String.fromEnvironment(
+    'BASE_URL',
+    defaultValue: 'https://api-wismaamal.allvvnt.my.id/',
+  );
 
   factory ApiConfig.getServerUrl() {
     if (kReleaseMode) {
@@ -28,7 +30,7 @@ class ApiConfig {
         case PRODUCTION:
           return ApiConfig(baseUrl: productionURL);
         case DEVELOP:
-          return ApiConfig(baseUrl: localURl);
+          return ApiConfig(baseUrl: 'http://127.0.0.1:8000');
         default:
           return ApiConfig(baseUrl: productionURL);
       }

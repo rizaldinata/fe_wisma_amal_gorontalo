@@ -2,20 +2,21 @@ import 'package:auto_route/auto_route.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:formz/formz.dart';
-import 'package:frontend/core/constant/permission_key.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
-import 'package:frontend/main.dart';
+import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend/presentation/bloc/room_list/room_bloc.dart';
 import 'package:frontend/presentation/bloc/room_list/room_event.dart';
 import 'package:frontend/presentation/bloc/room_list/room_state.dart';
-import 'package:frontend/presentation/pages/room_form/form_room.dart';
 import 'package:frontend/presentation/pages/room_list/widget/room_card.dart';
-import 'package:frontend/presentation/widget/core/botton/button.dart';
-import 'package:frontend/presentation/widget/core/card/basic_card.dart';
-import 'package:frontend/presentation/widget/core/card/stat_card.dart';
+import 'package:frontend/presentation/widget/core/appbar/app_topbar.dart';
+import 'package:frontend/presentation/widget/core/card/summary_stat_card.dart';
 import 'package:frontend/presentation/widget/core/dialog/app_dialog.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_theme.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
 
 @RoutePage()
 class RoomPage extends StatelessWidget {
@@ -54,140 +55,198 @@ class _RoomViewState extends State<RoomView>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final isDark = AppTheme.isDark(context);
 
-    return BlocBuilder<RoomBloc, RoomState>(
-      builder: (context, state) {
-        return Scaffold(
-          backgroundColor: theme.colorScheme.surface,
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, authState) {
+        final roles = authState.userInfo?.roles ?? [];
+        final isAdmin =
+            roles.contains('admin') || roles.contains('super-admin');
+
+        return BlocBuilder<RoomBloc, RoomState>(
+          builder: (context, state) {
+            return Scaffold(
+              backgroundColor: isDark
+                  ? AppColorsDark.background
+                  : AppColorsLight.background,
+              body: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Kelola Kamar',
-                    style: theme.textTheme.headlineLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  AppTopBar(
+                    title: isAdmin ? 'Kelola Kamar' : 'Daftar Kamar Tersedia',
+                    breadcrumb: 'Kamar & Reservasi / Kelola Kamar',
+                    action: isAdmin
+                        ? ElevatedButton.icon(
+                            onPressed: () async {
+                              final result = await context.router.push(
+                                const AddRoomRoute(),
+                              );
+
+                              if (result == true && context.mounted) {
+                                context.read<RoomBloc>().add(GetRoomsEvent());
+                              }
+                            },
+                            icon: const Icon(Icons.add, size: 18),
+                            label: const Text('Tambah Kamar'),
+                          )
+                        : null,
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Kelola Sistem Kost Anda dengan Mudah',
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  const SizedBox(height: 32),
-                  Row(
-                    children: [
-                      StatCard(
-                        title: 'Total Rooms',
-                        count: state.rooms.length.toString(),
-                        color: Colors.green.shade100,
-                      ),
-                      const SizedBox(width: 16),
-                      StatCard(
-                        title: 'Available Rooms',
-                        count: state.availableRooms.length.toString(),
-                        color: colorScheme.primaryContainer,
-                      ),
-                      const SizedBox(width: 16),
-                      StatCard(
-                        title: 'Occupied Rooms',
-                        count: state.occupiedRooms.length.toString(),
-                        color: colorScheme.errorContainer,
-                      ),
-                      const SizedBox(width: 16),
-                      StatCard(
-                        title: 'Maintenance Rooms',
-                        count: state.maintenanceRooms.length.toString(),
-                        color: colorScheme.secondaryContainer,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 30),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.surfaceContainerLow,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: TabBar(
-                            indicator: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withAlpha(50),
+
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(AppSpacing.xxxl),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (isAdmin) ...[
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: SummaryStatCard(
+                                    label: 'Total Kamar',
+                                    value: state.rooms.length.toString(),
+                                    icon: Icons.bed_outlined,
+                                    iconColor: isDark
+                                        ? AppColorsDark.primary
+                                        : AppColorsLight.primary,
+                                    iconBg: isDark
+                                        ? AppColorsDark.primaryLight
+                                        : AppColorsLight.primaryLight,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.lg),
+                                Expanded(
+                                  child: SummaryStatCard(
+                                    label: 'Tersedia',
+                                    value: state.availableRooms.length
+                                        .toString(),
+                                    icon: Icons.check_circle_outline,
+                                    iconColor: isDark
+                                        ? AppColorsDark.conditionGood
+                                        : AppColorsLight.conditionGood,
+                                    iconBg: isDark
+                                        ? AppColorsDark.statusDoneBg
+                                        : AppColorsLight.statusDoneBg,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.lg),
+                                Expanded(
+                                  child: SummaryStatCard(
+                                    label: 'Terisi',
+                                    value: state.occupiedRooms.length
+                                        .toString(),
+                                    icon: Icons.person_outline,
+                                    iconColor: isDark
+                                        ? AppColorsDark.conditionPoor
+                                        : AppColorsLight.conditionPoor,
+                                    iconBg: isDark
+                                        ? AppColorsDark.statusCancelledBg
+                                        : AppColorsLight.statusCancelledBg,
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.lg),
+                                Expanded(
+                                  child: SummaryStatCard(
+                                    label: 'Perbaikan',
+                                    value: state.maintenanceRooms.length
+                                        .toString(),
+                                    icon: Icons.build_circle_outlined,
+                                    iconColor: isDark
+                                        ? AppColorsDark.conditionFair
+                                        : AppColorsLight.conditionFair,
+                                    iconBg: isDark
+                                        ? AppColorsDark.statusWaitingBg
+                                        : AppColorsLight.statusWaitingBg,
+                                  ),
+                                ),
+                              ],
                             ),
-                            dividerColor: Colors.transparent,
-                            indicatorSize: TabBarIndicatorSize.tab,
-                            tabs: const [
-                              Tab(text: 'All'),
-                              Tab(text: 'Available'),
-                              Tab(text: 'Occupied'),
-                              Tab(text: 'Maintenance'),
-                            ],
-                            controller: _controller,
+                            const SizedBox(height: AppSpacing.xxxl),
+                          ],
+
+                          /// TAB
+                          Container(
+                            decoration: BoxDecoration(
+                              color: isDark
+                                  ? AppColorsDark.surfaceVariant
+                                  : AppColorsLight.surfaceVariant,
+                              borderRadius: BorderRadius.circular(
+                                AppSpacing.radiusMd,
+                              ),
+                              border: Border.all(
+                                color: isDark
+                                    ? AppColorsDark.borderLight
+                                    : AppColorsLight.borderLight,
+                              ),
+                            ),
+                            child: TabBar(
+                              controller: _controller,
+                              indicator: BoxDecoration(
+                                borderRadius: BorderRadius.circular(
+                                  AppSpacing.radiusMd,
+                                ),
+                                color: isDark
+                                    ? AppColorsDark.primary
+                                    : AppColorsLight.primary,
+                              ),
+                              labelColor: Colors.white,
+                              unselectedLabelColor: isDark
+                                  ? AppColorsDark.textSecondary
+                                  : AppColorsLight.textSecondary,
+                              dividerColor: Colors.transparent,
+                              indicatorSize: TabBarIndicatorSize.tab,
+                              tabs: const [
+                                Tab(text: 'Semua'),
+                                Tab(text: 'Tersedia'),
+                                Tab(text: 'Terisi'),
+                                Tab(text: 'Perbaikan'),
+                              ],
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: AppSpacing.xxxl),
+
+                          /// GRID
+                          AnimatedBuilder(
+                            animation: _controller,
+                            builder: (context, child) {
+                              final List<RoomEntity> currentRooms;
+                              switch (_controller.index) {
+                                case 0:
+                                  currentRooms = state.rooms;
+                                  break;
+                                case 1:
+                                  currentRooms = state.availableRooms;
+                                  break;
+                                case 2:
+                                  currentRooms = state.occupiedRooms;
+                                  break;
+                                case 3:
+                                  currentRooms = state.maintenanceRooms;
+                                  break;
+                                default:
+                                  currentRooms = state.rooms;
+                              }
+                              return _buildRoomGrid(
+                                currentRooms,
+                                state,
+                                isDark,
+                              );
+                            },
+                          ),
+                        ],
                       ),
-                      if (context.can(PermissionKeys.createRooms)) ...[
-                        const SizedBox(width: 20),
-                        BasicButton(
-                          onPressed: () async {
-                            await context.router.navigate(const AddRoomRoute());
-
-                            if (mounted) {
-                              context.read<RoomBloc>().add(GetRoomsEvent());
-                            }
-                          },
-                          label: 'Tambah Kamar',
-                          leadIcon: const Icon(Icons.add),
-                        ),
-                      ],
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  AnimatedBuilder(
-                    animation: _controller,
-                    builder: (context, child) {
-                      final List<RoomEntity> currentRooms;
-                      switch (_controller.index) {
-                        case 0:
-                          currentRooms = state.rooms;
-                          break;
-                        case 1:
-                          currentRooms = state.availableRooms;
-                          break;
-                        case 2:
-                          currentRooms = state.occupiedRooms;
-                          break;
-                        case 3:
-                          currentRooms = state.maintenanceRooms;
-                          break;
-                        default:
-                          currentRooms = state.rooms;
-                      }
-
-                      return _buildRoomGrid(currentRooms, state);
-                    },
+                    ),
                   ),
                 ],
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
   }
 
-  Widget _buildRoomGrid(List<RoomEntity> rooms, RoomState state) {
-    print('Building room grid with ${rooms.length} rooms');
+  Widget _buildRoomGrid(List<RoomEntity> rooms, RoomState state, bool isDark) {
     if (state.status == FormzSubmissionStatus.inProgress) {
       return const Center(
         child: Padding(
@@ -201,27 +260,49 @@ class _RoomViewState extends State<RoomView>
       return Center(
         child: Text(
           'Gagal memuat kamar: ${state.errorMessage}',
-          style: const TextStyle(color: Colors.red),
+          style: TextStyle(
+            color: isDark
+                ? AppColorsDark.statusCancelled
+                : AppColorsLight.statusCancelled,
+          ),
         ),
       );
     }
 
     if (rooms.isEmpty) {
-      return BasicCard(
-        child: SizedBox(
-          height: 300,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.bed_outlined, size: 64, color: Colors.grey),
-                SizedBox(height: 16),
-                Text(
-                  'Tidak ada kamar',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+      return Container(
+        height: 300,
+        decoration: BoxDecoration(
+          color: isDark ? AppColorsDark.surface : AppColorsLight.surface,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(
+            color: isDark
+                ? AppColorsDark.borderLight
+                : AppColorsLight.borderLight,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.bed_outlined,
+                size: 64,
+                color: isDark
+                    ? AppColorsDark.textSecondary
+                    : AppColorsLight.textSecondary,
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Tidak ada kamar',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDark
+                      ? AppColorsDark.textSecondary
+                      : AppColorsLight.textSecondary,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       );
@@ -229,46 +310,46 @@ class _RoomViewState extends State<RoomView>
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        return BasicCard(
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: constraints.maxWidth ~/ 300,
-              crossAxisSpacing: 30,
-              mainAxisSpacing: 16,
-              childAspectRatio: 0.6,
-            ),
-            itemBuilder: (context, index) {
-              final room = rooms[index];
-              return RoomCard(
-                onTap: () {
-                  context.router.navigate(RoomDetailRoute(roomId: room.id));
-                },
-                onDelete: () async {
-                  final confirmed = await AppDialog.show(
-                    context,
-                    title: 'Delete Room',
-                    message:
-                        'Are you sure you want to delete this room? This action cannot be undone.',
-                    confirmLabel: 'Delete',
-                    type: AppDialogType.danger,
-                  );
-                  if (confirmed == true) {
-                    context.read<RoomBloc>().add(DeleteRoomEvent(room.id));
-                  }
-                },
-                title: room.title,
-                imageUrl: room.imageUrl.firstOrNull?.thumbnail,
-                availability: room.status,
-                description: room.description,
-                roomNumber: room.number,
-                price: '${room.priceFormatted} / bulan',
-              );
-            },
-            itemCount: rooms.length,
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: (constraints.maxWidth ~/ 300).clamp(1, 10),
+            crossAxisSpacing: AppSpacing.xl,
+            mainAxisSpacing: AppSpacing.xl,
+            childAspectRatio: 0.6,
           ),
+          itemCount: rooms.length,
+          itemBuilder: (context, index) {
+            final room = rooms[index];
+            return RoomCard(
+              onTap: () async {
+                await context.router.navigate(RoomDetailRoute(roomId: room.id));
+                if (context.mounted) {
+                  context.read<RoomBloc>().add(GetRoomsEvent());
+                }
+              },
+              onDelete: () async {
+                final confirmed = await AppDialog.show(
+                  context,
+                  title: 'Delete Room',
+                  message: 'Are you sure you want to delete this room?',
+                  confirmLabel: 'Delete',
+                  type: AppDialogType.danger,
+                );
+
+                if (confirmed == true) {
+                  context.read<RoomBloc>().add(DeleteRoomEvent(room.id));
+                }
+              },
+              title: room.title,
+              imageUrl: room.imageUrl.firstOrNull?.thumbnail,
+              availability: room.status,
+              description: room.description,
+              roomNumber: room.number,
+              price: '${room.priceFormatted} / bulan',
+            );
+          },
         );
       },
     );

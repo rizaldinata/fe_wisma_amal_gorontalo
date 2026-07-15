@@ -18,6 +18,9 @@ import 'package:frontend/domain/entity/permission_entity.dart';
 import 'package:frontend/domain/entity/user_entity.dart';
 import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 import 'package:frontend/presentation/bloc/auth/auth_state.dart';
+import 'package:frontend/presentation/bloc/setting/feature_toggle/feature_toggle_bloc.dart';
+import 'package:frontend/presentation/bloc/setting/feature_toggle/feature_toggle_event.dart';
+import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 class AuthStateNotifier extends ChangeNotifier {
@@ -60,13 +63,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<GetUserInfoEvent>(_onGetUserInfo);
     on<GetPermissionsEvent>(_onGetPermissions);
     on<ToggleObscureTextEvent>(_onToggleObscureText);
+    on<SessionExpiredEvent>(_onSessionExpired);
     on<ResetStateEvent>((event, emit) {
       emit(const AuthState());
     });
     add(const InitLoginStatusEvent());
     on<CheckSessionEvent>((event, emit) async {
       _sessionTimer = Timer.periodic(const Duration(minutes: 5), (timer) {
-        print('Checking session validity...');
         _checkSession();
       });
     });
@@ -77,27 +80,40 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     try {
-      // Ambil ulang permissions dari server dan simpan ke SharedPreferences
       await getPermissionsUseCase(NoParams());
 
-      // Setelah tersimpan di storage, sinkronkan kembali ke state.userInfo
       final currentUser = state.userInfo;
-      if (currentUser != null) {
-        final permissions = Permissions(
-          storage.getPermissions()?.toSet() ?? {},
+      if (currentUser == null) return;
+
+      final newPermissions = Permissions(storage.getPermissions()?.toSet() ?? {});
+      final newRoles = storage.getList(StorageConstant.roleActive) ?? currentUser.roles;
+
+      final permissionsChanged = !_setsEqual(
+        currentUser.permissions?.raw ?? {},
+        newPermissions.raw,
+      );
+      final rolesChanged = !_setsEqual(
+        currentUser.roles.toSet(),
+        newRoles.toSet(),
+      );
+
+      if (permissionsChanged || rolesChanged) {
+        final updatedUser = currentUser.copyWith(
+          permissions: newPermissions,
+          roles: newRoles,
         );
-        final updatedUser = currentUser.copyWith(permissions: permissions);
         emit(state.copyWith(userInfo: updatedUser));
       }
     } on AppException catch (e) {
       debugPrint('Error fetching permissions: ${e.message}');
-      AppSnackbar.showError('Gagal mendapatkan izin: ${e.message}');
     } catch (e) {
       debugPrint('Unexpected error fetching permissions: $e');
-      AppSnackbar.showError(
-        'Terjadi kesalahan tak terduga saat mendapatkan izin.',
-      );
     }
+  }
+
+  bool _setsEqual(Set<String> a, Set<String> b) {
+    if (a.length != b.length) return false;
+    return a.containsAll(b);
   }
 
   Future<void> _checkSession() async {
@@ -106,15 +122,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (!isValid) {
         add(const LogoutEvent());
         AppSnackbar.showError('Sesi telah berakhir. Silakan login kembali.');
+      } else {
+        // Refresh permissions setiap kali session dicek (setiap 5 menit)
+        add(const GetPermissionsEvent());
       }
     } on AppException catch (e) {
       print('Error checking session: ${e.message}');
-      AppSnackbar.showError('Gagal memeriksa sesi: ${e.message}');
     } catch (e) {
       print('Unexpected error checking session: $e');
-      AppSnackbar.showError(
-        'Terjadi kesalahan tak terduga saat memeriksa sesi.',
-      );
     }
   }
 
@@ -150,6 +165,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         roles: role ?? [],
         permissions: permissions,
       );
+      serviceLocator<FeatureToggleBloc>().add(FetchFeatureToggles());
       emit(state.copyWith(isLoggedIn: status, userInfo: userInfo));
     } else {
       final permissions = Permissions(storage.getPermissions()?.toSet() ?? {});
@@ -181,6 +197,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       if (isLoggedIn) {
         add(const GetUserInfoEvent());
+        serviceLocator<FeatureToggleBloc>().add(FetchFeatureToggles());
         emit(
           state.copyWith(
             isLoggedIn: true,
@@ -224,6 +241,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           email: event.email,
           password: event.password,
           username: event.username,
+          passwordConfirmation: event.passwordConfirm,
         ),
       );
 
@@ -231,6 +249,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
       if (isLoggedIn) {
         add(const GetUserInfoEvent());
+        serviceLocator<FeatureToggleBloc>().add(FetchFeatureToggles());
         emit(
           state.copyWith(
             isLoggedIn: true,
@@ -288,6 +307,38 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
           isLoggedIn: false,
         ),
       );
+    }
+  }
+
+  Future<void> _onSessionExpired(
+    SessionExpiredEvent event,
+    Emitter<AuthState> emit,
+  ) async {
+    print('Handling Session Expired Event...');
+    try {
+      // 1. Clear local storage & token directly to be sure
+      await storage.clear();
+      // insecure but since secureStorage is internal to repository, we use repository via logoutUseCase or similar
+      // Actually, better to use the repository functionality if possible
+      // but logoutUseCase might call the API.
+      // Let's just reset the state and let the session initialization handle it.
+      
+      // Emit guest state
+      emit(
+        const AuthState(
+          status: FormzSubmissionStatus.initial,
+          isLoggedIn: false,
+        ),
+      );
+      
+      loginStatusNotifier.isLoggedIn = false;
+      
+      // Update permissions as guest
+      await getPermissionsUseCase(NoParams());
+      
+      AppSnackbar.showError('Sesi sudah habis. Silakan login kembali.');
+    } catch (e) {
+      print('Error during session expiration handling: $e');
     }
   }
 

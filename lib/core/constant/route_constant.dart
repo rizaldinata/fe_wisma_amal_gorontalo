@@ -3,7 +3,8 @@ class RouteConstant {
   // Kalau nggak diawali / → berarti child/nested
 
   //splash page
-  static const String rootPath = '/';
+  static const String landingPath = '/';
+  static const String rootPath = '/app';
   static const String rootName = 'root';
 
   //auth page
@@ -14,11 +15,19 @@ class RouteConstant {
   static const String dashboardName = 'dashboard';
   static const String landingName = 'landing';
   static const String permissionName = 'permissions';
-  static const String roleName = 'role';
+  static const String roleName = 'roles';
   static const String settingName = 'setting';
+  static const String featureToggleName = 'setting/feature-toggles';
+  static const String landingCmsName = 'setting/landing-cms';
+  static const String userManagementName = 'users';
+  static const String profileName = 'profile';
+  static const String editProfileName = 'edit-profile';
+  static const String changePasswordName = 'change-password';
 
   // Manajemen penghuni
   static const String residentName = 'residents';
+  static const String residentProfileName = '$residentName/profile';
+  static const String myReservationName = 'my-reservation';
 
   // Manajemen kamar & reservasi
   static const String roomAndReservationName = 'room-reservations';
@@ -28,6 +37,7 @@ class RouteConstant {
   static const String editRoomName =
       '$roomAndReservationName/$detailRoomName/form';
   static const String reservationName = '$roomAndReservationName/reservations';
+  static const String reservationDetailFormName = 'reservation-detail-form';
   static const String roomScheduleName = '$roomAndReservationName/schedule';
 
   // Manajemen Keuangan
@@ -47,4 +57,28 @@ class RouteConstant {
 
   // Modul Finance
   static const String financeDashboardName = 'finance/dashboard';
+
+  // Form Identitas Pengguna
+  static const String identityFormName = 'profile/identity';
+  static const String completeProfileName = 'profile/complete';
+
+  static const String financeExpenseName = 'finance/expenses';
+  static const String financeFixedExpenseName = 'finance/fixed-expenses';
+
+  static const String financeInvoiceName = 'finance/invoices';
+  static const String paymentVerificationName = 'finance/payment-verification';
+  static const String refundRequestName = 'finance/refund-requests';
+  static const String paymentHistoryName = 'finance/payment-history';
+  static const String memberFinanceName = 'me/finance';
+  static const String extendLeaseName = 'me/finance/extend-lease';
+  static const String extendLeasePaymentName =
+      'me/finance/extend-lease/payment';
+  static const String invoicePaymentName = 'me/finance/invoice/payment';
+  static const String myFinesName = 'me/fines';
+  static const String fineManagementName = 'finance/fines';
+  static const String myGuestName = 'me/guests';
+  static const String adminGuestBillName = 'admin/guest-bills';
+
+  // Notifikasi
+  static const String notificationMonitoringName = 'notification/monitoring';
 }

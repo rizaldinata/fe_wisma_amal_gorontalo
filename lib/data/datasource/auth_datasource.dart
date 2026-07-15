@@ -64,12 +64,12 @@ class AuthDatasource {
     }
   }
 
-  Future<BaseResponseModel<List<String>>> getPermissions() async {
+  Future<BaseResponseModel<Map<String, dynamic>>> getPermissions() async {
     try {
       final response = await dioClient.get(EndpointConstant.permissionEndpoint);
-      final baseResponse = BaseResponseModel<List<String>>.fromJson(
+      final baseResponse = BaseResponseModel<Map<String, dynamic>>.fromJson(
         response.data,
-        (json) => List<String>.from(json),
+        (json) => Map<String, dynamic>.from(json as Map),
       );
       return baseResponse;
     } catch (e) {

@@ -30,13 +30,14 @@ class FinanceDashboardBloc
     FetchDashboardData event,
     Emitter<FinanceDashboardState> emit,
   ) async {
-    emit(FinanceDashboardLoading());
+    final current = state is FinanceDashboardLoaded ? state as FinanceDashboardLoaded : null;
+    emit(current != null ? FinanceDashboardRefreshing(current) : FinanceDashboardLoading());
     try {
       // Kita panggil ke-4 API secara bersamaan agar sangat cepat!
       final results = await Future.wait([
         _getDueInvoicesUseCase.call(),
         _getPendingPaymentsUseCase.call(),
-        _getKpiSummaryUseCase.call(),
+        _getKpiSummaryUseCase.call(month: event.month, year: event.year),
         _getRevenueChartUseCase.call(),
       ]);
 

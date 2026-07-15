@@ -78,18 +78,19 @@ class AppException implements Exception {
         }
       }
 
-      // Handle format standard lainnya
-      if (data.containsKey('message')) return data['message'].toString();
-      if (data.containsKey('error')) return data['error'].toString();
       if (data.containsKey('errors')) {
         // Kalau bentuknya {"errors": {"email": ["Already taken"]}}
         final errors = data['errors'];
-        if (errors is Map) {
-          return errors.values.first is List
+        if (errors is Map && errors.isNotEmpty) {
+          return errors.values.first is List && (errors.values.first as List).isNotEmpty
               ? (errors.values.first as List).first.toString()
               : errors.values.first.toString();
         }
       }
+
+      // Handle format standard lainnya
+      if (data.containsKey('message')) return data['message'].toString();
+      if (data.containsKey('error')) return data['error'].toString();
     }
 
     // Fallback berdasarkan status code umum

@@ -89,6 +89,7 @@ class _FormRoomViewState extends State<FormRoomView> {
   final TextEditingController titleController = TextEditingController();
 
   final TextEditingController priceController = TextEditingController();
+  final TextEditingController priceDailyController = TextEditingController();
 
   final TextEditingController roomNumberController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -98,6 +99,9 @@ class _FormRoomViewState extends State<FormRoomView> {
     titleController.text = state.room.title;
     descriptionController.text = state.room.description;
     priceController.text = ThousandsFormatter.format(state.room.price.toInt());
+    priceDailyController.text = state.room.priceDaily > 0 
+        ? ThousandsFormatter.format(state.room.priceDaily.toInt()) 
+        : '';
     roomNumberController.text = state.room.number;
   }
 
@@ -107,6 +111,7 @@ class _FormRoomViewState extends State<FormRoomView> {
     descriptionController.dispose();
     titleController.dispose();
     priceController.dispose();
+    priceDailyController.dispose();
     super.dispose();
   }
 
@@ -139,12 +144,12 @@ class _FormRoomViewState extends State<FormRoomView> {
         if (state.submitStatus.isSuccess) {
           AppSnackbar.showSuccess(
             widget.formMode == FormMode.add
-                ? 'Room added successfully'
-                : 'Room updated successfully',
+                ? 'Kamar berhasil ditambahkan'
+                : 'Kamar berhasil diperbarui',
           );
           context.router.pop(true);
         } else if (state.submitStatus.isFailure) {
-          AppSnackbar.showError(state.errorMessage ?? 'Failed to submit form');
+          AppSnackbar.showError(state.errorMessage ?? 'Gagal menyimpan data kamar');
         }
       },
       builder: (context, state) {
@@ -165,19 +170,19 @@ class _FormRoomViewState extends State<FormRoomView> {
         return Scaffold(
           appBar: CustomAppbar(
             icon: const Icon(Icons.arrow_back),
-            title: 'Back',
+            title: 'Kembali',
           ),
           body: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: SingleChildScrollView(
               child: BasicCard(
                 title: widget.formMode == FormMode.add
-                    ? 'Add Room'
-                    : 'Edit Room',
+                    ? 'Tambah Kamar'
+                    : 'Edit Kamar',
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Room Images'),
+                    Text('Gambar Kamar'),
                     SizedBox(height: 10),
                     SizedBox(
                       height: 300,
@@ -243,7 +248,7 @@ class _FormRoomViewState extends State<FormRoomView> {
                                   ),
                                 ),
                                 SizedBox(height: 10),
-                                Text('Add Image'),
+                                Text('Tambah Gambar'),
                               ],
                             ),
                           ),
@@ -263,21 +268,21 @@ class _FormRoomViewState extends State<FormRoomView> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   CustomTextForm(
-                                    title: 'Title',
-                                    hintText: 'Enter room title',
+                                    title: 'Nama Kamar',
+                                    hintText: 'Masukkan nama kamar',
                                     controller: titleController,
                                     isRequired: true,
                                     validator: (v) {
                                       if (v == null || v.trim().isEmpty) {
-                                        return 'Title is required';
+                                        return 'Nama kamar wajib diisi';
                                       }
                                       return null;
                                     },
                                   ),
                                   SizedBox(height: 30),
                                   CustomTextForm(
-                                    title: 'Room number',
-                                    hintText: 'Enter room number',
+                                    title: 'Nomor Kamar',
+                                    hintText: 'Masukkan nomor kamar',
                                     keyboardType: TextInputType.number,
                                     inputFormatters: [
                                       FilteringTextInputFormatter.digitsOnly,
@@ -288,8 +293,8 @@ class _FormRoomViewState extends State<FormRoomView> {
                                   ),
                                   SizedBox(height: 30),
                                   CustomTextForm(
-                                    title: 'Price',
-                                    hintText: 'Enter room price',
+                                    title: 'Harga Kamar',
+                                    hintText: 'Masukkan harga kamar',
                                     keyboardType: TextInputType.number,
                                     controller: priceController,
                                     isRequired: true,
@@ -302,20 +307,32 @@ class _FormRoomViewState extends State<FormRoomView> {
                                       //   priceController.text.trim(),
                                       // );
                                       if (v == null || v.trim().isEmpty) {
-                                        return 'Price is required';
+                                        return 'Harga kamar wajib diisi';
                                       }
                                       final p = ThousandsFormatter.parse(
                                         v.trim(),
                                       );
                                       if (p == null || p <= 0) {
-                                        return 'Price must be greater than 0';
+                                        return 'Harga kamar harus lebih besar dari 0';
                                       }
                                       return null;
                                     },
                                   ),
                                   SizedBox(height: 30),
+                                  // CustomTextForm(
+                                  //   title: 'Price Daily (Optional)',
+                                  //   hintText: 'Enter daily price',
+                                  //   keyboardType: TextInputType.number,
+                                  //   controller: priceDailyController,
+                                  //   isRequired: false,
+                                  //   inputFormatters: [
+                                  //     FilteringTextInputFormatter.digitsOnly,
+                                  //     ThousandsFormatter(),
+                                  //   ],
+                                  // ),
+                                  SizedBox(height: 30),
                                   Text(
-                                    'Facilities',
+                                    'Fasilitas',
                                     style: Theme.of(
                                       context,
                                     ).textTheme.titleMedium,
@@ -350,7 +367,7 @@ class _FormRoomViewState extends State<FormRoomView> {
                                                 if (state.facilities.isEmpty) {
                                                   setState(() {
                                                     _facilitiesError =
-                                                        'Please add at least one facility';
+                                                        'Silahkan tambahkan setidaknya satu fasilitas';
                                                   });
                                                 } else if (_facilitiesError !=
                                                     null) {
@@ -380,10 +397,10 @@ class _FormRoomViewState extends State<FormRoomView> {
                                                 .isEmpty) {
                                               setState(() {
                                                 _facilitiesError =
-                                                    'Please enter a facility';
+                                                    'Silahkan masukkan fasilitas';
                                               });
                                               AppSnackbar.showError(
-                                                'Please enter a facility',
+                                                'Silahkan masukkan fasilitas',
                                               );
                                               return;
                                             }
@@ -403,14 +420,14 @@ class _FormRoomViewState extends State<FormRoomView> {
                                   ),
                                   SizedBox(height: 30),
                                   CustomTextForm(
-                                    title: 'Description',
-                                    hintText: 'Enter room description',
+                                    title: 'Deskripsi Kamar',
+                                    hintText: 'Masukkan deskripsi kamar',
                                     maxLines: 10,
                                     controller: descriptionController,
                                     isRequired: true,
                                     validator: (v) {
                                       if (v == null || v.trim().isEmpty) {
-                                        return 'Description is required';
+                                        return 'Deskripsi kamar wajib diisi';
                                       }
                                       return null;
                                     },
@@ -423,7 +440,7 @@ class _FormRoomViewState extends State<FormRoomView> {
                                           false;
                                       if (!valid) {
                                         AppSnackbar.showError(
-                                          'Please correct the form errors',
+                                          'Silahkan perbaiki kesalahan pada formulir',
                                         );
                                         return;
                                       }
@@ -431,10 +448,10 @@ class _FormRoomViewState extends State<FormRoomView> {
                                       if (state.facilities.isEmpty) {
                                         setState(() {
                                           _facilitiesError =
-                                              'Please add at least one facility';
+                                              'Silahkan tambahkan setidaknya satu fasilitas';
                                         });
                                         AppSnackbar.showError(
-                                          'Please add at least one facility',
+                                          'Silahkan tambahkan setidaknya satu fasilitas',
                                         );
                                         return;
                                       }
@@ -448,6 +465,10 @@ class _FormRoomViewState extends State<FormRoomView> {
                                         priceController.text.trim(),
                                       );
 
+                                      final priceDaily = ThousandsFormatter.parse(
+                                        priceDailyController.text.trim(),
+                                      ) ?? 0;
+
                                       context.read<FormRoomBloc>().add(
                                         SubmitFormRoomEvent(
                                           formMode: widget.formMode,
@@ -457,6 +478,7 @@ class _FormRoomViewState extends State<FormRoomView> {
                                                 .text
                                                 .trim(),
                                             price: price.toDouble(),
+                                            priceDaily: priceDaily.toDouble(),
                                             facilities: state.facilities,
                                             number: roomNumberController.text
                                                 .trim(),
@@ -465,8 +487,8 @@ class _FormRoomViewState extends State<FormRoomView> {
                                       );
                                     },
                                     label: widget.formMode == FormMode.add
-                                        ? 'Add Room'
-                                        : 'Update Room',
+                                        ? 'Tambah Kamar'
+                                        : 'Simpan Perubahan',
                                   ),
                                 ],
                               ),

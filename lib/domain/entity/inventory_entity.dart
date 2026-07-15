@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/domain/entity/pagination_meta.dart';
 
 enum InventoryCondition {
   baik,
@@ -133,4 +134,14 @@ class InventoryEntity {
   @override
   String toString() =>
       'InventoryEntity(id: $id, nama: $nama, jumlah: $jumlah, kondisi: ${kondisi.displayName}, purchasePrice: $purchasePrice)';
+}
+
+class PaginatedInventories {
+  final List<InventoryEntity> data;
+  final PaginationMeta meta;
+
+  const PaginatedInventories({
+    required this.data,
+    required this.meta,
+  });
 }

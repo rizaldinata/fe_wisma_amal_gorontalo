@@ -1,25 +1,33 @@
-class Role {
-  final int id;
-  final String name;
-  final String guardName;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+import 'package:frontend/data/model/auth/permission_model.dart';
+import 'package:frontend/domain/entity/role/role_entity.dart';
 
-  Role({
-    required this.id,
-    required this.name,
-    required this.guardName,
-    required this.createdAt,
-    required this.updatedAt,
+class RoleModel extends RoleEntity {
+  const RoleModel({
+    required super.id,
+    required super.name,
+    super.description,
+    super.permissions = const [],
   });
 
-  factory Role.fromJson(Map<String, dynamic> json) {
-    return Role(
-      id: json['id'],
-      name: json['name'],
-      guardName: json['guard_name'],
-      createdAt: DateTime.parse(json['created_at']),
-      updatedAt: DateTime.parse(json['updated_at']),
+  factory RoleModel.fromJson(Map<String, dynamic> json) {
+    return RoleModel(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? '',
+      description: json['description'],
+      permissions: json['permissions'] != null
+          ? (json['permissions'] as List)
+              .map((p) => PermissionModel.fromJson(p))
+              .toList()
+          : const [],
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'description': description,
+      'permissions': permissions.map((p) => (p as PermissionModel).toJson()).toList(),
+    };
   }
 }

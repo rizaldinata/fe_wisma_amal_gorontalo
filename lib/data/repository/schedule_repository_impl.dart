@@ -9,8 +9,8 @@ class ScheduleRepositoryImpl implements ScheduleRepository {
   ScheduleRepositoryImpl({required this.remoteDatasource});
 
   @override
-  Future<List<ScheduleEntity>> getSchedules() async {
-    return await remoteDatasource.getSchedules();
+  Future<PaginatedSchedules> getSchedules({int page = 1, int perPage = 10}) async {
+    return await remoteDatasource.getSchedules(page: page, perPage: perPage);
   }
 
   @override

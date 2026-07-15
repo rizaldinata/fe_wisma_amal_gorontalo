@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:frontend/data/datasource/room_datasource.dart';
 import 'package:frontend/data/model/room/room_model.dart';
+import 'package:frontend/domain/entity/room/room_schedule_entity.dart';
 import 'package:frontend/domain/entity/room_entity.dart';
 
 import 'package:frontend/domain/repository/room_repository.dart';
@@ -11,10 +12,20 @@ class RoomRepositoryImpl implements RoomRepository {
   RoomRepositoryImpl({required this.datasource});
 
   @override
-  Future<List<RoomEntity>> getRooms() async {
+  Future<List<RoomEntity>> getRooms({bool? isHighlighted}) async {
     try {
-      final response = await datasource.getRooms();
+      final response = await datasource.getRooms(isHighlighted: isHighlighted);
       return response.data.map((e) => e.toEntity()).toList();
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<List<RoomScheduleEntity>> getRoomSchedules() async {
+    try {
+      final response = await datasource.getRoomSchedules();
+      return response.data; // Model extends Entity so it's compatible
     } catch (e) {
       rethrow;
     }

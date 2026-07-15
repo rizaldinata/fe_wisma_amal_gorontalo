@@ -4,15 +4,18 @@ import 'package:flutter/foundation.dart';
 import '../model/maintenance_model.dart';
 import '../../../core/services/network/dio_client.dart';
 import '../../../core/services/network/exception.dart';
+import '../../domain/entity/maintenance_request_entity.dart';
+import '../../domain/entity/pagination_meta.dart';
 
 abstract class MaintenanceRemoteDataSource {
   Future<List<MaintenanceRequestModel>> getMyRequests();
-  Future<List<MaintenanceRequestModel>> getAllRequests();
+  Future<PaginatedMaintenanceRequests> getAllRequests(int page, int perPage);
   Future<MaintenanceRequestModel> getReportById(int id);
   Future<MaintenanceRequestModel> createReport({
     required String title,
     required String description,
     int? roomId,
+    String? location,
     List<PlatformFile>? images,
   });
   Future<MaintenanceTimelineModel> addUpdateReply({
@@ -36,10 +39,14 @@ class MaintenanceRemoteDataSourceImpl implements MaintenanceRemoteDataSource {
   }
 
   @override
-  Future<List<MaintenanceRequestModel>> getAllRequests() async {
-    final response = await dioClient.get('/v1/damage-reports/admin/');
-    final data = response.data['data'] as List;
-    return data.map((json) => MaintenanceRequestModel.fromJson(json)).toList();
+  Future<PaginatedMaintenanceRequests> getAllRequests(int page, int perPage) async {
+    final response = await dioClient.get('/v1/damage-reports/admin?page=$page&per_page=$perPage');
+    final data = response.data['data'] as List? ?? [];
+    final meta = response.data['meta'] as Map<String, dynamic>? ?? {};
+    return PaginatedMaintenanceRequests(
+      data: data.map((json) => MaintenanceRequestModel.fromJson(json).toEntity()).toList(),
+      meta: PaginationMeta.fromJson(meta),
+    );
   }
 
   @override
@@ -61,12 +68,14 @@ class MaintenanceRemoteDataSourceImpl implements MaintenanceRemoteDataSource {
     required String title,
     required String description,
     int? roomId,
+    String? location,
     List<PlatformFile>? images,
   }) async {
     final formData = FormData.fromMap({
       'title': title,
       'description': description,
       if (roomId != null) 'room_id': roomId,
+      if (location != null && location.isNotEmpty) 'location': location,
     });
 
     if (images != null && images.isNotEmpty) {

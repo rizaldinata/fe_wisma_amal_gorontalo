@@ -1,28 +1,65 @@
 import 'package:dio/dio.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
+import 'package:frontend/data/repository/feature_toggle_repository.dart';
+import 'package:frontend/data/datasource/feature_toggle_datasource.dart';
 import 'package:frontend/core/services/network/api_config.dart';
+import 'package:frontend/data/datasource/refund_request_datasource.dart';
+import 'package:frontend/data/repository/refund_request_repository_impl.dart';
+import 'package:frontend/domain/repository/refund_request_repository.dart';
 import 'package:frontend/core/services/network/dio_client.dart';
 import 'package:frontend/core/services/storage/shared_prefrence.dart';
 import 'package:frontend/data/datasource/finance_datasource.dart';
+import 'package:frontend/data/datasource/inventory_datasource.dart';
 import 'package:frontend/data/datasource/permission_datasource.dart';
 import 'package:frontend/data/datasource/room_datasource.dart';
+import 'package:frontend/data/datasource/schedule_datasource.dart';
+import 'package:frontend/data/datasource/setting_datasource.dart';
 import 'package:frontend/data/repository/auth_repository_impl.dart';
 import 'package:frontend/data/repository/finance_repository_impl.dart';
+import 'package:frontend/data/repository/inventory_repository_impl.dart';
 import 'package:frontend/data/repository/permission_repository_impl.dart';
 import 'package:frontend/data/repository/room_repository_impl.dart';
+import 'package:frontend/data/repository/schedule_repository_impl.dart';
+import 'package:frontend/data/repository/setting_repository_impl.dart';
 import 'package:frontend/domain/repository/auth_repository.dart';
 import 'package:frontend/domain/repository/finance_repository.dart';
+import 'package:frontend/domain/repository/inventory_repository.dart';
 import 'package:frontend/domain/repository/permission_repository.dart';
 import 'package:frontend/domain/repository/room_repository.dart';
 import 'package:frontend/data/repository/maintenance_repository_impl.dart';
 import 'package:frontend/domain/repository/maintenance_repository.dart';
 import 'package:frontend/data/datasource/maintenance_remote_datasource.dart';
-import 'package:frontend/data/repository/inventory_repository_impl.dart';
-import 'package:frontend/domain/repository/inventory_repository.dart';
-import 'package:frontend/data/datasource/inventory_datasource.dart';
-import 'package:frontend/data/repository/schedule_repository_impl.dart';
 import 'package:frontend/domain/repository/schedule_repository.dart';
-import 'package:frontend/data/datasource/schedule_datasource.dart';
+import 'package:frontend/domain/repository/setting_repository.dart';
+import 'package:frontend/data/repository/resident_repository_impl.dart';
+import 'package:frontend/domain/repository/resident_repository.dart';
+import 'package:frontend/data/datasource/user_datasource.dart';
+import 'package:frontend/data/repository/user_repository_impl.dart';
+import 'package:frontend/domain/repository/user_repository.dart';
+import 'package:frontend/data/datasource/profile_datasource.dart';
+import 'package:frontend/data/repository/profile_repository_impl.dart';
+import 'package:frontend/domain/repository/profile_repository.dart';
+import 'package:frontend/data/datasource/reservation_remote_datasource.dart';
+import 'package:frontend/data/repository/reservation_repository_impl.dart';
+import 'package:frontend/domain/repository/reservation_repository.dart';
+import 'package:frontend/data/datasource/role_datasource.dart';
+import 'package:frontend/data/repository/role_repository_impl.dart';
+import 'package:frontend/domain/repository/role_repository.dart';
+import 'package:frontend/data/datasource/my_reservation_remote_datasource.dart';
+import 'package:frontend/data/repository/my_reservation_repository_impl.dart';
+import 'package:frontend/domain/repository/my_reservation_repository.dart';
+import 'package:frontend/data/datasource/guest_datasource.dart';
+import 'package:frontend/data/repository/guest_repository_impl.dart';
+import 'package:frontend/domain/repository/guest_repository.dart';
+import 'package:frontend/data/datasource/notification_datasource.dart';
+import 'package:frontend/data/repository/notification_repository_impl.dart';
+import 'package:frontend/domain/repository/notification_repository.dart';
+import 'package:frontend/data/datasource/fixed_expense_datasource.dart';
+import 'package:frontend/data/repository/fixed_expense_repository_impl.dart';
+import 'package:frontend/domain/repository/fixed_expense_repository.dart';
+import 'package:frontend/data/repository/dashboard_repository_impl.dart';
+import 'package:frontend/domain/repository/dashboard_repository.dart';
+import 'package:frontend/data/datasource/dashboard_datasource.dart';
 
 Future<void> initializeRepository() async {
   serviceLocator.registerFactory<AuthRepository>(
@@ -42,9 +79,15 @@ Future<void> initializeRepository() async {
     ),
   );
 
-  serviceLocator.registerFactory<FinanceRepository>(
+  serviceLocator.registerLazySingleton<FinanceRepository>(
     () => FinanceRepositoryImpl(
-      remoteDatasource: serviceLocator<FinanceRemoteDatasource>(),
+      remoteDatasource: serviceLocator.get<FinanceRemoteDatasource>(),
+    ),
+  );
+
+  serviceLocator.registerLazySingleton<SettingRepository>(
+    () => SettingRepositoryImpl(
+      remoteDatasource: serviceLocator.get<SettingDatasource>(),
     ),
   );
 
@@ -63,6 +106,51 @@ Future<void> initializeRepository() async {
   serviceLocator.registerFactory<ScheduleRepository>(
     () => ScheduleRepositoryImpl(
       remoteDatasource: serviceLocator<ScheduleRemoteDatasource>(),
+    ),
+  );
+  serviceLocator.registerFactory<ResidentRepository>(
+    () => ResidentRepositoryImpl(datasource: serviceLocator.get()),
+  );
+  serviceLocator.registerFactory<UserRepository>(
+    () => UserRepositoryImpl(serviceLocator.get<UserDataSource>()),
+  );
+  serviceLocator.registerFactory<ProfileRepository>(
+    () => ProfileRepositoryImpl(serviceLocator.get<ProfileDataSource>()),
+  );
+  serviceLocator.registerFactory<ReservationRepository>(
+    () => ReservationRepositoryImpl(
+      remoteDatasource: serviceLocator<ReservationRemoteDatasource>(),
+    ),
+  );
+  serviceLocator.registerFactory<RoleRepository>(
+    () => RoleRepositoryImpl(serviceLocator<RoleDataSource>()),
+  );
+  serviceLocator.registerFactory<MyReservationRepository>(
+    () => MyReservationRepositoryImpl(
+      remoteDatasource: serviceLocator<MyReservationRemoteDatasource>(),
+    ),
+  );
+  serviceLocator.registerFactory<GuestRepository>(
+    () => GuestRepositoryImpl(datasource: serviceLocator<GuestDatasource>()),
+  );
+
+  serviceLocator.registerFactory<NotificationRepository>(
+    () => NotificationRepositoryImpl(
+      datasource: serviceLocator<NotificationDatasource>(),
+    ),
+  );
+  serviceLocator.registerFactory<FixedExpenseRepository>(
+    () => FixedExpenseRepositoryImpl(serviceLocator<FixedExpenseRemoteDatasource>()),
+  );
+  serviceLocator.registerFactory<FeatureToggleRepository>(
+    () => FeatureToggleRepository(serviceLocator<FeatureToggleRemoteDataSource>()),
+  );
+  serviceLocator.registerFactory<DashboardRepository>(
+    () => DashboardRepositoryImpl(remoteDataSource: serviceLocator<DashboardDatasource>()),
+  );
+  serviceLocator.registerFactory<RefundRequestRepository>(
+    () => RefundRequestRepositoryImpl(
+      datasource: serviceLocator<RefundRequestDatasource>(),
     ),
   );
 }

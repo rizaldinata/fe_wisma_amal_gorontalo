@@ -15,9 +15,8 @@ class MaintenanceRepositoryImpl implements MaintenanceRepository {
   }
 
   @override
-  Future<List<MaintenanceRequestEntity>> getAllRequests() async {
-    final response = await defaultDataSource.getAllRequests();
-    return response.map((e) => e.toEntity()).toList();
+  Future<PaginatedMaintenanceRequests> getAllRequests(int page, int perPage) async {
+    return await defaultDataSource.getAllRequests(page, perPage);
   }
 
   @override
@@ -31,12 +30,14 @@ class MaintenanceRepositoryImpl implements MaintenanceRepository {
     required String title,
     required String description,
     int? roomId,
+    String? location,
     List<PlatformFile>? images,
   }) async {
     final response = await defaultDataSource.createReport(
       title: title,
       description: description,
       roomId: roomId,
+      location: location,
       images: images,
     );
     return response.toEntity();

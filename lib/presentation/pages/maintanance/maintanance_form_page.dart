@@ -23,8 +23,8 @@ class MaintananceFormPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => serviceLocator<ScheduleActionBloc>(),
+    return BlocProvider.value(
+      value: serviceLocator<ScheduleActionBloc>(),
       child: _MaintananceFormView(
         scheduleData: scheduleData,
         isEditMode: isEditMode,

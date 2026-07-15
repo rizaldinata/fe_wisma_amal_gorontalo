@@ -7,12 +7,14 @@ class CreateRequestParams {
   final String title;
   final String description;
   final int? roomId;
+  final String? location;
   final List<PlatformFile>? images;
 
   CreateRequestParams({
     required this.title,
     required this.description,
     this.roomId,
+    this.location,
     this.images,
   });
 }
@@ -28,6 +30,7 @@ class CreateRequestUseCase implements UseCase<MaintenanceRequestEntity, CreateRe
       title: params.title,
       description: params.description,
       roomId: params.roomId,
+      location: params.location,
       images: params.images,
     );
   }

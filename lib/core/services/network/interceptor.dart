@@ -1,6 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:frontend/core/constant/storage_constant.dart';
+import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/services/storage/secure_storage.dart';
+import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend/presentation/bloc/auth/auth_event.dart';
 
 class ApiInterceptor extends Interceptor {
   ApiInterceptor(this.secureStorageService);
@@ -46,10 +49,8 @@ class ApiInterceptor extends Interceptor {
   ) async {
     //handle jika token expired -> lalu hapus token & redirect ke login
     if (err.response?.statusCode == 401) {
-      await secureStorageService.delete(StorageConstant.token);
-
-      //memanggil logout yang nantinya merubah login status, sehingga go_router akan otomatis redirect ke login
-      // _authController.logout();
+      // Dispatch session expired event to AuthBloc
+      serviceLocator<AuthBloc>().add(const SessionExpiredEvent());
     }
 
     return handler.next(err);

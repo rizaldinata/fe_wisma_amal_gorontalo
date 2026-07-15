@@ -10,6 +10,10 @@ import 'package:frontend/presentation/widget/core/chip/custom_chip.dart';
 import 'package:frontend/presentation/widget/core/dialog/app_dialog.dart';
 import 'package:frontend/presentation/widget/core/image/image_network.dart';
 import 'package:frontend/presentation/widget/core/wrapper/wrapper_tap_wrapper.dart';
+import 'package:frontend/core/theme/app_colors.dart';
+import 'package:frontend/core/theme/app_shadows.dart';
+import 'package:frontend/core/theme/app_theme.dart';
+import 'package:frontend/core/theme/app_spacing.dart';
 
 class RoomCard extends StatelessWidget {
   final String? imageUrl;
@@ -39,22 +43,20 @@ class RoomCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print('Building RoomCard for $title with imageUrl: $imageUrl');
+    final isDark = AppTheme.isDark(context);
+    final surfaceColor = isDark ? AppColorsDark.surface : AppColorsLight.surface;
+    final borderColor = isDark ? AppColorsDark.borderLight : AppColorsLight.borderLight;
+
     return HoverTapWrapper(
       onTap: onTap,
       child: Container(
         height: height,
         width: width,
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Theme.of(context).colorScheme.shadow.withAlpha(70),
-              blurRadius: 5,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          color: surfaceColor,
+          borderRadius: BorderRadius.circular(AppSpacing.radiusLg),
+          border: Border.all(color: borderColor),
+          boxShadow: const [AppShadows.cardShadow],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

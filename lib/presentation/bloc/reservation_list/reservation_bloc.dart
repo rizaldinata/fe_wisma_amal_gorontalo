@@ -1,12 +1,38 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:formz/formz.dart';
+
+import 'package:frontend/domain/usecase/reservation/get_reservations_usecase.dart';
+
+import 'package:frontend/domain/usecase/reservation/update_reservation_status_usecase.dart';
+
+import 'package:frontend/domain/usecase/usecase.dart';
+
 import 'package:frontend/presentation/bloc/reservation_list/reservation_event.dart';
+
 import 'package:frontend/presentation/bloc/reservation_list/reservation_state.dart';
+
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 
 class ReservationBloc extends Bloc<ReservationEvent, ReservationState> {
-  ReservationBloc() : super(const ReservationState()) {
+  final GetReservationsUseCase getReservationsUseCase;
+
+  // final UpdateReservationStatusUseCase updateReservationStatusUseCase;
+
+  ReservationBloc({
+    required this.getReservationsUseCase,
+
+    // required this.updateReservationStatusUseCase,
+  }) : super(const ReservationState()) {
     on<GetReservationsEvent>(_onGetReservations);
+
+    on<SearchReservationEvent>(_onSearchReservation);
+
+    on<FilterReservationDateEvent>(_onFilterReservationDate);
+
+    on<SortReservationEvent>(_onSortReservation);
+
+    // on<UpdateReservationStatusEvent>(_onUpdateReservationStatus);
   }
 
   Future<void> _onGetReservations(
@@ -14,50 +40,74 @@ class ReservationBloc extends Bloc<ReservationEvent, ReservationState> {
     Emitter<ReservationState> emit,
   ) async {
     emit(state.copyWith(status: FormzSubmissionStatus.inProgress));
+
     try {
-      await Future.delayed(const Duration(milliseconds: 500));
+      final reservations = await getReservationsUseCase(NoParams());
 
-      final dummyData = <Map<String, dynamic>>[
-        {
-          'guestName': 'Budi Santoso',
-          'roomTitle': 'Kamar Deluxe A',
-          'checkIn': '2025-01-01',
-          'checkOut': '2025-02-01',
-          'status': 'Aktif',
-        },
-        {
-          'guestName': 'Siti Rahayu',
-          'roomTitle': 'Kamar Standard B',
-          'checkIn': '2025-01-15',
-          'checkOut': '2025-03-15',
-          'status': 'Pending',
-        },
-        {
-          'guestName': 'Ahmad Fauzi',
-          'roomTitle': 'Kamar VIP C',
-          'checkIn': '2025-02-01',
-          'checkOut': '2025-04-01',
-          'status': 'Aktif',
-        },
-        {
-          'guestName': 'Dewi Kusuma',
-          'roomTitle': 'Kamar Standard D',
-          'checkIn': '2024-10-01',
-          'checkOut': '2024-12-01',
-          'status': 'Selesai',
-        },
-      ];
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.success,
 
-      emit(state.copyWith(
-        status: FormzSubmissionStatus.success,
-        reservations: dummyData,
-      ));
+          reservations: reservations,
+        ),
+      );
     } catch (e) {
       AppSnackbar.showError('Gagal memuat data reservasi: ${e.toString()}');
-      emit(state.copyWith(
-        status: FormzSubmissionStatus.failure,
-        errorMessage: e.toString(),
-      ));
+
+      emit(
+        state.copyWith(
+          status: FormzSubmissionStatus.failure,
+
+          errorMessage: e.toString(),
+        ),
+      );
     }
   }
+
+  void _onSearchReservation(
+    SearchReservationEvent event,
+    Emitter<ReservationState> emit,
+  ) {
+    emit(state.copyWith(searchQuery: event.query));
+  }
+
+  void _onFilterReservationDate(
+    FilterReservationDateEvent event,
+    Emitter<ReservationState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        startDateFilter: event.startDate,
+
+        endDateFilter: event.endDate,
+      ),
+    );
+  }
+
+  void _onSortReservation(
+    SortReservationEvent event,
+    Emitter<ReservationState> emit,
+  ) {
+    emit(state.copyWith(sortBy: event.sortBy));
+  }
+
+  // Future<void> _onUpdateReservationStatus(
+  //   UpdateReservationStatusEvent event,
+
+  //   Emitter<ReservationState> emit,
+  // ) async {
+  //   try {
+  //     await updateReservationStatusUseCase(
+  //       reservationId: event.reservationId,
+
+  //       status: event.status,
+  //     );
+
+  //     AppSnackbar.showSuccess('Status reservasi berhasil diperbarui');
+
+  //     add(GetReservationsEvent());
+  //   } catch (e) {
+  //     AppSnackbar.showError('Gagal update status reservasi');
+  //   }
+  // }
 }

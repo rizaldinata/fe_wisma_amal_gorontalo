@@ -67,6 +67,7 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
+      alignment: WrapAlignment.spaceBetween,
       crossAxisAlignment: WrapCrossAlignment.center,
       spacing: 12,
       runSpacing: 12,
@@ -91,7 +92,7 @@ class _Header extends StatelessWidget {
             ),
           ],
         ),
-        if (actions != null) ...[const Spacer(), actions!],
+        if (actions != null) actions!,
       ],
     );
   }

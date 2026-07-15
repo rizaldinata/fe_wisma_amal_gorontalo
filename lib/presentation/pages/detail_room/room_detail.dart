@@ -6,12 +6,14 @@ import 'package:frontend/core/constant/permission_key.dart';
 import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/navigation/auto_route.gr.dart';
 import 'package:frontend/main.dart';
+import 'package:frontend/presentation/bloc/auth/auth_bloc.dart';
+import 'package:frontend/presentation/bloc/auth/auth_state.dart';
 import 'package:frontend/presentation/bloc/detail_room/detail_room_bloc.dart';
-import 'package:frontend/presentation/pages/room_form/form_room.dart';
 import 'package:frontend/presentation/widget/core/appbar/custom_appbar.dart';
 import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:frontend/presentation/widget/core/chip/custom_chip.dart';
+import 'package:frontend/domain/entity/room_entity.dart';
 import 'package:frontend/presentation/widget/core/image/image_carousel.dart';
 
 @RoutePage()
@@ -39,6 +41,13 @@ class RoomDetailView extends StatelessWidget {
     return BlocConsumer<DetailRoomBloc, DetailRoomState>(
       listener: (context, state) {},
       builder: (context, state) {
+        final authState = context.read<AuthBloc>().state;
+        final roles = authState.userInfo?.roles ?? [];
+        final isLoggedIn = authState.isLoggedIn;
+
+        final isAdmin =
+            roles.contains('admin') || roles.contains('super-admin');
+
         if (state.status == FormzSubmissionStatus.inProgress) {
           return const Scaffold(
             body: Center(child: CircularProgressIndicator()),
@@ -49,7 +58,7 @@ class RoomDetailView extends StatelessWidget {
           return Scaffold(
             appBar: CustomAppbar(
               icon: const Icon(Icons.arrow_back),
-              title: 'Room Detail',
+              title: 'Detail Kamar',
             ),
             body: Center(
               child: Text(
@@ -62,7 +71,7 @@ class RoomDetailView extends StatelessWidget {
         return Scaffold(
           appBar: CustomAppbar(
             icon: const Icon(Icons.arrow_back),
-            title: 'Room Detail',
+            title: 'Detail Kamar',
           ),
           body: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
@@ -81,7 +90,6 @@ class RoomDetailView extends StatelessWidget {
                       height: 400,
                       child: DynamicCarousel(
                         height: 400,
-
                         items:
                             state.room?.imageUrl
                                 .map(
@@ -94,7 +102,7 @@ class RoomDetailView extends StatelessWidget {
                             [],
                       ),
                     ),
-                    SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -116,7 +124,7 @@ class RoomDetailView extends StatelessWidget {
                                         context,
                                       ).colorScheme.onSurface,
                                       type: ButtonType.secondary,
-                                      trailIcon: Icon(Icons.edit),
+                                      trailIcon: const Icon(Icons.edit),
                                       onPressed: () async {
                                         await context.router.push(
                                           EditRoomRoute(roomId: state.room!.id),
@@ -129,8 +137,10 @@ class RoomDetailView extends StatelessWidget {
                                       label: 'Edit Kamar',
                                     ),
                                   ),
-                                  SizedBox(height: 20),
+                                  const SizedBox(height: 20),
                                 ],
+
+                                /// TITLE
                                 Row(
                                   children: [
                                     Expanded(
@@ -141,7 +151,7 @@ class RoomDetailView extends StatelessWidget {
                                         ).textTheme.headlineMedium,
                                       ),
                                     ),
-                                    SizedBox(width: 10),
+                                    const SizedBox(width: 10),
                                     if (state.room?.number != null &&
                                         state.room!.number.isNotEmpty) ...[
                                       Text(
@@ -150,7 +160,7 @@ class RoomDetailView extends StatelessWidget {
                                           context,
                                         ).textTheme.bodyMedium,
                                       ),
-                                      SizedBox(width: 10),
+                                      const SizedBox(width: 10),
                                     ],
                                     CustomChip(
                                       label:
@@ -161,53 +171,58 @@ class RoomDetailView extends StatelessWidget {
                                     ),
                                   ],
                                 ),
-                                SizedBox(height: 30),
-                                Divider(),
-                                SizedBox(height: 30),
+
+                                const SizedBox(height: 30),
+                                const Divider(),
+                                const SizedBox(height: 30),
+
+                                /// FASILITAS
                                 Text(
                                   'Fasilitas',
                                   style: Theme.of(
                                     context,
                                   ).textTheme.headlineSmall,
                                 ),
-                                SizedBox(height: 20),
-                                SizedBox(
-                                  width: 300,
-                                  child: Wrap(
-                                    spacing: 10,
-                                    runSpacing: 10,
-                                    children:
-                                        state.room?.facilities
-                                            .map(
-                                              (facility) => CustomChip(
-                                                label: facility,
-                                                color: Theme.of(
-                                                  context,
-                                                ).colorScheme.primary,
-                                              ),
-                                            )
-                                            .toList() ??
-                                        [],
-                                  ),
+                                const SizedBox(height: 20),
+
+                                Wrap(
+                                  spacing: 10,
+                                  runSpacing: 10,
+                                  children:
+                                      state.room?.facilities
+                                          .map(
+                                            (facility) => CustomChip(
+                                              label: facility,
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                            ),
+                                          )
+                                          .toList() ??
+                                      [],
                                 ),
-                                SizedBox(height: 30),
-                                Divider(),
-                                SizedBox(height: 30),
+
+                                const SizedBox(height: 30),
+                                const Divider(),
+                                const SizedBox(height: 30),
+
                                 Text(
                                   'Deskripsi',
                                   style: Theme.of(
                                     context,
                                   ).textTheme.headlineSmall,
                                 ),
-                                SizedBox(height: 20),
+                                const SizedBox(height: 20),
                                 Text(
                                   state.room?.description ?? '',
-                                  style: Theme.of(context).textTheme.bodyMedium,
+                                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(height: 1.6, fontSize: 16),
                                 ),
                               ],
                             ),
                           ),
-                          SizedBox(width: 30),
+
+                          const SizedBox(width: 30),
+
                           Expanded(
                             flex: 30,
                             child: BasicCard(
@@ -217,17 +232,52 @@ class RoomDetailView extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+                                  /// PRICE
                                   Text(
-                                    '${state.room?.priceFormatted}/ bulan',
+                                    '${state.room?.priceFormatted} / bulan',
                                     style: Theme.of(
                                       context,
                                     ).textTheme.titleMedium,
                                   ),
-                                  SizedBox(height: 20),
-                                  BasicButton(
-                                    onPressed: () {},
-                                    label: 'Pesan Sekarang',
-                                  ),
+
+                                  if (state.room?.priceDaily != null &&
+                                      state.room!.priceDaily > 0) ...[
+                                    const SizedBox(height: 8),
+                                    // Text(
+                                    //   '${state.room?.priceDailyFormatted} / hari',
+                                    //   style: Theme.of(context)
+                                    //       .textTheme
+                                    //       .titleMedium
+                                    //       ?.copyWith(
+                                    //         color: Colors.blue.shade700,
+                                    //       ),
+                                    // ),
+                                  ],
+                                  if (!isAdmin &&
+                                      state.room?.status ==
+                                          RoomStatusEnum.available) ...[
+                                    const SizedBox(height: 20),
+                                    if (isLoggedIn)
+                                      BasicButton(
+                                        onPressed: () {
+                                          context.router.push(
+                                            ReservationDetailFormRoute(
+                                              room: state.room!,
+                                            ),
+                                          );
+                                        },
+                                        label: 'Pesan Sekarang',
+                                      )
+                                    else
+                                      BasicButton(
+                                        onPressed: () {
+                                          context.router.push(
+                                            LoginRoute(pendingRoom: state.room),
+                                          );
+                                        },
+                                        label: 'Login untuk Memesan',
+                                      ),
+                                  ],
                                 ],
                               ),
                             ),

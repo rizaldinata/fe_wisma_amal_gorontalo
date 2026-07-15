@@ -3,7 +3,7 @@ import '../entity/maintenance_request_entity.dart';
 
 abstract class MaintenanceRepository {
   Future<List<MaintenanceRequestEntity>> getMyRequests();
-  Future<List<MaintenanceRequestEntity>> getAllRequests();
+  Future<PaginatedMaintenanceRequests> getAllRequests(int page, int perPage);
   Future<MaintenanceRequestEntity> getReportById(int id);
   
   /// Creates a report. images is a list of PlatformFile.
@@ -11,6 +11,7 @@ abstract class MaintenanceRepository {
     required String title,
     required String description,
     int? roomId,
+    String? location,
     List<PlatformFile>? images,
   });
 

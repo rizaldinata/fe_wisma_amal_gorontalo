@@ -2,11 +2,24 @@ import 'package:frontend/core/dependency_injection/dependency_injection.dart';
 import 'package:frontend/core/services/network/dio_client.dart';
 import 'package:frontend/data/datasource/auth_datasource.dart';
 import 'package:frontend/data/datasource/finance_datasource.dart';
+import 'package:frontend/data/datasource/inventory_datasource.dart';
 import 'package:frontend/data/datasource/permission_datasource.dart';
 import 'package:frontend/data/datasource/room_datasource.dart';
 import 'package:frontend/data/datasource/maintenance_remote_datasource.dart';
-import 'package:frontend/data/datasource/inventory_datasource.dart';
 import 'package:frontend/data/datasource/schedule_datasource.dart';
+import 'package:frontend/data/datasource/setting_datasource.dart';
+import 'package:frontend/data/datasource/resident_datasource.dart';
+import 'package:frontend/data/datasource/user_datasource.dart';
+import 'package:frontend/data/datasource/profile_datasource.dart';
+import 'package:frontend/data/datasource/reservation_remote_datasource.dart';
+import 'package:frontend/data/datasource/role_datasource.dart';
+import 'package:frontend/data/datasource/my_reservation_remote_datasource.dart';
+import 'package:frontend/data/datasource/guest_datasource.dart';
+import 'package:frontend/data/datasource/notification_datasource.dart';
+import 'package:frontend/data/datasource/fixed_expense_datasource.dart';
+import 'package:frontend/data/datasource/feature_toggle_datasource.dart';
+import 'package:frontend/data/datasource/dashboard_datasource.dart';
+import 'package:frontend/data/datasource/refund_request_datasource.dart';
 
 Future<void> initializeDatasource() async {
   serviceLocator.registerFactory<AuthDatasource>(
@@ -26,7 +39,8 @@ Future<void> initializeDatasource() async {
   );
 
   serviceLocator.registerFactory<MaintenanceRemoteDataSource>(
-    () => MaintenanceRemoteDataSourceImpl(dioClient: serviceLocator<DioClient>()),
+    () =>
+        MaintenanceRemoteDataSourceImpl(dioClient: serviceLocator<DioClient>()),
   );
 
   serviceLocator.registerFactory<InventoryRemoteDatasource>(
@@ -35,5 +49,45 @@ Future<void> initializeDatasource() async {
 
   serviceLocator.registerFactory<ScheduleRemoteDatasource>(
     () => ScheduleRemoteDatasourceImpl(dioClient: serviceLocator<DioClient>()),
+  );
+  serviceLocator.registerLazySingleton<SettingDatasource>(
+    () => SettingDatasourceImpl(serviceLocator.get<DioClient>()),
+  );
+  serviceLocator.registerFactory<ResidentDatasource>(
+    () => ResidentDatasource(dioClient: serviceLocator<DioClient>()),
+  );
+  serviceLocator.registerFactory<UserDataSource>(
+    () => UserDataSource(serviceLocator<DioClient>()),
+  );
+  serviceLocator.registerFactory<ProfileDataSource>(
+    () => ProfileDataSource(serviceLocator<DioClient>()),
+  );
+  serviceLocator.registerFactory<ReservationRemoteDatasource>(
+    () => ReservationRemoteDatasource(dioClient: serviceLocator<DioClient>()),
+  );
+  serviceLocator.registerFactory<RoleDataSource>(
+    () => RoleDataSource(serviceLocator<DioClient>()),
+  );
+  serviceLocator.registerFactory<MyReservationRemoteDatasource>(
+    () => MyReservationRemoteDatasource(dioClient: serviceLocator<DioClient>()),
+  );
+  serviceLocator.registerFactory<GuestDatasource>(
+    () => GuestDatasource(dioClient: serviceLocator<DioClient>()),
+  );
+
+  serviceLocator.registerFactory<NotificationDatasource>(
+    () => NotificationDatasource(dioClient: serviceLocator<DioClient>()),
+  );
+  serviceLocator.registerFactory<FixedExpenseRemoteDatasource>(
+    () => FixedExpenseRemoteDatasourceImpl(serviceLocator<DioClient>()),
+  );
+  serviceLocator.registerFactory<FeatureToggleRemoteDataSource>(
+    () => FeatureToggleRemoteDataSource(serviceLocator<DioClient>()),
+  );
+  serviceLocator.registerFactory<DashboardDatasource>(
+    () => DashboardDatasource(dioClient: serviceLocator<DioClient>()),
+  );
+  serviceLocator.registerFactory<RefundRequestDatasource>(
+    () => RefundRequestDatasource(dioClient: serviceLocator<DioClient>()),
   );
 }

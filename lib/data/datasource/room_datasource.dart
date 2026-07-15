@@ -6,6 +6,7 @@ import 'package:frontend/core/constant/endpoint_constant.dart';
 import 'package:frontend/core/services/network/dio_client.dart';
 import 'package:frontend/data/model/base_response_model.dart';
 import 'package:frontend/data/model/room/room_model.dart';
+import 'package:frontend/data/model/room/room_schedule_model.dart';
 import 'package:file_picker/file_picker.dart';
 
 class RoomDatasource {
@@ -13,13 +14,46 @@ class RoomDatasource {
 
   RoomDatasource({required this.dioClient});
 
-  Future<BaseResponseModel<List<RoomModel>>> getRooms() async {
+  Future<BaseResponseModel<List<RoomScheduleModel>>> getRoomSchedules() async {
     try {
-      final response = await dioClient.get(EndpointConstant.roomsEndpoint);
+      final response = await dioClient.get(
+        EndpointConstant.roomSchedulesEndpoint,
+      );
+      return BaseResponseModel<List<RoomScheduleModel>>.fromJson(
+        response.data,
+        (json) {
+          if (json is List) {
+            return json.map((e) => RoomScheduleModel.fromJson(e)).toList();
+          }
+          return [];
+        },
+      );
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  Future<BaseResponseModel<List<RoomModel>>> getRooms({
+    bool? isHighlighted,
+  }) async {
+    try {
+      final queryParams = <String, dynamic>{};
+      if (isHighlighted != null) {
+        queryParams['is_highlighted'] = isHighlighted;
+      }
+      final response = await dioClient.get(
+        EndpointConstant.roomsEndpoint,
+        queryParams: queryParams.isNotEmpty ? queryParams : null,
+      );
 
       return BaseResponseModel<List<RoomModel>>.fromJson(response.data, (json) {
         if (json is List) {
           return json.map((e) => RoomModel.fromJson(e)).toList();
+        } else if (json is Map && json.containsKey('data')) {
+          final data = json['data'];
+          if (data is List) {
+            return data.map((e) => RoomModel.fromJson(e)).toList();
+          }
         }
         return [];
       });
@@ -111,7 +145,7 @@ class RoomDatasource {
   }
 
   // UPLOAD ROOM IMAGE
-    Future<bool> uploadRoomImage({
+  Future<bool> uploadRoomImage({
     required int roomId,
     required List<PlatformFile> files,
   }) async {
@@ -137,7 +171,7 @@ class RoomDatasource {
         EndpointConstant.uploadRoomImage(roomId: roomId),
         data: formData,
       );
-      // Status 201 (Created) adalah standard Laravel/REST API 
+      // Status 201 (Created) adalah standard Laravel/REST API
       // untuk request POST yang berhasil membuat data baru.
       if (response.statusCode == 200 || response.statusCode == 201) {
         return response.data['status'] == true;
@@ -148,4 +182,5 @@ class RoomDatasource {
       debugPrint('Upload error: $e');
       rethrow;
     }
-  }}
+  }
+}

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class CustomDropdownField extends StatelessWidget {
+class CustomDropdownField<T> extends StatelessWidget {
   const CustomDropdownField({
     super.key,
     required this.title,
@@ -14,11 +14,11 @@ class CustomDropdownField extends StatelessWidget {
 
   final String title;
   final String hint;
-  final List<String> items;
-  final String? value;
+  final List<DropdownMenuItem<T>> items;
+  final T? value;
   final bool isRequired;
-  final ValueChanged<String?> onChanged;
-  final String? Function(String?)? validator;
+  final ValueChanged<T?> onChanged;
+  final String? Function(T?)? validator;
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +36,7 @@ class CustomDropdownField extends StatelessWidget {
                     TextSpan(
                       text: ' *',
                       style: TextStyle(
-                        color: Colors.red.shade300,
+                        color: theme.colorScheme.error,
                         fontSize: 12,
                       ),
                     ),
@@ -45,7 +45,7 @@ class CustomDropdownField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
+        DropdownButtonFormField<T>(
           value: value,
           hint: Text(
             hint,
@@ -80,9 +80,7 @@ class CustomDropdownField extends StatelessWidget {
               borderSide: BorderSide(color: theme.colorScheme.error),
             ),
           ),
-          items: items
-              .map((item) => DropdownMenuItem(value: item, child: Text(item)))
-              .toList(),
+          items: items,
           onChanged: onChanged,
           validator: validator,
         ),

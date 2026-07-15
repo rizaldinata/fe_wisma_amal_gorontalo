@@ -23,9 +23,8 @@ class PermissionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (context) =>
-          serviceLocator<PermissionBloc>()..add(GetPermissionsEvent()),
+    return BlocProvider.value(
+      value: serviceLocator<PermissionBloc>()..add(GetPermissionsEvent()),
       child: const PermissionView(),
     );
   }
@@ -74,16 +73,16 @@ class PermissionView extends StatelessWidget {
                   'Manajemen Izin (Permission)',
                   style: Theme.of(context).textTheme.headlineLarge,
                 ),
-                BasicButton(
-                  onPressed: canCreate
-                      ? () => _showPermissionForm(context)
-                      : null,
-                  label: 'Tambah Izin',
-                  leadIcon: Icon(
-                    Icons.add,
-                    color: canCreate ? Colors.white : Colors.grey,
-                  ),
-                ),
+                // BasicButton(
+                //   onPressed: canCreate
+                //       ? () => _showPermissionForm(context)
+                //       : null,
+                //   label: 'Tambah Izin',
+                //   leadIcon: Icon(
+                //     Icons.add,
+                //     color: canCreate ? Colors.white : Colors.grey,
+                //   ),
+                // ),
               ],
             ),
             const SizedBox(height: 24),
@@ -104,81 +103,9 @@ class PermissionView extends StatelessWidget {
                     TableColumn(label: 'Nama Izin', flex: 2),
                     TableColumn(label: 'Target', flex: 1),
                     TableColumn(label: 'Deskripsi', flex: 3),
-                    TableColumn(
-                      label: 'Aksi',
-                      flex: 1,
-                      align: TextAlign.center,
-                    ),
                   ],
                   rows: state.permissions.map((p) {
-                    return [
-                      p.name,
-                      p.target ?? '-',
-                      p.description ?? '-',
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          IconButton(
-                            icon: const Icon(
-                              Icons.visibility,
-                              color: Colors.blue,
-                            ),
-                            onPressed: () {
-                              context.router.navigate(
-                                PermissionDetailRoute(id: p.id),
-                              );
-                            },
-                            tooltip: 'Lihat Detail',
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.edit,
-                              color: canUpdate
-                                  ? Colors.orange
-                                  : Colors.grey.withAlpha(100),
-                            ),
-                            onPressed: canUpdate
-                                ? () => _showPermissionForm(
-                                    context,
-                                    permission: p,
-                                  )
-                                : null,
-                            tooltip: canUpdate
-                                ? 'Ubah Izin'
-                                : 'Tidak memiliki akses',
-                          ),
-                          IconButton(
-                            icon: Icon(
-                              Icons.delete,
-                              color: canDelete
-                                  ? Colors.red
-                                  : Colors.grey.withAlpha(100),
-                            ),
-                            onPressed: canDelete
-                                ? () async {
-                                    final confirm = await AppDialog.show(
-                                      context,
-                                      title: 'Hapus Izin',
-                                      message:
-                                          'Apakah Anda yakin ingin menghapus izin "${p.name}"?',
-                                      type: AppDialogType.danger,
-                                      confirmLabel: 'Hapus',
-                                    );
-
-                                    if (confirm == true) {
-                                      context.read<PermissionBloc>().add(
-                                        DeletePermissionEvent(p.id),
-                                      );
-                                    }
-                                  }
-                                : null,
-                            tooltip: canDelete
-                                ? 'Hapus Izin'
-                                : 'Tidak memiliki akses',
-                          ),
-                        ],
-                      ),
-                    ];
+                    return [p.name, p.target ?? '-', p.description ?? '-'];
                   }).toList(),
                   // Note: Karena TableCard Anda saat ini hanya menerima List<String>,
                   // kita perlu sedikit modifikasi atau membungkus tombol aksi.

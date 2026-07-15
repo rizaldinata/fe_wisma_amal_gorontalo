@@ -10,6 +10,9 @@ import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/textform/textform.dart';
+import 'package:frontend/presentation/bloc/room_list/room_bloc.dart';
+import 'package:frontend/presentation/bloc/room_list/room_event.dart';
+import 'package:frontend/presentation/bloc/room_list/room_state.dart';
 
 @RoutePage()
 class MaintenanceCreateReportPage extends StatelessWidget {
@@ -17,8 +20,15 @@ class MaintenanceCreateReportPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => serviceLocator<MaintenanceActionBloc>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(
+          value: serviceLocator<MaintenanceActionBloc>(),
+        ),
+        BlocProvider(
+          create: (context) => serviceLocator<RoomBloc>()..add(GetRoomsEvent()),
+        ),
+      ],
       child: const _CreateReportView(),
     );
   }
@@ -36,6 +46,7 @@ class _CreateReportViewState extends State<_CreateReportView> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
+  int? _selectedRoomId;
 
   List<PlatformFile> _selectedImages = [];
 
@@ -58,13 +69,13 @@ class _CreateReportViewState extends State<_CreateReportView> {
         // Prevent duplicates by checking name
         final newFiles = result.files;
         final currentNames = _selectedImages.map((f) => f.name).toSet();
-        
+
         for (var file in newFiles) {
           if (!currentNames.contains(file.name)) {
             _selectedImages.add(file);
           }
         }
-        
+
         if (_selectedImages.length > 6) {
           _selectedImages = _selectedImages.sublist(0, 6);
         }
@@ -83,6 +94,8 @@ class _CreateReportViewState extends State<_CreateReportView> {
       SubmitMaintenanceRequest(
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
+        location: _locationController.text.trim(),
+        roomId: _selectedRoomId,
         images: _selectedImages.isEmpty ? null : _selectedImages,
       ),
     );
@@ -114,7 +127,8 @@ class _CreateReportViewState extends State<_CreateReportView> {
                     onPressed: () => context.router.maybePop(),
                     icon: const Icon(Icons.arrow_back_rounded),
                     style: IconButton.styleFrom(
-                      backgroundColor: theme.colorScheme.surfaceContainerHighest,
+                      backgroundColor:
+                          theme.colorScheme.surfaceContainerHighest,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -177,12 +191,70 @@ class _CreateReportViewState extends State<_CreateReportView> {
                               ),
                               const SizedBox(height: 16),
 
-                              // Location (optional)
-                              CustomTextForm(
-                                title: 'Lokasi Kerusakan',
-                                hintText:
-                                    'contoh: Kamar 301, Lorong Lt. 2, Kamar Mandi Umum',
-                                controller: _locationController,
+                              // Room & Location
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Kamar',
+                                          style: theme.textTheme.titleSmall?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: theme.colorScheme.onSurface,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        BlocBuilder<RoomBloc, RoomState>(
+                                          builder: (context, state) {
+                                            return DropdownButtonFormField<int>(
+                                              value: _selectedRoomId,
+                                              decoration: InputDecoration(
+                                                hintText: 'Pilih Kamar',
+                                                filled: true,
+                                                fillColor: theme.colorScheme.surface,
+                                                border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                  borderSide: BorderSide(
+                                                    color: theme.colorScheme.outlineVariant,
+                                                  ),
+                                                ),
+                                                enabledBorder: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                  borderSide: BorderSide(
+                                                    color: theme.colorScheme.outlineVariant,
+                                                  ),
+                                                ),
+                                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                              ),
+                                              items: state.rooms.map((room) {
+                                                return DropdownMenuItem<int>(
+                                                  value: room.id,
+                                                  child: Text(room.number ?? 'Kamar ${room.id}'),
+                                                );
+                                              }).toList(),
+                                              onChanged: (val) {
+                                                setState(() {
+                                                  _selectedRoomId = val;
+                                                });
+                                              },
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: CustomTextForm(
+                                      title: 'Area / Spot',
+                                      hintText: 'Lorong Lt. 2',
+                                      controller: _locationController,
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 16),
 
@@ -225,10 +297,12 @@ class _CreateReportViewState extends State<_CreateReportView> {
                                     '${_selectedImages.length}/6',
                                     style: theme.textTheme.labelMedium
                                         ?.copyWith(
-                                      color: _selectedImages.length >= 6
-                                          ? theme.colorScheme.error
-                                          : theme.colorScheme.onSurfaceVariant,
-                                    ),
+                                          color: _selectedImages.length >= 6
+                                              ? theme.colorScheme.error
+                                              : theme
+                                                    .colorScheme
+                                                    .onSurfaceVariant,
+                                        ),
                                   ),
                                 ],
                               ),
@@ -289,8 +363,10 @@ class _CreateReportViewState extends State<_CreateReportView> {
                         const SizedBox(height: 24),
 
                         // Action buttons
-                        BlocBuilder<MaintenanceActionBloc,
-                            MaintenanceActionState>(
+                        BlocBuilder<
+                          MaintenanceActionBloc,
+                          MaintenanceActionState
+                        >(
                           builder: (context, state) {
                             final isLoading =
                                 state is MaintenanceActionSubmitting;
@@ -310,7 +386,7 @@ class _CreateReportViewState extends State<_CreateReportView> {
                                 ),
                                 const SizedBox(width: 12),
                                 SizedBox(
-                                  width: 160,
+                                  width: 170,
                                   height: 44,
                                   child: BasicButton(
                                     label: 'Kirim Laporan',
