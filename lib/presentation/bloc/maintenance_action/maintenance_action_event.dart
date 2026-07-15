@@ -11,20 +11,20 @@ abstract class MaintenanceActionEvent extends Equatable {
 class SubmitMaintenanceRequest extends MaintenanceActionEvent {
   final String title;
   final String description;
+  final String location;
   final int? roomId;
-  final String? location;
   final List<PlatformFile>? images;
 
   const SubmitMaintenanceRequest({
     required this.title,
     required this.description,
+    required this.location,
     this.roomId,
-    this.location,
     this.images,
   });
 
   @override
-  List<Object?> get props => [title, description, roomId, location, images];
+  List<Object?> get props => [title, description, location, roomId, images];
 }
 
 class SubmitMaintenanceUpdate extends MaintenanceActionEvent {

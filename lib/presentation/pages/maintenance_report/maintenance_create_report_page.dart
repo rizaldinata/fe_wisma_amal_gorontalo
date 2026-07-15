@@ -10,6 +10,9 @@ import 'package:frontend/presentation/widget/core/botton/button.dart';
 import 'package:frontend/presentation/widget/core/card/basic_card.dart';
 import 'package:frontend/presentation/widget/core/snackbar/app_snackbar.dart';
 import 'package:frontend/presentation/widget/core/textform/textform.dart';
+import 'package:frontend/presentation/bloc/room_list/room_bloc.dart';
+import 'package:frontend/presentation/bloc/room_list/room_event.dart';
+import 'package:frontend/presentation/bloc/room_list/room_state.dart';
 
 @RoutePage()
 class MaintenanceCreateReportPage extends StatelessWidget {
@@ -17,8 +20,15 @@ class MaintenanceCreateReportPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider.value(
-      value: serviceLocator<MaintenanceActionBloc>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider.value(
+          value: serviceLocator<MaintenanceActionBloc>(),
+        ),
+        BlocProvider(
+          create: (context) => serviceLocator<RoomBloc>()..add(GetRoomsEvent()),
+        ),
+      ],
       child: const _CreateReportView(),
     );
   }
@@ -36,6 +46,7 @@ class _CreateReportViewState extends State<_CreateReportView> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
+  int? _selectedRoomId;
 
   List<PlatformFile> _selectedImages = [];
 
@@ -84,6 +95,7 @@ class _CreateReportViewState extends State<_CreateReportView> {
         title: _titleController.text.trim(),
         description: _descriptionController.text.trim(),
         location: _locationController.text.trim(),
+        roomId: _selectedRoomId,
         images: _selectedImages.isEmpty ? null : _selectedImages,
       ),
     );
@@ -179,12 +191,70 @@ class _CreateReportViewState extends State<_CreateReportView> {
                               ),
                               const SizedBox(height: 16),
 
-                              // Location (optional)
-                              CustomTextForm(
-                                title: 'Lokasi Kerusakan',
-                                hintText:
-                                    'contoh: Kamar 301, Lorong Lt. 2, Kamar Mandi Umum',
-                                controller: _locationController,
+                              // Room & Location
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Kamar',
+                                          style: theme.textTheme.titleSmall?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                            color: theme.colorScheme.onSurface,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        BlocBuilder<RoomBloc, RoomState>(
+                                          builder: (context, state) {
+                                            return DropdownButtonFormField<int>(
+                                              value: _selectedRoomId,
+                                              decoration: InputDecoration(
+                                                hintText: 'Pilih Kamar',
+                                                filled: true,
+                                                fillColor: theme.colorScheme.surface,
+                                                border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                  borderSide: BorderSide(
+                                                    color: theme.colorScheme.outlineVariant,
+                                                  ),
+                                                ),
+                                                enabledBorder: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(10),
+                                                  borderSide: BorderSide(
+                                                    color: theme.colorScheme.outlineVariant,
+                                                  ),
+                                                ),
+                                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                              ),
+                                              items: state.rooms.map((room) {
+                                                return DropdownMenuItem<int>(
+                                                  value: room.id,
+                                                  child: Text(room.number ?? 'Kamar ${room.id}'),
+                                                );
+                                              }).toList(),
+                                              onChanged: (val) {
+                                                setState(() {
+                                                  _selectedRoomId = val;
+                                                });
+                                              },
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: CustomTextForm(
+                                      title: 'Area / Spot',
+                                      hintText: 'Lorong Lt. 2',
+                                      controller: _locationController,
+                                    ),
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 16),
 

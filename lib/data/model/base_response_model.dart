@@ -14,8 +14,8 @@ class BaseResponseModel<T> {
     T Function(dynamic) fromJsonT,
   ) {
     return BaseResponseModel(
-      status: json['status'],
-      message: json['message'],
+      status: json['status'] ?? false,
+      message: json['message'] ?? '',
       data: fromJsonT(json['data']),
     );
   }

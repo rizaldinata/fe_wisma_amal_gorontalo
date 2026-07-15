@@ -60,7 +60,7 @@ class DashboardActivityModel extends DashboardActivityEntity {
       status: json['status'] ?? '',
       tenantName: json['tenant_name'],
       roomNumber: json['room_number'],
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
     );
   }
 }
@@ -82,7 +82,7 @@ class DashboardDamageReportModel extends DashboardDamageReportEntity {
       reporterName: json['reporter_name'] ?? '',
       status: json['status'] ?? '',
       roomNumber: json['room_number'],
-      reportedAt: DateTime.parse(json['reported_at']),
+      reportedAt: json['reported_at'] != null ? DateTime.parse(json['reported_at']) : DateTime.now(),
     );
   }
 }
@@ -107,8 +107,8 @@ class DashboardMaintenanceScheduleModel extends DashboardMaintenanceScheduleEnti
       type: json['type'] ?? '',
       subtype: json['subtype'] ?? '',
       status: json['status'] ?? '',
-      startTime: DateTime.parse(json['start_time']),
-      endTime: DateTime.parse(json['end_time']),
+      startTime: json['start_time'] != null ? DateTime.parse(json['start_time']) : DateTime.now(),
+      endTime: json['end_time'] != null ? DateTime.parse(json['end_time']) : DateTime.now(),
     );
   }
 }
@@ -191,7 +191,7 @@ class ResidentBillModel extends ResidentBillEntity {
       title: json['title'] ?? '',
       amount: double.tryParse(json['amount']?.toString() ?? '0') ?? 0.0,
       status: json['status'] ?? '',
-      createdAt: DateTime.parse(json['created_at']),
+      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at']) : DateTime.now(),
     );
   }
 }
@@ -209,7 +209,7 @@ class ResidentDamageReportModel extends ResidentDamageReportEntity {
       id: json['id'] ?? 0,
       title: json['title'] ?? '',
       status: json['status'] ?? '',
-      reportedAt: DateTime.parse(json['reported_at']),
+      reportedAt: json['reported_at'] != null ? DateTime.parse(json['reported_at']) : DateTime.now(),
     );
   }
 }
@@ -228,7 +228,7 @@ class ResidentGuestModel extends ResidentGuestEntity {
       id: json['id'] ?? 0,
       name: json['name'] ?? '',
       relationship: json['relationship'] ?? '',
-      checkInAt: DateTime.parse(json['check_in_at']),
+      checkInAt: json['check_in_at'] != null ? DateTime.parse(json['check_in_at']) : DateTime.now(),
       checkOutAt: json['check_out_at'] != null ? DateTime.parse(json['check_out_at']) : null,
     );
   }
